@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${inter.variable} h-full antialiased light scroll-smooth`}
+      className={`${manrope.variable} ${inter.variable} antialiased light scroll-smooth`}
     >
       <head>
         <link
@@ -39,9 +39,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         />
       </head>
-      <body className="min-h-full flex flex-col bg-surface font-body text-on-surface antialiased">
-        {children}
-      </body>
+      <body className="bg-surface font-body text-on-surface antialiased">{children}</body>
     </html>
   );
 }
