@@ -49,6 +49,7 @@
   --lh-outline-variant: #c5c5d4;
   --lh-mint-500: #86f8c6;
   --lh-glass-nav-bg: rgba(251, 248, 255, 0.7);
+  --lh-glass-card-bg: rgba(255, 255, 255, 0.7);
   color-scheme: light;
 }
 
@@ -101,6 +102,7 @@
   --lh-outline-variant: #444654;
   --lh-mint-500: #86f8c6;
   --lh-glass-nav-bg: rgba(18, 19, 26, 0.7);
+  --lh-glass-card-bg: rgba(18, 19, 26, 0.7);
   color-scheme: dark;
 }
 
@@ -166,6 +168,8 @@
 
 @import "tailwindcss";
 
+@source "../templates/**/*.html";
+
 html,
 body {
 }
@@ -194,8 +198,22 @@ body {
   backdrop-filter: blur(24px);
 }
 
+.glass-card,
+.glass-panel {
+  background-color: var(--lh-glass-card-bg);
+  backdrop-filter: blur(24px);
+}
+
 .editorial-shadow {
   box-shadow: 0px 24px 48px -12px rgba(26, 27, 34, 0.06);
+}
+
+.bg-editorial-gradient {
+  background: linear-gradient(135deg, #1f33aa 0%, #3b4ec2 100%);
+}
+
+.surface-container-lowest {
+  background-color: var(--lh-surface-container-lowest);
 }
 
 @keyframes fadeInUp {
