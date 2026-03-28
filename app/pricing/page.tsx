@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -18,7 +19,12 @@ export default function PricingPage() {
             href="/"
             className="text-2xl font-black tracking-tight text-indigo-900"
           >
-            LinkHub
+            <span className="flex items-center font-headline font-bold tracking-tight">
+              <span className="sr-only">LinkHub</span>
+              <span className="bg-white rounded-xl p-2 shadow-sm border border-surface-variant/30 dark:border-white/10">
+                <Image src="/logo.png" alt="LinkHub logo" width={36} height={36} />
+              </span>
+            </span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link

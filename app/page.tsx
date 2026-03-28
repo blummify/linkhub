@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, type CSSProperties } from "react";
 
@@ -45,7 +46,18 @@ export default function Home() {
             href="/"
             className="text-2xl font-bold text-indigo-900 dark:text-indigo-100 font-headline tracking-tight hover:scale-105 transition-transform"
           >
-            LinkHub
+            <span className="flex items-center">
+              <span className="sr-only">LinkHub</span>
+              <span className="bg-white rounded-xl p-2 shadow-sm border border-surface-variant/30 dark:border-white/10">
+                <Image
+                  src="/logo.png"
+                  alt="LinkHub logo"
+                  width={36}
+                  height={36}
+                  priority
+                />
+              </span>
+            </span>
           </Link>
           <div className="hidden md:flex items-center gap-8 font-headline font-semibold tracking-tight">
             <Link
