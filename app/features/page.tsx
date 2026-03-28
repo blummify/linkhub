@@ -37,12 +37,18 @@ export default function FeaturesPage() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <button className="px-5 py-2 text-primary font-semibold hover:bg-indigo-50/50 transition-all scale-100 hover:scale-105 active:scale-95 duration-200">
+            <Link
+              href="/login"
+              className="px-5 py-2 text-primary font-semibold hover:bg-indigo-50/50 transition-all scale-100 hover:scale-105 active:scale-95 duration-200"
+            >
               Login
-            </button>
-            <button className="cta-gradient px-6 py-2.5 text-white rounded-full font-bold shadow-lg hover:shadow-primary/30 hover:opacity-95 transition-all hover:scale-105 active:scale-95 duration-200">
+            </Link>
+            <Link
+              href="/signup"
+              className="cta-gradient px-6 py-2.5 text-white rounded-full font-bold shadow-lg hover:shadow-primary/30 hover:opacity-95 transition-all hover:scale-105 active:scale-95 duration-200"
+            >
               Sign Up
-            </button>
+            </Link>
           </div>
         </div>
       </nav>

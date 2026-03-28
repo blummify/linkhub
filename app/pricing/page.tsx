@@ -41,12 +41,18 @@ export default function PricingPage() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <button className="px-5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100/50 rounded-lg transition-colors">
+            <Link
+              href="/login"
+              className="px-5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100/50 rounded-lg transition-colors"
+            >
               Login
-            </button>
-            <button className="px-6 py-2 text-sm font-semibold bg-primary text-on-primary rounded-full editorial-gradient scale-95 active:scale-90 transition-transform duration-200">
+            </Link>
+            <Link
+              href="/signup"
+              className="px-6 py-2 text-sm font-semibold bg-primary text-on-primary rounded-full editorial-gradient scale-95 active:scale-90 transition-transform duration-200"
+            >
               Sign Up
-            </button>
+            </Link>
           </div>
         </div>
       </nav>

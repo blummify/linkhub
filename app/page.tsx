@@ -74,12 +74,18 @@ export default function Home() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <button className="px-5 py-2 text-primary font-semibold hover:bg-indigo-50/50 transition-all scale-100 hover:scale-105 active:scale-95 duration-200">
+            <Link
+              href="/login"
+              className="px-5 py-2 text-primary font-semibold hover:bg-indigo-50/50 transition-all scale-100 hover:scale-105 active:scale-95 duration-200"
+            >
               Login
-            </button>
-            <button className="cta-gradient px-6 py-2.5 text-white rounded-full font-bold shadow-lg hover:shadow-primary/30 hover:opacity-95 transition-all hover:scale-105 active:scale-95 duration-200">
+            </Link>
+            <Link
+              href="/signup"
+              className="cta-gradient px-6 py-2.5 text-white rounded-full font-bold shadow-lg hover:shadow-primary/30 hover:opacity-95 transition-all hover:scale-105 active:scale-95 duration-200"
+            >
               Sign Up
-            </button>
+            </Link>
           </div>
         </div>
       </nav>
@@ -107,9 +113,12 @@ export default function Home() {
               className="reveal-up flex flex-col sm:flex-row justify-center lg:justify-start gap-6 items-center"
               style={{ animationDelay: "0.5s" }}
             >
-              <button className="pulse-primary cta-gradient px-10 py-5 text-white rounded-full font-bold text-xl shadow-2xl hover:scale-105 hover:shadow-indigo-500/40 active:scale-95 transition-all duration-300">
+              <Link
+                href="/signup"
+                className="pulse-primary cta-gradient px-10 py-5 text-white rounded-full font-bold text-xl shadow-2xl hover:scale-105 hover:shadow-indigo-500/40 active:scale-95 transition-all duration-300"
+              >
                 Get Started for Free
-              </button>
+              </Link>
               <button className="group flex items-center gap-2 text-primary font-bold text-lg hover:text-primary-container transition-all hover:translate-x-1">
                 View Demo{" "}
                 <span className="material-symbols-outlined transition-transform group-hover:translate-x-2">
@@ -355,9 +364,12 @@ export default function Home() {
             presence. No credit card required.
           </p>
           <div className="relative z-10">
-            <button className="bg-white text-primary px-10 py-5 rounded-full font-bold text-xl shadow-2xl hover:scale-105 hover:shadow-white/20 active:scale-95 transition-all duration-300">
+            <Link
+              href="/signup"
+              className="inline-block bg-white text-primary px-10 py-5 rounded-full font-bold text-xl shadow-2xl hover:scale-105 hover:shadow-white/20 active:scale-95 transition-all duration-300"
+            >
               Sign Up Now — It&apos;s Free
-            </button>
+            </Link>
           </div>
         </div>
       </section>
