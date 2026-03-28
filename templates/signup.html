@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Join LinkHub - The Digital Curator</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-container": "#ffc6b3",
+                        "secondary": "#006c4c",
+                        "on-background": "#1a1b22",
+                        "on-secondary-fixed": "#002114",
+                        "surface-variant": "#e3e1ea",
+                        "on-primary-fixed": "#000e5f",
+                        "primary": "#1f33aa",
+                        "surface-container": "#efedf6",
+                        "surface": "#fbf8ff",
+                        "on-secondary-container": "#00714f",
+                        "inverse-on-surface": "#f2eff9",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#9f390e",
+                        "tertiary-fixed": "#ffdbcf",
+                        "outline": "#757684",
+                        "surface-tint": "#4052c7",
+                        "inverse-surface": "#2f3037",
+                        "primary-fixed-dim": "#bbc3ff",
+                        "secondary-fixed": "#86f8c6",
+                        "tertiary-fixed-dim": "#ffb59c",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1a1b22",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#005138",
+                        "inverse-primary": "#bbc3ff",
+                        "secondary-container": "#83f5c3",
+                        "on-error": "#ffffff",
+                        "tertiary": "#7c2500",
+                        "primary-fixed": "#dfe0ff",
+                        "surface-container-highest": "#e3e1ea",
+                        "outline-variant": "#c5c5d4",
+                        "error": "#ba1a1a",
+                        "background": "#fbf8ff",
+                        "surface-bright": "#fbf8ff",
+                        "on-primary-fixed-variant": "#2438ae",
+                        "primary-container": "#3b4ec2",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#69dbab",
+                        "surface-container-high": "#e9e7f0",
+                        "surface-dim": "#dbd9e2",
+                        "on-tertiary-fixed": "#380c00",
+                        "on-surface-variant": "#454652",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f4f2fc",
+                        "on-primary-container": "#cacfff",
+                        "on-tertiary-fixed-variant": "#822800"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .editorial-gradient {
+            background: linear-gradient(135deg, #1f33aa 0%, #3b4ec2 100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+
+<body class="bg-surface font-body text-on-surface antialiased">
+    <!-- TopAppBar Navigation Shell -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-[#fbf8ff]/80 dark:bg-[#1a1c1e]/80 backdrop-blur-lg">
+        <div class="flex justify-between items-center w-full px-8 py-4 max-w-7xl mx-auto">
+            <div class="text-2xl font-extrabold text-[#3F51B5] dark:text-[#b0c6ff] font-['Manrope'] tracking-tight">
+                LinkHub
+            </div>
+            <div class="flex items-center gap-6">
+                <a class="text-slate-500 dark:text-slate-400 font-medium hover:opacity-70 transition-all duration-300"
+                    href="#">
+                    Help
+                </a>
+            </div>
+        </div>
+    </header>
+    <main class="min-h-screen pt-24 pb-12 flex items-center justify-center px-6 relative overflow-hidden">
+        <!-- Abstract Background Elements (Editorial Style) -->
+        <div class="absolute top-[-10%] left-[-5%] w-[40rem] h-[40rem] bg-primary/5 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] right-[-5%] w-[35rem] h-[35rem] bg-secondary/5 rounded-full blur-[100px]">
+        </div>
+        <div class="w-full max-w-xl z-10">
+            <!-- Central Card -->
+            <div
+                class="surface-container-lowest glass-card rounded-xl p-8 md:p-12 shadow-[0px_24px_48px_-12px_rgba(31,51,170,0.06)] border border-outline-variant/15">
+                <div class="mb-10 text-center">
+                    <h1 class="font-headline text-4xl font-extrabold text-on-surface tracking-tight mb-3">
+                        Join the curators
+                    </h1>
+                    <p class="text-on-surface-variant font-medium">
+                        Create your stage. Share your vision.
+                    </p>
+                </div>
+                <!-- Social Sign-Up -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <button
+                        class="flex items-center justify-center gap-3 bg-surface-container-high text-on-primary-fixed-variant px-6 py-3.5 rounded-full font-semibold hover:opacity-80 transition-all duration-200 active:scale-[0.97]">
+                        <img alt="" class="w-5 h-5"
+                            data-alt="clean minimal google icon logo with bright primary colors on a white background"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBS3mhLLUx3oY8j_L3kvU9P3ioD5DqNHLiPa8qx2dEfr_PCsEHo87AG9kZ9ZHkQP32Gd8Ec4voLDpB8_oxHj3jfOdXiT_vDY6UNouDghmfLQDTAUUtRktzLsPsztk2Cj_qNUnLNLvdcqs7T28lB3zuzyvFvBqQDK7ZgMg0JW044H5hvwAD-uW-i3MQa4-APRwCg50uviByltkR90knP-RGRcIq2ETCaMZ9Fd2kCV3xhm6G_7ZYvblyP0UVRpHaIdKWnAfoO-YlqXy7X" />
+                        <span class="font-label">Google</span>
+                    </button>
+                    <button
+                        class="flex items-center justify-center gap-3 bg-surface-container-high text-on-primary-fixed-variant px-6 py-3.5 rounded-full font-semibold hover:opacity-80 transition-all duration-200 active:scale-[0.97]">
+                        <span class="material-symbols-outlined text-xl" data-icon="apple"
+                            style="font-variation-settings: 'FILL' 1;">ios</span>
+                        <span class="font-label">Apple</span>
+                    </button>
+                </div>
+                <div class="relative flex items-center mb-8">
+                    <div class="flex-grow border-t border-outline-variant/20"></div>
+                    <span class="flex-shrink mx-4 text-xs font-label uppercase tracking-widest text-slate-400">or use
+                        email</span>
+                    <div class="flex-grow border-t border-outline-variant/20"></div>
+                </div>
+                <!-- Registration Form -->
+                <form class="space-y-6">
+                    <div>
+                        <label
+                            class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2 ml-1"
+                            for="name">
+                            Full Name
+                        </label>
+                        <input
+                            class="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-surface transition-all duration-300 outline-none"
+                            id="name" placeholder="John Doe" type="text" />
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2 ml-1"
+                            for="email">
+                            Email Address
+                        </label>
+                        <input
+                            class="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-surface transition-all duration-300 outline-none"
+                            id="email" placeholder="curator@linkhub.com" type="email" />
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2 ml-1"
+                            for="password">
+                            Password
+                        </label>
+                        <input
+                            class="w-full bg-surface-container-highest border-none rounded-xl px-5 py-4 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:bg-surface transition-all duration-300 outline-none"
+                            id="password" placeholder="••••••••" type="password" />
+                    </div>
+                    <div class="pt-4">
+                        <button
+                            class="editorial-gradient w-full text-white py-5 rounded-full font-bold text-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200 active:scale-[0.97]"
+                            type="submit">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+                <p class="mt-8 text-center text-on-surface-variant font-medium">
+                    Already part of the hub?
+                    <a class="text-primary font-bold hover:underline underline-offset-4 ml-1" href="#">Log In</a>
+                </p>
+            </div>
+            <!-- Visual Editorial Element -->
+            <div class="mt-12 flex justify-center items-center gap-12 opacity-40">
+                <div class="flex flex-col items-center gap-2">
+                    <span class="material-symbols-outlined text-3xl" data-icon="auto_awesome">auto_awesome</span>
+                    <span class="text-[10px] font-label uppercase tracking-[0.2em]">Curate</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <span class="material-symbols-outlined text-3xl" data-icon="rocket_launch">rocket_launch</span>
+                    <span class="text-[10px] font-label uppercase tracking-[0.2em]">Launch</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <span class="material-symbols-outlined text-3xl" data-icon="insights">insights</span>
+                    <span class="text-[10px] font-label uppercase tracking-[0.2em]">Growth</span>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Footer Navigation Shell -->
+    <footer class="bg-transparent border-t border-[#3F51B5]/10 py-12">
+        <div class="flex flex-col md:flex-row justify-center items-center gap-8 w-full">
+            <div class="text-xs font-['Inter'] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                © 2024 LinkHub. Designed for the Digital Curator.
+            </div>
+            <nav class="flex gap-8">
+                <a class="text-xs font-['Inter'] uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-[#3F51B5] dark:hover:text-[#b0c6ff] transition-colors"
+                    href="#">
+                    Privacy Policy
+                </a>
+                <a class="text-xs font-['Inter'] uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-[#3F51B5] dark:hover:text-[#b0c6ff] transition-colors"
+                    href="#">
+                    Terms of Service
+                </a>
+                <a class="text-xs font-['Inter'] uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-[#3F51B5] dark:hover:text-[#b0c6ff] transition-colors"
+                    href="#">
+                    Contact
+                </a>
+            </nav>
+        </div>
+    </footer>
+</body>
+
+</html>
