@@ -23,12 +23,6 @@ export default function FeaturesPage() {
             >
               Features
             </Link>
-            <a
-              className="font-inter text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
-              href="#"
-            >
-              Solutions
-            </a>
             <Link
               className="font-inter text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
               href="/pricing"
@@ -332,4 +326,3 @@ export default function FeaturesPage() {
     </>
   );
 }
-

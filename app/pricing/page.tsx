@@ -27,12 +27,6 @@ export default function PricingPage() {
             >
               Features
             </Link>
-            <a
-              className="text-slate-600 hover:text-indigo-600 transition-colors font-inter text-sm font-medium"
-              href="#"
-            >
-              Solutions
-            </a>
             <Link
               className="text-indigo-700 font-bold border-b-2 border-indigo-600 pb-1 font-inter text-sm font-medium"
               href="/pricing"
@@ -484,4 +478,3 @@ export default function PricingPage() {
     </div>
   );
 }
-
