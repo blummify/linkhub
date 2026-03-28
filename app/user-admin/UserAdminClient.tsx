@@ -16,8 +16,8 @@ export default function UserAdminClient() {
             <section className="col-span-12 lg:col-span-7 space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-4xl font-black text-on-surface tracking-tight">System Dashboard</h1>
-                  <p className="text-lg text-on-surface-variant mt-2 font-medium">Monitor and manage system operations.</p>
+                  <h1 className="text-2xl font-semibold text-on-surface tracking-tight">System Dashboard</h1>
+                  <p className="text-sm text-on-surface-variant mt-1">Monitor and manage system operations.</p>
                 </div>
                 <button className="flex items-center gap-2 bg-secondary text-on-secondary px-6 py-3 rounded-full font-bold shadow-lg hover:bg-on-secondary-container transition-all active:scale-95">
                   <span className="material-symbols-outlined">add</span>
@@ -35,7 +35,7 @@ export default function UserAdminClient() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-black text-xl text-on-surface">Active Users</h3>
+                      <h3 className="font-semibold text-base text-on-surface">Active Users</h3>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase tracking-wider">
                           Healthy
@@ -48,8 +48,8 @@ export default function UserAdminClient() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-base text-primary font-semibold">1,284,592 total users</p>
-                    <div className="mt-4 flex items-center gap-6 text-sm text-on-surface-variant font-medium">
+                    <p className="text-sm text-primary font-medium">1,284,592 total users</p>
+                    <div className="mt-3 flex items-center gap-4 text-xs text-on-surface-variant">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-base">trending_up</span> +12% this week
                       </span>
@@ -68,7 +68,7 @@ export default function UserAdminClient() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-black text-xl text-on-surface">Revenue Tracking</h3>
+                      <h3 className="font-semibold text-base text-on-surface">Revenue Tracking</h3>
                       <div className="flex items-center gap-3">
                         <button className="text-on-surface-variant hover:text-primary transition-colors">
                           <span className="material-symbols-outlined text-xl">edit</span>
@@ -78,8 +78,8 @@ export default function UserAdminClient() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-base text-primary font-semibold">$492,104 MTD</p>
-                    <div className="mt-4 flex items-center gap-6 text-sm text-on-surface-variant font-medium">
+                    <p className="text-sm text-primary font-medium">$492,104 MTD</p>
+                    <div className="mt-3 flex items-center gap-4 text-xs text-on-surface-variant">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-base">trending_up</span> +8.4% growth
                       </span>
@@ -94,7 +94,7 @@ export default function UserAdminClient() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-black text-xl text-on-surface">Support Tickets</h3>
+                      <h3 className="font-semibold text-base text-on-surface">Support Tickets</h3>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-high text-on-surface-variant rounded text-[10px] font-bold uppercase tracking-wider">
                           2 Critical

@@ -40,21 +40,21 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
         </div>
         <nav className="flex-1 space-y-2">
           {/* Active: Links */}
-          <a className="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold transition-all active:scale-95 duration-200 ease-in-out" href="#">
+          <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="/user-analytics">
             <span className="material-symbols-outlined" data-icon="link">link</span>
             <span className="text-sm">Links</span>
           </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="#">
+          <a className="flex items-center gap-3 px-4 py-3 bg-primary-container text-primary rounded-xl font-bold transition-all active:scale-95 duration-200 ease-in-out" href="/appearance">
             <span className="material-symbols-outlined" data-icon="palette">palette</span>
             <span className="text-sm">Appearance</span>
           </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="#">
+          <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="/user-analytics">
             <span className="material-symbols-outlined" data-icon="monitoring">monitoring</span>
             <span className="text-sm">Analytics</span>
           </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="#">
+          <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="/user-admin">
             <span className="material-symbols-outlined" data-icon="settings">settings</span>
-            <span className="text-sm">Settings</span>
+            <span className="text-sm">Admin</span>
           </a>
         </nav>
         <div className="mt-auto p-4 bg-indigo-700 rounded-2xl text-white">

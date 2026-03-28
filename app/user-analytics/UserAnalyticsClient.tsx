@@ -68,7 +68,7 @@ export default function UserAnalyticsClient() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-bold text-lg text-on-surface">Latest Portfolio Drop</h3>
+                      <h3 className="font-semibold text-base text-on-surface">Latest Portfolio Drop</h3>
                       <div className="flex items-center gap-3">
                         <button className="text-on-surface-variant hover:text-primary transition-colors">
                           <span className="material-symbols-outlined text-xl">edit</span>
@@ -94,7 +94,7 @@ export default function UserAnalyticsClient() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-bold text-lg text-on-surface">Instagram Profile</h3>
+                      <h3 className="font-semibold text-base text-on-surface">Instagram Profile</h3>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-high text-on-surface-variant rounded text-[10px] font-bold uppercase tracking-wider">
                           Draft

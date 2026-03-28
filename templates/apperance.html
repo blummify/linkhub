@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary-fixed": "#002114",
+              "on-error-container": "#93000a",
+              "inverse-primary": "#bbc3ff",
+              "on-background": "#1a1b22",
+              "tertiary": "#7c2500",
+              "on-primary": "#ffffff",
+              "on-tertiary-container": "#ffc6b3",
+              "on-tertiary-fixed": "#380c00",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-high": "#e9e7f0",
+              "error": "#ba1a1a",
+              "tertiary-fixed": "#ffdbcf",
+              "background": "#fbf8ff",
+              "primary-container": "#3b4ec2",
+              "error-container": "#ffdad6",
+              "primary-fixed": "#dfe0ff",
+              "surface-bright": "#fbf8ff",
+              "primary": "#1f33aa",
+              "on-primary-fixed-variant": "#2438ae",
+              "on-tertiary-fixed-variant": "#822800",
+              "outline-variant": "#c5c5d4",
+              "secondary-fixed-dim": "#69dbab",
+              "primary-fixed-dim": "#bbc3ff",
+              "on-surface-variant": "#454652",
+              "on-surface": "#1a1b22",
+              "tertiary-container": "#9f390e",
+              "surface-variant": "#e3e1ea",
+              "surface-container-highest": "#e3e1ea",
+              "secondary-container": "#83f5c3",
+              "surface-tint": "#4052c7",
+              "on-error": "#ffffff",
+              "on-primary-container": "#cacfff",
+              "surface-container": "#efedf6",
+              "inverse-on-surface": "#f2eff9",
+              "surface-container-low": "#f4f2fc",
+              "on-secondary-fixed-variant": "#005138",
+              "secondary": "#006c4c",
+              "surface": "#fbf8ff",
+              "tertiary-fixed-dim": "#ffb59c",
+              "on-secondary": "#ffffff",
+              "on-secondary-container": "#00714f",
+              "surface-dim": "#dbd9e2",
+              "on-tertiary": "#ffffff",
+              "inverse-surface": "#2f3037",
+              "secondary-fixed": "#86f8c6",
+              "outline": "#757684",
+              "on-primary-fixed": "#000e5f"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-50 bg-[#fbf8ff] dark:bg-[#1a1b1e] border-b border-transparent">
+<div class="flex justify-between items-center px-6 py-3 w-full">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold text-[#1f33aa] dark:text-[#3b4ec2] tracking-tight font-headline">CreatorHub</span>
+<div class="hidden md:flex items-center bg-surface-container-low px-4 py-2 rounded-full w-96">
+<span class="material-symbols-outlined text-outline text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2" placeholder="Search components..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-gradient-to-br from-primary to-primary-container text-white px-6 py-2 rounded-full text-sm font-semibold active:scale-95 transition-all">
+                    Publish Changes
+                </button>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-[#f4f2fc] dark:hover:bg-[#2a2b2f] rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-slate-500">notifications</span>
+</button>
+<button class="p-2 hover:bg-[#f4f2fc] dark:hover:bg-[#2a2b2f] rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-slate-500">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden ml-2 ring-2 ring-primary-fixed">
+<img alt="User profile" data-alt="professional headshot of a creative director in a minimalist studio setting with soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI57sppD_FLi9ouIh-nc1Tcj4PF6vKEAcZmAdyk0FM0P-SgHL4GDKTwJojpoC4Zdgclz61XTPE4THKrbPyXX4zalYeXTqHkAbKlA85wWL3zAe8gityPPdlDtwuDU0upwunIQPs0M13K-oQ1Tq0ZgfR8cdmGtB_k1Vc8Hdb1TRCamkkRf4oYpPXWTH73M_JuKxNU08-S8VdQevKwYgDZtbUJPtCSxb09pJUEGDjVyW1zafOoKx6JbW26p684_qC_-pO6N_XlrhrrH10"/>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-[#f4f2fc] dark:bg-[#2a2b2f] h-[1px] w-full absolute bottom-0"></div>
+</header>
+<div class="flex min-h-[calc(100vh-64px)]">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 pt-16 overflow-y-auto z-40 bg-[#fbf8ff] dark:bg-[#1a1b1e]">
+<div class="flex flex-col h-full p-4 gap-2">
+<div class="flex flex-col items-center py-6 gap-2 mb-4">
+<div class="w-16 h-16 rounded-2xl overflow-hidden shadow-lg">
+<img alt="Creator Avatar" data-alt="close-up of a smiling young man with artistic glasses in a bright contemporary workspace" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZBs3RyC9JkP8uiqKQ10_W-GLaursX8DuIX48zKjztqOjiagPmAcDGvMlOnGFOCet4UurniYlXNrfvZbL5Qw0Yxfu7Hr87EfMgvcjCcLH-WGIR1RZi8zknv04x9qsiv2oOd2z5kgycfB-J74_LBuNsl5Xd8BcG-NUGtM70bcSVx_gM9DLhYKj0Q_zNasfYkIIIBX2V3qhTfglgrl0nBHGjuh1GEwXNizxI9Nt5RHYJzbhjxxSzhawHms8U8QBC7Sf9FBjctAx8DzS0"/>
+</div>
+<div class="text-center">
+<p class="font-headline font-bold text-on-surface">Alex Rivers</p>
+<p class="text-xs text-outline">Professional Plan</p>
+</div>
+<button class="mt-2 text-xs font-bold text-primary bg-primary-fixed px-3 py-1 rounded-full hover:bg-primary-container hover:text-white transition-colors">Upgrade to Pro</button>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 hover:text-[#1f33aa] dark:hover:text-[#3b4ec2] transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-['Manrope'] font-medium text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-[#1f33aa] dark:text-[#3b4ec2] bg-[#f4f2fc] dark:bg-[#2a2b2f] rounded-xl px-4 py-3 font-bold active:translate-x-1" href="#">
+<span class="material-symbols-outlined">palette</span>
+<span class="font-['Manrope'] text-sm">Appearance</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 hover:text-[#1f33aa] dark:hover:text-[#3b4ec2] transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-['Manrope'] font-medium text-sm">Analytics</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 hover:text-[#1f33aa] dark:hover:text-[#3b4ec2] transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined">link</span>
+<span class="font-['Manrope'] font-medium text-sm">Links</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 hover:text-[#1f33aa] dark:hover:text-[#3b4ec2] transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-['Manrope'] font-medium text-sm">Audience</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-surface-container flex flex-col gap-1">
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 hover:text-[#1f33aa] transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-['Manrope'] font-medium text-sm">Help Center</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 hover:text-[#1f33aa] transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-['Manrope'] font-medium text-sm">Log Out</span>
+</a>
+</div>
+</div>
+<div class="bg-[#f4f2fc] dark:bg-[#2a2b2f] w-[1px] h-full absolute right-0 top-0"></div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 w-full flex bg-surface">
+<!-- Left Customization Panel -->
+<div class="flex-1 max-w-2xl px-12 py-10 overflow-y-auto h-[calc(100vh-64px)] hide-scrollbar">
+<header class="mb-12">
+<h1 class="text-3xl font-extrabold font-headline tracking-tight text-on-surface mb-2">Appearance</h1>
+<p class="text-on-surface-variant">Customize your public profile to reflect your brand's unique style.</p>
+</header>
+<div class="space-y-12">
+<!-- Profile Settings -->
+<section>
+<h2 class="text-sm font-bold font-headline uppercase tracking-widest text-primary mb-6">Profile Settings</h2>
+<div class="bg-surface-container-low p-8 rounded-xl space-y-6">
+<div class="flex items-center gap-6 mb-8">
+<div class="relative group">
+<div class="w-24 h-24 rounded-full overflow-hidden bg-surface-container-highest flex items-center justify-center ring-4 ring-white shadow-md">
+<img alt="Placeholder logo" data-alt="vibrant abstract splash of indigo and mint green paint on a white canvas with high contrast" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4CPgv-mQOEFNUQ75XgMO_x5olid0O0RwPWxjsoFa8ql_jecZ5HMhnxmXvVLs9egGsMOfONs6iY53A-i0iAizWATMmXA2VReS1U_efUICX_LKBqNs6mLtA_rzS0YzTxf_CJf8InO_RxeEAey6igSpMw1a9M55wvmfAMao66kUgMIH8KmsA3AmyhKXIe6HVdN8yzNybEZpSiuol_kqj7y5OjKTqrWylfMVNpz-UNumvF4yDh9Il2DlCS-SdWagl7oeVGphxCrdD0r70"/>
+</div>
+<button class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+<div>
+<p class="font-bold text-on-surface mb-1">Profile Picture</p>
+<p class="text-xs text-on-surface-variant">JPG, PNG or SVG. Max size of 2MB.</p>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-on-surface-variant">Profile Name</label>
+<input class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all font-medium" type="text" value="Alex Rivers"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-on-surface-variant">Short Bio</label>
+<textarea class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-none text-sm" rows="3">Professional Photographer &amp; Creative Director based in Seattle. Capturing the essence of modern living.</textarea>
+</div>
+</div>
+</div>
+</section>
+<!-- Theme Presets -->
+<section>
+<h2 class="text-sm font-bold font-headline uppercase tracking-widest text-primary mb-6">Theme Presets</h2>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+<button class="flex flex-col gap-3 group">
+<div class="w-full aspect-[4/3] bg-surface-container-low rounded-xl ring-2 ring-primary p-2 flex items-center justify-center transition-all group-hover:shadow-lg">
+<div class="w-full h-full rounded-lg bg-gradient-to-br from-[#fbf8ff] to-[#f4f2fc] border border-primary/20 flex flex-col items-center justify-center gap-2">
+<div class="flex gap-1">
+<div class="w-4 h-4 rounded-full bg-[#1f33aa]"></div>
+<div class="w-4 h-4 rounded-full bg-[#006c4c]"></div>
+</div>
+</div>
+</div>
+<span class="text-xs font-bold text-on-surface text-center">Indigo Mint</span>
+</button>
+<button class="flex flex-col gap-3 group opacity-70 hover:opacity-100">
+<div class="w-full aspect-[4/3] bg-surface-container-low rounded-xl p-2 flex items-center justify-center transition-all group-hover:shadow-lg">
+<div class="w-full h-full rounded-lg bg-gradient-to-br from-[#fff5f0] to-[#fff1e0] border border-outline-variant flex flex-col items-center justify-center gap-2">
+<div class="flex gap-1">
+<div class="w-4 h-4 rounded-full bg-[#ff6b35]"></div>
+<div class="w-4 h-4 rounded-full bg-[#ffcc33]"></div>
+</div>
+</div>
+</div>
+<span class="text-xs font-bold text-on-surface-variant text-center">Sunset Glow</span>
+</button>
+<button class="flex flex-col gap-3 group opacity-70 hover:opacity-100">
+<div class="w-full aspect-[4/3] bg-surface-container-low rounded-xl p-2 flex items-center justify-center transition-all group-hover:shadow-lg">
+<div class="w-full h-full rounded-lg bg-gradient-to-br from-[#1a1b22] to-[#2f3037] border border-outline-variant flex flex-col items-center justify-center gap-2">
+<div class="flex gap-1">
+<div class="w-4 h-4 rounded-full bg-[#3b4ec2]"></div>
+<div class="w-4 h-4 rounded-full bg-[#ffffff]"></div>
+</div>
+</div>
+</div>
+<span class="text-xs font-bold text-on-surface-variant text-center">Midnight Oasis</span>
+</button>
+<button class="flex flex-col gap-3 group opacity-70 hover:opacity-100">
+<div class="w-full aspect-[4/3] bg-surface-container-low rounded-xl p-2 flex items-center justify-center transition-all group-hover:shadow-lg">
+<div class="w-full h-full rounded-lg bg-white border border-outline-variant flex flex-col items-center justify-center gap-2 shadow-sm">
+<div class="flex gap-1">
+<div class="w-4 h-4 rounded-full bg-[#1a1b22]"></div>
+<div class="w-4 h-4 rounded-full bg-[#757684]"></div>
+</div>
+</div>
+</div>
+<span class="text-xs font-bold text-on-surface-variant text-center">Cloud White</span>
+</button>
+</div>
+</section>
+<!-- Custom Colors -->
+<section>
+<h2 class="text-sm font-bold font-headline uppercase tracking-widest text-primary mb-6">Custom Colors</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-surface-container-low p-6 rounded-xl flex flex-col gap-4">
+<span class="text-xs font-bold text-on-surface-variant">Background Color</span>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-gradient-to-br from-surface to-surface-container-low border border-outline-variant shadow-inner"></div>
+<div class="flex-1">
+<p class="text-sm font-medium text-on-surface">Linear Gradient</p>
+<p class="text-xs text-outline">#FBF8FF to #F4F2FC</p>
+</div>
+<button class="material-symbols-outlined text-outline">colorize</button>
+</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl flex flex-col gap-4">
+<span class="text-xs font-bold text-on-surface-variant">Button Color</span>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-primary border border-outline-variant shadow-inner"></div>
+<div class="flex-1">
+<p class="text-sm font-medium text-on-surface">Solid Indigo</p>
+<p class="text-xs text-outline">#1F33AA</p>
+</div>
+<button class="material-symbols-outlined text-outline">colorize</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Button Styles -->
+<section>
+<h2 class="text-sm font-bold font-headline uppercase tracking-widest text-primary mb-6">Button Styles</h2>
+<div class="bg-surface-container-low p-2 rounded-2xl flex gap-2">
+<button class="flex-1 py-3 px-4 rounded-xl bg-white shadow-sm font-bold text-sm text-primary transition-all">Flat</button>
+<button class="flex-1 py-3 px-4 rounded-xl hover:bg-white/50 font-medium text-sm text-on-surface-variant transition-all">Rounded</button>
+<button class="flex-1 py-3 px-4 rounded-xl hover:bg-white/50 font-medium text-sm text-on-surface-variant transition-all">Outline</button>
+<button class="flex-1 py-3 px-4 rounded-xl hover:bg-white/50 font-medium text-sm text-on-surface-variant transition-all">Shadow</button>
+</div>
+</section>
+<!-- Typography -->
+<section class="pb-20">
+<h2 class="text-sm font-bold font-headline uppercase tracking-widest text-primary mb-6">Typography</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-on-surface-variant">Headline Font</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 appearance-none focus:ring-2 focus:ring-primary/20 font-headline font-bold">
+<option>Manrope</option>
+<option>Playfair Display</option>
+<option>Outfit</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-on-surface-variant">Body Font</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 appearance-none focus:ring-2 focus:ring-primary/20 font-body">
+<option>Inter</option>
+<option>Roboto</option>
+<option>Open Sans</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Right Live Preview Panel -->
+<div class="flex-1 bg-surface-container px-8 flex flex-col items-center justify-center sticky top-16 h-[calc(100vh-64px)] overflow-hidden">
+<div class="relative">
+<!-- Phone Frame -->
+<div class="w-[320px] h-[640px] bg-[#1a1b22] rounded-[3rem] p-3 shadow-2xl relative z-10 border-[6px] border-[#2f3037]">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#1a1b22] rounded-b-2xl z-20"></div>
+<!-- Internal Screen Content -->
+<div class="w-full h-full bg-[#fbf8ff] rounded-[2.2rem] overflow-hidden flex flex-col items-center relative">
+<!-- Live Preview Background (Mocking chosen style) -->
+<div class="absolute inset-0 bg-gradient-to-br from-surface to-surface-container-low opacity-50"></div>
+<div class="relative z-10 w-full flex flex-col items-center px-6 pt-16">
+<div class="w-20 h-20 rounded-full overflow-hidden shadow-lg border-2 border-white mb-4">
+<img alt="Avatar Preview" data-alt="high quality headshot profile preview of a male creator with a friendly expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4PxtiCvvdChx5rltV1QWgJOqNq6piD1-6Ei7usvNa6vEqtcJS14LJjz75FSALFuRLCOo0PeWiYTCWQG62g3U-sBgKkkTS8YLKuLQ5VXhayVh9HApiK6p0t3dHTTdwJ7qIltKK80bBabeACJ56gyTzodT-BxvGcpFh7nbolhTp9SrlFS4DSC2EcM-M062HDKFztAej-R7GT47dJReQ0J2iH6aWyNKUSJEss688VsS89wBvuGXxVJrQT0Sf7ComxHaSCEFSk4u1SlQa"/>
+</div>
+<h3 class="font-headline text-xl font-bold text-on-surface mb-1">Alex Rivers</h3>
+<p class="text-[10px] text-on-surface-variant text-center leading-relaxed mb-8 px-4 opacity-80">Professional Photographer &amp; Creative Director based in Seattle. Capturing the essence of modern living.</p>
+<div class="w-full space-y-3">
+<div class="w-full bg-primary text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm">photo_camera</span>
+<span class="text-xs font-bold">Latest Portfolio</span>
+</div>
+<div class="w-full bg-primary text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm">shopping_bag</span>
+<span class="text-xs font-bold">Print Shop</span>
+</div>
+<div class="w-full bg-primary text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm">mail</span>
+<span class="text-xs font-bold">Inquiries</span>
+</div>
+</div>
+<div class="mt-12 flex gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">share</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">public</span>
+</div>
+</div>
+</div>
+<!-- Logo Watermark -->
+<div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 opacity-20">
+<span class="text-[10px] font-bold font-headline">CreatorHub</span>
+</div>
+</div>
+</div>
+<!-- Ambient Glow -->
+<div class="absolute -inset-10 bg-primary/10 blur-3xl rounded-full z-0 opacity-50"></div>
+</div>
+<div class="mt-10 flex items-center gap-3 bg-white/60 backdrop-blur-md px-6 py-2 rounded-full shadow-sm border border-white/40">
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></div>
+</div>
+<span class="text-xs font-bold text-on-surface-variant tracking-wide">Syncing changes...</span>
+</div>
+</div>
+</main>
+</div>
+</body></html>
