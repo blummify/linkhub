@@ -76,7 +76,7 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <Link
               href="/login"
-              className="px-5 py-2 text-primary font-semibold hover:bg-indigo-50/50 transition-all scale-100 hover:scale-105 active:scale-95 duration-200"
+              className="px-5 py-2 text-primary font-semibold rounded-full hover:bg-surface-container-low/70 dark:hover:bg-white/5 transition-all scale-100 hover:scale-105 active:scale-95 duration-200"
             >
               Login
             </Link>

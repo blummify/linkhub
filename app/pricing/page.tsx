@@ -43,7 +43,7 @@ export default function PricingPage() {
           <div className="flex items-center gap-4">
             <Link
               href="/login"
-              className="px-5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100/50 rounded-lg transition-colors"
+              className="px-5 py-2 text-sm font-medium text-primary rounded-full hover:bg-surface-container-low/70 dark:hover:bg-white/5 transition-colors"
             >
               Login
             </Link>
