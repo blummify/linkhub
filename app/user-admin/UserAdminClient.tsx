@@ -2,6 +2,7 @@
 
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
+import { ThemeToggle } from "../ThemeToggle";
 
 export default function UserAdminClient() {
   return (
@@ -15,8 +16,8 @@ export default function UserAdminClient() {
             <section className="col-span-12 lg:col-span-7 space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">System Overview</h1>
-                  <p className="text-on-surface-variant mt-1">Manage platform health, users, and system performance.</p>
+                  <h1 className="text-4xl font-black text-on-surface tracking-tight">System Dashboard</h1>
+                  <p className="text-lg text-on-surface-variant mt-2 font-medium">Monitor and manage system operations.</p>
                 </div>
                 <button className="flex items-center gap-2 bg-secondary text-on-secondary px-6 py-3 rounded-full font-bold shadow-lg hover:bg-on-secondary-container transition-all active:scale-95">
                   <span className="material-symbols-outlined">add</span>
@@ -29,26 +30,26 @@ export default function UserAdminClient() {
                 {/* System Card 1: Active Users */}
                 <div className="bg-surface-container-lowest rounded-xl p-6 flex gap-6 group relative overflow-hidden transition-all hover:translate-x-1">
                   <div className="w-1 bg-secondary absolute left-0 top-0 h-full rounded-full"></div>
-                  <div className="flex flex-col items-center justify-center cursor-grab text-slate-300 hover:text-slate-500">
+                  <div className="flex flex-col items-center justify-center cursor-grab text-on-surface-variant hover:text-on-surface">
                     <span className="material-symbols-outlined">drag_indicator</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-bold text-lg text-on-surface">Active Users</h3>
+                      <h3 className="font-black text-xl text-on-surface">Active Users</h3>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase tracking-wider">
                           Healthy
                         </div>
-                        <button className="text-slate-400 hover:text-primary transition-colors">
+                        <button className="text-on-surface-variant hover:text-primary transition-colors">
                           <span className="material-symbols-outlined text-xl">edit</span>
                         </button>
-                        <button className="text-slate-400 hover:text-error transition-colors">
+                        <button className="text-on-surface-variant hover:text-error transition-colors">
                           <span className="material-symbols-outlined text-xl">delete</span>
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm text-primary font-medium">1,284,592 total users</p>
-                    <div className="mt-4 flex items-center gap-6 text-xs text-on-surface-variant font-medium">
+                    <p className="text-base text-primary font-semibold">1,284,592 total users</p>
+                    <div className="mt-4 flex items-center gap-6 text-sm text-on-surface-variant font-medium">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-base">trending_up</span> +12% this week
                       </span>
@@ -62,23 +63,23 @@ export default function UserAdminClient() {
                 {/* System Card 2: Revenue */}
                 <div className="bg-surface-container-lowest rounded-xl p-6 flex gap-6 group relative transition-all hover:translate-x-1">
                   <div className="w-1 bg-secondary absolute left-0 top-0 h-full rounded-full"></div>
-                  <div className="flex flex-col items-center justify-center cursor-grab text-slate-300 hover:text-slate-500">
+                  <div className="flex flex-col items-center justify-center cursor-grab text-on-surface-variant hover:text-on-surface">
                     <span className="material-symbols-outlined">drag_indicator</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-bold text-lg text-on-surface">Revenue Tracking</h3>
+                      <h3 className="font-black text-xl text-on-surface">Revenue Tracking</h3>
                       <div className="flex items-center gap-3">
-                        <button className="text-slate-400 hover:text-primary transition-colors">
+                        <button className="text-on-surface-variant hover:text-primary transition-colors">
                           <span className="material-symbols-outlined text-xl">edit</span>
                         </button>
-                        <button className="text-slate-400 hover:text-error transition-colors">
+                        <button className="text-on-surface-variant hover:text-error transition-colors">
                           <span className="material-symbols-outlined text-xl">delete</span>
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm text-primary font-medium">$492,104 MTD</p>
-                    <div className="mt-4 flex items-center gap-6 text-xs text-on-surface-variant font-medium">
+                    <p className="text-base text-primary font-semibold">$492,104 MTD</p>
+                    <div className="mt-4 flex items-center gap-6 text-sm text-on-surface-variant font-medium">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-base">trending_up</span> +8.4% growth
                       </span>
@@ -88,25 +89,25 @@ export default function UserAdminClient() {
 
                 {/* System Card 3: Support Tickets */}
                 <div className="bg-surface-container-lowest/60 rounded-xl p-6 flex gap-6 group relative transition-all opacity-80">
-                  <div className="flex flex-col items-center justify-center cursor-grab text-slate-300">
+                  <div className="flex flex-col items-center justify-center cursor-grab text-on-surface-variant">
                     <span className="material-symbols-outlined">drag_indicator</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-bold text-lg text-on-surface">Support Tickets</h3>
+                      <h3 className="font-black text-xl text-on-surface">Support Tickets</h3>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-high text-on-surface-variant rounded text-[10px] font-bold uppercase tracking-wider">
                           2 Critical
                         </div>
-                        <button className="text-slate-400 hover:text-primary transition-colors">
+                        <button className="text-on-surface-variant hover:text-primary transition-colors">
                           <span className="material-symbols-outlined text-xl">edit</span>
                         </button>
-                        <button className="text-slate-400 hover:text-error transition-colors">
+                        <button className="text-on-surface-variant hover:text-error transition-colors">
                           <span className="material-symbols-outlined text-xl">delete</span>
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm text-slate-400 font-medium italic">Requires immediate attention</p>
+                    <p className="text-sm text-on-surface-variant font-medium italic">Requires immediate attention</p>
                   </div>
                 </div>
               </div>
@@ -175,7 +176,7 @@ export default function UserAdminClient() {
                   </div>
                 </div>
               </div>
-              <div className="mt-8 flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm text-sm text-slate-500 font-medium">
+              <div className="mt-8 flex items-center gap-2 px-4 py-2 bg-surface-container-highest rounded-full shadow-sm text-sm text-on-surface font-medium">
                 <span className="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
                 Live system monitoring
               </div>
@@ -183,6 +184,7 @@ export default function UserAdminClient() {
           </div>
         </main>
       </CollapsibleSidebar>
+      <ThemeToggle />
     </div>
   );
 }

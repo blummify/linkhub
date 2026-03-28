@@ -54,55 +54,55 @@
 }
 
 .dark {
-  --lh-on-surface: #e6e1e6;
+  --lh-on-surface: #f1f0f4;
   --lh-surface-tint: #bbc3ff;
   --lh-on-error-container: #ffdad6;
-  --lh-on-secondary: #002114;
-  --lh-on-background: #e6e1e6;
-  --lh-on-primary-container: #1a1b22;
+  --lh-on-secondary: #003d2a;
+  --lh-on-background: #f1f0f4;
+  --lh-on-primary-container: #0a1b4a;
   --lh-error-container: #93000a;
-  --lh-surface-variant: #444654;
-  --lh-inverse-surface: #e6e1e6;
+  --lh-surface-variant: #49454f;
+  --lh-inverse-surface: #f1f0f4;
   --lh-on-tertiary-container: #ffdbcf;
-  --lh-surface-container-lowest: #0d0e14;
+  --lh-surface-container-lowest: #1a1b22;
   --lh-on-tertiary-fixed: #ffdbcf;
-  --lh-secondary: #69dbab;
-  --lh-secondary-fixed-dim: #69dbab;
-  --lh-outline: #8f8f9d;
+  --lh-secondary: #4cdb94;
+  --lh-secondary-fixed-dim: #4cdb94;
+  --lh-outline: #938f99;
   --lh-on-tertiary-fixed-variant: #ffb59c;
-  --lh-surface-dim: #0d0e14;
+  --lh-surface-dim: #1a1b22;
   --lh-tertiary-fixed-dim: #ffb59c;
   --lh-tertiary: #ffb59c;
-  --lh-on-tertiary: #380c00;
-  --lh-on-secondary-container: #86f8c6;
-  --lh-surface-container: #20212a;
-  --lh-background: #0d0e14;
-  --lh-surface-container-highest: #343542;
-  --lh-on-secondary-fixed-variant: #69dbab;
+  --lh-on-tertiary: #4a0f00;
+  --lh-on-secondary-container: #005239;
+  --lh-surface-container: #2a2b35;
+  --lh-background: #1a1b22;
+  --lh-surface-container-highest: #3e3f4a;
+  --lh-on-secondary-fixed-variant: #005239;
   --lh-tertiary-container: #ffdbcf;
-  --lh-on-secondary-fixed: #002114;
+  --lh-on-secondary-fixed: #003d2a;
   --lh-inverse-primary: #1f33aa;
-  --lh-surface: #12131a;
-  --lh-on-primary-fixed-variant: #cacfff;
-  --lh-primary: #bbc3ff;
-  --lh-secondary-fixed: #86f8c6;
-  --lh-surface-bright: #1a1b22;
+  --lh-surface: #1f2029;
+  --lh-on-primary-fixed-variant: #d0d1ff;
+  --lh-primary: #c0c5ff;
+  --lh-secondary-fixed: #4cdb94;
+  --lh-surface-bright: #2a2b35;
   --lh-on-error: #93000a;
-  --lh-surface-container-low: #1a1b22;
+  --lh-surface-container-low: #2a2b35;
   --lh-primary-container: #3b4ec2;
-  --lh-inverse-on-surface: #2f3037;
+  --lh-inverse-on-surface: #3e3f4a;
   --lh-error: #ffb4ab;
   --lh-tertiary-fixed: #ffdbcf;
-  --lh-on-surface-variant: #c7c5d0;
-  --lh-on-primary: #000e5f;
-  --lh-primary-fixed-dim: #bbc3ff;
-  --lh-primary-fixed: #dfe0ff;
-  --lh-on-primary-fixed: #000e5f;
-  --lh-surface-container-high: #2a2b35;
-  --lh-outline-variant: #444654;
-  --lh-mint-500: #86f8c6;
-  --lh-glass-nav-bg: rgba(18, 19, 26, 0.7);
-  --lh-glass-card-bg: rgba(18, 19, 26, 0.7);
+  --lh-on-surface-variant: #cac4d0;
+  --lh-on-primary: #0a1b4a;
+  --lh-primary-fixed-dim: #c0c5ff;
+  --lh-primary-fixed: #e0e0ff;
+  --lh-on-primary-fixed: #0a1b4a;
+  --lh-surface-container-high: #3e3f4a;
+  --lh-outline-variant: #49454f;
+  --lh-mint-500: #4cdb94;
+  --lh-glass-nav-bg: rgba(31, 32, 41, 0.8);
+  --lh-glass-card-bg: rgba(31, 32, 41, 0.8);
   color-scheme: dark;
 }
 
@@ -170,14 +170,14 @@
 
 @source "../templates/**/*.html";
 
-html,
-body {
-}
-
 body {
   margin: 0;
   background: var(--lh-surface);
   color: var(--lh-on-surface);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .material-symbols-outlined {
