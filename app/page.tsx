@@ -338,7 +338,7 @@ export default function Home() {
           <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-white mb-6 relative z-10">
             Ready to take center stage?
           </h2>
-          <p className="text-primary-container text-on-primary-container text-lg md:text-xl mb-10 max-w-2xl mx-auto relative z-10 opacity-90">
+          <p className="text-white/80 text-lg md:text-xl mb-10 max-w-2xl mx-auto relative z-10">
             Join 50,000+ creators who trust LinkHub to power their digital
             presence. No credit card required.
           </p>
