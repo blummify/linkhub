@@ -1,22 +1,14 @@
 <!DOCTYPE html>
 
-<html class="light" lang="en">
-
-<head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Creator Hub - Analytics Overview</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <script id="tailwind-config">
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Creator Hub | Curator Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -80,400 +72,236 @@
             },
         }
     </script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        h1,
-        h2,
-        h3,
-        .font-headline {
-            font-family: 'Manrope', sans-serif;
-        }
-
+<style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            vertical-align: middle;
         }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.7);
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .glass-effect {
             backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
         }
     </style>
 </head>
-
-<body class="bg-surface text-on-surface antialiased">
-    <!-- Sidebar Navigation -->
-    <aside
-        class="h-screen w-64 fixed left-0 top-0 flex flex-col h-full p-4 border-r border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900 z-50">
-        <div class="mb-8 px-4">
-            <h1 class="text-xl font-bold tracking-tight text-indigo-700 dark:text-indigo-400">Creator Hub</h1>
-            <p class="text-xs text-slate-500 font-medium">@username</p>
-        </div>
-        <nav class="flex-1 space-y-1">
-            <a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all"
-                href="#">
-                <span class="material-symbols-outlined" data-icon="link">link</span>
-                <span class="text-sm font-medium">Links</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all"
-                href="#">
-                <span class="material-symbols-outlined" data-icon="palette">palette</span>
-                <span class="text-sm font-medium">Appearance</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-bold"
-                href="#">
-                <span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
-                <span class="text-sm font-medium">Analytics</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all"
-                href="#">
-                <span class="material-symbols-outlined" data-icon="settings">settings</span>
-                <span class="text-sm font-medium">Settings</span>
-            </a>
-        </nav>
-        <div class="mt-auto p-4 bg-primary rounded-xl text-on-primary">
-            <p class="text-xs font-bold mb-2">Upgrade to Pro</p>
-            <p class="text-[10px] opacity-80 mb-3">Unlock advanced insights and custom domains.</p>
-            <button
-                class="w-full py-2 bg-white text-primary text-[10px] font-bold rounded-full hover:bg-opacity-90 transition-all">Get
-                Access</button>
-        </div>
-    </aside>
-    <!-- Top App Bar -->
-    <header
-        class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 flex justify-between items-center h-16 px-6">
-        <div class="flex items-center gap-4 flex-1">
-            <div class="relative w-full max-w-md">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                    data-icon="search">search</span>
-                <input
-                    class="w-full bg-surface-container-highest border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
-                    placeholder="Search analytics..." type="text" />
-            </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <button class="hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full p-2 transition-colors">
-                <span class="material-symbols-outlined text-slate-500" data-icon="notifications">notifications</span>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- SideNavBar Component -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col h-full p-4 border-r border-slate-200/50 bg-slate-50 z-50">
+<div class="mb-8 px-4">
+<span class="text-xl font-bold tracking-tight text-indigo-700">Creator Hub</span>
+<p class="text-xs text-slate-500 mt-1 font-medium">@username</p>
+</div>
+<nav class="flex-1 space-y-2">
+<!-- Active: Links -->
+<a class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold transition-all active:scale-95 duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="link">link</span>
+<span class="text-sm">Links</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200 rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="palette">palette</span>
+<span class="text-sm">Appearance</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200 rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span class="text-sm">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200 rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-sm">Settings</span>
+</a>
+</nav>
+<div class="mt-auto p-4 bg-indigo-700 rounded-2xl text-white">
+<p class="text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Pro Plan</p>
+<p class="text-sm font-medium mb-4">Unlock advanced analytics and themes.</p>
+<button class="w-full py-2 bg-white text-indigo-700 rounded-full text-sm font-bold shadow-sm hover:bg-indigo-50 transition-colors">
+                Upgrade to Pro
             </button>
-            <button class="hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full p-2 transition-colors">
-                <span class="material-symbols-outlined text-slate-500" data-icon="help">help</span>
-            </button>
-            <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
-            <button
-                class="bg-gradient-to-br from-primary to-primary-container text-white px-5 py-2 rounded-full text-xs font-bold hover:scale-95 transition-transform">
+</div>
+</aside>
+<!-- TopAppBar Component -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 flex justify-between items-center h-16 px-6">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" data-icon="search">search</span>
+<input class="w-full bg-surface-container-highest border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search links..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="hover:bg-slate-100 rounded-full p-2 transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-500" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-slate-100 rounded-full p-2 transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-500" data-icon="help">help</span>
+</button>
+<div class="h-6 w-px bg-slate-200 mx-2"></div>
+<button class="bg-gradient-to-br from-primary to-primary-container text-white px-5 py-2 rounded-full text-sm font-bold shadow-md hover:opacity-90 transition-all active:scale-95">
                 Share Hub
             </button>
-            <img alt="User Profile" class="h-9 w-9 rounded-full object-cover border-2 border-primary-container/20"
-                data-alt="Professional portrait of a creative individual with friendly expression, soft studio lighting, neutral background"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBThX7Hd3xTPAjgyvRnlIJrYLfbrsuLy5JQIJLoMEGdbRRlf0HS8f_eOrwaeLYdUa4x7qdH5bZIxW6HMJR0eur47YI5noPLkXJjgIDOBmX29Yyqsbsi3xATiqJci3LDNe2wPbrDZs1--FISLNpcZfpkyLepkSwBtPymvR2cuYaH-Jdl1GK4dcVtmBjsZCywv4WUknbvZLNLCWlDc6qKU4fcsZGoxWWgh7trCyx8hD0UR0sqD2OsgJ1uPeABTKet4hKJkPSoH_2yfxBA" />
-        </div>
-    </header>
-    <!-- Main Content Canvas -->
-    <main class="ml-64 pt-24 px-8 pb-12 min-h-screen bg-surface">
-        <!-- Header Section -->
-        <header class="mb-10">
-            <h2 class="text-3xl font-extrabold tracking-tight text-on-surface mb-1 font-headline">Performance Overview
-            </h2>
-            <p class="text-on-surface-variant text-sm font-medium">Monitoring your digital footprint for the last 30
-                days.</p>
-        </header>
-        <!-- Top Row: KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <!-- KPI 1: Total Clicks -->
-            <div
-                class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-secondary flex flex-col justify-between h-40">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-bold text-outline uppercase tracking-wider mb-1">Total Clicks</p>
-                        <h3 class="text-3xl font-black text-on-surface">42,891</h3>
-                    </div>
-                    <span
-                        class="flex items-center gap-1 text-[10px] font-bold text-secondary bg-secondary-container/30 px-2 py-1 rounded-full">
-                        <span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
-                        12.5%
-                    </span>
-                </div>
-                <div class="mt-4 h-12 flex items-end gap-[2px]">
-                    <div class="flex-1 bg-secondary/10 h-[40%] rounded-t-sm"></div>
-                    <div class="flex-1 bg-secondary/10 h-[60%] rounded-t-sm"></div>
-                    <div class="flex-1 bg-secondary/20 h-[50%] rounded-t-sm"></div>
-                    <div class="flex-1 bg-secondary/40 h-[75%] rounded-t-sm"></div>
-                    <div class="flex-1 bg-secondary/60 h-[65%] rounded-t-sm"></div>
-                    <div class="flex-1 bg-secondary/80 h-[90%] rounded-t-sm"></div>
-                    <div class="flex-1 bg-secondary h-[100%] rounded-t-sm"></div>
-                </div>
-            </div>
-            <!-- KPI 2: Unique Visitors -->
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between h-40">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-bold text-outline uppercase tracking-wider mb-1">Unique Visitors</p>
-                        <h3 class="text-3xl font-black text-on-surface">18,204</h3>
-                    </div>
-                    <span
-                        class="flex items-center gap-1 text-[10px] font-bold text-secondary bg-secondary-container/30 px-2 py-1 rounded-full">
-                        <span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
-                        8.2%
-                    </span>
-                </div>
-                <div class="flex items-center gap-2 mt-auto">
-                    <div class="flex -space-x-2">
-                        <img class="h-6 w-6 rounded-full border-2 border-white object-cover"
-                            data-alt="Female headshot avatar"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvqy0PUhIO5uJkJoxItAUZKSF6JTdPWIw6vRB1BE5WdLZSmMO5FabXH1FD_F-Khu5qLJxxX3Ch_hZ57Q2HhmhLzbk_XdwWpXKq4lJC3RmfvtTtEuRa-dvOEwaxEWqYZXfVsLWiX4QZkXcUkODQo4abYDlZb8HKkWpCdSJQcD5Pow2_3NfUzeYFumwdDz5mIBp1nXLTzMUFB-49G9h-1g2CqYq9TQkWRfvrEtsQEwsqxXjcqwbEWBGblWgWT9u5sRtbQdJcT2JCDL1f" />
-                        <img class="h-6 w-6 rounded-full border-2 border-white object-cover"
-                            data-alt="Male headshot avatar"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPg2fikbV5x63KjZ0aMh9TBS_FC6mSbFx-WUdgtqgq7jETFhjjHf15PMZ0fwveIca5BKItTq_csKSNX8PK6WfIa8ovlkutboSgx7DDPlQW_9JIlWjQ8xC1eddtvcmRi5H0mWUCTdowNUbAE_DstdInUncIkqSwue9aa0BF4lLM1voLXOeG6bY0JXzA1U7puYDtsJwQkaDKskWdt2Qhuk1uYJ74DRb0Vo6e7153OkU8fvmDa1WGqt81yp5nWesn27uwYP6dpiFSSIhh" />
-                        <img class="h-6 w-6 rounded-full border-2 border-white object-cover"
-                            data-alt="Female professional avatar"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxWVebuD2ylzr145X2mGIp50O0AxmRe07eqUhlgelfPjVdZgd5vadHqPydKxF1QDbsMaCGvcmhZKtAyMWdISuPbzQMobutFiGbnfJIqv7tu3AoFcrkzpHbt8XQ8U1m8-EflF5R--3OQV5A0DPVBkKTT4qU9nGdu3xPKVo6kiPh5CWo7CqY1yOz6tGKJL-rbo5JkAIBQ3rv8fxbqtMzXet-AyORRBHZsrIjpCW29m2-PH-R3d9eRz767WjCPcoF8epi_rt9ZFwcpS_t" />
-                    </div>
-                    <p class="text-[10px] font-medium text-outline">+120 new today</p>
-                </div>
-            </div>
-            <!-- KPI 3: Click-Through Rate -->
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between h-40">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-bold text-outline uppercase tracking-wider mb-1">Avg. CTR</p>
-                        <h3 class="text-3xl font-black text-on-surface">24.5%</h3>
-                    </div>
-                    <span
-                        class="flex items-center gap-1 text-[10px] font-bold text-tertiary-container bg-tertiary-fixed/30 px-2 py-1 rounded-full">
-                        <span class="material-symbols-outlined text-sm" data-icon="trending_down">trending_down</span>
-                        1.4%
-                    </span>
-                </div>
-                <div class="w-full bg-surface-container rounded-full h-1.5 mt-auto">
-                    <div class="bg-primary h-1.5 rounded-full w-[24.5%]"></div>
-                </div>
-                <p class="text-[10px] text-outline mt-2 font-medium">Benchmark: 18.2% in category</p>
-            </div>
-        </div>
-        <!-- Middle Row: Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
-            <!-- Clicks Over Time (Line Chart Representation) -->
-            <div class="lg:col-span-3 bg-surface-container-low p-8 rounded-2xl relative overflow-hidden group">
-                <div class="flex justify-between items-center mb-10">
-                    <h4 class="text-lg font-bold font-headline">Clicks Over Time</h4>
-                    <select
-                        class="text-xs font-bold bg-white border-none rounded-lg px-3 py-1.5 focus:ring-primary/20 cursor-pointer">
-                        <option>Last 30 Days</option>
-                        <option>Last 7 Days</option>
-                    </select>
-                </div>
-                <div class="h-64 flex items-end justify-between gap-1 relative z-10">
-                    <!-- SVG Path for Line Chart Simulation -->
-                    <svg class="absolute bottom-0 left-0 w-full h-40 opacity-20 pointer-events-none"
-                        viewbox="0 0 1000 100">
-                        <path
-                            d="M0,100 C100,80 200,90 300,40 C400,20 500,60 600,30 C700,10 800,50 900,10 L1000,0 V100 H0 Z"
-                            fill="url(#grad1)"></path>
-                        <defs>
-                            <lineargradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
-                                <stop offset="0%" style="stop-color:var(--primary);stop-opacity:1"></stop>
-                                <stop offset="100%" style="stop-color:var(--primary);stop-opacity:0"></stop>
-                            </lineargradient>
-                        </defs>
-                    </svg>
-                    <!-- Floating Data Points -->
-                    <div class="h-full flex-1 flex flex-col justify-end items-center group/point">
-                        <div
-                            class="w-1.5 h-1.5 rounded-full bg-primary mb-[20%] opacity-0 group-hover/point:opacity-100 transition-opacity">
-                        </div>
-                        <div class="w-[2px] bg-primary/10 h-[20%]"></div>
-                    </div>
-                    <div class="h-full flex-1 flex flex-col justify-end items-center group/point">
-                        <div
-                            class="w-1.5 h-1.5 rounded-full bg-primary mb-[35%] opacity-0 group-hover/point:opacity-100 transition-opacity">
-                        </div>
-                        <div class="w-[2px] bg-primary/10 h-[35%]"></div>
-                    </div>
-                    <div class="h-full flex-1 flex flex-col justify-end items-center group/point">
-                        <div
-                            class="w-1.5 h-1.5 rounded-full bg-primary mb-[45%] opacity-0 group-hover/point:opacity-100 transition-opacity">
-                        </div>
-                        <div class="w-[2px] bg-primary/10 h-[45%]"></div>
-                    </div>
-                    <div class="h-full flex-1 flex flex-col justify-end items-center group/point">
-                        <div
-                            class="w-1.5 h-1.5 rounded-full bg-primary mb-[40%] opacity-0 group-hover/point:opacity-100 transition-opacity">
-                        </div>
-                        <div class="w-[2px] bg-primary/10 h-[40%]"></div>
-                    </div>
-                    <div class="h-full flex-1 flex flex-col justify-end items-center group/point">
-                        <div
-                            class="w-1.5 h-1.5 rounded-full bg-primary mb-[65%] opacity-0 group-hover/point:opacity-100 transition-opacity">
-                        </div>
-                        <div class="w-[2px] bg-primary/10 h-[65%]"></div>
-                    </div>
-                    <div class="h-full flex-1 flex flex-col justify-end items-center group/point">
-                        <div
-                            class="w-1.5 h-1.5 rounded-full bg-primary mb-[80%] opacity-0 group-hover/point:opacity-100 transition-opacity">
-                        </div>
-                        <div class="w-[2px] bg-primary/10 h-[80%]"></div>
-                    </div>
-                    <div class="h-full flex-1 flex flex-col justify-end items-center group/point">
-                        <div
-                            class="w-1.5 h-1.5 rounded-full bg-primary mb-[75%] opacity-0 group-hover/point:opacity-100 transition-opacity">
-                        </div>
-                        <div class="w-[2px] bg-primary/20 h-[75%]"></div>
-                    </div>
-                </div>
-                <div class="flex justify-between mt-4 text-[10px] text-outline font-bold">
-                    <span>JAN 01</span>
-                    <span>JAN 08</span>
-                    <span>JAN 15</span>
-                    <span>JAN 22</span>
-                    <span>JAN 30</span>
-                </div>
-            </div>
-            <!-- Top Links (Bar Chart Representation) -->
-            <div class="lg:col-span-2 bg-surface-container-lowest p-8 rounded-2xl shadow-sm">
-                <h4 class="text-lg font-bold font-headline mb-8">Top Performing Links</h4>
-                <div class="space-y-6">
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-xs font-bold">
-                            <span class="text-on-surface">Instagram Profile</span>
-                            <span class="text-primary">12.4k</span>
-                        </div>
-                        <div class="w-full bg-surface-container rounded-full h-2">
-                            <div class="bg-primary h-2 rounded-full w-[85%]"></div>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-xs font-bold">
-                            <span class="text-on-surface">Latest Portfolio</span>
-                            <span class="text-primary">8.2k</span>
-                        </div>
-                        <div class="w-full bg-surface-container rounded-full h-2">
-                            <div class="bg-primary h-2 rounded-full w-[60%]"></div>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-xs font-bold">
-                            <span class="text-on-surface">Weekly Newsletter</span>
-                            <span class="text-primary">5.1k</span>
-                        </div>
-                        <div class="w-full bg-surface-container rounded-full h-2">
-                            <div class="bg-primary h-2 rounded-full w-[45%]"></div>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-xs font-bold">
-                            <span class="text-on-surface">Store Launch</span>
-                            <span class="text-primary">3.9k</span>
-                        </div>
-                        <div class="w-full bg-surface-container rounded-full h-2">
-                            <div class="bg-primary h-2 rounded-full w-[30%]"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Bottom Row: Geo & Device -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Geo Locations (World Map) -->
-            <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm overflow-hidden">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h4 class="text-lg font-bold font-headline">Visitor Origins</h4>
-                        <p class="text-xs text-outline mt-1 font-medium">Top global regions by traffic volume</p>
-                    </div>
-                    <button class="text-xs font-bold text-primary flex items-center gap-1">
-                        View Details <span class="material-symbols-outlined text-sm"
-                            data-icon="chevron_right">chevron_right</span>
+<img alt="User Profile" class="w-10 h-10 rounded-full border-2 border-white shadow-sm ml-2 object-cover" data-alt="Close-up portrait of a stylish young creator with soft natural lighting and a clean neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3C8ffKjXogmoEnGKxR7GFcuWSQ7Ms5bD23F2Bli4xzYsvrkCAXDhRW_nMzJiwyg1unKkUamgyATO5dNebOfM1ndY2ONW8hZs1fNele0JcXyNhYi9Z2jh0Ts1gNatV4gDfvWLQZLGGMviHyMfaR3O0qGi_aDAz0P4hugchrXGJiGfNElr4Z0qOof9M7DRlVf_aAFLcfLBkML9cKTED0MVU3jmBgisKILW74Dj8p_9qa_h0KqN4srFIA3CvrlJK6PCESHQ9qHIQPoKQ"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen bg-surface-container-low">
+<div class="max-w-[1400px] mx-auto p-8 grid grid-cols-12 gap-10">
+<!-- Left Column: Link Management -->
+<section class="col-span-12 lg:col-span-7 space-y-8">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="text-3xl font-extrabold text-on-surface tracking-tight">Your Links</h1>
+<p class="text-on-surface-variant mt-1">Manage and organize your digital presence.</p>
+</div>
+<button class="flex items-center gap-2 bg-secondary text-on-secondary px-6 py-3 rounded-full font-bold shadow-lg hover:bg-on-secondary-container transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                        Add New Link
                     </button>
+</div>
+<!-- Link Cards Container -->
+<div class="space-y-4">
+<!-- Link Card 1: Active -->
+<div class="bg-surface-container-lowest rounded-xl p-6 flex gap-6 group relative overflow-hidden transition-all hover:translate-x-1">
+<div class="w-1 bg-secondary absolute left-0 top-0 h-full rounded-full"></div>
+<div class="flex flex-col items-center justify-center cursor-grab text-slate-300 hover:text-slate-500">
+<span class="material-symbols-outlined" data-icon="drag_indicator">drag_indicator</span>
+</div>
+<div class="flex-1">
+<div class="flex items-start justify-between mb-2">
+<h3 class="font-bold text-lg text-on-surface">Official Website</h3>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase tracking-wider">
+                                        Active
+                                    </div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="edit">edit</span>
+</button>
+<button class="text-slate-400 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+<p class="text-sm text-primary font-medium">https://johndoe.design</p>
+<div class="mt-4 flex items-center gap-6 text-xs text-on-surface-variant font-medium">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-base" data-icon="visibility">visibility</span> 1,240 clicks</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-base" data-icon="trending_up">trending_up</span> +12% this week</span>
+</div>
+</div>
+</div>
+<!-- Link Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 flex gap-6 group relative transition-all hover:translate-x-1">
+<div class="w-1 bg-secondary absolute left-0 top-0 h-full rounded-full"></div>
+<div class="flex flex-col items-center justify-center cursor-grab text-slate-300 hover:text-slate-500">
+<span class="material-symbols-outlined" data-icon="drag_indicator">drag_indicator</span>
+</div>
+<div class="flex-1">
+<div class="flex items-start justify-between mb-2">
+<h3 class="font-bold text-lg text-on-surface">Latest Portfolio Drop</h3>
+<div class="flex items-center gap-3">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="edit">edit</span>
+</button>
+<button class="text-slate-400 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+<p class="text-sm text-primary font-medium">https://behance.net/johndoe/vibe-check</p>
+<div class="mt-4 flex items-center gap-6 text-xs text-on-surface-variant font-medium">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-base" data-icon="visibility">visibility</span> 856 clicks</span>
+</div>
+</div>
+</div>
+<!-- Link Card 3: Draft -->
+<div class="bg-surface-container-lowest/60 rounded-xl p-6 flex gap-6 group relative transition-all opacity-80">
+<div class="flex flex-col items-center justify-center cursor-grab text-slate-300">
+<span class="material-symbols-outlined" data-icon="drag_indicator">drag_indicator</span>
+</div>
+<div class="flex-1">
+<div class="flex items-start justify-between mb-2">
+<h3 class="font-bold text-lg text-on-surface">Instagram Profile</h3>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-high text-on-surface-variant rounded text-[10px] font-bold uppercase tracking-wider">
+                                        Draft
+                                    </div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="edit">edit</span>
+</button>
+<button class="text-slate-400 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+<p class="text-sm text-slate-400 font-medium italic">https://instagram.com/johndoe</p>
+</div>
+</div>
+</div>
+<!-- Bento-style Analytics Quick View -->
+<div class="grid grid-cols-2 gap-4 pt-8">
+<div class="bg-primary/5 rounded-2xl p-6 border border-primary/10">
+<div class="flex items-center justify-between mb-4">
+<span class="text-primary font-bold text-sm">Total Views</span>
+<span class="material-symbols-outlined text-primary" data-icon="bar_chart">bar_chart</span>
+</div>
+<div class="text-3xl font-black text-primary">24.8K</div>
+<p class="text-xs text-primary/60 mt-1">Across all active links</p>
+</div>
+<div class="bg-secondary/5 rounded-2xl p-6 border border-secondary/10">
+<div class="flex items-center justify-between mb-4">
+<span class="text-secondary font-bold text-sm">Click-thru Rate</span>
+<span class="material-symbols-outlined text-secondary" data-icon="ads_click">ads_click</span>
+</div>
+<div class="text-3xl font-black text-secondary">6.4%</div>
+<p class="text-xs text-secondary/60 mt-1">+2.1% from last month</p>
+</div>
+</div>
+</section>
+<!-- Right Column: Live Preview -->
+<section class="hidden lg:col-span-5 lg:flex flex-col items-center sticky top-24 h-[calc(100vh-8rem)]">
+<div class="mb-6 flex flex-col items-center text-center">
+<h2 class="text-xl font-bold text-on-surface">Live Preview</h2>
+<p class="text-sm text-on-surface-variant">Changes update in real-time</p>
+</div>
+<!-- Smartphone Container -->
+<div class="relative w-[320px] h-[640px] bg-slate-900 rounded-[3rem] p-3 shadow-[0px_24px_48px_-12px_rgba(31,51,170,0.15)] ring-8 ring-slate-800">
+<!-- Notch -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20"></div>
+<!-- Screen Content -->
+<div class="w-full h-full bg-[#fbf8ff] rounded-[2.2rem] overflow-hidden relative flex flex-col items-center pt-12 px-6">
+<!-- Preview Brand Header -->
+<div class="flex flex-col items-center mb-8">
+<img alt="Preview Avatar" class="w-20 h-20 rounded-full border-4 border-white shadow-md mb-3 object-cover" data-alt="Close-up portrait of a stylish young creator with soft natural lighting and a clean neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATuI7dHSheXcXpjptSvTlMhGMS8m6NVlM7E87d75L4uCg3L28S2GqK1oK0g18TEXpnsIg4vJhxL2XwUux6eif4jqyXuX0TNk597tJynNXypGyrAPKpllYQ4HNoOXD16bdVTzhiTp_wWsV8fZfJ2T9wMqsOgVMjSAcGEkI80Ru7y8Pt-FDD87fFqidmLv-2rAb_om2tOV8m3FQE46fuFYv3CAhqJmGoWkhp9Sl_d2kgMAfMgbYHbBgip9ZcwjSQXfKGekhC_k3_CE6d"/>
+<h4 class="font-headline font-extrabold text-xl text-indigo-900">John Doe</h4>
+<p class="text-sm text-indigo-700/60 font-medium">Digital Architect &amp; Curator</p>
+</div>
+<!-- Preview Links -->
+<div class="w-full space-y-3">
+<div class="w-full py-4 px-4 bg-primary text-white text-center rounded-full font-bold text-sm shadow-sm">
+                                Official Website
+                            </div>
+<div class="w-full py-4 px-4 bg-primary text-white text-center rounded-full font-bold text-sm shadow-sm">
+                                Latest Portfolio Drop
+                            </div>
+<div class="w-full py-4 px-4 bg-surface-container-high text-on-primary-fixed-variant text-center rounded-full font-bold text-sm">
+                                Newsletter Signup
+                            </div>
+</div>
+<!-- Preview Footer -->
+<div class="mt-auto pb-8 flex items-center gap-4">
+<span class="material-symbols-outlined text-indigo-300" data-icon="share">share</span>
+<span class="material-symbols-outlined text-indigo-300" data-icon="mail">mail</span>
+<span class="material-symbols-outlined text-indigo-300" data-icon="language">language</span>
+</div>
+<!-- Logo Overlay -->
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 opacity-20 grayscale">
+<span class="text-[10px] font-black tracking-widest uppercase">Curator Studio</span>
+</div>
+</div>
+</div>
+<div class="mt-8 flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm text-sm text-slate-500 font-medium">
+<span class="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
+                    Syncing with live profile
                 </div>
-                <div class="relative h-60 w-full bg-slate-50 rounded-xl flex items-center justify-center">
-                    <!-- Placeholder for Map Visualization -->
-                    <img alt="Visitor World Map"
-                        class="absolute inset-0 w-full h-full object-cover opacity-20 grayscale"
-                        data-alt="Monochromatic simplified world map illustration with subtle heat map points in indigo blue showing global traffic distribution"
-                        data-location="Global"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFA1QojLN10oqornOdhe6wiMbaqp_MtQuJiP6FwxM4kOJ68dQenew3yuRQ8FkxXxBRz5-ySuJednW4xeiReC8fTuoykBRLkZHtvsr4fg7gaxDBK7VgYX-C8nIt0QPHnmYzkbkV3LEqHFZ_uRoLdyebsvVCQC6R2LKALQN8Gc6baeKdlqdl3XTB9ZxCYJ-A_C9RrRS5DG-IN3C8MSZa_k0U6-vZNDMD-hMDhEgQBkFwAFp-8loH1hAGLy3RjoEX8qbeeREadptbk_qE" />
-                    <!-- Map Heat points -->
-                    <div class="absolute top-1/4 left-1/4 animate-pulse">
-                        <div class="w-4 h-4 rounded-full bg-primary/40 flex items-center justify-center">
-                            <div class="w-2 h-2 rounded-full bg-primary"></div>
-                        </div>
-                    </div>
-                    <div class="absolute top-1/3 right-1/4 animate-pulse" style="animation-delay: 1s">
-                        <div class="w-6 h-6 rounded-full bg-primary/40 flex items-center justify-center">
-                            <div class="w-3 h-3 rounded-full bg-primary"></div>
-                        </div>
-                    </div>
-                    <div class="absolute bottom-1/4 left-1/3 animate-pulse" style="animation-delay: 0.5s">
-                        <div class="w-3 h-3 rounded-full bg-primary/40 flex items-center justify-center">
-                            <div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                        </div>
-                    </div>
-                    <div class="absolute bottom-4 left-4 bg-white/90 p-3 rounded-lg shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-primary"></span>
-                                <span class="text-[10px] font-bold">USA (42%)</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-primary/60"></span>
-                                <span class="text-[10px] font-bold">UK (18%)</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-primary/30"></span>
-                                <span class="text-[10px] font-bold">Other (40%)</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Device Type (Pie Chart Breakdown) -->
-            <div class="bg-surface-container-low p-8 rounded-2xl">
-                <h4 class="text-lg font-bold font-headline mb-10">Device Breakdown</h4>
-                <div class="flex items-center gap-12">
-                    <div class="relative w-48 h-48">
-                        <!-- Custom CSS Pie Chart -->
-                        <div class="w-full h-full rounded-full border-[16px] border-primary"
-                            style="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); mask-image: radial-gradient(circle, transparent 55%, black 56%);">
-                        </div>
-                        <div class="absolute inset-0 w-full h-full rounded-full border-[16px] border-secondary-container"
-                            style="clip-path: polygon(100% 0, 100% 100%, 50% 100%); mask-image: radial-gradient(circle, transparent 55%, black 56%);">
-                        </div>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span class="text-2xl font-black text-on-surface">78%</span>
-                            <span class="text-[10px] font-bold text-outline">MOBILE</span>
-                        </div>
-                    </div>
-                    <div class="flex-1 space-y-6">
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                                <span class="material-symbols-outlined" data-icon="smartphone">smartphone</span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-on-surface">Mobile Users</p>
-                                <p class="text-[10px] text-outline font-medium">14.2k active sessions</p>
-                            </div>
-                            <p class="ml-auto text-sm font-black text-primary">78%</p>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-10 h-10 rounded-xl bg-secondary-container/20 flex items-center justify-center text-secondary">
-                                <span class="material-symbols-outlined" data-icon="laptop">laptop</span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-on-surface">Desktop Users</p>
-                                <p class="text-[10px] text-outline font-medium">4.0k active sessions</p>
-                            </div>
-                            <p class="ml-auto text-sm font-black text-secondary">22%</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-</body>
-
-</html>
+</section>
+</div>
+</main>
+<!-- Contextual FAB Suppression (Not needed on Dashboard, but keeping for system alignment if desired) -->
+<!-- For Dashboard, FAB could be "Add Link" if mobile-first, but we have the button in header/top-list -->
+</body></html>

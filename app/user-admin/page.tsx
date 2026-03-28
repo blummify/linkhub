@@ -7,5 +7,7 @@ export const metadata: Metadata = {
 
 export default async function UserAdminPage() {
   const { bodyClassName, bodyHtml } = await loadTemplateHtml("user-admin.html");
-  return <div className={bodyClassName} dangerouslySetInnerHTML={{ __html: bodyHtml }} />;
+  return (
+    <div className={`admin-skin ${bodyClassName}`} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+  );
 }
