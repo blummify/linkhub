@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export default function CollapsibleSidebar({ children, isAdmin = false }: { children: React.ReactNode; isAdmin?: boolean }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     // Update header and main content margins based on sidebar state
@@ -25,6 +27,18 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
     setIsCollapsed(!isCollapsed);
   };
 
+  const isActiveLink = (href: string) => {
+    return pathname === href;
+  };
+
+  const getLinkClasses = (href: string) => {
+    const baseClasses = "flex items-center gap-3 px-4 py-3 rounded-xl transition-all active:scale-95 duration-200 ease-in-out relative";
+    if (isActiveLink(href)) {
+      return `${baseClasses} bg-gradient-to-r from-primary/10 to-primary-container/20 text-primary font-semibold shadow-sm border border-primary/20`;
+    }
+    return `${baseClasses} text-on-surface-variant hover:bg-surface-container-highest`;
+  };
+
   return (
     <>
       {/* SideNavBar Component */}
@@ -34,35 +48,94 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
           isCollapsed ? 'w-0 p-0 overflow-hidden' : 'w-64 p-4'
         }`}
       >
+        {/* Logo Section */}
         <div className="mb-8 px-4">
-          <span className="text-xl font-bold tracking-tight text-indigo-700">Creator Hub</span>
-          <p className="text-xs text-on-surface-variant mt-1 font-medium">@username</p>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-sm">link</span>
+            </div>
+            <span className="text-xl font-bold tracking-tight text-primary">CreatorHub</span>
+          </div>
         </div>
-        <nav className="flex-1 space-y-2">
-          {/* Active: Links */}
-          <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="/user-analytics">
-            <span className="material-symbols-outlined" data-icon="link">link</span>
+        
+        <nav className="flex-1 space-y-1">
+          <a className={getLinkClasses('/admin/dashboard')} href="/admin/dashboard">
+            {isActiveLink('/admin/dashboard') && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
+            )}
+            <span className="material-symbols-outlined">dashboard</span>
+            <span className="text-sm">Dashboard</span>
+          </a>
+          
+          <a className={getLinkClasses('/links')} href="/links">
+            {isActiveLink('/links') && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
+            )}
+            <span className="material-symbols-outlined">link</span>
             <span className="text-sm">Links</span>
           </a>
-          <a className="flex items-center gap-3 px-4 py-3 bg-primary-container text-primary rounded-xl font-bold transition-all active:scale-95 duration-200 ease-in-out" href="/appearance">
-            <span className="material-symbols-outlined" data-icon="palette">palette</span>
+          
+          <a className={getLinkClasses('/appearance')} href="/appearance">
+            {isActiveLink('/appearance') && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
+            )}
+            <span className="material-symbols-outlined">palette</span>
             <span className="text-sm">Appearance</span>
           </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="/user-analytics">
-            <span className="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+          
+          <a className={getLinkClasses('/analytics')} href="/analytics">
+            {isActiveLink('/analytics') && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
+            )}
+            <span className="material-symbols-outlined">analytics</span>
             <span className="text-sm">Analytics</span>
           </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-highest rounded-xl transition-all active:scale-95 duration-200 ease-in-out" href="/user-admin">
-            <span className="material-symbols-outlined" data-icon="settings">settings</span>
-            <span className="text-sm">Admin</span>
+          
+          <a className={getLinkClasses('/admin/users')} href="/admin/users">
+            {isActiveLink('/admin/users') && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
+            )}
+            <span className="material-symbols-outlined">groups</span>
+            <span className="text-sm">Users</span>
+          </a>
+          
+          <a className={getLinkClasses('/admin/settings')} href="/admin/settings">
+            {isActiveLink('/admin/settings') && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
+            )}
+            <span className="material-symbols-outlined">settings</span>
+            <span className="text-sm">Settings</span>
           </a>
         </nav>
-        <div className="mt-auto p-4 bg-indigo-700 rounded-2xl text-white">
-          <p className="text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Pro Plan</p>
-          <p className="text-sm font-medium mb-4">Unlock advanced analytics and themes.</p>
-          <button className="w-full py-2 bg-surface-container-highest text-on-primary-container rounded-full text-sm font-bold shadow-sm hover:bg-surface-container transition-colors">
-            Upgrade to Pro
-          </button>
+        
+        {/* Bottom Section */}
+        <div className="mt-auto p-4 space-y-4">
+          {/* User Profile */}
+          <div className="flex items-center gap-3 p-3 bg-surface-container-highest rounded-xl">
+            <div className="w-10 h-10 rounded-full overflow-hidden">
+              <img 
+                alt="User Avatar" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI57sppD_FLi9ouIh-nc1Tcj4PF6vKEAcZmAdyk0FM0P-SgHL4GDKTwJojpoC4Zdgclz61XTPE4THKrbPyXX4zalYeXTqHkAbKlA85wWL3zAe8gityPPdlDtwuDU0upwunIQPs0M13K-oQ1Tq0ZgfR8cdmGtB_k1Vc8Hdb1TRCamkkRf4oYpPXWTH73M_JuKxNU08-S8VdQevKwYgDZtbUJPtCSxb09pJUEGDjVyW1zafOoKx6JbW26p684_qC_-pO6N_XlrhrrH10"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-on-surface truncate">Alex Rivers</p>
+              <p className="text-xs text-on-surface-variant truncate">alex@creatorhub.com</p>
+            </div>
+          </div>
+          
+          {/* Bottom Links */}
+          <div className="space-y-1">
+            <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all" href="/help">
+              <span className="material-symbols-outlined text-lg">help</span>
+              <span className="text-sm">Help Center</span>
+            </a>
+            <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all" href="/logout">
+              <span className="material-symbols-outlined text-lg">logout</span>
+              <span className="text-sm">Log Out</span>
+            </a>
+          </div>
         </div>
       </aside>
 

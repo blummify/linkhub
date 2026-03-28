@@ -194,7 +194,7 @@ export default function AppearanceClient() {
             <div className="flex-1 bg-surface-container px-8 flex flex-col items-center justify-center sticky top-16 h-[calc(100vh-64px)] overflow-hidden">
               <div className="relative">
                 {/* Phone Frame */}
-                <div className="w-[320px] h-[640px] bg-surface-dim rounded-[3rem] p-3 shadow-2xl relative z-10 border-[6px] border-outline">
+                <div className="w-[280px] h-[640px] bg-surface-dim rounded-[3rem] p-3 shadow-2xl relative z-10 border-[6px] border-outline">
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-surface-dim rounded-b-2xl z-20"></div>
                   {/* Internal Screen Content */}
                   <div className="w-full h-full bg-surface rounded-[2.2rem] overflow-hidden flex flex-col items-center relative">
