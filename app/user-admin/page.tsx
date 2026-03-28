@@ -1,13 +1,10 @@
-import type { Metadata } from "next";
-import { loadTemplateHtml } from "../templateLoader";
+import { type Metadata } from "next";
+import UserAdminClient from "./UserAdminClient";
 
 export const metadata: Metadata = {
   title: "User Admin",
 };
 
-export default async function UserAdminPage() {
-  const { bodyClassName, bodyHtml } = await loadTemplateHtml("user-admin.html");
-  return (
-    <div className={`admin-skin ${bodyClassName}`} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
-  );
+export default function UserAdminPage() {
+  return <UserAdminClient />;
 }

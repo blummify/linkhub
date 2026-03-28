@@ -86,7 +86,7 @@
 </head>
 <body class="bg-surface text-on-surface min-h-screen">
 <!-- SideNavBar Component -->
-<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col h-full p-4 border-r border-slate-200/50 bg-slate-50 z-50">
+<aside id="sidebar" class="h-screen w-64 fixed left-0 top-0 flex flex-col h-full p-4 border-r border-slate-200/50 bg-slate-50 z-50 transition-all duration-300 ease-in-out">
 <div class="mb-8 px-4">
 <span class="text-xl font-bold tracking-tight text-indigo-700">Creator Hub</span>
 <p class="text-xs text-slate-500 mt-1 font-medium">@username</p>
@@ -118,8 +118,12 @@
             </button>
 </div>
 </aside>
+<!-- Collapse Toggle Button (separate from sidebar) -->
+<button id="sidebarToggle" class="fixed left-64 top-4 w-6 h-6 bg-white border border-slate-200 rounded-full shadow-md flex items-center justify-center hover:bg-slate-50 transition-all duration-300 z-50">
+<span class="material-symbols-outlined text-xs text-slate-600" data-icon="chevron_left">chevron_left</span>
+</button>
 <!-- TopAppBar Component -->
-<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 flex justify-between items-center h-16 px-6">
+<header id="header" class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 flex justify-between items-center h-16 px-6 transition-all duration-300 ease-in-out">
 <div class="flex items-center gap-4 flex-1">
 <div class="relative w-full max-w-md">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" data-icon="search">search</span>
@@ -141,7 +145,7 @@
 </div>
 </header>
 <!-- Main Content Canvas -->
-<main class="ml-64 pt-16 min-h-screen bg-surface-container-low">
+<main id="mainContent" class="ml-64 pt-16 min-h-screen bg-surface-container-low transition-all duration-300 ease-in-out">
 <div class="max-w-[1400px] mx-auto p-8 grid grid-cols-12 gap-10">
 <!-- Left Column: Link Management -->
 <section class="col-span-12 lg:col-span-7 space-y-8">
@@ -304,4 +308,41 @@
 </main>
 <!-- Contextual FAB Suppression (Not needed on Dashboard, but keeping for system alignment if desired) -->
 <!-- For Dashboard, FAB could be "Add Link" if mobile-first, but we have the button in header/top-list -->
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const header = document.getElementById('header');
+    const mainContent = document.getElementById('mainContent');
+    const toggleIcon = sidebarToggle.querySelector('span');
+    
+    let isCollapsed = false;
+    
+    sidebarToggle.addEventListener('click', () => {
+        isCollapsed = !isCollapsed;
+        
+        if (isCollapsed) {
+            // Collapse sidebar
+            sidebar.style.width = '0';
+            sidebar.style.padding = '0';
+            sidebar.style.overflow = 'hidden';
+            header.style.width = 'calc(100% - 0rem)';
+            mainContent.style.marginLeft = '0';
+            // Move toggle button to left edge
+            sidebarToggle.style.left = '0.5rem';
+            toggleIcon.textContent = 'chevron_right';
+            toggleIcon.setAttribute('data-icon', 'chevron_right');
+        } else {
+            // Expand sidebar
+            sidebar.style.width = '16rem';
+            sidebar.style.padding = '1rem';
+            sidebar.style.overflow = 'visible';
+            header.style.width = 'calc(100% - 16rem)';
+            mainContent.style.marginLeft = '16rem';
+            // Move toggle button to right edge of sidebar
+            sidebarToggle.style.left = '16rem';
+            toggleIcon.textContent = 'chevron_left';
+            toggleIcon.setAttribute('data-icon', 'chevron_left');
+        }
+    });
+</script>
 </body></html>
