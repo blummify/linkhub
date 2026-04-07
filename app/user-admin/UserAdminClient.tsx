@@ -16,8 +16,8 @@ export default function UserAdminClient() {
             <section className="col-span-12 lg:col-span-7 space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-semibold text-on-surface tracking-tight">Manage Links</h1>
-                  <p className="text-sm text-on-surface-variant mt-1">Organize and optimize your digital presence.</p>
+                  <h1 className="text-xl font-semibold text-on-surface tracking-tight">Manage Links</h1>
+                  <p className="text-xs text-on-surface-variant mt-1">Organize and optimize your digital presence.</p>
                 </div>
                 <button className="flex items-center gap-2 bg-secondary text-on-secondary px-6 py-3 rounded-full font-bold shadow-lg hover:bg-on-secondary-container transition-all active:scale-95">
                   <span className="material-symbols-outlined">add</span>
@@ -34,8 +34,8 @@ export default function UserAdminClient() {
                     <span className="material-symbols-outlined">drag_indicator</span>
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-base text-on-surface">Official Website</h3>
+                    <div className="flex items-start justify-between mb-1">
+                      <h3 className="font-semibold text-sm text-on-surface">Official Website</h3>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase tracking-wider">
                           Active
@@ -48,7 +48,7 @@ export default function UserAdminClient() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm text-primary font-medium">https://johndoe.design</p>
+                    <p className="text-xs text-primary font-medium">https://johndoe.design</p>
                     <div className="mt-3 flex items-center gap-4 text-xs text-on-surface-variant">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-base">visibility</span> 1,240 clicks
@@ -67,8 +67,8 @@ export default function UserAdminClient() {
                     <span className="material-symbols-outlined">drag_indicator</span>
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-base text-on-surface">Latest Portfolio Drop</h3>
+                    <div className="flex items-start justify-between mb-1">
+                      <h3 className="font-semibold text-sm text-on-surface">Latest Portfolio Drop</h3>
                       <div className="flex items-center gap-3">
                         <button className="text-on-surface-variant hover:text-primary transition-colors">
                           <span className="material-symbols-outlined text-xl">edit</span>
@@ -78,7 +78,7 @@ export default function UserAdminClient() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm text-primary font-medium">https://behance.net/johndoe/vibe-check</p>
+                    <p className="text-xs text-primary font-medium">https://behance.net/johndoe/vibe-check</p>
                     <div className="mt-3 flex items-center gap-4 text-xs text-on-surface-variant">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-base">visibility</span> 856 clicks
@@ -93,8 +93,8 @@ export default function UserAdminClient() {
                     <span className="material-symbols-outlined">drag_indicator</span>
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-base text-on-surface">Instagram Profile</h3>
+                    <div className="flex items-start justify-between mb-1">
+                      <h3 className="font-semibold text-sm text-on-surface">Instagram Profile</h3>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-high text-on-surface-variant rounded text-[10px] font-bold uppercase tracking-wider">
                           Draft
@@ -107,7 +107,7 @@ export default function UserAdminClient() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm text-on-surface-variant font-medium italic">https://instagram.com/johndoe</p>
+                    <p className="text-xs text-on-surface-variant font-medium italic">https://instagram.com/johndoe</p>
                   </div>
                 </div>
               </div>
@@ -135,22 +135,22 @@ export default function UserAdminClient() {
 
             {/* Right Column: System Preview */}
             <section className="hidden lg:col-span-5 lg:flex flex-col items-center sticky top-24 h-[calc(100vh-8rem)]">
-              <div className="mb-6 flex flex-col items-center text-center">
-                <h2 className="text-xl font-bold text-on-surface">Live Preview</h2>
-                <p className="text-sm text-on-surface-variant">Real-time profile updates</p>
+              <div className="mb-4 flex flex-col items-center text-center">
+                <h2 className="text-lg font-bold text-on-surface">Live Preview</h2>
+                <p className="text-xs text-on-surface-variant">Real-time profile updates</p>
               </div>
               
               {/* Profile Preview Container */}
-              <div className="relative w-[320px] h-[640px] bg-slate-900 rounded-[3rem] p-3 shadow-[0px_24px_48px_-12px_rgba(31,51,170,0.15)] ring-8 ring-slate-800">
-                {/* Notch */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20"></div>
+              <div className="relative w-[260px] h-[540px] bg-slate-950 rounded-[3rem] p-2 shadow-[0px_32px_64px_-16px_rgba(31,51,170,0.2)] ring-4 ring-slate-800">
+                {/* Modern Pill Notch (Dynamic Island style) */}
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-5 bg-slate-950 rounded-full z-20 border border-slate-800/50"></div>
                 {/* Screen Content */}
-                <div className="w-full h-full bg-[#fbf8ff] rounded-[2.2rem] overflow-hidden relative flex flex-col items-center pt-12 px-6">
+                <div className="w-full h-full bg-[#fbf8ff] rounded-[2.8rem] overflow-hidden relative flex flex-col items-center pt-14 px-5">
                   {/* Profile Header */}
-                  <div className="flex flex-col items-center mb-8">
-                    <img alt="User Avatar" className="w-20 h-20 rounded-full border-4 border-white shadow-md mb-3 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI57sppD_FLi9ouIh-nc1Tcj4PF6vKEAcZmAdyk0FM0P-SgHL4GDKTwJojpoC4Zdgclz61XTPE4THKrbPyXX4zalYeXTqHkAbKlA85wWL3zAe8gityPPdlDtwuDU0upwunIQPs0M13K-oQ1Tq0ZgfR8cdmGtB_k1Vc8Hdb1TRCamkkRf4oYpPXWTH73M_JuKxNU08-S8VdQevKwYgDZtbUJPtCSxb09pJUEGDjVyW1zafOoKx6JbW26p684_qC_-pO6N_XlrhrrH10"/>
-                    <h4 className="font-headline font-extrabold text-xl text-indigo-900">Alex Rivers</h4>
-                    <p className="text-sm text-indigo-700/60 font-medium">@alex_rivers</p>
+                  <div className="flex flex-col items-center mb-6">
+                    <img alt="User Avatar" className="w-16 h-16 rounded-full border-4 border-white shadow-md mb-2 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI57sppD_FLi9ouIh-nc1Tcj4PF6vKEAcZmAdyk0FM0P-SgHL4GDKTwJojpoC4Zdgclz61XTPE4THKrbPyXX4zalYeXTqHkAbKlA85wWL3zAe8gityPPdlDtwuDU0upwunIQPs0M13K-oQ1Tq0ZgfR8cdmGtB_k1Vc8Hdb1TRCamkkRf4oYpPXWTH73M_JuKxNU08-S8VdQevKwYgDZtbUJPtCSxb09pJUEGDjVyW1zafOoKx6JbW26p684_qC_-pO6N_XlrhrrH10"/>
+                    <h4 className="font-headline font-extrabold text-lg text-indigo-900">Alex Rivers</h4>
+                    <p className="text-xs text-indigo-700/60 font-medium">@alex_rivers</p>
                   </div>
                   {/* Link Buttons */}
                   <div className="w-full space-y-3">
