@@ -1,10 +1,14 @@
-"use client";
+import { useSidebar } from "./SidebarContext";
 
 export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
+  const { isCollapsed } = useSidebar();
+  
   return (
     <header 
       id="header"
-      className="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/50 flex justify-between items-center h-16 px-6 transition-all duration-300 ease-in-out"
+      className={`fixed top-0 right-0 z-40 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/50 flex justify-between items-center h-16 px-6 transition-all duration-300 ease-in-out ${
+        isCollapsed ? 'w-full' : 'w-[calc(100%-16rem)]'
+      }`}
     >
       <div className="flex items-center gap-4 flex-1">
         <div className="w-8"></div> {/* Spacer for toggle button */}

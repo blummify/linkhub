@@ -3,24 +3,32 @@
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
 import { ThemeToggle } from "../ThemeToggle";
+import { useSidebar } from "../components/SidebarContext";
 
 export default function UserAdminClient() {
+  const { isCollapsed } = useSidebar();
+  
   return (
     <div className="bg-surface text-on-surface min-h-screen antialiased">
       <CollapsibleSidebar isAdmin={true}>
         <AppHeader isAdmin={true} />
         {/* Main Content Canvas */}
-        <main id="mainContent" className="ml-64 pt-16 min-h-screen bg-surface-container-low transition-all duration-300 ease-in-out">
-          <div className="max-w-[1400px] mx-auto p-8 grid grid-cols-12 gap-10">
+        <main 
+          id="mainContent" 
+          className={`pt-16 min-h-screen bg-surface-container-low transition-all duration-300 ease-in-out ${
+            isCollapsed ? 'ml-0' : 'ml-64'
+          }`}
+        >
+          <div className="max-w-[1280px] mx-auto p-6 md:p-10 grid grid-cols-12 gap-12 lg:gap-20">
             {/* Left Column: System Management */}
             <section className="col-span-12 lg:col-span-7 space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-xl font-semibold text-on-surface tracking-tight">Manage Links</h1>
-                  <p className="text-xs text-on-surface-variant mt-1">Organize and optimize your digital presence.</p>
+                  <h1 className="text-lg font-semibold text-on-surface tracking-tight">Manage Links</h1>
+                  <p className="text-[11px] text-on-surface-variant mt-1">Organize and optimize your digital presence.</p>
                 </div>
-                <button className="flex items-center gap-2 bg-secondary text-on-secondary px-6 py-3 rounded-full font-bold shadow-lg hover:bg-on-secondary-container transition-all active:scale-95">
-                  <span className="material-symbols-outlined">add</span>
+                <button className="flex items-center gap-2 bg-secondary text-on-secondary px-5 py-2.5 rounded-full font-bold shadow-lg hover:bg-on-secondary-container transition-all text-xs active:scale-95">
+                  <span className="material-symbols-outlined text-sm">add</span>
                   Add New Link
                 </button>
               </div>
@@ -116,19 +124,19 @@ export default function UserAdminClient() {
               <div className="grid grid-cols-2 gap-4 pt-8">
                 <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-primary font-bold text-sm">Total Views</span>
-                    <span className="material-symbols-outlined text-primary">bar_chart</span>
+                    <span className="text-primary font-bold text-xs">Total Views</span>
+                    <span className="material-symbols-outlined text-primary text-sm">bar_chart</span>
                   </div>
-                  <div className="text-3xl font-black text-primary">12.4K</div>
-                  <p className="text-xs text-primary/60 mt-1">+2,340 this month</p>
+                  <div className="text-2xl font-black text-primary">12.4K</div>
+                  <p className="text-[11px] text-primary/60 mt-1">+2,340 this month</p>
                 </div>
                 <div className="bg-secondary/5 rounded-2xl p-6 border border-secondary/10">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-secondary font-bold text-sm">Click Rate</span>
-                    <span className="material-symbols-outlined text-secondary">trending_up</span>
+                    <span className="text-secondary font-bold text-xs">Click Rate</span>
+                    <span className="material-symbols-outlined text-secondary text-sm">trending_up</span>
                   </div>
-                  <div className="text-3xl font-black text-secondary">68%</div>
-                  <p className="text-xs text-secondary/60 mt-1">+5% from last week</p>
+                  <div className="text-2xl font-black text-secondary">68%</div>
+                  <p className="text-[11px] text-secondary/60 mt-1">+5% from last week</p>
                 </div>
               </div>
             </section>
@@ -136,8 +144,8 @@ export default function UserAdminClient() {
             {/* Right Column: System Preview */}
             <section className="hidden lg:col-span-5 lg:flex flex-col items-center sticky top-24 h-[calc(100vh-8rem)]">
               <div className="mb-4 flex flex-col items-center text-center">
-                <h2 className="text-lg font-bold text-on-surface">Live Preview</h2>
-                <p className="text-xs text-on-surface-variant">Real-time profile updates</p>
+                <h2 className="text-base font-bold text-on-surface">Live Preview</h2>
+                <p className="text-[11px] text-on-surface-variant">Real-time profile updates</p>
               </div>
               
               {/* Profile Preview Container */}
@@ -149,8 +157,8 @@ export default function UserAdminClient() {
                   {/* Profile Header */}
                   <div className="flex flex-col items-center mb-6">
                     <img alt="User Avatar" className="w-16 h-16 rounded-full border-4 border-white shadow-md mb-2 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI57sppD_FLi9ouIh-nc1Tcj4PF6vKEAcZmAdyk0FM0P-SgHL4GDKTwJojpoC4Zdgclz61XTPE4THKrbPyXX4zalYeXTqHkAbKlA85wWL3zAe8gityPPdlDtwuDU0upwunIQPs0M13K-oQ1Tq0ZgfR8cdmGtB_k1Vc8Hdb1TRCamkkRf4oYpPXWTH73M_JuKxNU08-S8VdQevKwYgDZtbUJPtCSxb09pJUEGDjVyW1zafOoKx6JbW26p684_qC_-pO6N_XlrhrrH10"/>
-                    <h4 className="font-headline font-extrabold text-lg text-indigo-900">Alex Rivers</h4>
-                    <p className="text-xs text-indigo-700/60 font-medium">@alex_rivers</p>
+                    <h4 className="font-headline font-extrabold text-base text-indigo-900">Alex Rivers</h4>
+                    <p className="text-[11px] text-indigo-700/60 font-medium">@alex_rivers</p>
                   </div>
                   {/* Link Buttons */}
                   <div className="w-full space-y-3">
@@ -164,15 +172,16 @@ export default function UserAdminClient() {
                       Instagram Profile
                     </div>
                   </div>
-                  {/* Footer Icons */}
-                  <div className="mt-auto pb-8 flex items-center gap-6">
-                    <span className="material-symbols-outlined text-indigo-300">mood</span>
-                    <span className="material-symbols-outlined text-indigo-300">share</span>
-                    <span className="material-symbols-outlined text-indigo-300">favorite</span>
-                  </div>
-                  {/* Logo Overlay */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 opacity-20 grayscale">
-                    <span className="text-[10px] font-black tracking-widest uppercase">CreatorHub Profile</span>
+                  {/* Refined Footer: Icons and Logo combined to prevent overlap */}
+                  <div className="mt-auto pb-4 flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-6">
+                      <span className="material-symbols-outlined text-indigo-300">mood</span>
+                      <span className="material-symbols-outlined text-indigo-300">share</span>
+                      <span className="material-symbols-outlined text-indigo-300">favorite</span>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-20 grayscale">
+                      <span className="text-[9px] font-black tracking-widest uppercase">CreatorHub Profile</span>
+                    </div>
                   </div>
                 </div>
               </div>

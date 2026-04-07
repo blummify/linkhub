@@ -24,6 +24,8 @@ export const metadata: Metadata = {
     "Consolidate your digital presence into a single, high-converting editorial stage.",
 };
 
+import { SidebarProvider } from "./components/SidebarContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -48,7 +50,9 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-surface font-body text-on-surface antialiased">
-        {children}
+        <SidebarProvider>
+          {children}
+        </SidebarProvider>
         <ThemeToggle />
       </body>
     </html>

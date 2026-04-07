@@ -1,31 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useSidebar } from "./SidebarContext";
 
 export default function CollapsibleSidebar({ children, isAdmin = false }: { children: React.ReactNode; isAdmin?: boolean }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, toggleSidebar } = useSidebar();
   const pathname = usePathname();
-
-  useEffect(() => {
-    // Update header and main content margins based on sidebar state
-    const header = document.getElementById('header');
-    const mainContent = document.getElementById('mainContent');
-    
-    if (header && mainContent) {
-      if (isCollapsed) {
-        header.style.width = 'calc(100% - 0rem)';
-        mainContent.style.marginLeft = '0';
-      } else {
-        header.style.width = 'calc(100% - 16rem)';
-        mainContent.style.marginLeft = '16rem';
-      }
-    }
-  }, [isCollapsed]);
-
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
 
   const isActiveLink = (href: string) => {
     return pathname === href;
