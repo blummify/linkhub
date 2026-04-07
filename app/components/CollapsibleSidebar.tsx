@@ -110,19 +110,6 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
         </div>
       </aside>
 
-      {/* Collapse Toggle Button (separate from sidebar) */}
-      <button 
-        id="sidebarToggle"
-        onClick={toggleSidebar}
-        className={`fixed w-6 h-6 bg-surface border border-outline-variant rounded-full shadow-md flex items-center justify-center hover:bg-surface-container-highest transition-all duration-300 z-50 ${
-          isCollapsed ? 'left-2' : 'left-64'
-        } top-4`}
-      >
-        <span className="material-symbols-outlined text-xs text-on-surface-variant">
-          {isCollapsed ? 'chevron_right' : 'chevron_left'}
-        </span>
-      </button>
-
       {/* Main Content Area */}
       <div className="flex-1">
         {children}
