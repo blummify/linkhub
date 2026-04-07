@@ -44,14 +44,14 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">link</span>
-            <span className="text-sm">Links</span>
+            <span className="text-[13px]">Links</span>
           </a>
           <a className={getLinkClasses('/appearance')} href="/appearance">
             {isActiveLink('/appearance') && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">palette</span>
-            <span className="text-sm">Appearance</span>
+            <span className="text-[13px]">Appearance</span>
           </a>
           
           <a className={getLinkClasses('/analytics')} href="/analytics">
@@ -59,7 +59,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">analytics</span>
-            <span className="text-sm">Analytics</span>
+            <span className="text-[13px]">Analytics</span>
           </a>
           
           <a className={getLinkClasses('/admin/users')} href="/admin/users">
@@ -67,7 +67,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">groups</span>
-            <span className="text-sm">Users</span>
+            <span className="text-[13px]">Users</span>
           </a>
           
           <a className={getLinkClasses('/admin/settings')} href="/admin/settings">
@@ -75,7 +75,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">settings</span>
-            <span className="text-sm">Settings</span>
+            <span className="text-[13px]">Settings</span>
           </a>
         </nav>
         
@@ -91,8 +91,8 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-on-surface truncate">Alex Rivers</p>
-              <p className="text-xs text-on-surface-variant truncate">alex@creatorhub.com</p>
+              <p className="text-[13px] font-semibold text-on-surface truncate">Alex Rivers</p>
+              <p className="text-[11px] text-on-surface-variant truncate">alex@creatorhub.com</p>
             </div>
           </div>
           
@@ -100,11 +100,11 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
           <div className="space-y-1">
             <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all" href="/help">
               <span className="material-symbols-outlined text-lg">help</span>
-              <span className="text-sm">Help Center</span>
+              <span className="text-[13px]">Help Center</span>
             </a>
             <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all" href="/logout">
               <span className="material-symbols-outlined text-lg">logout</span>
-              <span className="text-sm">Log Out</span>
+              <span className="text-[13px]">Log Out</span>
             </a>
           </div>
         </div>

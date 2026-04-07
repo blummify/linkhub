@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
 import { ThemeToggle } from "../ThemeToggle";
@@ -7,6 +8,14 @@ import { useSidebar } from "../components/SidebarContext";
 
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText("linktr.ee/blummify");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   
   return (
     <div className="bg-surface text-on-surface min-h-screen antialiased">
@@ -143,6 +152,23 @@ export default function UserAdminClient() {
 
             {/* Right Column: System Preview */}
             <section className="hidden lg:col-span-5 lg:flex flex-col items-center sticky top-24 h-[calc(100vh-8rem)]">
+              {/* Top URL Bar & Controls - Now positioned above mobile preview */}
+              <div className="flex items-center gap-3 w-full mb-8 animate-fade-in-up">
+                <div 
+                  onClick={() => setShowShareModal(true)}
+                  className="flex-1 bg-white border border-slate-200 rounded-full py-2.5 px-6 flex items-center justify-between shadow-sm cursor-pointer hover:border-primary/30 transition-all group"
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span className="material-symbols-outlined text-[18px] text-slate-400">link</span>
+                    <span className="text-[11px] font-semibold text-slate-600 truncate">linktr.ee/blummify</span>
+                  </div>
+                  <span className="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-primary transition-colors">ios_share</span>
+                </div>
+                <button className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors">
+                  <span className="material-symbols-outlined text-[18px] text-slate-600">tune</span>
+                </button>
+              </div>
+
               <div className="mb-4 flex flex-col items-center text-center">
                 <h2 className="text-base font-bold text-on-surface">Live Preview</h2>
                 <p className="text-[11px] text-on-surface-variant">Real-time profile updates</p>
@@ -153,34 +179,69 @@ export default function UserAdminClient() {
                 {/* Modern Pill Notch (Dynamic Island style) */}
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-5 bg-slate-950 rounded-full z-20 border border-slate-800/50"></div>
                 {/* Screen Content */}
-                <div className="w-full h-full bg-[#fbf8ff] rounded-[2.8rem] overflow-hidden relative flex flex-col items-center pt-14 px-5">
-                  {/* Profile Header */}
-                  <div className="flex flex-col items-center mb-6">
-                    <img alt="User Avatar" className="w-16 h-16 rounded-full border-4 border-white shadow-md mb-2 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI57sppD_FLi9ouIh-nc1Tcj4PF6vKEAcZmAdyk0FM0P-SgHL4GDKTwJojpoC4Zdgclz61XTPE4THKrbPyXX4zalYeXTqHkAbKlA85wWL3zAe8gityPPdlDtwuDU0upwunIQPs0M13K-oQ1Tq0ZgfR8cdmGtB_k1Vc8Hdb1TRCamkkRf4oYpPXWTH73M_JuKxNU08-S8VdQevKwYgDZtbUJPtCSxb09pJUEGDjVyW1zafOoKx6JbW26p684_qC_-pO6N_XlrhrrH10"/>
-                    <h4 className="font-headline font-extrabold text-base text-indigo-900">Alex Rivers</h4>
-                    <p className="text-[11px] text-indigo-700/60 font-medium">@alex_rivers</p>
+                {/* Screen Content Container */}
+                <div className="w-full h-full bg-[#fbf8ff] rounded-[2.8rem] overflow-hidden relative flex flex-col pt-14 px-4 pb-6">
+                  {/* Scrollable List Area */}
+                  <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 -mr-1 scrollbar-hide">
+                    {/* Refined Branded Header (Clean Logo Card) */}
+                    <div className="w-full bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 flex flex-col items-center mb-6">
+                      <div className="w-20 h-20 bg-secondary/5 rounded-2xl flex items-center justify-center mb-4 border border-secondary/10">
+                        <span className="material-symbols-outlined text-secondary text-4xl font-light">eco</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg font-bold tracking-tight text-slate-800">blummify</span>
+                      </div>
+                    </div>
+                    
+                    {/* WhatsApp Text Link */}
+                    <div className="w-full mb-6 px-2 flex items-center justify-between">
+                      <div className="w-6"></div>
+                      <p className="text-[13px] text-slate-700 font-semibold">WhatsApp</p>
+                      <span className="material-symbols-outlined text-sm text-slate-300">more_vert</span>
+                    </div>
+
+                    {/* Refined Rectangular Link Cards with Blue Accents (Smaller Size) */}
+                    <div className="w-full space-y-3">
+                      <div className="w-full py-2.5 px-4 bg-white border border-slate-100 border-l-4 border-l-primary text-primary flex items-center justify-between rounded-xl shadow-sm group cursor-pointer hover:bg-slate-50 transition-all">
+                        <div className="w-6"></div> 
+                        <span className="font-bold text-[13px] tracking-tight">Official Website</span>
+                        <span className="material-symbols-outlined text-sm text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">more_vert</span>
+                      </div>
+                      
+                      <div className="w-full py-2.5 px-4 bg-white border border-slate-100 border-l-4 border-l-primary text-primary flex items-center justify-between rounded-xl shadow-sm group cursor-pointer hover:bg-slate-50 transition-all">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-primary/5 rounded flex items-center justify-center">
+                            <span className="material-symbols-outlined text-xs">grid_view</span>
+                          </div>
+                        </div>
+                        <span className="font-bold text-[13px] tracking-tight">Portfolio Drop</span>
+                        <span className="material-symbols-outlined text-sm text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">more_vert</span>
+                      </div>
+
+                      <div className="w-full py-2.5 px-4 bg-white border border-slate-100 border-l-4 border-l-slate-200 text-slate-600 flex items-center justify-between rounded-xl shadow-sm group cursor-pointer hover:bg-slate-50 transition-all">
+                        <div className="w-6"></div>
+                        <span className="font-bold text-[13px] tracking-tight opacity-70">Instagram Profile</span>
+                        <span className="material-symbols-outlined text-sm text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity">more_vert</span>
+                      </div>
+
+                      {/* Mock additional links for scroll testing */}
+                      <div className="w-full py-2.5 px-4 bg-white border border-slate-100 border-l-4 border-l-slate-200 text-slate-600 flex items-center justify-between rounded-xl shadow-sm group cursor-pointer hover:bg-slate-50 transition-all">
+                        <div className="w-6"></div>
+                        <span className="font-bold text-[13px] tracking-tight opacity-70">Coming Soon</span>
+                        <span className="material-symbols-outlined text-sm text-slate-200">more_vert</span>
+                      </div>
+                    </div>
                   </div>
-                  {/* Link Buttons */}
-                  <div className="w-full space-y-3">
-                    <div className="w-full py-4 px-4 bg-primary text-white text-center rounded-full font-bold text-sm shadow-sm">
-                      Official Website
-                    </div>
-                    <div className="w-full py-4 px-4 bg-primary text-white text-center rounded-full font-bold text-sm shadow-sm">
-                      Portfolio Drop
-                    </div>
-                    <div className="w-full py-4 px-4 bg-surface-container-high text-on-primary-fixed-variant text-center rounded-full font-bold text-sm opacity-60">
-                      Instagram Profile
-                    </div>
-                  </div>
-                  {/* Refined Footer: Icons and Logo combined to prevent overlap */}
-                  <div className="mt-auto pb-4 flex flex-col items-center gap-4">
-                    <div className="flex items-center gap-6">
-                      <span className="material-symbols-outlined text-indigo-300">mood</span>
-                      <span className="material-symbols-outlined text-indigo-300">share</span>
-                      <span className="material-symbols-outlined text-indigo-300">favorite</span>
-                    </div>
-                    <div className="flex items-center gap-1 opacity-20 grayscale">
-                      <span className="text-[9px] font-black tracking-widest uppercase">CreatorHub Profile</span>
+                  
+                  {/* Fixed Footer at the bottom */}
+                  <div className="pt-4 flex flex-col items-center gap-4 bg-[#fbf8ff] border-t border-slate-100/50">
+                    <button className="w-auto bg-white text-slate-900 py-1.5 px-3 rounded-full font-bold text-[10px] shadow-sm hover:scale-[1.02] transition-transform active:scale-95 border border-slate-200/50">
+                      Join blummify on Linktree
+                    </button>
+                    <div className="flex items-center gap-2 text-[9px] text-slate-400 font-medium">
+                      <span>Report</span>
+                      <span className="opacity-50">·</span>
+                      <span>Privacy</span>
                     </div>
                   </div>
                 </div>
@@ -190,8 +251,126 @@ export default function UserAdminClient() {
                 Autosaving changes
               </div>
             </section>
-          </div>
+          </div> {/* End of grid */}
         </main>
+
+        {/* Share Modal Overlay */}
+        {showShareModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div 
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              onClick={() => setShowShareModal(false)}
+            ></div>
+            
+            <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              {/* Modal Header */}
+              <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-slate-900">Share</h3>
+                <div className="flex items-center gap-3">
+                  <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <span className="material-symbols-outlined text-[22px]">settings</span>
+                  </button>
+                  <button 
+                    onClick={() => setShowShareModal(false)}
+                    className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[22px]">close</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* URL Section */}
+              <div className="px-8 mb-6">
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-2xl p-3">
+                  <div className="w-10 h-10 bg-white shadow-sm rounded-xl flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary text-[20px]">hub</span>
+                  </div>
+                  <span className="flex-1 text-sm font-semibold text-slate-600 truncate">linktr.ee/blummify</span>
+                  <button 
+                    onClick={handleCopy}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${copied ? 'bg-secondary text-white' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                  >
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+
+              {/* QR Code Card */}
+              <div className="px-8 mb-8">
+                <div className="relative bg-slate-50 border border-slate-100 rounded-3xl p-8 flex flex-col items-center">
+                  <button className="absolute top-4 right-4 text-slate-300 hover:text-slate-500">
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                  <div className="w-32 h-32 bg-white p-3 rounded-2xl shadow-sm mb-6 border border-purple-100">
+                    <img alt="QR Code" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://blummify.com" className="w-full h-full" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 text-center mb-1">Add link to Instagram bio</p>
+                  <p className="text-[11px] text-slate-400 font-medium text-center">Scan with your phone</p>
+                </div>
+              </div>
+
+              {/* Social Platforms */}
+              <div className="px-8 mb-8">
+                <p className="text-[13px] font-bold text-slate-900 mb-4 px-1">My platforms</p>
+                <div className="flex items-center gap-6 px-1">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 flex items-center justify-center text-white">
+                      <span className="material-symbols-outlined text-lg">photo_camera</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-500">Instagram</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white">
+                      <span className="material-symbols-outlined text-lg">music_note</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-500">TikTok</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white">
+                      <span className="font-bold text-lg italic">X</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-500">X</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Actions Row */}
+              <div className="px-6 py-6 bg-slate-50 border-t border-slate-100 flex items-center gap-4 overflow-x-auto scrollbar-hide">
+                <div className="flex flex-col items-center gap-2 min-w-[60px]">
+                  <div className="w-11 h-11 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm">
+                    <span className="material-symbols-outlined text-[18px]">hub</span>
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-500 whitespace-nowrap">My Linktree</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 min-w-[60px]">
+                  <div className="w-11 h-11 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm">
+                    <span className="material-symbols-outlined text-[18px]">qr_code</span>
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-500">QR Code</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 min-w-[60px] relative">
+                  <div className="w-11 h-11 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm">
+                    <span className="material-symbols-outlined text-[18px]">style</span>
+                  </div>
+                  <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[7px] font-black uppercase px-1.5 py-0.5 rounded-full ring-2 ring-white">New</span>
+                  <span className="text-[9px] font-bold text-slate-500">Digital card</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 min-w-[60px]">
+                  <div className="w-11 h-11 bg-red-600 rounded-full flex items-center justify-center text-white shadow-sm">
+                    <span className="material-symbols-outlined text-[18px]">play_arrow</span>
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-500">YouTube</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 min-w-[60px]">
+                  <div className="w-11 h-11 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-sm">
+                    <span className="font-bold text-lg">f</span>
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-500">Facebook</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </CollapsibleSidebar>
       <ThemeToggle />
     </div>
