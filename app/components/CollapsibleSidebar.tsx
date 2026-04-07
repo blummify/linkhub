@@ -59,22 +59,13 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
         </div>
         
         <nav className="flex-1 space-y-1">
-          <a className={getLinkClasses('/admin/dashboard')} href="/admin/dashboard">
-            {isActiveLink('/admin/dashboard') && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
-            )}
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="text-sm">Dashboard</span>
-          </a>
-          
-          <a className={getLinkClasses('/links')} href="/links">
-            {isActiveLink('/links') && (
+          <a className={getLinkClasses('/user-admin')} href="/user-admin">
+            {isActiveLink('/user-admin') && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">link</span>
             <span className="text-sm">Links</span>
           </a>
-          
           <a className={getLinkClasses('/appearance')} href="/appearance">
             {isActiveLink('/appearance') && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
