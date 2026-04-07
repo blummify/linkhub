@@ -42,14 +42,14 @@ export default function UserAdminClient() {
           <div className={`max-w-[1280px] mx-auto p-6 md:p-10 grid grid-cols-12 gap-12 lg:gap-16 ${isCollapsed ? 'px-12 md:px-20' : ''} transition-all duration-500 relative`}>
             
             {/* Left Column: Link Management */}
-            <section className="col-span-12 lg:col-span-7 space-y-10">
+            <section className="col-span-12 lg:col-span-7 space-y-10 animate-fade-in-up">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-black text-on-surface tracking-tight">Manage Links</h1>
+                  <h1 className="text-3xl font-black text-on-surface tracking-tight">Manage Links</h1>
                   <p className="text-[13px] text-on-surface-variant font-medium mt-1">Organize and optimize your digital presence.</p>
                 </div>
-                <button className="flex items-center gap-2 bg-secondary text-on-secondary px-6 py-3 rounded-full font-bold shadow-lg shadow-secondary/10 hover:opacity-90 transition-all text-[13px] active:scale-95">
-                  <span className="material-symbols-outlined text-[20px]">add</span>
+                <button className="flex items-center gap-2 bg-secondary text-on-secondary px-6 py-3 rounded-full font-bold shadow-lg shadow-secondary/20 hover:scale-105 transition-all text-[13px] active:scale-95 group">
+                  <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">add</span>
                   Add New Link
                 </button>
               </div>
@@ -57,8 +57,8 @@ export default function UserAdminClient() {
               {/* Links Cards Container */}
               <div className="space-y-4">
                 {/* Link Card 1: Active */}
-                <div className="bg-surface-container-lowest rounded-[2rem] p-6 flex items-center gap-6 group relative shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-outline-variant/50 transition-all hover:shadow-[0_20px_40px_rgb(0,0,0,0.04)] dark:hover:bg-surface-container border-l-[6px] border-l-secondary">
-                  <div className="flex flex-col items-center justify-center cursor-grab text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">
+                <div className="bg-surface-container-lowest rounded-[2.5rem] p-6 flex items-center gap-6 group relative shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-outline-variant/40 transition-all hover:shadow-[0_25px_50px_-12px_rgba(0,107,77,0.1)] hover:border-secondary/20 border-l-[6px] border-l-secondary animate-fade-in-up delay-100">
+                  <div className="flex flex-col items-center justify-center cursor-grab text-on-surface-variant/30 hover:text-on-surface-variant transition-colors">
                     <span className="material-symbols-outlined text-[24px]">drag_indicator</span>
                   </div>
                   
@@ -103,7 +103,7 @@ export default function UserAdminClient() {
                 </div>
 
                 {/* Link Card 2 */}
-                <div className="bg-surface-container-lowest rounded-[2rem] p-6 flex items-center gap-6 group relative shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-outline-variant/50 transition-all hover:shadow-[0_20px_40px_rgb(0,0,0,0.04)] dark:hover:bg-surface-container border-l-[6px] border-l-secondary">
+                <div className="bg-surface-container-lowest rounded-[2.5rem] p-6 flex items-center gap-6 group relative shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-outline-variant/40 transition-all hover:shadow-[0_25px_50px_-12px_rgba(0,107,77,0.1)] hover:border-secondary/20 border-l-[6px] border-l-secondary animate-fade-in-up delay-200">
                   <div className="flex flex-col items-center justify-center cursor-grab text-on-surface-variant/40 transition-colors">
                     <span className="material-symbols-outlined text-[24px]">drag_indicator</span>
                   </div>
@@ -129,8 +129,8 @@ export default function UserAdminClient() {
                   </div>
                 </div>
 
-                {/* Link Card 3: Draft */}
-                <div className="bg-surface-container-lowest/50 rounded-[2rem] p-6 flex items-center gap-6 group relative border border-outline-variant/30 transition-all border-l-[6px] border-l-outline-variant/50 opacity-70">
+                {/* Link Card 3: Draft - Dashed Border Style */}
+                <div className="bg-surface-container-lowest/50 rounded-[2.5rem] p-6 flex items-center gap-6 group relative border-2 border-dashed border-outline-variant/30 transition-all border-l-[6px] border-l-outline-variant/50 opacity-70 animate-fade-in-up delay-300">
                   <div className="flex flex-col items-center justify-center text-outline-variant/50">
                     <span className="material-symbols-outlined text-[24px]">drag_indicator</span>
                   </div>
@@ -155,46 +155,52 @@ export default function UserAdminClient() {
               </div>
 
               {/* Redesigned Analytics Section */}
-              <div className="grid grid-cols-2 gap-6 pt-10">
-                <div className="bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10 flex flex-col items-start shadow-sm transition-all hover:bg-primary/10">
+              <div className="grid grid-cols-2 gap-6 pt-10 animate-fade-in-up delay-500">
+                <div className="bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10 flex flex-col items-start shadow-sm transition-all hover:bg-primary/10 group">
                   <div className="flex items-center justify-between w-full mb-6">
                     <p className="text-[13px] font-black text-primary uppercase tracking-tight">Total Views</p>
-                    <span className="material-symbols-outlined text-primary text-[24px]">bar_chart</span>
+                    <span className="material-symbols-outlined text-primary text-[24px] group-hover:scale-110 transition-transform">bar_chart</span>
                   </div>
                   <div className="text-4xl font-black text-on-surface tracking-tighter mb-2">12.4K</div>
-                  <p className="text-[11px] font-bold text-primary/70">+2,340 this month</p>
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary/70">
+                    <span className="material-symbols-outlined text-[14px]">arrow_upward</span>
+                    <span>+2,340 this month</span>
+                  </div>
                 </div>
                 
-                <div className="bg-secondary/5 rounded-[2.5rem] p-8 border border-secondary/10 flex flex-col items-start shadow-sm transition-all hover:bg-secondary/10">
+                <div className="bg-secondary/5 rounded-[2.5rem] p-8 border border-secondary/10 flex flex-col items-start shadow-sm transition-all hover:bg-secondary/10 group">
                   <div className="flex items-center justify-between w-full mb-6">
                     <p className="text-[13px] font-black text-secondary uppercase tracking-tight">Click Rate</p>
-                    <span className="material-symbols-outlined text-secondary text-[24px]">trending_up</span>
+                    <span className="material-symbols-outlined text-secondary text-[24px] group-hover:scale-110 transition-transform">trending_up</span>
                   </div>
                   <div className="text-4xl font-black text-on-surface tracking-tighter mb-2">68%</div>
-                  <p className="text-[11px] font-bold text-secondary/70">+5% from last week</p>
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-secondary/70">
+                    <span className="material-symbols-outlined text-[14px]">insights</span>
+                    <span>+5% from last week</span>
+                  </div>
                 </div>
               </div>
             </section>
 
-            {/* Vertical Separator - More Defined and Persistent */}
-            <div className="hidden lg:block lg:col-span-1 border-r border-outline-variant/60 h-auto self-stretch mx-auto my-4"></div>
+            {/* Vertical Separator */}
+            <div className="hidden lg:block lg:col-span-1 border-r border-outline-variant/60 h-auto self-stretch mx-auto my-4 animate-fade-in opacity-40"></div>
 
             {/* Right Column: Preview Wrapper */}
-            <section className="hidden lg:col-span-4 lg:flex flex-col items-center sticky top-40 h-[calc(100vh-12rem)]">
+            <section className="hidden lg:col-span-4 lg:flex flex-col items-center sticky top-40 h-[calc(100vh-12rem)] animate-fade-in delay-700">
               {/* Share Bar & Controls - Compact Mockup Style */}
               <div className="flex items-center gap-3 w-full max-w-[320px] mb-10">
                 <div 
                   onClick={() => setShowShareModal(true)}
-                  className="flex-1 bg-surface-container-lowest border border-outline-variant/50 rounded-full py-3 px-6 flex items-center justify-between shadow-lg shadow-on-surface/5 cursor-pointer hover:border-primary/20 transition-all group"
+                  className="flex-1 bg-surface-container-lowest border border-outline-variant/60 rounded-full py-3 px-6 flex items-center justify-between shadow-lg shadow-on-surface/5 cursor-pointer hover:border-primary/40 transition-all group"
                 >
                   <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="material-symbols-outlined text-[18px] text-on-surface-variant/40">link</span>
+                    <span className="material-symbols-outlined text-[18px] text-on-surface-variant/40 group-hover:text-primary transition-colors">link</span>
                     <span className="text-[11px] font-bold text-on-surface-variant truncate">linktr.ee/blummify</span>
                   </div>
                   <span className="material-symbols-outlined text-[18px] text-on-surface-variant/60 group-hover:text-primary transition-colors">ios_share</span>
                 </div>
-                <button className="w-11 h-11 bg-surface-container-lowest border border-outline-variant/50 rounded-xl flex items-center justify-center shadow-lg shadow-on-surface/5 hover:bg-surface transition-all active:scale-95">
-                  <span className="material-symbols-outlined text-[20px] text-on-surface-variant">tune</span>
+                <button className="w-11 h-11 bg-surface-container-lowest border border-outline-variant/60 rounded-xl flex items-center justify-center shadow-lg shadow-on-surface/5 hover:bg-surface transition-all active:scale-95 group">
+                  <span className="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-primary transition-colors">tune</span>
                 </button>
               </div>
 
@@ -204,12 +210,12 @@ export default function UserAdminClient() {
               </div>
               
               {/* iPhone Mockup Container */}
-              <div className="relative w-[300px] h-[600px] bg-slate-950 rounded-[3.5rem] p-2.5 shadow-[0px_60px_100px_-20px_rgba(0,0,0,0.15)] ring-[8px] ring-slate-900 border border-slate-800/50">
+              <div className="relative w-[300px] h-[600px] bg-slate-950 rounded-[3.5rem] p-2.5 shadow-[0px_60px_100px_-20px_rgba(0,0,0,0.2)] ring-[10px] ring-slate-900 border border-slate-800/50 origin-top transition-all duration-700">
                 {/* Dynamic Island */}
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-6 bg-slate-950 rounded-full z-20 border border-slate-800/30"></div>
                 
                 {/* Screen Content Wrapper */}
-                <div className="w-full h-full bg-[#fcfaff] rounded-[3rem] overflow-hidden relative flex flex-col pt-16 px-5 pb-8 shadow-inner overflow-hidden">
+                <div className="w-full h-full bg-[#fcfaff] rounded-[3rem] shadow-inner overflow-hidden relative flex flex-col pt-16 px-5 pb-8">
                   
                   {/* Internal Scrollable Content */}
                   <div className="flex-1 overflow-y-auto scrollbar-hide space-y-8 pr-1 text-slate-900">
@@ -226,7 +232,7 @@ export default function UserAdminClient() {
                     <div className="space-y-4">
                        <div className="flex items-center justify-between px-2">
                          <div className="w-6"></div>
-                         <span className="text-[13px] font-bold text-slate-700">WhatsApp</span>
+                         <span className="text-[13px] font-bold text-slate-700 tracking-tight">WhatsApp</span>
                          <span className="material-symbols-outlined text-slate-300 text-sm">more_vert</span>
                        </div>
                        
@@ -248,7 +254,7 @@ export default function UserAdminClient() {
 
                   {/* Fixed Phone Footer */}
                   <div className="pt-6 border-t border-slate-100 flex flex-col items-center gap-4">
-                    <button className="bg-white text-slate-900 px-5 py-2 rounded-full font-black text-[11px] border border-slate-200 shadow-sm transition-all hover:scale-105 active:scale-95">
+                    <button className="bg-slate-900 text-white px-5 py-2 rounded-full font-black text-[11px] shadow-sm transition-all hover:scale-105 active:scale-95">
                       Join blummify on Linktree
                     </button>
                     <div className="flex gap-4 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
@@ -263,9 +269,9 @@ export default function UserAdminClient() {
 
           {/* Floating Footer bar */}
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40">
-            <div className="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom duration-500">
-               <div className="w-2.5 h-2.5 bg-secondary rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
-               <span className="text-[12px] font-bold tracking-tight">Autosaving changes</span>
+            <div className="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-fade-in-up duration-700">
+               <div className="w-2 h-2 bg-secondary rounded-full animate-pulse shadow-[0_0_12px_rgba(var(--lh-secondary),0.8)]"></div>
+               <span className="text-[12px] font-black tracking-tight">Autosaving changes</span>
             </div>
           </div>
         </main>
@@ -279,44 +285,47 @@ export default function UserAdminClient() {
         {showShareModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div 
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
               onClick={() => setShowShareModal(false)}
             ></div>
             <div className="relative w-full max-w-md bg-surface rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-outline-variant/60">
                {/* Modal Header */}
-               <div className="p-8 flex items-center justify-between">
-                 <h3 className="text-2xl font-black text-on-surface tracking-tight">Share</h3>
-                 <button onClick={() => setShowShareModal(false)} className="w-10 h-10 bg-surface-container text-on-surface-variant hover:text-on-surface rounded-full flex items-center justify-center transition-all">
+               <div className="p-10 flex items-center justify-between">
+                 <div>
+                   <h3 className="text-2xl font-black text-on-surface tracking-tight">Share Profile</h3>
+                   <p className="text-[12px] text-on-surface-variant font-medium mt-1">Connect with your community.</p>
+                 </div>
+                 <button onClick={() => setShowShareModal(false)} className="w-10 h-10 bg-surface-container text-on-surface-variant hover:text-on-surface rounded-full flex items-center justify-center transition-all hover:rotate-90">
                     <span className="material-symbols-outlined">close</span>
                  </button>
                </div>
                
-               <div className="px-8 pb-10 space-y-8">
+               <div className="px-10 pb-12 space-y-8">
                  {/* URL Field */}
-                 <div className="bg-surface-container-low border border-outline-variant/30 p-4 rounded-[2rem] flex items-center gap-4">
+                 <div className="bg-surface-container-low border border-outline-variant/30 p-4 rounded-[2.5rem] flex items-center gap-4 transition-all hover:border-primary/30">
                     <div className="w-12 h-12 bg-surface rounded-2xl flex items-center justify-center shadow-sm text-primary font-black">
                       <span className="material-symbols-outlined">hub</span>
                     </div>
                     <span className="flex-1 text-sm font-bold text-on-surface-variant truncate text-center">linktr.ee/blummify</span>
                     <button 
                       onClick={handleCopy}
-                      className={`px-6 py-2.5 rounded-full text-xs font-black transition-all ${copied ? 'bg-secondary text-on-secondary' : 'bg-on-surface text-surface hover:opacity-90'}`}
+                      className={`px-8 py-3 rounded-full text-xs font-black transition-all ${copied ? 'bg-secondary text-on-secondary scale-95' : 'bg-on-surface text-surface hover:opacity-90 active:scale-95'}`}
                     >
-                      {copied ? 'Copied' : 'Copy'}
+                      {copied ? 'Copied!' : 'Copy'}
                     </button>
                  </div>
 
                  {/* Platforms Grid */}
-                 <div className="grid grid-cols-4 gap-4">
+                 <div className="grid grid-cols-4 gap-6">
                    {[
                      { label: 'Instagram', icon: 'photo_camera', color: 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600' },
                      { label: 'TikTok', icon: 'music_note', color: 'bg-[#000000]' },
                      { label: 'X', icon: 'close', color: 'bg-[#000000]' },
                      { label: 'QR', icon: 'qr_code', color: 'bg-primary' }
                    ].map((p) => (
-                     <div key={p.label} className="flex flex-col items-center gap-2 group cursor-pointer">
-                        <div className={`w-12 h-12 ${p.color} rounded-full flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110 active:scale-95`}>
-                          <span className="material-symbols-outlined text-[20px]">{p.icon}</span>
+                     <div key={p.label} className="flex flex-col items-center gap-3 group cursor-pointer">
+                        <div className={`w-14 h-14 ${p.color} rounded-full flex items-center justify-center text-white shadow-lg transition-all group-hover:scale-110 active:scale-95 group-hover:rotate-6`}>
+                          <span className="material-symbols-outlined text-[24px]">{p.icon}</span>
                         </div>
                         <span className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">{p.label}</span>
                      </div>
