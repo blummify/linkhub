@@ -3,17 +3,26 @@
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
 import { ThemeToggle } from "../ThemeToggle";
+import { useSidebar } from "../components/SidebarContext";
+import { MobilePreview, DEFAULT_APPEARANCE } from "../components/MobilePreview";
 
 export default function AppearanceClient() {
+  const { isCollapsed } = useSidebar();
+
   return (
     <div className="bg-surface text-on-surface min-h-screen antialiased">
       <CollapsibleSidebar isAdmin={false}>
         <AppHeader isAdmin={false} />
-        {/* Main Content Canvas */}
-        <main id="mainContent" className="ml-64 pt-16 min-h-screen bg-surface-container-low transition-all duration-300 ease-in-out">
-          <div className="max-w-[1400px] mx-auto p-8">
+        {/* Main Content Canvas — full width on small screens (sidebar overlays); offset on lg+ when expanded */}
+        <main
+          id="mainContent"
+          className={`pt-16 min-h-screen bg-surface-container-low transition-all duration-300 ease-in-out ${
+            isCollapsed ? "ml-0" : "ml-0 lg:ml-64"
+          }`}
+        >
+          <div className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 lg:items-start">
             {/* Left Customization Panel */}
-            <div className="flex-1 max-w-2xl px-4 py-6">
+            <div className="lg:col-span-7 w-full min-w-0 max-w-2xl lg:max-w-none py-2 sm:py-4 lg:py-6">
               <header className="mb-12">
                 <h1 className="text-2xl font-semibold text-on-surface tracking-tight mb-2">Appearance</h1>
                 <p className="text-sm text-on-surface-variant">Customize your public profile to reflect your brand's unique style.</p>
@@ -24,8 +33,8 @@ export default function AppearanceClient() {
                 <section>
                   <h2 className="text-xs font-bold uppercase tracking-widest text-primary mb-6">Profile Settings</h2>
                   <div className="bg-surface-container-low p-8 rounded-xl space-y-6">
-                    <div className="flex items-center gap-6 mb-8">
-                      <div className="relative group">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-8">
+                      <div className="relative group shrink-0">
                         <div className="w-24 h-24 rounded-full overflow-hidden bg-surface-container-highest flex items-center justify-center ring-4 ring-white shadow-md">
                           <img 
                             alt="Profile Avatar" 
@@ -124,24 +133,24 @@ export default function AppearanceClient() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-surface-container-low p-6 rounded-xl flex flex-col gap-4">
                       <span className="text-xs font-bold text-on-surface-variant">Background Color</span>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-surface to-surface-container-low border border-outline-variant shadow-inner"></div>
-                        <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                        <div className="w-12 h-12 shrink-0 rounded-lg bg-gradient-to-br from-surface to-surface-container-low border border-outline-variant shadow-inner"></div>
+                        <div className="min-w-0 flex-1 basis-[min(100%,12rem)]">
                           <p className="text-sm font-medium text-on-surface">Linear Gradient</p>
                           <p className="text-xs text-outline">#FBF8FF to #F4F2FC</p>
                         </div>
-                        <button className="material-symbols-outlined text-outline">colorize</button>
+                        <button type="button" className="material-symbols-outlined text-outline shrink-0 ml-auto sm:ml-0">colorize</button>
                       </div>
                     </div>
                     <div className="bg-surface-container-low p-6 rounded-xl flex flex-col gap-4">
                       <span className="text-xs font-bold text-on-surface-variant">Button Color</span>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-primary border border-outline-variant shadow-inner"></div>
-                        <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                        <div className="w-12 h-12 shrink-0 rounded-lg bg-primary border border-outline-variant shadow-inner"></div>
+                        <div className="min-w-0 flex-1 basis-[min(100%,12rem)]">
                           <p className="text-sm font-medium text-on-surface">Solid Indigo</p>
                           <p className="text-xs text-outline">#1F33AA</p>
                         </div>
-                        <button className="material-symbols-outlined text-outline">colorize</button>
+                        <button type="button" className="material-symbols-outlined text-outline shrink-0 ml-auto sm:ml-0">colorize</button>
                       </div>
                     </div>
                   </div>
@@ -150,11 +159,11 @@ export default function AppearanceClient() {
                 {/* Button Styles */}
                 <section>
                   <h2 className="text-xs font-bold uppercase tracking-widest text-primary mb-6">Button Styles</h2>
-                  <div className="bg-surface-container-low p-2 rounded-2xl flex gap-2">
-                    <button className="flex-1 py-3 px-4 rounded-xl bg-surface-container-highest shadow-sm font-bold text-sm text-primary transition-all">Flat</button>
-                    <button className="flex-1 py-3 px-4 rounded-xl hover:bg-surface-container-highest font-medium text-sm text-on-surface-variant transition-all">Rounded</button>
-                    <button className="flex-1 py-3 px-4 rounded-xl hover:bg-surface-container-highest font-medium text-sm text-on-surface-variant transition-all">Outline</button>
-                    <button className="flex-1 py-3 px-4 rounded-xl hover:bg-surface-container-highest font-medium text-sm text-on-surface-variant transition-all">Shadow</button>
+                  <div className="bg-surface-container-low p-2 rounded-2xl grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button className="min-w-0 py-3 px-3 sm:px-4 rounded-xl bg-surface-container-highest shadow-sm font-bold text-sm text-primary transition-all">Flat</button>
+                    <button className="min-w-0 py-3 px-3 sm:px-4 rounded-xl hover:bg-surface-container-highest font-medium text-sm text-on-surface-variant transition-all">Rounded</button>
+                    <button className="min-w-0 py-3 px-3 sm:px-4 rounded-xl hover:bg-surface-container-highest font-medium text-sm text-on-surface-variant transition-all">Outline</button>
+                    <button className="min-w-0 py-3 px-3 sm:px-4 rounded-xl hover:bg-surface-container-highest font-medium text-sm text-on-surface-variant transition-all">Shadow</button>
                   </div>
                 </section>
 
@@ -191,63 +200,12 @@ export default function AppearanceClient() {
             </div>
 
             {/* Right Live Preview Panel */}
-            <div className="flex-1 bg-surface-container px-8 flex flex-col items-center justify-center sticky top-16 h-[calc(100vh-64px)] overflow-hidden">
-              <div className="relative">
-                {/* Phone Frame */}
-                <div className="w-[280px] h-[640px] bg-surface-dim rounded-[3rem] p-3 shadow-2xl relative z-10 border-[6px] border-outline">
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-surface-dim rounded-b-2xl z-20"></div>
-                  {/* Internal Screen Content */}
-                  <div className="w-full h-full bg-surface rounded-[2.2rem] overflow-hidden flex flex-col items-center relative">
-                    {/* Live Preview Background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-surface to-surface-container-low opacity-50"></div>
-                    <div className="relative z-10 w-full flex flex-col items-center px-6 pt-16">
-                      <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg border-2 border-white mb-4">
-                        <img 
-                          alt="Avatar Preview" 
-                          src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4PxtiCvvdChx5rltV1QWgJOqNq6piD1-6Ei7usvNa6vEqtcJS14LJjz75FSALFuRLCOo0PeWiYTCWQG62g3U-sBgKkkTS8YLKuLQ5VXhayVh9HApiK6p0t3dHTTdwJ7qIltKK80bBabeACJ56gyTzodT-BxvGcpFh7nbolhTp9SrlFS4DSC2EcM-M062HDKFztAej-R7GT47dJReQ0J2iH6aWyNKUSJEss688VsS89wBvuGXxVJrQT0Sf7ComxHaSCEFSk4u1SlQa"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <h3 className="text-xl font-bold text-on-surface mb-1">Alex Rivers</h3>
-                      <p className="text-[10px] text-on-surface-variant text-center leading-relaxed mb-8 px-4 opacity-80">Professional Photographer & Creative Director based in Seattle. Capturing the essence of modern living.</p>
-                      <div className="w-full space-y-3">
-                        <div className="w-full bg-primary text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm">
-                          <span className="material-symbols-outlined text-sm">photo_camera</span>
-                          <span className="text-xs font-bold">Latest Portfolio</span>
-                        </div>
-                        <div className="w-full bg-primary text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm">
-                          <span className="material-symbols-outlined text-sm">shopping_bag</span>
-                          <span className="text-xs font-bold">Print Shop</span>
-                        </div>
-                        <div className="w-full bg-primary text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm">
-                          <span className="material-symbols-outlined text-sm">mail</span>
-                          <span className="text-xs font-bold">Inquiries</span>
-                        </div>
-                      </div>
-                      <div className="mt-12 flex gap-4">
-                        <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center">
-                          <span className="material-symbols-outlined text-sm text-on-surface-variant">share</span>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center">
-                          <span className="material-symbols-outlined text-sm text-on-surface-variant">public</span>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Logo Watermark */}
-                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 opacity-20">
-                      <span className="text-[10px] font-bold">CreatorHub</span>
-                    </div>
-                  </div>
-                </div>
-                {/* Ambient Glow */}
-                <div className="absolute -inset-10 bg-primary/10 blur-3xl rounded-full z-0 opacity-50"></div>
-              </div>
-              <div className="mt-10 flex items-center gap-3 bg-surface-container-highest/60 backdrop-blur-md px-6 py-2 rounded-full shadow-sm border border-surface-container-highest/40">
-                <div className="flex gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></div>
-                </div>
-                <span className="text-xs font-bold text-on-surface-variant tracking-wide">Syncing changes...</span>
-              </div>
+            <div className="lg:col-span-5 w-full min-w-0 flex flex-col items-center justify-center lg:justify-start bg-surface-container rounded-2xl lg:rounded-none px-4 py-8 sm:px-6 lg:px-8 lg:sticky lg:top-16 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
+              <MobilePreview
+                appearance={DEFAULT_APPEARANCE}
+                showHeaderChrome={false}
+                syncLabel="Syncing changes..."
+              />
             </div>
           </div>
         </main>
