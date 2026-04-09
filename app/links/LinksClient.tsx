@@ -4,7 +4,10 @@ import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
 import { ThemeToggle } from "../ThemeToggle";
 import { useSidebar } from "../components/SidebarContext";
-import { MobilePreview, DEFAULT_APPEARANCE } from "../components/MobilePreview";
+import { MobilePreview } from "../components/MobilePreview";
+import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
+import { LinksStyleTwoColumnLayout } from "../components/LinksStyleTwoColumnLayout";
+import { EDITOR_MOBILE_PREVIEW_SHARED, EDITOR_PREVIEW_COLUMN_CLASS } from "../constants/editorMobilePreview";
 
 export default function LinksClient() {
   const { isCollapsed } = useSidebar();
@@ -19,9 +22,10 @@ export default function LinksClient() {
             isCollapsed ? "ml-0" : "ml-0 lg:ml-64"
           }`}
         >
-          <div className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 lg:items-start">
-            {/* Links Management Section */}
-            <section className="col-span-12 lg:col-span-7 space-y-8 min-w-0">
+          <LinksStyleTwoColumnLayout
+            previewColumnClassName={EDITOR_PREVIEW_COLUMN_CLASS}
+            left={
+            <section className="space-y-8 min-w-0">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-semibold text-on-surface tracking-tight">Your Links</h1>
@@ -141,12 +145,13 @@ export default function LinksClient() {
               </div>
               
             </section>
-
-            {/* Live preview (shared with Appearance) */}
-            <div className="col-span-12 lg:col-span-5 w-full min-w-0 flex flex-col items-center lg:items-stretch bg-surface-container rounded-2xl lg:rounded-none px-4 py-8 sm:px-6 lg:px-8 lg:sticky lg:top-16 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
-              <MobilePreview appearance={DEFAULT_APPEARANCE} syncLabel="Syncing with live profile" />
-            </div>
-          </div>
+            }
+            preview={
+              <LinksPreviewPanel>
+                <MobilePreview {...EDITOR_MOBILE_PREVIEW_SHARED} linkDensity="relaxed" />
+              </LinksPreviewPanel>
+            }
+          />
         </main>
       </CollapsibleSidebar>
       <ThemeToggle />

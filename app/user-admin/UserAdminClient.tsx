@@ -3,15 +3,15 @@
 import { useState } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
-import { ThemeToggle } from "../ThemeToggle";
 import { useSidebar } from "../components/SidebarContext";
 import { MobilePreview, type AppearanceState } from "../components/MobilePreview";
-import { ShareProfileModal } from "./components/ShareProfileModal";
+import { ShareProfileModal } from "../components/ShareProfileModal";
+import { LinksStyleTwoColumnLayout } from "../components/LinksStyleTwoColumnLayout";
+import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
-import { UserAdminTwoColumnLayout } from "./components/UserAdminTwoColumnLayout";
 import type { ManagedLink } from "./components/types";
-
-const PROFILE_PUBLIC_URL = "linktr.ee/blummify";
+import { EDITOR_MOBILE_PREVIEW_SHARED, EDITOR_PREVIEW_COLUMN_CLASS } from "../constants/editorMobilePreview";
+import { PROFILE_PUBLIC_URL } from "../constants/profile";
 
 const DEMO_LINKS: ManagedLink[] = [
   { title: "Official Website", url: "https://johndoe.design", clicks: "1.2K" },
@@ -47,26 +47,26 @@ export default function UserAdminClient() {
 
         <main
           id="mainContent"
-          className={`pt-16 min-h-screen transition-all duration-500 ease-in-out ${
-            isCollapsed ? "ml-0" : "ml-64"
+          className={`pt-16 min-h-screen bg-surface-container-low transition-all duration-500 ease-in-out ${
+            isCollapsed ? "ml-0" : "ml-0 lg:ml-64"
           }`}
         >
-          <UserAdminTwoColumnLayout
+          <LinksStyleTwoColumnLayout
             className={isCollapsed ? "px-12 md:px-20" : ""}
+            previewColumnClassName={EDITOR_PREVIEW_COLUMN_CLASS}
             left={<ManageLinksSection links={DEMO_LINKS} />}
             preview={
-              <MobilePreview
-                appearance={appearance}
-                publicUrl={PROFILE_PUBLIC_URL}
-                onShareBarClick={() => setShowShareModal(true)}
-              />
+              <LinksPreviewPanel>
+                <MobilePreview
+                  {...EDITOR_MOBILE_PREVIEW_SHARED}
+                  appearance={appearance}
+                  linkDensity="relaxed"
+                  onShareBarClick={() => setShowShareModal(true)}
+                />
+              </LinksPreviewPanel>
             }
           />
         </main>
-
-        <div className="fixed bottom-8 right-8 z-50">
-          <ThemeToggle />
-        </div>
 
         <ShareProfileModal
           open={showShareModal}

@@ -73,7 +73,13 @@ export interface MobilePreviewProps {
   showAmbientGlow?: boolean;
   /** Opens share / copy flow when the URL pill is used (e.g. user admin) */
   onShareBarClick?: () => void;
+  /** Show the trailing share glyph in the URL pill (hidden on Preferences / Appearance) */
+  showUrlBarShareIcon?: boolean;
+  /** Show the tune/settings button beside the URL bar (hidden on Preferences / Appearance) */
+  showHeaderTuneButton?: boolean;
   className?: string;
+  /** Extra vertical spacing for link rows inside the device (e.g. `/links` editor) */
+  linkDensity?: "default" | "relaxed";
 }
 
 export const MobilePreview: React.FC<MobilePreviewProps> = ({
@@ -89,16 +95,21 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
   syncLabel = null,
   showAmbientGlow = true,
   onShareBarClick,
+  showUrlBarShareIcon = true,
+  showHeaderTuneButton = true,
   className = "",
+  linkDensity = "default",
 }) => {
   const rows = linkRows.length ? linkRows : DEFAULT_LINK_ROWS;
   const slug = appearance.profileTitle.replace(/^@/, "") || "profile";
+  const relaxed = linkDensity === "relaxed";
 
   return (
     <div className={`flex flex-col items-center w-full min-w-0 ${className}`}>
       {showHeaderChrome && (
         <>
-          <div className="flex items-center gap-3 w-full max-w-[320px] mb-6">
+          <div className={`flex items-center gap-3 w-full max-w-[320px] ${relaxed ? "mb-7" : "mb-6"}`}
+          >
             <div
               role={onShareBarClick ? "button" : undefined}
               tabIndex={onShareBarClick ? 0 : undefined}
@@ -113,9 +124,9 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                     }
                   : undefined
               }
-              className={`flex-1 bg-surface-container-lowest border border-outline-variant/60 rounded-full py-3 px-5 flex items-center justify-between shadow-lg shadow-on-surface/5 min-w-0 ${
-                onShareBarClick ? "cursor-pointer hover:border-primary/40 transition-colors" : ""
-              }`}
+              className={`flex-1 bg-surface-container-lowest border border-outline-variant/60 rounded-full py-3 px-5 flex items-center min-w-0 shadow-lg shadow-on-surface/5 ${
+                showUrlBarShareIcon ? "justify-between" : "justify-start gap-2"
+              } ${onShareBarClick ? "cursor-pointer hover:border-primary/40 transition-colors" : ""}`}
             >
               <div className="flex items-center gap-2 overflow-hidden min-w-0">
                 <span className="material-symbols-outlined text-[18px] text-on-surface-variant/50 shrink-0">
@@ -123,36 +134,48 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                 </span>
                 <span className="text-[11px] font-bold text-on-surface-variant truncate">{publicUrl}</span>
               </div>
-              <span className="material-symbols-outlined text-[18px] text-on-surface-variant/60 shrink-0">ios_share</span>
+              {showUrlBarShareIcon && (
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant/60 shrink-0">ios_share</span>
+              )}
             </div>
-            <button
-              type="button"
-              className="w-11 h-11 shrink-0 bg-surface-container-lowest border border-outline-variant/60 rounded-xl flex items-center justify-center shadow-lg shadow-on-surface/5 hover:bg-surface transition-all active:scale-95"
-              aria-label="Preview settings"
-            >
-              <span className="material-symbols-outlined text-[20px] text-on-surface-variant">tune</span>
-            </button>
+            {showHeaderTuneButton && (
+              <button
+                type="button"
+                className="w-11 h-11 shrink-0 bg-surface-container-lowest border border-outline-variant/60 rounded-xl flex items-center justify-center shadow-lg shadow-on-surface/5 hover:bg-surface transition-all active:scale-95"
+                aria-label="Preview settings"
+              >
+                <span className="material-symbols-outlined text-[20px] text-on-surface-variant">tune</span>
+              </button>
+            )}
           </div>
 
-          <div className="mb-6 flex flex-col items-center text-center px-2">
+          <div
+            className={`flex flex-col items-center text-center px-2 ${relaxed ? "mb-8" : "mb-6"}`}
+          >
             <h2 className="text-base font-black text-on-surface tracking-tight">{headerTitle}</h2>
             <p className="text-[11px] text-on-surface-variant font-medium italic">{headerSubtitle}</p>
           </div>
         </>
       )}
 
-      <div className="relative w-full flex justify-center px-1">
+      <div className={`relative w-full flex justify-center px-1 ${relaxed ? "py-1" : ""}`}>
         {showAmbientGlow && (
           <div className="pointer-events-none absolute -inset-10 bg-primary/10 blur-3xl rounded-full z-0 opacity-50" aria-hidden />
         )}
 
         <div
-          className="relative z-10 mx-auto w-full max-w-[280px] aspect-[280/640] sm:aspect-auto sm:h-[640px] sm:w-[280px] bg-slate-950 rounded-[2.5rem] sm:rounded-[3.5rem] p-2.5 shadow-[0px_60px_100px_-20px_rgba(0,0,0,0.2)] ring-[8px] sm:ring-[10px] ring-slate-900 border border-slate-800/50"
+          className={`relative z-10 mx-auto w-full max-w-[320px] aspect-[320/560] sm:aspect-auto sm:h-[560px] sm:w-[320px] bg-slate-950 rounded-[2.5rem] sm:rounded-[3.5rem] p-2.5 ring-[8px] sm:ring-[10px] ring-slate-900 border border-slate-800/50 ${
+            relaxed
+              ? "shadow-[0px_50px_100px_-24px_rgba(0,0,0,0.35)] dark:shadow-[0px_50px_100px_-20px_rgba(0,0,0,0.6)]"
+              : "shadow-[0px_60px_100px_-20px_rgba(0,0,0,0.2)]"
+          }`}
         >
           <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-6 bg-slate-950 rounded-full z-20 border border-slate-800/30" />
 
           <div
-            className="w-full h-full rounded-[2.2rem] sm:rounded-[3rem] overflow-hidden relative flex flex-col pt-14 sm:pt-16 px-4 sm:px-5 pb-6 sm:pb-8 transition-all duration-700"
+            className={`w-full h-full rounded-[2.2rem] sm:rounded-[3rem] overflow-hidden relative flex flex-col min-h-0 pt-14 sm:pt-16 pb-4 sm:pb-5 transition-all duration-700 ${
+              relaxed ? "px-5 sm:px-6" : "px-4 sm:px-5"
+            }`}
             style={{
               backgroundColor:
                 appearance.themeId === "agate"
@@ -177,10 +200,13 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
             }
           `}</style>
 
-            <div className="flex-1 overflow-y-auto scrollbar-hide space-y-6 sm:space-y-8 pr-1 preview-shell min-h-0">
-              <div className="flex flex-col items-center text-center">
+            {/* Scroll area sized to content (capped) so short profiles don’t leave a huge gap above the footer */}
+            <div className="overflow-y-auto overflow-x-hidden scrollbar-hide pr-1 preview-shell min-h-0 w-full shrink-0 max-h-[calc(100%-6rem)]">
+              <div className="flex flex-col items-center text-center pb-1">
                 <div
-                  className={`overflow-hidden shadow-xl shadow-slate-200/50 mb-4 sm:mb-6 border border-slate-50 ring-4 ring-white/50 flex items-center justify-center ${
+                  className={`overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-50 ring-4 ring-white/50 flex items-center justify-center ${
+                    relaxed ? "mb-5 sm:mb-7" : "mb-4 sm:mb-6"
+                  } ${
                     profileAvatarShape === "rounded" ? "w-20 h-20 rounded-3xl" : "w-20 h-20 rounded-full"
                   } ${appearance.themeId === "air" ? "bg-slate-100" : "bg-white"}`}
                 >
@@ -198,14 +224,21 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                 >
                   {appearance.profileTitle}
                 </h3>
-                <p className="text-[10px] sm:text-[11px] font-medium leading-relaxed mb-6 sm:mb-8 px-2 opacity-80 max-w-[220px]">
+                <p
+                  className={`text-[10px] sm:text-[11px] font-medium leading-relaxed px-2 opacity-80 max-w-[220px] ${
+                    relaxed ? "mb-5 sm:mb-7" : "mb-6 sm:mb-8"
+                  }`}
+                >
                   {appearance.profileBio}
                 </p>
 
-                <div className="w-full space-y-3 text-left">
+                <div className={`w-full text-left ${relaxed ? "space-y-4 sm:space-y-5" : "space-y-3"}`}>
                   {rows.map((row, idx) =>
                     row.kind === "label" ? (
-                      <div key={`${row.title}-${idx}`} className="flex items-center justify-between px-2">
+                      <div
+                        key={`${row.title}-${idx}`}
+                        className={`flex items-center justify-between px-2 ${relaxed ? "py-0.5" : ""}`}
+                      >
                         <div className="w-6 shrink-0" />
                         <span className="text-[13px] font-bold text-slate-700 tracking-tight">{row.title}</span>
                         <span className="material-symbols-outlined text-slate-300 text-sm">more_vert</span>
@@ -213,9 +246,11 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                     ) : (
                       <div
                         key={`${row.title}-${idx}`}
-                        className={`preview-card w-full py-3.5 px-4 sm:px-6 rounded-2xl flex items-center justify-between shadow-sm hover:translate-x-0.5 transition-transform cursor-default ${
-                          row.accent ? "border-l-[6px] border-l-primary" : ""
-                        }`}
+                        className={`preview-card w-full px-4 sm:px-6 rounded-2xl flex items-center justify-between hover:translate-x-0.5 transition-all cursor-default ${
+                          relaxed
+                            ? "py-4 sm:py-[18px] shadow-md ring-1 ring-slate-200/90 dark:ring-slate-600/50"
+                            : "py-3.5 shadow-sm"
+                        } ${row.accent ? "border-l-[6px] border-l-primary" : ""}`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           {row.icon ? (
@@ -233,7 +268,7 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
               </div>
             </div>
 
-            <div className="pt-4 sm:pt-6 border-t border-slate-100/80 flex flex-col items-center gap-3 sm:gap-4 shrink-0">
+            <div className="pt-3 sm:pt-4 border-t border-slate-100/80 flex flex-col items-center gap-2.5 sm:gap-3 shrink-0">
               <button
                 type="button"
                 className="bg-slate-900 text-white px-5 py-2 rounded-full font-black text-[10px] sm:text-[11px] shadow-sm"
@@ -250,7 +285,11 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
       </div>
 
       {syncLabel != null && syncLabel !== "" && (
-        <div className="mt-8 sm:mt-10 flex items-center gap-3 bg-surface-container-highest/60 backdrop-blur-md px-5 sm:px-6 py-2 rounded-full shadow-sm border border-surface-container-highest/40 max-w-full">
+        <div
+          className={`flex items-center justify-center gap-3 bg-surface-container-highest/60 backdrop-blur-md px-5 sm:px-6 py-2.5 rounded-full shadow-sm border border-surface-container-highest/40 w-full max-w-[320px] mx-auto ${
+            relaxed ? "mt-10 sm:mt-12" : "mt-8 sm:mt-10"
+          }`}
+        >
           <div className="flex gap-1 shrink-0">
             <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
           </div>
