@@ -51,8 +51,8 @@ export default function Home() {
               <Image
                 src="/link_hub_logo.png"
                 alt="LinkHub logo"
-                width={104}
-                height={104}
+                width={112}
+                height={112}
                 priority
               />
             </span>
@@ -378,8 +378,8 @@ export default function Home() {
               <Image
                 src="/link_hub_logo.png"
                 alt="LinkHub logo"
-                width={104}
-                height={104}
+                width={112}
+                height={112}
               />
             </div>
             <p className="font-inter text-sm text-slate-500 dark:text-slate-400">

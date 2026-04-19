@@ -10,7 +10,7 @@ export default async function LoginPage() {
 
   const logo = `<a class="flex items-center" href="/">
   <span class="sr-only">LinkHub</span>
-  <img src="/link_hub_logo.png" alt="LinkHub logo" width="104" height="104" />
+  <img src="/link_hub_logo.png" alt="LinkHub logo" width="112" height="112" />
 </a>`;
 
   const patched = bodyHtml

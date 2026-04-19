@@ -21,7 +21,7 @@ export default function PricingPage() {
           >
             <span className="flex items-center font-headline font-bold tracking-tight">
               <span className="sr-only">LinkHub</span>
-              <Image src="/link_hub_logo.png" alt="LinkHub logo" width={104} height={104} />
+              <Image src="/link_hub_logo.png" alt="LinkHub logo" width={112} height={112} />
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
@@ -392,8 +392,8 @@ export default function PricingPage() {
               <Image
                 src="/link_hub_logo.png"
                 alt="LinkHub logo"
-                width={104}
-                height={104}
+                width={112}
+                height={112}
               />
             </div>
             <p className="text-slate-500 text-sm max-w-xs">

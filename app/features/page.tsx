@@ -17,7 +17,7 @@ export default function FeaturesPage() {
           >
             <span className="flex items-center">
               <span className="sr-only">LinkHub</span>
-              <Image src="/link_hub_logo.png" alt="LinkHub logo" width={104} height={104} />
+              <Image src="/link_hub_logo.png" alt="LinkHub logo" width={112} height={112} />
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-8 font-headline font-semibold tracking-tight">
@@ -267,8 +267,8 @@ export default function FeaturesPage() {
               <Image
                 src="/link_hub_logo.png"
                 alt="LinkHub logo"
-                width={104}
-                height={104}
+                width={112}
+                height={112}
               />
             </div>
             <p className="font-inter text-sm text-slate-500">
