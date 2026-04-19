@@ -18,7 +18,7 @@ export default function FeaturesPage() {
             <span className="flex items-center">
               <span className="sr-only">LinkHub</span>
               <span className="bg-white rounded-xl p-2 shadow-sm border border-surface-variant/30 dark:border-white/10">
-                <Image src="/logo.png" alt="LinkHub logo" width={36} height={36} />
+                <Image src="/link_hub_logo.png" alt="LinkHub logo" width={36} height={36} />
               </span>
             </span>
           </Link>

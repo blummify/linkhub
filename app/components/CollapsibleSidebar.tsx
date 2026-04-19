@@ -31,9 +31,11 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
         {/* Logo Section */}
         <div className="mb-8 px-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-sm">link</span>
-            </div>
+            <img 
+              src="/link_hub_logo.png" 
+              alt="CreatorHub Logo" 
+              className="w-8 h-8"
+            />
             <span className="text-xl font-bold tracking-tight text-primary">CreatorHub</span>
           </div>
         </div>
