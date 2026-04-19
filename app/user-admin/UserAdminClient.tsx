@@ -35,6 +35,7 @@ export default function UserAdminClient() {
     buttonShadow: "none",
     buttonRoundness: "full",
     fontFamily: "Inter",
+    bodyFontFamily: "Inter",
     titleSize: "small",
     titleColor: "#000000",
     footerStyle: "minimal",

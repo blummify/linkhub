@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google";
+import { Inter, Manrope, Open_Sans, Outfit, Playfair_Display, Roboto } from "next/font/google";
 import "./globals.css";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -13,6 +13,30 @@ const inter = Inter({
   variable: "--next-font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "700", "800"],
+});
+
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+});
+
+const roboto = Roboto({
+  variable: "--font-roboto",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -35,7 +59,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${manrope.variable} ${inter.variable} antialiased scroll-smooth`}
+      className={`${manrope.variable} ${inter.variable} ${playfair.variable} ${outfit.variable} ${roboto.variable} ${openSans.variable} antialiased scroll-smooth`}
     >
       <head>
         <script

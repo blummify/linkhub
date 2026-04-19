@@ -4,14 +4,21 @@ import { useState, type ReactNode } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
 import { useSidebar } from "../components/SidebarContext";
-import { MobilePreview } from "../components/MobilePreview";
-import { ShareProfileModal } from "../components/ShareProfileModal";
+import { MobilePreview, type AppearanceState, normalizePreviewButtonStyle } from "../components/MobilePreview";
 import { LinksStyleTwoColumnLayout } from "../components/LinksStyleTwoColumnLayout";
 import { DashboardPageHeader } from "../components/DashboardPageHeader";
 import { DashboardSectionCard } from "../components/DashboardSectionCard";
 import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
 import { EDITOR_MOBILE_PREVIEW_SHARED, EDITOR_PREVIEW_COLUMN_CLASS } from "../constants/editorMobilePreview";
-import { PROFILE_PUBLIC_URL } from "../constants/profile";
+import { THEME_PRESETS } from "../constants/themePresets";
+import { BODY_FONT_OPTIONS, HEADLINE_FONT_OPTIONS } from "../constants/previewFonts";
+
+const PREVIEW_BUTTON_STYLES = [
+  { id: "flat", label: "Flat" },
+  { id: "rounded", label: "Rounded" },
+  { id: "outline", label: "Outline" },
+  { id: "shadow", label: "Shadow" },
+] as const;
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
@@ -26,7 +33,7 @@ const inputClass =
 
 export default function AppearanceClient() {
   const { isCollapsed } = useSidebar();
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [previewAppearance, setPreviewAppearance] = useState<AppearanceState>(THEME_PRESETS[0].appearance);
 
   return (
     <div className="bg-background text-on-surface min-h-screen antialiased font-sans">
@@ -51,6 +58,7 @@ export default function AppearanceClient() {
                       <button
                         type="button"
                         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container-high border border-outline-variant/40 text-[11px] font-black hover:bg-surface transition-all"
+                        onClick={() => setPreviewAppearance(THEME_PRESETS[0].appearance)}
                       >
                         <span className="material-symbols-outlined text-[16px]">restart_alt</span>
                         Reset
@@ -117,53 +125,75 @@ export default function AppearanceClient() {
                   <SectionLabel>Theme presets</SectionLabel>
                   <DashboardSectionCard className="!space-y-0 !p-6 sm:!p-8">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <button type="button" className="flex flex-col gap-3 group text-left">
-                        <div className="w-full aspect-[4/3] bg-surface-container rounded-2xl ring-2 ring-primary p-2 flex items-center justify-center transition-all group-hover:shadow-lg">
-                          <div className="w-full h-full rounded-xl bg-gradient-to-br from-surface to-surface-container-low border border-primary/20 flex flex-col items-center justify-center gap-2">
-                            <div className="flex gap-1">
-                              <div className="w-4 h-4 rounded-full bg-primary" />
-                              <div className="w-4 h-4 rounded-full bg-secondary" />
+                      {THEME_PRESETS.map((preset) => {
+                        const selected = previewAppearance.themeId === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() =>
+                              setPreviewAppearance((prev) => ({
+                                ...preset.appearance,
+                                fontFamily: prev.fontFamily,
+                                bodyFontFamily: prev.bodyFontFamily,
+                                buttonStyle: prev.buttonStyle,
+                              }))
+                            }
+                            className={`flex flex-col gap-3 group text-left transition-opacity ${
+                              selected ? "opacity-100" : "opacity-80 hover:opacity-100"
+                            }`}
+                          >
+                            <div
+                              className={`w-full aspect-[4/3] bg-surface-container rounded-2xl p-2 flex items-center justify-center transition-all ${
+                                selected
+                                  ? "ring-2 ring-primary shadow-lg group-hover:shadow-lg"
+                                  : "group-hover:shadow-md"
+                              }`}
+                            >
+                              {preset.id === "indigo-mint" && (
+                                <div className="w-full h-full rounded-xl bg-gradient-to-br from-surface to-surface-container-low border border-primary/20 flex flex-col items-center justify-center gap-2">
+                                  <div className="flex gap-1">
+                                    <div className="w-4 h-4 rounded-full bg-primary" />
+                                    <div className="w-4 h-4 rounded-full bg-secondary" />
+                                  </div>
+                                </div>
+                              )}
+                              {preset.id === "sunset-glow" && (
+                                <div className="w-full h-full rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/40 dark:to-amber-950/30 border border-outline-variant/50 flex flex-col items-center justify-center gap-2">
+                                  <div className="flex gap-1">
+                                    <div className="w-4 h-4 rounded-full bg-orange-500" />
+                                    <div className="w-4 h-4 rounded-full bg-yellow-400" />
+                                  </div>
+                                </div>
+                              )}
+                              {preset.id === "midnight-oasis" && (
+                                <div className="w-full h-full rounded-xl bg-gradient-to-br from-surface-dim to-surface-container-highest border border-outline-variant/50 flex flex-col items-center justify-center gap-2">
+                                  <div className="flex gap-1">
+                                    <div className="w-4 h-4 rounded-full bg-primary-container" />
+                                    <div className="w-4 h-4 rounded-full bg-white" />
+                                  </div>
+                                </div>
+                              )}
+                              {preset.id === "cloud-white" && (
+                                <div className="w-full h-full rounded-xl bg-white dark:bg-surface-container-highest border border-outline-variant/50 shadow-sm flex flex-col items-center justify-center gap-2">
+                                  <div className="flex gap-1">
+                                    <div className="w-4 h-4 rounded-full bg-surface-dim" />
+                                    <div className="w-4 h-4 rounded-full bg-outline" />
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        </div>
-                        <span className="text-xs font-black text-on-surface text-center">Indigo Mint</span>
-                      </button>
-
-                      <button type="button" className="flex flex-col gap-3 group text-left opacity-80 hover:opacity-100 transition-opacity">
-                        <div className="w-full aspect-[4/3] bg-surface-container rounded-2xl p-2 flex items-center justify-center transition-all group-hover:shadow-md">
-                          <div className="w-full h-full rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/40 dark:to-amber-950/30 border border-outline-variant/50 flex flex-col items-center justify-center gap-2">
-                            <div className="flex gap-1">
-                              <div className="w-4 h-4 rounded-full bg-orange-500" />
-                              <div className="w-4 h-4 rounded-full bg-yellow-400" />
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-xs font-bold text-on-surface-variant text-center">Sunset Glow</span>
-                      </button>
-
-                      <button type="button" className="flex flex-col gap-3 group text-left opacity-80 hover:opacity-100 transition-opacity">
-                        <div className="w-full aspect-[4/3] bg-surface-container rounded-2xl p-2 flex items-center justify-center transition-all group-hover:shadow-md">
-                          <div className="w-full h-full rounded-xl bg-gradient-to-br from-surface-dim to-surface-container-highest border border-outline-variant/50 flex flex-col items-center justify-center gap-2">
-                            <div className="flex gap-1">
-                              <div className="w-4 h-4 rounded-full bg-primary-container" />
-                              <div className="w-4 h-4 rounded-full bg-white" />
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-xs font-bold text-on-surface-variant text-center">Midnight Oasis</span>
-                      </button>
-
-                      <button type="button" className="flex flex-col gap-3 group text-left opacity-80 hover:opacity-100 transition-opacity">
-                        <div className="w-full aspect-[4/3] bg-surface-container rounded-2xl p-2 flex items-center justify-center transition-all group-hover:shadow-md">
-                          <div className="w-full h-full rounded-xl bg-white dark:bg-surface-container-highest border border-outline-variant/50 shadow-sm flex flex-col items-center justify-center gap-2">
-                            <div className="flex gap-1">
-                              <div className="w-4 h-4 rounded-full bg-surface-dim" />
-                              <div className="w-4 h-4 rounded-full bg-outline" />
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-xs font-bold text-on-surface-variant text-center">Cloud White</span>
-                      </button>
+                            <span
+                              className={`text-xs text-center font-black ${
+                                selected ? "text-on-surface" : "text-on-surface-variant font-bold"
+                              }`}
+                            >
+                              {preset.label}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </DashboardSectionCard>
                 </section>
@@ -206,27 +236,24 @@ export default function AppearanceClient() {
                   <SectionLabel>Button styles</SectionLabel>
                   <DashboardSectionCard className="!p-2 !space-y-0">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <button type="button" className="min-w-0 py-3 px-3 sm:px-4 rounded-xl bg-surface-container-highest shadow-sm font-black text-sm text-primary transition-all">
-                        Flat
-                      </button>
-                      <button
-                        type="button"
-                        className="min-w-0 py-3 px-3 sm:px-4 rounded-xl hover:bg-surface-container-highest font-medium text-sm text-on-surface-variant transition-all"
-                      >
-                        Rounded
-                      </button>
-                      <button
-                        type="button"
-                        className="min-w-0 py-3 px-3 sm:px-4 rounded-xl hover:bg-surface-container-highest font-medium text-sm text-on-surface-variant transition-all"
-                      >
-                        Outline
-                      </button>
-                      <button
-                        type="button"
-                        className="min-w-0 py-3 px-3 sm:px-4 rounded-xl hover:bg-surface-container-highest font-medium text-sm text-on-surface-variant transition-all"
-                      >
-                        Shadow
-                      </button>
+                      {PREVIEW_BUTTON_STYLES.map(({ id, label }) => {
+                        const active = normalizePreviewButtonStyle(previewAppearance.buttonStyle) === id;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => setPreviewAppearance((prev) => ({ ...prev, buttonStyle: id }))}
+                            className={`min-w-0 py-3 px-3 sm:px-4 rounded-xl text-sm transition-all ${
+                              active
+                                ? "bg-surface-container-highest shadow-sm font-black text-primary"
+                                : "hover:bg-surface-container-highest font-medium text-on-surface-variant"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </DashboardSectionCard>
                 </section>
@@ -239,11 +266,18 @@ export default function AppearanceClient() {
                       <div className="flex flex-col gap-2">
                         <label className={fieldLabel}>Headline font</label>
                         <div className="relative">
-                          <select className={`${inputClass} font-bold appearance-none pr-10`}>
-                            <option>Inter</option>
-                            <option>Manrope</option>
-                            <option>Playfair Display</option>
-                            <option>Outfit</option>
+                          <select
+                            className={`${inputClass} font-bold appearance-none pr-10`}
+                            value={previewAppearance.fontFamily}
+                            onChange={(e) =>
+                              setPreviewAppearance((prev) => ({ ...prev, fontFamily: e.target.value }))
+                            }
+                          >
+                            {HEADLINE_FONT_OPTIONS.map((name) => (
+                              <option key={name} value={name}>
+                                {name}
+                              </option>
+                            ))}
                           </select>
                           <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-sm">
                             expand_more
@@ -253,10 +287,18 @@ export default function AppearanceClient() {
                       <div className="flex flex-col gap-2">
                         <label className={fieldLabel}>Body font</label>
                         <div className="relative">
-                          <select className={`${inputClass} appearance-none pr-10`}>
-                            <option>Inter</option>
-                            <option>Roboto</option>
-                            <option>Open Sans</option>
+                          <select
+                            className={`${inputClass} appearance-none pr-10`}
+                            value={previewAppearance.bodyFontFamily}
+                            onChange={(e) =>
+                              setPreviewAppearance((prev) => ({ ...prev, bodyFontFamily: e.target.value }))
+                            }
+                          >
+                            {BODY_FONT_OPTIONS.map((name) => (
+                              <option key={name} value={name}>
+                                {name}
+                              </option>
+                            ))}
                           </select>
                           <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-sm">
                             expand_more
@@ -272,21 +314,14 @@ export default function AppearanceClient() {
               <LinksPreviewPanel>
                 <MobilePreview
                   {...EDITOR_MOBILE_PREVIEW_SHARED}
+                  appearance={previewAppearance}
                   linkDensity="relaxed"
-                  showUrlBarShareIcon={false}
-                  showHeaderTuneButton={false}
-                  onShareBarClick={() => setShowShareModal(true)}
+                  showPublicUrlBar={false}
                 />
               </LinksPreviewPanel>
             }
           />
         </main>
-
-        <ShareProfileModal
-          open={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          profileUrl={PROFILE_PUBLIC_URL}
-        />
       </CollapsibleSidebar>
     </div>
   );
