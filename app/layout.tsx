@@ -46,6 +46,15 @@ export const metadata: Metadata = {
   },
   description:
     "Consolidate your digital presence into a single, high-converting editorial stage.",
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180' },
+    ],
+  },
 };
 
 import { SidebarProvider } from "./components/SidebarContext";

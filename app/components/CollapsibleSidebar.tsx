@@ -34,7 +34,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
             <img 
               src="/link_hub_logo.png" 
               alt="CreatorHub Logo" 
-              className="w-28 h-28"
+              className="w-32 h-32"
             />
             <span className="text-xl font-bold tracking-tight text-primary">CreatorHub</span>
           </div>

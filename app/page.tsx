@@ -51,9 +51,11 @@ export default function Home() {
               <Image
                 src="/link_hub_logo.png"
                 alt="LinkHub logo"
-                width={112}
-                height={112}
+                width={128}
+                height={128}
                 priority
+                loading="eager"
+                style={{ width: 'auto', height: 'auto' }}
               />
             </span>
           </Link>
@@ -378,8 +380,10 @@ export default function Home() {
               <Image
                 src="/link_hub_logo.png"
                 alt="LinkHub logo"
-                width={112}
-                height={112}
+                width={128}
+                height={128}
+                loading="eager"
+                style={{ width: 'auto', height: 'auto' }}
               />
             </div>
             <p className="font-inter text-sm text-slate-500 dark:text-slate-400">

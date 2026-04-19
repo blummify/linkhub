@@ -10,7 +10,7 @@ export default async function SignupPage() {
 
   const logo = `<a class="flex items-center" href="/">
   <span class="sr-only">LinkHub</span>
-  <img src="/link_hub_logo.png" alt="LinkHub logo" width="112" height="112" />
+  <img src="/link_hub_logo.png" alt="LinkHub logo" width="128" height="128" />
 </a>`;
 
   const patched = bodyHtml
