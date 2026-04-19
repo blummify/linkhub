@@ -48,15 +48,13 @@ export default function Home() {
           >
             <span className="flex items-center">
               <span className="sr-only">LinkHub</span>
-              <span className="bg-white rounded-xl p-2 shadow-sm border border-surface-variant/30 dark:border-white/10">
-                <Image
-                  src="/link_hub_logo.png"
-                  alt="LinkHub logo"
-                  width={36}
-                  height={36}
-                  priority
-                />
-              </span>
+              <Image
+                src="/link_hub_logo.png"
+                alt="LinkHub logo"
+                width={104}
+                height={104}
+                priority
+              />
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-8 font-headline font-semibold tracking-tight">
@@ -376,8 +374,13 @@ export default function Home() {
       <footer className="w-full border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-950">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto gap-6">
           <div className="flex flex-col items-center md:items-start gap-4">
-            <div className="text-xl font-black text-indigo-900 dark:text-indigo-100 font-headline hover:scale-105 transition-transform cursor-pointer">
-              LinkHub
+            <div className="flex items-center justify-center hover:scale-105 transition-transform cursor-pointer">
+              <Image
+                src="/link_hub_logo.png"
+                alt="LinkHub logo"
+                width={104}
+                height={104}
+              />
             </div>
             <p className="font-inter text-sm text-slate-500 dark:text-slate-400">
               © 2024 LinkHub Digital. All rights reserved.

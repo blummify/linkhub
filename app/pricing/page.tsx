@@ -21,9 +21,7 @@ export default function PricingPage() {
           >
             <span className="flex items-center font-headline font-bold tracking-tight">
               <span className="sr-only">LinkHub</span>
-              <span className="bg-white rounded-xl p-2 shadow-sm border border-surface-variant/30 dark:border-white/10">
-                <Image src="/link_hub_logo.png" alt="LinkHub logo" width={36} height={36} />
-              </span>
+              <Image src="/link_hub_logo.png" alt="LinkHub logo" width={104} height={104} />
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
@@ -390,8 +388,13 @@ export default function PricingPage() {
       <footer className="bg-slate-50 w-full py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-7xl mx-auto px-6">
           <div className="col-span-2 md:col-span-1">
-            <div className="text-lg font-bold text-slate-900 mb-4">
-              LinkHub
+            <div className="flex items-center justify-center mb-4">
+              <Image
+                src="/link_hub_logo.png"
+                alt="LinkHub logo"
+                width={104}
+                height={104}
+              />
             </div>
             <p className="text-slate-500 text-sm max-w-xs">
               The world&apos;s premier platform for editorial link curation and
