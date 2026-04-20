@@ -5,12 +5,19 @@ import AppHeader from "../components/AppHeader";
 import { ThemeToggle } from "../ThemeToggle";
 
 export default function SuperAdminClient() {
+  const { isCollapsed } = useSidebar();
+  
   return (
     <div className="bg-surface text-on-surface min-h-screen antialiased">
       <CollapsibleSidebar isAdmin={false}>
         <AppHeader isAdmin={false} />
         {/* Main Content Canvas */}
-        <main id="mainContent" className="ml-64 pt-16 min-h-screen bg-surface-container-low transition-all duration-300 ease-in-out">
+        <main
+          id="mainContent"
+          className={`flex-1 pt-16 transition-all duration-500 ease-in-out ${
+            isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
+          } ml-0 overflow-y-auto bg-surface`}
+        >
           <div className="max-w-[1400px] mx-auto p-8 grid grid-cols-12 gap-10">
             {/* Super Admin Dashboard */}
             <section className="col-span-12 space-y-8">

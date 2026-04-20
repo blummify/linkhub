@@ -53,25 +53,6 @@ export default function AppearanceClient() {
                 <DashboardPageHeader
                   title="Appearance"
                   description="Customize your public profile to match your brand. Changes sync to your live preview."
-                  actions={
-                    <>
-                      <button
-                        type="button"
-                        className="px-6 py-2 rounded-xl text-[11px] font-black hover:bg-surface-container-high transition-all text-on-surface-variant flex items-center gap-2"
-                        onClick={() => setPreviewAppearance(THEME_PRESETS[0].appearance)}
-                      >
-                        <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-                        Reset
-                      </button>
-                      <button
-                        type="button"
-                        className="bg-primary text-on-primary px-6 py-2 rounded-full text-[11px] font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95 flex items-center gap-2"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">save</span>
-                        Save changes
-                      </button>
-                    </>
-                  }
                 />
 
                 {/* Profile */}
