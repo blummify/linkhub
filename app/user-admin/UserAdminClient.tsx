@@ -42,38 +42,52 @@ export default function UserAdminClient() {
   });
 
   return (
-    <div className="bg-background text-on-surface min-h-screen antialiased font-sans">
+    <div className="bg-surface text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
       <CollapsibleSidebar isAdmin={true}>
-        <AppHeader isAdmin={true} />
+        <div className="flex-1 flex flex-col min-h-screen relative">
+          <AppHeader isAdmin={true} />
 
-        <main
-          id="mainContent"
-          className={`min-h-screen bg-surface-container-low transition-all duration-500 ease-in-out ${
-            isCollapsed ? "ml-0" : "ml-0 lg:ml-64"
-          }`}
-        >
-          <LinksStyleTwoColumnLayout
-            className="!p-0 !gap-0"
-            previewColumnClassName={EDITOR_PREVIEW_COLUMN_CLASS}
-            left={<ManageLinksSection links={DEMO_LINKS} />}
-            preview={
-              <LinksPreviewPanel>
-                <MobilePreview
-                  {...EDITOR_MOBILE_PREVIEW_SHARED}
-                  appearance={appearance}
-                  linkDensity="relaxed"
-                  onShareBarClick={() => setShowShareModal(true)}
-                />
-              </LinksPreviewPanel>
-            }
+          <main
+            id="mainContent"
+            className={`flex-1 pt-16 transition-all duration-500 ease-in-out ${
+              isCollapsed ? "ml-[80px]" : "ml-[256px]"
+            } overflow-y-auto bg-surface`}
+          >
+            <div className="min-h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
+              {/* Left Column - Main Content */}
+              <div className="flex-1 px-8 py-12 lg:px-12">
+                <div className="max-w-2xl mx-auto lg:mx-0 animate-fade-in-up">
+                  <ManageLinksSection links={DEMO_LINKS} />
+                </div>
+              </div>
+
+              {/* Right Column - Preview Panel */}
+              <div className="w-full lg:w-[460px] xl:w-[540px] bg-surface-container-low/50 border-l border-outline-variant/30 relative py-8 px-6 flex flex-col items-center">
+                <div className="sticky top-8 w-full flex flex-col items-center animate-fade-in-up delay-100">
+                  <LinksPreviewPanel>
+                    <MobilePreview
+                      {...EDITOR_MOBILE_PREVIEW_SHARED}
+                      appearance={appearance}
+                      linkDensity="relaxed"
+                      headerTitle=""
+                      headerSubtitle=""
+                      showHeaderTuneButton={false}
+                      syncLabel={null}
+                      showDeviceFooter={false}
+                      onShareBarClick={() => setShowShareModal(true)}
+                    />
+                  </LinksPreviewPanel>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          <ShareProfileModal
+            open={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            profileUrl={PROFILE_PUBLIC_URL}
           />
-        </main>
-
-        <ShareProfileModal
-          open={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          profileUrl={PROFILE_PUBLIC_URL}
-        />
+        </div>
       </CollapsibleSidebar>
     </div>
   );

@@ -12,7 +12,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
   };
 
   const getLinkClasses = (href: string) => {
-    const baseClasses = `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-2' : 'px-4'} py-3 rounded-xl transition-all active:scale-95 duration-200 ease-in-out relative`;
+    const baseClasses = `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-1' : 'px-4'} py-3 rounded-xl transition-all active:scale-95 duration-200 ease-in-out relative`;
     if (isActiveLink(href)) {
       return `${baseClasses} bg-gradient-to-r from-primary/10 to-primary-container/20 text-primary font-semibold shadow-sm border border-primary/20`;
     }
@@ -25,7 +25,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
       <aside 
         id="sidebar"
         className={`h-screen bg-surface border-r border-outline-variant/50 z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 flex flex-col ${
-          isCollapsed ? 'w-16 p-2' : 'w-64 p-4'
+          isCollapsed ? 'w-20 p-3' : 'w-64 p-4'
         }`}
       >
         {/* Logo Section */}
@@ -79,10 +79,10 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
         </nav>
         
         {/* Bottom Section */}
-        <div className={`mt-auto ${isCollapsed ? 'p-2' : 'p-4'} space-y-4 pb-6`}>
+        <div className={`mt-auto ${isCollapsed ? 'p-1' : 'p-4'} space-y-2 pb-4`}>
           {/* User Profile */}
-          <div className={`${isCollapsed ? 'justify-center' : 'flex items-center gap-3'} p-3 bg-surface-container-highest rounded-xl`}>
-            <div className="w-10 h-10 rounded-full overflow-hidden">
+          <div className={`${isCollapsed ? 'justify-center' : 'flex items-center gap-3'} ${isCollapsed ? 'p-2' : 'p-3'} bg-surface-container-highest rounded-xl`}>
+            <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-full overflow-hidden`}>
               <img 
                 alt="User Avatar" 
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI57sppD_FLi9ouIh-nc1Tcj4PF6vKEAcZmAdyk0FM0P-SgHL4GDKTwJojpoC4Zdgclz61XTPE4THKrbPyXX4zalYeXTqHkAbKlA85wWL3zAe8gityPPdlDtwuDU0upwunIQPs0M13K-oQ1Tq0ZgfR8cdmGtB_k1Vc8Hdb1TRCamkkRf4oYpPXWTH73M_JuKxNU08-S8VdQevKwYgDZtbUJPtCSxb09pJUEGDjVyW1zafOoKx6JbW26p684_qC_-pO6N_XlrhrrH10"
@@ -99,12 +99,12 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
           
           {/* Bottom Links */}
           <div className="space-y-1">
-            <a className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all`} href="/help">
-              <span className="material-symbols-outlined text-lg">help</span>
+            <a className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-1 py-2' : 'px-3 py-2'} text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all`} href="/help">
+              <span className={`material-symbols-outlined ${isCollapsed ? 'text-base' : 'text-lg'}`}>help</span>
               {!isCollapsed && <span className="text-[13px]">Help Center</span>}
             </a>
-            <a className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all`} href="/logout">
-              <span className="material-symbols-outlined text-lg">logout</span>
+            <a className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-1 py-2' : 'px-3 py-2'} text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all`} href="/logout">
+              <span className={`material-symbols-outlined ${isCollapsed ? 'text-base' : 'text-lg'}`}>logout</span>
               {!isCollapsed && <span className="text-[13px]">Log Out</span>}
             </a>
           </div>

@@ -6,8 +6,8 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
   return (
     <header 
       id="header"
-      className={`fixed top-0 right-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/60 flex justify-between items-center h-16 px-6 transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'w-full' : 'w-[calc(100%-16rem)]'
+      className={`fixed top-0 right-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/60 flex justify-between items-center h-16 px-8 transition-all duration-300 ease-in-out ${
+        isCollapsed ? 'w-[calc(100%-5rem)]' : 'w-[calc(100%-16rem)]'
       }`}
     >
       <div className="flex items-center gap-6 flex-1">

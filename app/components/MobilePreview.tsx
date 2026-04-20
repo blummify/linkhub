@@ -264,7 +264,8 @@ export interface MobilePreviewProps {
   showHeaderTuneButton?: boolean;
   className?: string;
   /** Extra vertical spacing for link rows inside the device (e.g. `/links` editor) */
-  linkDensity?: "default" | "relaxed";
+  /** Show the Report / Privacy / Join button at the bottom of the phone screen */
+  showDeviceFooter?: boolean;
 }
 
 export const MobilePreview: React.FC<MobilePreviewProps> = ({
@@ -285,6 +286,7 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
   showHeaderTuneButton = true,
   className = "",
   linkDensity = "default",
+  showDeviceFooter = true,
 }) => {
   const rows = linkRows.length ? linkRows : DEFAULT_LINK_ROWS;
   const slug = appearance.profileTitle.replace(/^@/, "") || "profile";
@@ -352,12 +354,14 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
             </div>
           )}
 
-          <div
-            className={`flex flex-col items-center text-center px-2 ${relaxed ? "mb-8" : "mb-6"}`}
-          >
-            <h2 className="text-base font-black text-on-surface tracking-tight">{headerTitle}</h2>
-            <p className="text-[11px] text-on-surface-variant font-medium italic">{headerSubtitle}</p>
-          </div>
+          {(headerTitle || headerSubtitle) && (
+            <div
+              className={`flex flex-col items-center text-center px-2 ${relaxed ? "mb-8" : "mb-6"}`}
+            >
+              <h2 className="text-base font-black text-on-surface tracking-tight">{headerTitle}</h2>
+              <p className="text-[11px] text-on-surface-variant font-medium italic">{headerSubtitle}</p>
+            </div>
+          )}
         </>
       )}
 
@@ -414,7 +418,7 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                           ? "text-fuchsia-600"
                           : appearance.themeId === "midnight-oasis"
                             ? "text-sky-400"
-                            : "text-emerald-500"
+                            : "text-primary"
                       }`}
                     >
                       {profileIcon}
@@ -467,30 +471,32 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
               </div>
             </div>
 
-            <div
-              className={`pt-3 sm:pt-4 border-t flex flex-col items-center gap-2.5 sm:gap-3 shrink-0 ${
-                appearance.themeId === "midnight-oasis" ? "border-white/10" : "border-slate-100/80"
-              }`}
-            >
-              <button
-                type="button"
-                className={`px-3 py-1 rounded-full font-bold text-[8px] sm:text-[9px] shadow-sm ${
-                  appearance.themeId === "midnight-oasis"
-                    ? "bg-white text-slate-900"
-                    : "bg-slate-900 text-white"
-                }`}
-              >
-                Join {slug} on Linktree
-              </button>
+            {showDeviceFooter && (
               <div
-                className={`flex gap-3 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest ${
-                  appearance.themeId === "midnight-oasis" ? "text-slate-500" : "text-slate-300"
+                className={`pt-3 sm:pt-4 border-t flex flex-col items-center gap-2.5 sm:gap-3 shrink-0 ${
+                  appearance.themeId === "midnight-oasis" ? "border-white/10" : "border-slate-100/80"
                 }`}
               >
-                <span>Report</span>
-                <span>Privacy</span>
+                <button
+                  type="button"
+                  className={`px-3 py-1 rounded-full font-bold text-[8px] sm:text-[9px] shadow-sm ${
+                    appearance.themeId === "midnight-oasis"
+                      ? "bg-white text-slate-900"
+                      : "bg-slate-900 text-white"
+                  }`}
+                >
+                  Join {slug} on Linktree
+                </button>
+                <div
+                  className={`flex gap-3 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest ${
+                    appearance.themeId === "midnight-oasis" ? "text-slate-500" : "text-slate-300"
+                  }`}
+                >
+                  <span>Report</span>
+                  <span>Privacy</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

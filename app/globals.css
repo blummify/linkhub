@@ -40,14 +40,19 @@
   --lh-inverse-on-surface: #f2eff9;
   --lh-error: #ba1a1a;
   --lh-tertiary-fixed: #ffdbcf;
-  --lh-on-surface-variant: #454652;
   --lh-on-primary: #ffffff;
   --lh-primary-fixed-dim: #bbc3ff;
   --lh-primary-fixed: #dfe0ff;
   --lh-on-primary-fixed: #000e5f;
   --lh-surface-container-high: #e9e7f0;
   --lh-outline-variant: #c5c5d4;
-  --lh-mint-500: #86f8c6;
+  --lh-secondary: #4052c7;
+  --lh-secondary-fixed-dim: #bbc3ff;
+  --lh-on-secondary-container: #1f33aa;
+  --lh-on-secondary-fixed-variant: #2438ae;
+  --lh-on-secondary-fixed: #000e5f;
+  --lh-secondary-fixed: #dfe0ff;
+  --lh-mint-500: #86aff8;
   --lh-glass-nav-bg: rgba(251, 248, 255, 0.7);
   --lh-glass-card-bg: rgba(255, 255, 255, 0.7);
   color-scheme: light;
@@ -57,7 +62,7 @@
   --lh-on-surface: #f1f0f4;
   --lh-surface-tint: #bbc3ff;
   --lh-on-error-container: #ffdad6;
-  --lh-on-secondary: #003d2a;
+  --lh-on-secondary: #000e5f;
   --lh-on-background: #f1f0f4;
   --lh-on-primary-container: #0a1b4a;
   --lh-error-container: #93000a;
@@ -66,26 +71,26 @@
   --lh-on-tertiary-container: #ffdbcf;
   --lh-surface-container-lowest: #1a1b22;
   --lh-on-tertiary-fixed: #ffdbcf;
-  --lh-secondary: #4cdb94;
-  --lh-secondary-fixed-dim: #4cdb94;
+  --lh-secondary: #bbc3ff;
+  --lh-secondary-fixed-dim: #bbc3ff;
   --lh-outline: #938f99;
   --lh-on-tertiary-fixed-variant: #ffb59c;
   --lh-surface-dim: #1a1b22;
   --lh-tertiary-fixed-dim: #ffb59c;
   --lh-tertiary: #ffb59c;
   --lh-on-tertiary: #4a0f00;
-  --lh-on-secondary-container: #005239;
+  --lh-on-secondary-container: #000e5f;
   --lh-surface-container: #2a2b35;
   --lh-background: #1a1b22;
   --lh-surface-container-highest: #3e3f4a;
-  --lh-on-secondary-fixed-variant: #005239;
+  --lh-on-secondary-fixed-variant: #2438ae;
   --lh-tertiary-container: #ffdbcf;
-  --lh-on-secondary-fixed: #003d2a;
+  --lh-on-secondary-fixed: #0a1b4a;
   --lh-inverse-primary: #1f33aa;
   --lh-surface: #1f2029;
   --lh-on-primary-fixed-variant: #d0d1ff;
   --lh-primary: #c0c5ff;
-  --lh-secondary-fixed: #4cdb94;
+  --lh-secondary-fixed: #bbc3ff;
   --lh-surface-bright: #2a2b35;
   --lh-on-error: #93000a;
   --lh-surface-container-low: #2a2b35;
@@ -100,7 +105,7 @@
   --lh-on-primary-fixed: #0a1b4a;
   --lh-surface-container-high: #3e3f4a;
   --lh-outline-variant: #49454f;
-  --lh-mint-500: #4cdb94;
+  --lh-mint-500: #bbc3ff;
   --lh-glass-nav-bg: rgba(31, 32, 41, 0.8);
   --lh-glass-card-bg: rgba(31, 32, 41, 0.8);
   color-scheme: dark;
@@ -328,7 +333,7 @@ body {
 }
 
 .headline-accent {
-  background: linear-gradient(90deg, #1f33aa 0%, #3b4ec2 35%, #86f8c6 70%, #1f33aa 100%);
+  background: linear-gradient(90deg, #1f33aa 0%, #3b4ec2 35%, #bbc3ff 70%, #1f33aa 100%);
   background-size: 200% 100%;
   animation: headline-accent-shift 5s ease-in-out infinite;
   -webkit-background-clip: text;

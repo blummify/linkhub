@@ -26,10 +26,10 @@ export function ManageLinksSection({
           <button
             type="button"
             onClick={onAddLink}
-            className="flex items-center gap-2 bg-secondary text-on-secondary px-5 py-2 rounded-full font-black shadow-lg shadow-secondary/20 hover:scale-105 transition-all text-[11px] active:scale-95 group"
+            className="group flex items-center gap-2.5 bg-primary text-on-primary px-6 py-3 rounded-2xl font-bold highlight-white/10 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all active:scale-95 active:translate-y-0"
           >
-            <span className="material-symbols-outlined text-[18px] group-hover:rotate-90 transition-transform">add</span>
-            Add New Link
+            <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform duration-300">add</span>
+            <span className="text-[13px] tracking-tight">Add New Link</span>
           </button>
         }
       />

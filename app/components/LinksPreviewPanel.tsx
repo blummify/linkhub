@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
  */
 export function LinksPreviewPanel({ children }: { children: ReactNode }) {
   return (
-    <div className="w-full max-w-[380px] mx-auto rounded-[2rem] border border-outline-variant/50 bg-gradient-to-b from-surface-container-highest/90 to-surface-container-low/70 p-5 sm:p-6 lg:p-7 shadow-[0_24px_60px_-16px_rgba(15,23,42,0.12)] dark:shadow-[0_24px_60px_-16px_rgba(0,0,0,0.45)] ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+    <div className="w-full max-w-[360px] mx-auto rounded-[3rem] border border-outline-variant/30 bg-surface-container-lowest/80 backdrop-blur-xl p-4 sm:p-5 lg:p-6 shadow-2xl shadow-on-surface/5 ring-1 ring-white/20">
       {children}
     </div>
   );
