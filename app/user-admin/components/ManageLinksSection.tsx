@@ -9,6 +9,8 @@ export interface ManageLinksSectionProps {
   onAddLink?: () => void;
   onEditLink?: (link: ManagedLink, index: number) => void;
   onDeleteLink?: (link: ManagedLink, index: number) => void;
+  onToggleLink?: (link: ManagedLink, index: number) => void;
+  onUpdateLink?: (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => void;
 }
 
 export function ManageLinksSection({
@@ -16,6 +18,8 @@ export function ManageLinksSection({
   onAddLink,
   onEditLink,
   onDeleteLink,
+  onToggleLink,
+  onUpdateLink,
 }: ManageLinksSectionProps) {
   return (
     <div className="space-y-8 animate-fade-in">
@@ -41,6 +45,8 @@ export function ManageLinksSection({
             link={link}
             onEdit={onEditLink ? () => onEditLink(link, idx) : undefined}
             onDelete={onDeleteLink ? () => onDeleteLink(link, idx) : undefined}
+            onToggle={onToggleLink ? () => onToggleLink(link, idx) : undefined}
+            onUpdate={onUpdateLink ? (updates) => onUpdateLink(link, idx, updates) : undefined}
           />
         ))}
       </div>

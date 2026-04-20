@@ -9,8 +9,9 @@ import { ShareProfileModal } from "../components/ShareProfileModal";
 import { LinksStyleTwoColumnLayout } from "../components/LinksStyleTwoColumnLayout";
 import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
+import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { ManagedLink } from "./components/types";
-import { EDITOR_MOBILE_PREVIEW_SHARED, EDITOR_PREVIEW_COLUMN_CLASS } from "../constants/editorMobilePreview";
+import { EDITOR_MOBILE_PREVIEW_SHARED } from "../constants/editorMobilePreview";
 import { PROFILE_PUBLIC_URL } from "../constants/profile";
 
 const DEMO_LINKS: ManagedLink[] = [
@@ -22,6 +23,46 @@ const DEMO_LINKS: ManagedLink[] = [
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
   const [showShareModal, setShowShareModal] = useState(false);
+  const [links, setLinks] = useState<ManagedLink[]>(DEMO_LINKS);
+  
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
+
+  const handleAddLink = () => {
+    setEditingLink(null);
+    setShowLinkModal(true);
+  };
+
+  const handleSaveLink = (newLink: ManagedLink) => {
+    if (editingLink !== null) {
+      const updatedLinks = [...links];
+      updatedLinks[editingLink.index] = newLink;
+      setLinks(updatedLinks);
+    } else {
+      setLinks([newLink, ...links]);
+    }
+  };
+
+  const handleDeleteLink = (link: ManagedLink, index: number) => {
+    setLinks(links.filter((_, i) => i !== index));
+  };
+
+  const handleEditLink = (link: ManagedLink, index: number) => {
+    setEditingLink({ link, index });
+    setShowLinkModal(true);
+  };
+
+  const handleToggleLink = (link: ManagedLink, index: number) => {
+    const updatedLinks = [...links];
+    updatedLinks[index] = { ...link, draft: !link.draft };
+    setLinks(updatedLinks);
+  };
+
+  const handleUpdateLink = (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => {
+    const updatedLinks = [...links];
+    updatedLinks[index] = { ...link, ...updates };
+    setLinks(updatedLinks);
+  };
 
   const [appearance] = useState<AppearanceState>({
     profileTitle: "@oseijoel6111",
@@ -57,7 +98,14 @@ export default function UserAdminClient() {
               {/* Left Column - Main Content */}
               <div className="flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
                 <div className="max-w-2xl mx-auto lg:mx-0 animate-fade-in-up">
-                  <ManageLinksSection links={DEMO_LINKS} />
+                  <ManageLinksSection 
+                    links={links} 
+                    onAddLink={handleAddLink}
+                    onEditLink={handleEditLink}
+                    onDeleteLink={handleDeleteLink}
+                    onToggleLink={handleToggleLink}
+                    onUpdateLink={handleUpdateLink}
+                  />
                 </div>
               </div>
 
@@ -68,6 +116,10 @@ export default function UserAdminClient() {
                     <MobilePreview
                       {...EDITOR_MOBILE_PREVIEW_SHARED}
                       appearance={appearance}
+                      linkRows={links
+                        .filter(l => !l.draft)
+                        .map(l => ({ kind: 'button', title: l.title, accent: true }))
+                      }
                       linkDensity="relaxed"
                       headerTitle=""
                       headerSubtitle=""
@@ -81,6 +133,13 @@ export default function UserAdminClient() {
               </div>
             </div>
           </main>
+
+          <AddEditLinkModal
+            open={showLinkModal}
+            onClose={() => setShowLinkModal(false)}
+            onSave={handleSaveLink}
+            initialLink={editingLink?.link}
+          />
 
           <ShareProfileModal
             open={showShareModal}
