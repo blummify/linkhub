@@ -22,14 +22,17 @@ const PREVIEW_BUTTON_STYLES = [
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <h2 className="text-[9px] font-black uppercase tracking-widest text-primary mb-4 pl-0.5">{children}</h2>
+    <h2 className="text-[10px] font-black uppercase tracking-[0.1em] text-on-surface-variant/80 mb-3 pl-1 flex items-center gap-3">
+      <span className="w-1 h-3 bg-primary rounded-full shadow-sm shadow-primary/40" />
+      {children}
+    </h2>
   );
 }
 
-const fieldLabel = "text-[9px] font-black uppercase tracking-widest text-on-surface-variant pl-1";
-const colorFieldLabel = "text-[9px] font-black uppercase tracking-widest text-on-surface-variant";
+const fieldLabel = "text-[10px] font-black uppercase tracking-widest text-on-surface-variant/50 pl-1";
+const colorFieldLabel = "text-[10px] font-black uppercase tracking-widest text-on-surface-variant/50";
 const inputClass =
-  "w-full bg-surface-container-low border border-outline-variant/10 rounded-xl px-4 py-3 text-[13px] font-medium outline-none transition-all focus:ring-2 focus:ring-primary/20";
+  "w-full bg-surface-container-low/50 border border-outline-variant/20 rounded-2xl px-5 py-4 text-[13px] font-black tracking-tight text-on-surface placeholder:text-on-surface-variant/30 outline-none transition-all duration-300 focus:bg-white focus:ring-[6px] focus:ring-primary/5 focus:border-primary/40 shadow-sm shadow-on-surface/[0.02]";
 
 export default function AppearanceClient() {
   const { isCollapsed } = useSidebar();
@@ -61,15 +64,15 @@ export default function AppearanceClient() {
                   <DashboardSectionCard className="!space-y-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
                       <div className="relative group shrink-0">
-                        <div className="w-28 h-28 rounded-full overflow-hidden bg-surface-container-highest flex items-center justify-center ring-4 ring-white dark:ring-surface-container-highest shadow-lg">
-                          <span className="material-symbols-outlined text-4xl text-on-surface-variant/40">person</span>
+                        <div className="w-32 h-32 rounded-full overflow-hidden bg-surface-container-highest flex items-center justify-center ring-[8px] ring-white dark:ring-surface-container-highest shadow-2xl shadow-on-surface/10 relative transition-transform duration-500 group-hover:scale-[1.02]">
+                          <span className="material-symbols-outlined text-5xl text-on-surface-variant/40">person</span>
                         </div>
                         <button
                           type="button"
-                          className="absolute bottom-1 right-1 bg-primary text-on-primary p-2.5 rounded-full shadow-lg hover:scale-110 transition-transform"
+                          className="absolute bottom-1 right-1 bg-primary text-on-primary p-3 rounded-full shadow-xl hover:scale-110 hover:rotate-6 transition-all active:scale-95 duration-500 group-hover:shadow-primary/40"
                           aria-label="Edit profile picture"
                         >
-                          <span className="material-symbols-outlined text-sm">edit</span>
+                          <span className="material-symbols-outlined text-[18px] font-black">edit</span>
                         </button>
                       </div>
                       <div className="min-w-0 flex-1">
@@ -158,26 +161,48 @@ export default function AppearanceClient() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <DashboardSectionCard className="!p-4 group">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-surface to-surface-container-low border border-outline-variant shadow-inner" />
+                        <div 
+                          className="w-12 h-12 rounded-xl bg-gradient-to-br from-surface to-surface-container-low border border-outline-variant shadow-inner" 
+                          style={{ backgroundColor: previewAppearance.bgColor }}
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Canvas</p>
-                          <code className="text-[11px] font-bold text-primary">#FBF8FF → #F4F2FC</code>
+                          <code className="text-[11px] font-bold text-primary uppercase">{previewAppearance.bgColor}</code>
                         </div>
-                        <button type="button" className="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
-                          <span className="material-symbols-outlined text-[18px]">colorize</span>
-                        </button>
+                        <div className="relative">
+                          <input 
+                            type="color" 
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                            value={previewAppearance.bgColor}
+                            onChange={(e) => setPreviewAppearance(prev => ({ ...prev, bgColor: e.target.value }))}
+                          />
+                          <button type="button" className="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+                            <span className="material-symbols-outlined text-[18px]">colorize</span>
+                          </button>
+                        </div>
                       </div>
                     </DashboardSectionCard>
                     <DashboardSectionCard className="!p-4 group">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary border border-primary/20 shadow-inner" />
+                        <div 
+                          className="w-12 h-12 rounded-xl border border-primary/20 shadow-inner" 
+                          style={{ backgroundColor: previewAppearance.titleColor }}
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Accent</p>
-                          <code className="text-[11px] font-bold text-primary">#1F33AA</code>
+                          <code className="text-[11px] font-bold text-primary uppercase">{previewAppearance.titleColor}</code>
                         </div>
-                        <button type="button" className="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
-                          <span className="material-symbols-outlined text-[18px]">colorize</span>
-                        </button>
+                        <div className="relative">
+                          <input 
+                            type="color" 
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                            value={previewAppearance.titleColor}
+                            onChange={(e) => setPreviewAppearance(prev => ({ ...prev, titleColor: e.target.value }))}
+                          />
+                          <button type="button" className="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+                            <span className="material-symbols-outlined text-[18px]">colorize</span>
+                          </button>
+                        </div>
                       </div>
                     </DashboardSectionCard>
                   </div>

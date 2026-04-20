@@ -3,6 +3,7 @@
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
 import { ThemeToggle } from "../ThemeToggle";
+import { useSidebar } from "../components/SidebarContext";
 
 export default function SuperAdminClient() {
   const { isCollapsed } = useSidebar();

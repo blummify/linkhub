@@ -364,14 +364,14 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
 
       <div className={`relative w-full flex justify-center px-1 ${relaxed ? "py-1" : ""}`}>
         {showAmbientGlow && (
-          <div className="pointer-events-none absolute -inset-10 bg-primary/10 blur-3xl rounded-full z-0 opacity-50" aria-hidden />
+          <div className="pointer-events-none absolute -inset-20 bg-gradient-to-tr from-primary/10 via-primary/5 to-transparent blur-[100px] rounded-full z-0 opacity-60 animate-pulse" aria-hidden />
         )}
 
         <div
-          className={`relative z-10 mx-auto w-full max-w-[320px] aspect-[320/560] sm:aspect-auto sm:h-[560px] sm:w-[320px] bg-slate-950 rounded-[2.5rem] sm:rounded-[3.5rem] p-2.5 ring-[8px] sm:ring-[10px] ring-slate-900 border border-slate-800/50 ${
+          className={`relative z-10 mx-auto w-full max-w-[320px] aspect-[320/560] sm:aspect-auto sm:h-[580px] sm:w-[320px] bg-slate-950 rounded-[3rem] sm:rounded-[3.5rem] p-3 ring-[10px] sm:ring-[12px] ring-slate-900 border border-slate-800/50 shadow-[0px_80px_120px_-20px_rgba(0,0,0,0.25)] ${
             relaxed
-              ? "shadow-[0px_50px_100px_-24px_rgba(0,0,0,0.35)] dark:shadow-[0px_50px_100px_-20px_rgba(0,0,0,0.6)]"
-              : "shadow-[0px_60px_100px_-20px_rgba(0,0,0,0.2)]"
+              ? "shadow-2xl shadow-black/40"
+              : ""
           }`}
         >
           <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-6 bg-slate-950 rounded-full z-20 border border-slate-800/30" />
