@@ -50,20 +50,20 @@ export default function UserAdminClient() {
           <main
             id="mainContent"
             className={`flex-1 pt-16 transition-all duration-500 ease-in-out ${
-              isCollapsed ? "ml-[80px]" : "ml-[256px]"
-            } overflow-y-auto bg-surface`}
+              isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
+            } ml-0 overflow-y-auto bg-surface`}
           >
             <div className="min-h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
               {/* Left Column - Main Content */}
-              <div className="flex-1 px-8 py-12 lg:px-12">
+              <div className="flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
                 <div className="max-w-2xl mx-auto lg:mx-0 animate-fade-in-up">
                   <ManageLinksSection links={DEMO_LINKS} />
                 </div>
               </div>
 
               {/* Right Column - Preview Panel */}
-              <div className="w-full lg:w-[460px] xl:w-[540px] bg-surface-container-low/50 border-l border-outline-variant/30 relative py-8 px-6 flex flex-col items-center">
-                <div className="sticky top-8 w-full flex flex-col items-center animate-fade-in-up delay-100">
+              <div className="w-full lg:w-[460px] xl:w-[540px] bg-surface-container-low/50 border-t lg:border-t-0 lg:border-l border-outline-variant/30 relative py-12 lg:py-8 px-4 sm:px-6 flex flex-col items-center">
+                <div className="sticky top-24 lg:top-8 w-full flex flex-col items-center animate-fade-in-up delay-100">
                   <LinksPreviewPanel>
                     <MobilePreview
                       {...EDITOR_MOBILE_PREVIEW_SHARED}

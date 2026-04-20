@@ -21,11 +21,21 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
 
   return (
     <>
+      {/* Mobile Overlay */}
+      {!isCollapsed && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          onClick={toggleSidebar}
+        />
+      )}
+
       {/* SideNavBar Component */}
       <aside 
         id="sidebar"
         className={`h-screen bg-surface border-r border-outline-variant/50 z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 flex flex-col ${
-          isCollapsed ? 'w-20 p-3' : 'w-64 p-4'
+          isCollapsed 
+            ? 'w-20 p-3 -translate-x-full lg:translate-x-0' 
+            : 'w-64 p-4 translate-x-0'
         }`}
       >
         {/* Logo Section */}
