@@ -123,7 +123,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1">
+      <div className="flex-1 h-screen overflow-hidden relative flex flex-col">
         {children}
       </div>
     </>

@@ -13,12 +13,12 @@ export default function LinksClient() {
   const { isCollapsed } = useSidebar();
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen antialiased">
+    <div className="bg-surface text-on-surface min-h-screen antialiased flex overflow-hidden">
       <CollapsibleSidebar isAdmin={false}>
         <AppHeader isAdmin={false} />
         <main
           id="mainContent"
-          className={`flex-1 pt-16 transition-all duration-500 ease-in-out ${
+          className={`flex-1 h-full pt-16 transition-all duration-500 ease-in-out ${
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           } ml-0 overflow-y-auto bg-surface`}
         >

@@ -28,7 +28,7 @@ export function LinksStyleTwoColumnLayout({
       <div className="col-span-12 lg:col-span-7 space-y-8 min-w-0">{left}</div>
 
       <div
-        className={`col-span-12 lg:col-span-5 w-full min-w-0 flex flex-col items-center lg:items-stretch bg-surface-container rounded-2xl lg:rounded-none px-4 py-8 sm:px-6 lg:px-8 lg:sticky lg:top-16 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto ${previewColumnClassName}`}
+        className={`col-span-12 lg:col-span-5 w-full min-w-0 flex flex-col items-center lg:items-stretch lg:sticky lg:top-8 lg:self-start ${previewColumnClassName}`}
       >
         {preview}
       </div>
