@@ -1,13 +1,22 @@
+import { useState, useEffect } from "react";
 import { useSidebar } from "./SidebarContext";
 
 export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
   const { isCollapsed, toggleSidebar } = useSidebar();
+  const [isMobileSearch, setIsMobileSearch] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobileSearch(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   return (
     <header 
       id="header"
       className={`fixed top-0 right-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/60 flex justify-between items-center h-16 px-4 sm:px-8 transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'lg:w-[calc(100%-5rem)] w-full' : 'lg:w-[calc(100%-16rem)] w-full'
+        isCollapsed ? 'lg:w-[calc(100%-5rem)] w-full' : 'lg:w-[calc(100%-12rem)] sm:lg:w-[calc(100%-16rem)] w-full'
       }`}
     >
       <div className="flex items-center gap-2 sm:gap-6 flex-1 min-w-0">
@@ -28,7 +37,7 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
           </div>
           <input 
             className="w-full bg-surface-container-low border border-outline-variant/30 rounded-full pl-10 sm:pl-12 pr-4 sm:pr-12 py-2 text-[12px] sm:text-[13px] text-on-surface placeholder:text-on-surface-variant focus:ring-4 focus:ring-primary/10 focus:border-primary/20 transition-all outline-none font-medium" 
-            placeholder={isAdmin ? (window.innerWidth < 640 ? "Search..." : "Search users...") : "Search..."} 
+            placeholder={isAdmin ? (isMobileSearch ? "Search..." : "Search users...") : "Search..."} 
             type="text"
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-1 px-1.5 py-1 bg-surface-container-highest border border-outline-variant rounded text-[10px] font-black text-on-surface-variant opacity-60">

@@ -268,8 +268,8 @@ export interface MobilePreviewProps {
 export const MobilePreview: React.FC<MobilePreviewProps> = ({
   appearance,
   publicUrl = "linktr.ee/blummify",
-  profileImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuA4PxtiCvvdChx5rltV1QWgJOqNq6piD1-6Ei7usvNa6vEqtcJS14LJjz75FSALFuRLCOo0PeWiYTCWQG62g3U-sBgKkkTS8YLKuLQ5VXhayVh9HApiK6p0t3dHTTdwJ7qIltKK80bBabeACJ56gyTzodT-BxvGcpFh7nbolhTp9SrlFS4DSC2EcM-M062HDKFztAej-R7GT47dJReQ0J2iH6aWyNKUSJEss688VsS89wBvuGXxVJrQT0Sf7ComxHaSCEFSk4u1SlQa",
-  profileIcon = "eco",
+  profileImageUrl = "",
+  profileIcon = "person",
   profileAvatarShape = "circle",
   linkRows = DEFAULT_LINK_ROWS,
   showHeaderChrome = true,
@@ -283,7 +283,7 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
   showHeaderTuneButton = true,
   className = "",
   linkDensity = "default",
-  showDeviceFooter = true,
+  showDeviceFooter = false,
 }) => {
   const rows = linkRows.length ? linkRows : DEFAULT_LINK_ROWS;
   const slug = appearance.profileTitle.replace(/^@/, "") || "profile";

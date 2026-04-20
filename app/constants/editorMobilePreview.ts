@@ -13,6 +13,6 @@ export const EDITOR_MOBILE_PREVIEW_SHARED: Pick<
 > = {
   appearance: DEFAULT_APPEARANCE,
   publicUrl: PROFILE_PUBLIC_URL,
-  showHeaderChrome: true,
-  syncLabel: "Syncing with live profile",
+  showHeaderChrome: false,
+  syncLabel: null,
 };

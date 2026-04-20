@@ -42,9 +42,9 @@ export default function AppearanceClient() {
 
         <main
           id="mainContent"
-          className={`pt-16 min-h-screen bg-surface-container-low transition-all duration-300 ease-in-out ${
-            isCollapsed ? "ml-0" : "ml-0 lg:ml-64"
-          }`}
+          className={`flex-1 pt-16 transition-all duration-500 ease-in-out ${
+            isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
+          } ml-0 overflow-y-auto bg-surface`}
         >
           <LinksStyleTwoColumnLayout
             previewColumnClassName={EDITOR_PREVIEW_COLUMN_CLASS}
@@ -57,7 +57,7 @@ export default function AppearanceClient() {
                     <>
                       <button
                         type="button"
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container-high border border-outline-variant/40 text-[11px] font-black hover:bg-surface transition-all"
+                        className="px-6 py-2 rounded-xl text-[11px] font-black hover:bg-surface-container-high transition-all text-on-surface-variant flex items-center gap-2"
                         onClick={() => setPreviewAppearance(THEME_PRESETS[0].appearance)}
                       >
                         <span className="material-symbols-outlined text-[16px]">restart_alt</span>
@@ -65,7 +65,7 @@ export default function AppearanceClient() {
                       </button>
                       <button
                         type="button"
-                        className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2 rounded-full font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all text-[11px] active:scale-95"
+                        className="bg-primary text-on-primary px-6 py-2 rounded-full text-[11px] font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95 flex items-center gap-2"
                       >
                         <span className="material-symbols-outlined text-[16px]">save</span>
                         Save changes
@@ -81,11 +81,7 @@ export default function AppearanceClient() {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
                       <div className="relative group shrink-0">
                         <div className="w-28 h-28 rounded-full overflow-hidden bg-surface-container-highest flex items-center justify-center ring-4 ring-white dark:ring-surface-container-highest shadow-lg">
-                          <img
-                            alt="Profile Avatar"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4CPgv-mQOEFNUQ75XgMO_x5olid0O0RwPWxjsoFa8ql_jecZ5HMhnxmXvVLs9egGsMOfONs6iY53A-i0iAizWATMmXA2VReS1U_efUICX_LKBqNs6mLtA_rzS0YzTxf_CJf8InO_RxeEAey6igSpMw1a9M55wvmfAMao66kUgMIH8KmsA3AmyhKXIe6HVdN8yzNybEZpSiuol_kqj7y5OjKTqrWylfMVNpz-UNumvF4yDh9Il2DlCS-SdWagl7oeVGphxCrdD0r70"
-                            className="w-full h-full object-cover"
-                          />
+                          <span className="material-symbols-outlined text-4xl text-on-surface-variant/40">person</span>
                         </div>
                         <button
                           type="button"
@@ -106,14 +102,14 @@ export default function AppearanceClient() {
                     <div className="space-y-5 pt-2 border-t border-outline-variant/30">
                       <div className="flex flex-col gap-2">
                         <label className={fieldLabel}>Profile name</label>
-                        <input className={inputClass} type="text" defaultValue="Alex Rivers" />
+                        <input className={inputClass} type="text" placeholder="@yourname" />
                       </div>
                       <div className="flex flex-col gap-2">
                         <label className={fieldLabel}>Short bio</label>
                         <textarea
-                          className={`${inputClass} resize-none text-sm min-h-[88px]`}
+                          className={`${inputClass} resize-none text-[13px] min-h-[88px]`}
                           rows={3}
-                          defaultValue="Professional Photographer & Creative Director based in Seattle. Capturing the essence of modern living."
+                          placeholder="Tell your story..."
                         />
                       </div>
                     </div>
