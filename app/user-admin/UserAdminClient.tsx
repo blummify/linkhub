@@ -48,12 +48,12 @@ export default function UserAdminClient() {
 
         <main
           id="mainContent"
-          className={`pt-16 min-h-screen bg-surface-container-low transition-all duration-500 ease-in-out ${
+          className={`min-h-screen bg-surface-container-low transition-all duration-500 ease-in-out ${
             isCollapsed ? "ml-0" : "ml-0 lg:ml-64"
           }`}
         >
           <LinksStyleTwoColumnLayout
-            className={isCollapsed ? "px-12 md:px-20" : ""}
+            className="!p-0 !gap-0"
             previewColumnClassName={EDITOR_PREVIEW_COLUMN_CLASS}
             left={<ManageLinksSection links={DEMO_LINKS} />}
             preview={

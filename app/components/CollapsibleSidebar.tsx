@@ -12,7 +12,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
   };
 
   const getLinkClasses = (href: string) => {
-    const baseClasses = "flex items-center gap-3 px-4 py-3 rounded-xl transition-all active:scale-95 duration-200 ease-in-out relative";
+    const baseClasses = `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-2' : 'px-4'} py-3 rounded-xl transition-all active:scale-95 duration-200 ease-in-out relative`;
     if (isActiveLink(href)) {
       return `${baseClasses} bg-gradient-to-r from-primary/10 to-primary-container/20 text-primary font-semibold shadow-sm border border-primary/20`;
     }
@@ -25,19 +25,16 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
       <aside 
         id="sidebar"
         className={`h-screen bg-surface border-r border-outline-variant/50 z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 flex flex-col ${
-          isCollapsed ? 'w-0 p-0 overflow-hidden' : 'w-64 p-4'
+          isCollapsed ? 'w-16 p-2' : 'w-64 p-4'
         }`}
       >
         {/* Logo Section */}
-        <div className="mb-8 px-4">
-          <div className="flex items-center gap-3">
-            <img 
-              src="/link_hub_logo.png" 
-              alt="CreatorHub Logo" 
-              className="w-32 h-32"
-            />
-            <span className="text-xl font-bold tracking-tight text-primary">CreatorHub</span>
-          </div>
+        <div className={`${isCollapsed ? 'mb-6' : 'mb-10'} flex justify-center ${isCollapsed ? 'pt-1' : 'pt-2'}`}>
+          <img 
+            src="/link_hub_logo.png" 
+            alt="LinkHub Logo" 
+            className={`${isCollapsed ? 'w-8 h-8' : 'w-32'}`}
+          />
         </div>
         
         <nav className="flex-1 space-y-1">
@@ -46,14 +43,14 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">link</span>
-            <span className="text-[13px]">Links</span>
+            {!isCollapsed && <span className="text-[13px]">Links</span>}
           </a>
           <a className={getLinkClasses('/appearance')} href="/appearance">
             {isActiveLink('/appearance') && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">palette</span>
-            <span className="text-[13px]">Appearance</span>
+            {!isCollapsed && <span className="text-[13px]">Appearance</span>}
           </a>
           
           <a className={getLinkClasses('/analytics')} href="/analytics">
@@ -61,7 +58,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">analytics</span>
-            <span className="text-[13px]">Analytics</span>
+            {!isCollapsed && <span className="text-[13px]">Analytics</span>}
           </a>
           
           <a className={getLinkClasses('/admin/users')} href="/admin/users">
@@ -69,7 +66,7 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">groups</span>
-            <span className="text-[13px]">Users</span>
+            {!isCollapsed && <span className="text-[13px]">Users</span>}
           </a>
           
           <a className={getLinkClasses('/admin/settings')} href="/admin/settings">
@@ -77,14 +74,14 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">settings</span>
-            <span className="text-[13px]">Settings</span>
+            {!isCollapsed && <span className="text-[13px]">Settings</span>}
           </a>
         </nav>
         
         {/* Bottom Section */}
-        <div className="mt-auto p-4 space-y-4">
+        <div className={`mt-auto ${isCollapsed ? 'p-2' : 'p-4'} space-y-4 pb-6`}>
           {/* User Profile */}
-          <div className="flex items-center gap-3 p-3 bg-surface-container-highest rounded-xl">
+          <div className={`${isCollapsed ? 'justify-center' : 'flex items-center gap-3'} p-3 bg-surface-container-highest rounded-xl`}>
             <div className="w-10 h-10 rounded-full overflow-hidden">
               <img 
                 alt="User Avatar" 
@@ -92,21 +89,23 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-on-surface truncate">Alex Rivers</p>
-              <p className="text-[11px] text-on-surface-variant truncate">alex@creatorhub.com</p>
-            </div>
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-on-surface truncate">Alex Rivers</p>
+                <p className="text-[11px] text-on-surface-variant truncate">alex@linkhub.com</p>
+              </div>
+            )}
           </div>
           
           {/* Bottom Links */}
           <div className="space-y-1">
-            <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all" href="/help">
+            <a className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all`} href="/help">
               <span className="material-symbols-outlined text-lg">help</span>
-              <span className="text-[13px]">Help Center</span>
+              {!isCollapsed && <span className="text-[13px]">Help Center</span>}
             </a>
-            <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all" href="/logout">
+            <a className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all`} href="/logout">
               <span className="material-symbols-outlined text-lg">logout</span>
-              <span className="text-[13px]">Log Out</span>
+              {!isCollapsed && <span className="text-[13px]">Log Out</span>}
             </a>
           </div>
         </div>
