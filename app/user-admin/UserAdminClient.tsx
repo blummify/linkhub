@@ -118,7 +118,7 @@ export default function UserAdminClient() {
                       appearance={appearance}
                       linkRows={links
                         .filter(l => !l.draft)
-                        .map(l => ({ kind: 'button', title: l.title, accent: true }))
+                        .map(l => ({ kind: 'button', title: l.title, url: l.url, icon: l.icon, accent: true }))
                       }
                       linkDensity="relaxed"
                       headerTitle=""

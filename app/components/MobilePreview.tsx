@@ -25,9 +25,8 @@ export interface AppearanceState {
 
 /** Demo defaults aligned with the Appearance / Links editor mock data */
 export const DEFAULT_APPEARANCE: AppearanceState = {
-  profileTitle: "Alex Rivers",
-  profileBio:
-    "Professional Photographer & Creative Director based in Seattle. Capturing the essence of modern living.",
+  profileTitle: "",
+  profileBio: "",
   profileLayout: "classic",
   themeId: "custom",
   wallpaperStyle: "fill",
@@ -48,15 +47,12 @@ export type PreviewLinkRow =
   | {
       kind: "button";
       title: string;
+      url?: string;
       icon?: string;
       accent?: boolean;
     };
 
-const DEFAULT_LINK_ROWS: PreviewLinkRow[] = [
-  { kind: "label", title: "WhatsApp" },
-  { kind: "button", title: "Official Website", accent: true },
-  { kind: "button", title: "Portfolio Drop", accent: true, icon: "grid_view" },
-];
+const DEFAULT_LINK_ROWS: PreviewLinkRow[] = [];
 
 /** Maps editor values (`solid` legacy) to preview link-button variants */
 export function normalizePreviewButtonStyle(s: string): "flat" | "rounded" | "outline" | "shadow" {
@@ -450,10 +446,13 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                         <span className="preview-label text-[11px] font-semibold tracking-tight">{row.title}</span>
                       </div>
                     ) : (
-                      <div
+                      <a
                         key={`${row.title}-${idx}`}
+                        href={row.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         data-preview-btn={linkBtnStyle}
-                        className={`preview-card preview-card-btn w-full px-2.5 sm:px-3 ${linkCardRadius} flex items-center justify-start hover:translate-x-0.5 transition-all cursor-default ${
+                        className={`preview-card preview-card-btn w-full px-2.5 sm:px-3 ${linkCardRadius} flex items-center justify-start hover:translate-x-0.5 transition-all ${row.url ? 'cursor-pointer' : 'cursor-default'} ${
                           relaxed ? "py-2 sm:py-2.5" : "py-2"
                         } ${linkCardShadow} ${row.accent ? "border-l-[3px] border-l-primary" : ""}`}
                       >
@@ -465,7 +464,7 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                           )}
                           <span className="preview-link-title font-bold text-[11px] leading-snug truncate">{row.title}</span>
                         </div>
-                      </div>
+                      </a>
                     ),
                   )}
                 </div>
