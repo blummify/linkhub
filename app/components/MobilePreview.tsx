@@ -25,8 +25,8 @@ export interface AppearanceState {
 
 /** Demo defaults aligned with the Appearance / Links editor mock data */
 export const DEFAULT_APPEARANCE: AppearanceState = {
-  profileTitle: "",
-  profileBio: "",
+  profileTitle: "@yourname",
+  profileBio: "Digital Curator & Designer",
   profileLayout: "classic",
   themeId: "custom",
   wallpaperStyle: "fill",

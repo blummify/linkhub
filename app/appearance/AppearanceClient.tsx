@@ -49,7 +49,7 @@ export default function AppearanceClient() {
           <LinksStyleTwoColumnLayout
             previewColumnClassName={EDITOR_PREVIEW_COLUMN_CLASS}
             left={
-              <div className="space-y-10 pb-12">
+              <div className="space-y-6 pb-12">
                 <DashboardPageHeader
                   title="Appearance"
                   description="Customize your public profile to match your brand. Changes sync to your live preview."
@@ -83,7 +83,13 @@ export default function AppearanceClient() {
                     <div className="space-y-5 pt-2 border-t border-outline-variant/30">
                       <div className="flex flex-col gap-2">
                         <label className={fieldLabel}>Profile name</label>
-                        <input className={inputClass} type="text" placeholder="@yourname" />
+                        <input 
+                          className={inputClass} 
+                          type="text" 
+                          placeholder="@yourname" 
+                          value={previewAppearance.profileTitle}
+                          onChange={(e) => setPreviewAppearance(prev => ({ ...prev, profileTitle: e.target.value }))}
+                        />
                       </div>
                       <div className="flex flex-col gap-2">
                         <label className={fieldLabel}>Short bio</label>
@@ -91,6 +97,8 @@ export default function AppearanceClient() {
                           className={`${inputClass} resize-none text-[13px] min-h-[88px]`}
                           rows={3}
                           placeholder="Tell your story..."
+                          value={previewAppearance.profileBio}
+                          onChange={(e) => setPreviewAppearance(prev => ({ ...prev, profileBio: e.target.value }))}
                         />
                       </div>
                     </div>
@@ -98,10 +106,11 @@ export default function AppearanceClient() {
                 </section>
 
                 {/* Theme presets */}
+                {/* Theme presets */}
                 <section>
                   <SectionLabel>Theme presets</SectionLabel>
-                  <DashboardSectionCard className="!space-y-0 !p-6 sm:!p-8">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <DashboardSectionCard className="!p-4 sm:!p-6">
+                    <div className="flex flex-wrap gap-3">
                       {THEME_PRESETS.map((preset) => {
                         const selected = previewAppearance.themeId === preset.id;
                         return (
@@ -112,58 +121,26 @@ export default function AppearanceClient() {
                             onClick={() =>
                               setPreviewAppearance((prev) => ({
                                 ...preset.appearance,
+                                profileTitle: prev.profileTitle,
+                                profileBio: prev.profileBio,
                                 fontFamily: prev.fontFamily,
                                 bodyFontFamily: prev.bodyFontFamily,
                                 buttonStyle: prev.buttonStyle,
                               }))
                             }
-                            className={`flex flex-col gap-3 group text-left transition-opacity ${
-                              selected ? "opacity-100" : "opacity-80 hover:opacity-100"
+                            className={`group flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all ${
+                              selected
+                                ? "bg-primary/5 border-primary shadow-sm"
+                                : "bg-surface-container-low border-outline-variant/30 hover:bg-surface-container"
                             }`}
                           >
                             <div
-                              className={`w-full aspect-[4/3] bg-surface-container rounded-2xl p-2 flex items-center justify-center transition-all ${
-                                selected
-                                  ? "ring-2 ring-primary shadow-lg group-hover:shadow-lg"
-                                  : "group-hover:shadow-md"
-                              }`}
-                            >
-                              {preset.id === "indigo-mint" && (
-                                <div className="w-full h-full rounded-xl bg-gradient-to-br from-surface to-surface-container-low border border-primary/20 flex flex-col items-center justify-center gap-2">
-                                  <div className="flex gap-1">
-                                    <div className="w-4 h-4 rounded-full bg-primary" />
-                                    <div className="w-4 h-4 rounded-full bg-secondary" />
-                                  </div>
-                                </div>
-                              )}
-                              {preset.id === "sunset-glow" && (
-                                <div className="w-full h-full rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/40 dark:to-amber-950/30 border border-outline-variant/50 flex flex-col items-center justify-center gap-2">
-                                  <div className="flex gap-1">
-                                    <div className="w-4 h-4 rounded-full bg-orange-500" />
-                                    <div className="w-4 h-4 rounded-full bg-yellow-400" />
-                                  </div>
-                                </div>
-                              )}
-                              {preset.id === "midnight-oasis" && (
-                                <div className="w-full h-full rounded-xl bg-gradient-to-br from-surface-dim to-surface-container-highest border border-outline-variant/50 flex flex-col items-center justify-center gap-2">
-                                  <div className="flex gap-1">
-                                    <div className="w-4 h-4 rounded-full bg-primary-container" />
-                                    <div className="w-4 h-4 rounded-full bg-white" />
-                                  </div>
-                                </div>
-                              )}
-                              {preset.id === "cloud-white" && (
-                                <div className="w-full h-full rounded-xl bg-white dark:bg-surface-container-highest border border-outline-variant/50 shadow-sm flex flex-col items-center justify-center gap-2">
-                                  <div className="flex gap-1">
-                                    <div className="w-4 h-4 rounded-full bg-surface-dim" />
-                                    <div className="w-4 h-4 rounded-full bg-outline" />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                              className="w-8 h-8 rounded-full border border-outline-variant/10 shadow-inner"
+                              style={{ backgroundColor: preset.appearance.bgColor }}
+                            />
                             <span
-                              className={`text-xs text-center font-black ${
-                                selected ? "text-on-surface" : "text-on-surface-variant font-bold"
+                              className={`text-[13px] font-bold tracking-tight ${
+                                selected ? "text-primary" : "text-on-surface-variant"
                               }`}
                             >
                               {preset.label}
@@ -178,30 +155,28 @@ export default function AppearanceClient() {
                 {/* Colors */}
                 <section>
                   <SectionLabel>Custom colors</SectionLabel>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <DashboardSectionCard className="!space-y-4">
-                      <span className={colorFieldLabel}>Background</span>
-                      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                        <div className="w-14 h-14 shrink-0 rounded-xl bg-gradient-to-br from-surface to-surface-container-low border border-outline-variant shadow-inner" />
-                        <div className="min-w-0 flex-1 basis-[min(100%,12rem)]">
-                          <p className="text-sm font-bold text-on-surface">Linear gradient</p>
-                          <p className="text-xs text-on-surface-variant font-mono">#FBF8FF → #F4F2FC</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <DashboardSectionCard className="!p-4 group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-surface to-surface-container-low border border-outline-variant shadow-inner" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Canvas</p>
+                          <code className="text-[11px] font-bold text-primary">#FBF8FF → #F4F2FC</code>
                         </div>
-                        <button type="button" className="material-symbols-outlined text-on-surface-variant hover:text-primary shrink-0 ml-auto sm:ml-0 p-2 rounded-full hover:bg-surface-container transition-colors">
-                          colorize
+                        <button type="button" className="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+                          <span className="material-symbols-outlined text-[18px]">colorize</span>
                         </button>
                       </div>
                     </DashboardSectionCard>
-                    <DashboardSectionCard className="!space-y-4">
-                      <span className={colorFieldLabel}>Button</span>
-                      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                        <div className="w-14 h-14 shrink-0 rounded-xl bg-primary border border-outline-variant shadow-inner" />
-                        <div className="min-w-0 flex-1 basis-[min(100%,12rem)]">
-                          <p className="text-sm font-bold text-on-surface">Solid indigo</p>
-                          <p className="text-xs text-on-surface-variant font-mono">#1F33AA</p>
+                    <DashboardSectionCard className="!p-4 group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary border border-primary/20 shadow-inner" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Accent</p>
+                          <code className="text-[11px] font-bold text-primary">#1F33AA</code>
                         </div>
-                        <button type="button" className="material-symbols-outlined text-on-surface-variant hover:text-primary shrink-0 ml-auto sm:ml-0 p-2 rounded-full hover:bg-surface-container transition-colors">
-                          colorize
+                        <button type="button" className="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+                          <span className="material-symbols-outlined text-[18px]">colorize</span>
                         </button>
                       </div>
                     </DashboardSectionCard>

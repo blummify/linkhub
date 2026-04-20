@@ -23,7 +23,7 @@ export default function UserAnalyticsClient() {
           <LinksStyleTwoColumnLayout
             previewColumnClassName={EDITOR_PREVIEW_COLUMN_CLASS}
             left={
-              <section className="space-y-8 min-w-0 pb-12">
+              <section className="space-y-6 min-w-0 pb-12">
                 <div className="flex items-center justify-between">
                   <div>
                     <h1 className="text-2xl font-semibold text-on-surface tracking-tight">Analytics</h1>
