@@ -264,6 +264,7 @@ export interface MobilePreviewProps {
   showHeaderTuneButton?: boolean;
   className?: string;
   /** Extra vertical spacing for link rows inside the device (e.g. `/links` editor) */
+  linkDensity?: "default" | "relaxed";
   /** Show the Report / Privacy / Join button at the bottom of the phone screen */
   showDeviceFooter?: boolean;
 }
