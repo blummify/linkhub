@@ -1,13 +1,11 @@
-import type { Metadata } from "next";
-import { loadTemplateHtml } from "../templateLoader";
+import LinksClient from "../links/LinksClient";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "Dashboard - Creator Hub",
+  description: "Manage and organize your digital presence.",
 };
 
-export default async function UserDashboardPage() {
-  const { bodyClassName, bodyHtml } = await loadTemplateHtml("user-dashboard.html");
-  return (
-    <div className={`admin-skin ${bodyClassName}`} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
-  );
+export default function UserDashboardPage() {
+  return <LinksClient />;
 }

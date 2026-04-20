@@ -1,13 +1,11 @@
-import type { Metadata } from "next";
-import { loadTemplateHtml } from "../templateLoader";
+import SuperAdminClient from "./SuperAdminClient";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Super Admin",
+  title: "Super Admin - Creator Hub",
+  description: "System-wide administration and control center.",
 };
 
-export default async function SuperAdminPage() {
-  const { bodyClassName, bodyHtml } = await loadTemplateHtml("super-admin.html");
-  return (
-    <div className={`admin-skin ${bodyClassName}`} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
-  );
+export default function SuperAdminPage() {
+  return <SuperAdminClient />;
 }
