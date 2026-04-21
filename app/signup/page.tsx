@@ -26,10 +26,10 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-surface flex">
+    <div className="h-screen bg-white dark:bg-surface flex overflow-hidden">
       {/* Left Side - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-20 py-12">
-        <div className="max-w-md mx-auto w-full">
+      <div className="w-full lg:w-1/2 flex flex-col px-8 sm:px-12 lg:px-16 xl:px-20 py-12 overflow-y-auto">
+        <div className="max-w-md mx-auto w-full my-auto">
           {/* Logo */}
           <div className="mb-8">
             <img 
