@@ -1,145 +1,310 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Login - LinkHub",
-};
-
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [stage, setStage] = useState<"email" | "password" | "signup">("email");
+  const [isValidating, setIsValidating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleContinue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setIsValidating(true);
+    // Mock validation logic
+    setTimeout(() => {
+      if (email === "joel@example.com") {
+        setStage("password");
+      } else {
+        setStage("signup");
+      }
+      setIsValidating(false);
+    }, 800);
+  };
+
+  const handleEditEmail = () => {
+    setStage("email");
+  };
+
   return (
-    <div className="bg-surface font-sans text-on-surface antialiased min-h-screen flex flex-col overflow-hidden relative">
-      {/* TopAppBar */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10">
-        <nav className="flex justify-between items-center w-full px-8 py-3 max-w-7xl mx-auto">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/link_hub_logo.png" alt="LinkHub logo" className="w-24 sm:w-28 opacity-90" />
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link 
-              href="#" 
-              className="text-on-surface-variant/60 text-xs font-black uppercase tracking-widest hover:text-primary transition-all duration-300"
-            >
-              Help
-            </Link>
-          </div>
-        </nav>
-      </header>
-
-      {/* Main Content: Login Journey */}
-      <main className="flex-grow flex items-center justify-center px-4 pt-16 pb-6 relative overflow-hidden">
-        {/* Asymmetric Background Decorative Elements */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px]" />
-
-        <div className="w-full max-w-[400px] z-10">
-          {/* Editorial Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-black tracking-tighter text-on-surface mb-1">Welcome Back</h1>
-            <p className="text-[13px] font-medium text-on-surface-variant/70">The stage is set for your next curation.</p>
+    <div className="min-h-screen bg-white dark:bg-surface flex">
+      {/* Left Side - Form */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-20 py-12">
+        <div className="max-w-md mx-auto w-full">
+          {/* Logo */}
+          <div className="mb-8">
+            <img 
+              src="/link_hub_logo.png" 
+              alt="LinkHub" 
+              className="w-32 h-auto"
+            />
           </div>
 
-          {/* Login Card */}
-          <div className="bg-white/70 dark:bg-surface/70 backdrop-blur-md p-6 md:p-8 rounded-[2.5rem] shadow-2xl shadow-primary/5 border border-outline-variant/20 transition-all duration-500 hover:shadow-primary/10">
-            <form className="space-y-4">
-              {/* Input Email */}
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-on-surface-variant/50 ml-1" htmlFor="email">
-                  Email Address
-                </label>
-                <div className="relative group">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-on-surface mb-2">
+              {stage === "email" ? "Welcome to LinkHub" : stage === "password" ? "Welcome Back" : "Join LinkHub"}
+            </h1>
+            <p className="text-gray-600 dark:text-on-surface-variant">
+              {stage === "email" 
+                ? "Enter your email to get started." 
+                : stage === "password" 
+                ? "Please enter your password to continue." 
+                : "Start your creative journey with LinkHub."}
+            </p>
+          </div>
+
+          {/* Form */}
+          <div className="space-y-6">
+            {stage === "email" && (
+              <form onSubmit={handleContinue} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
+                    Email Address
+                  </label>
                   <input
-                    className="w-full px-5 py-4 bg-surface-container-low border border-outline-variant/10 dark:border-outline-variant/5 rounded-2xl text-[13px] font-black tracking-tight text-on-surface placeholder:text-on-surface-variant/30 outline-none transition-all duration-500 focus:bg-white dark:focus:bg-surface-container-lowest focus:ring-[8px] focus:ring-primary/5 dark:focus:ring-primary/10 focus:border-primary/40 shadow-sm shadow-on-surface/[0.02] active:scale-[0.99]"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
                     id="email"
-                    name="email"
-                    placeholder="curator@linkhub.com"
                     type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                 </div>
-              </div>
+                <button
+                  disabled={isValidating}
+                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  type="submit"
+                >
+                  {isValidating ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      Continue
+                      <span className="material-symbols-outlined">arrow_forward</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
 
-              {/* Input Password */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center px-1">
-                  <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-on-surface-variant/50" htmlFor="password">
+            {stage === "password" && (
+              <form className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
+                    Email Address
+                  </label>
+                  <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-surface-container-low border border-gray-300 dark:border-outline-variant rounded-lg">
+                    <span className="text-gray-900 dark:text-on-surface">{email || "alex@example.com"}</span>
+                    <button 
+                      type="button" 
+                      onClick={handleEditEmail}
+                      className="text-primary hover:text-primary/80"
+                    >
+                      <span className="material-symbols-outlined">edit</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="password">
                     Password
                   </label>
-                  <Link href="#" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline underline-offset-4">
-                    Forgot?
-                  </Link>
+                  <div className="relative">
+                    <input
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface pr-12"
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      required
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-on-surface-variant"
+                    >
+                      <span className="material-symbols-outlined">
+                        {showPassword ? "visibility_off" : "visibility"}
+                      </span>
+                    </button>
+                  </div>
+                  <div className="flex justify-end mt-2">
+                    <button type="button" className="text-sm text-primary hover:underline">
+                      Forgot password?
+                    </button>
+                  </div>
                 </div>
-                <div className="relative group">
+                <button
+                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                  type="submit"
+                >
+                  Log In
+                </button>
+              </form>
+            )}
+
+            {stage === "signup" && (
+              <form className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
+                    Full Name
+                  </label>
                   <input
-                    className="w-full px-5 py-4 bg-surface-container-low border border-outline-variant/10 dark:border-outline-variant/5 rounded-2xl text-[13px] font-black tracking-tight text-on-surface placeholder:text-on-surface-variant/30 outline-none transition-all duration-500 focus:bg-white dark:focus:bg-surface-container-lowest focus:ring-[8px] focus:ring-primary/5 dark:focus:ring-primary/10 focus:border-primary/40 shadow-sm shadow-on-surface/[0.02] active:scale-[0.99]"
-                    id="password"
-                    name="password"
-                    placeholder="••••••••"
-                    type="password"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
+                    placeholder="Alex Rivers"
+                    type="text"
+                    required
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
+                    placeholder={email || "alex@example.com"}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface pr-12"
+                      placeholder="••••••••"
+                      type={showPassword ? "text" : "password"}
+                      required
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-on-surface-variant"
+                    >
+                      <span className="material-symbols-outlined">
+                        {showPassword ? "visibility_off" : "visibility"}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+                <button
+                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                  type="submit"
+                >
+                  Create Account
+                  <span className="material-symbols-outlined">arrow_forward</span>
+                </button>
+              </form>
+            )}
+
+            {/* Social Login */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
               </div>
-
-              {/* Primary Action */}
-              <button
-                className="w-full py-4 bg-primary text-white text-[13px] font-black uppercase tracking-widest rounded-full hover:shadow-2xl hover:shadow-primary/30 active:scale-[0.98] transition-all duration-500 mt-2"
-                type="submit"
-              >
-                Sign In to LinkHub
-              </button>
-            </form>
-
-            {/* Divider */}
-            <div className="relative my-6 text-center">
-              <span className="bg-white/80 dark:bg-surface-container-lowest px-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/40 relative z-10">
-                or continue with
-              </span>
-              <div className="absolute top-1/2 left-0 w-full h-[1px] bg-outline-variant/20 -translate-y-1/2" />
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant">
+                  Or continue with
+                </span>
+              </div>
             </div>
 
-            {/* Social Logins */}
-            <div className="grid grid-cols-2 gap-3">
-              <button className="flex items-center justify-center gap-2 py-3 px-4 bg-surface-container-low border border-outline-variant/10 rounded-2xl hover:bg-white hover:border-outline-variant/40 hover:shadow-xl hover:shadow-on-surface/[0.03] active:scale-[0.97] transition-all duration-300 group">
-                <img alt="Google" className="w-4 h-4 opacity-80 group-hover:opacity-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaqDTci7JWWwRcxklan86rx2FiMF6bDQ9MyCC7r9z-CWrtZDLPDyNZbcfJUKDWF06ds-Z5eK_hwmuUr-qt1e8ozh0CpS33Yzdtwy5Bj8cxS0oJo9M9eFjCWGpZyLLgwES1oLv6Z3cdHke_u-jW-oluuEQNSrra_DdzOuXG7G63J7OpaKLHFHC4TTgccC02L0bPtRDHlos68Rjq1AU3JL2_Lao5_pqv22GXQZSgp_WEXapCiUSWqVu8xc3SqnozWoqOLNOK6C1Duo6B" />
-                <span className="text-[12px] font-black text-on-surface">Google</span>
+            <div className="grid grid-cols-2 gap-4">
+              <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-outline-variant rounded-lg hover:bg-gray-50 dark:hover:bg-surface-container-low transition-colors">
+                <img alt="Google" className="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaqDTci7JWWwRcxklan86rx2FiMF6bDQ9MyCC7r9z-CWrtZDLPDyNZbcfJUKDWF06ds-Z5eK_hwmuUr-qt1e8ozh0CpS33Yzdtwy5Bj8cxS0oJo9M9eFjCWGpZyLLgwES1oLv6Z3cdHke_u-jW-oluuEQNSrra_DdzOuXG7G63J7OpaKLHFHFHC4TTgccC02L0bPtRDHlos68Rjq1AU3JL2_Lao5_pqv22GXQZSgp_WEXapCiUSWqVu8xc3SqnozWoqOLNOK6C1Duo6B" />
+                <span className="text-sm font-medium text-gray-700 dark:text-on-surface">Google</span>
               </button>
-              <button className="flex items-center justify-center gap-2 py-3 px-4 bg-surface-container-low border border-outline-variant/10 rounded-2xl hover:bg-white hover:border-outline-variant/40 hover:shadow-xl hover:shadow-on-surface/[0.03] active:scale-[0.97] transition-all duration-300 group">
-                <img alt="Apple" className="w-4 h-4 opacity-80 group-hover:opacity-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXu4bBgOMabyzo2odYRQRVOq75bYU5AJdEf1nT0smNt27MhZ7Xmy8L-YXPkM8w6npyVHub3B331bbg-w9kvjt7Ff3j6U8WEkqOAZy2va06LGP0vgqio5yC07DYJXD2vrzOziFBb6DpYTYkZTRnwmAOJuJRWf4p2engmyltCkhkfy55R0gLn5AaUwxm0IvTpSzPZz8Wl1WkyvKOTz4xl0bYlPn7AMfPWamrwcwnhCkzrz-cgacYXzq0lI2pK0vw4PgzA1ctkRij-znczX" />
-                <span className="text-[12px] font-black text-on-surface">Apple</span>
+              <button className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-outline-variant rounded-lg hover:bg-gray-50 dark:hover:bg-surface-container-low transition-colors">
+                <img alt="Apple" className="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXu4bBgOMabyzo2odYRQRVOq75bYU5AJdEf1nT0smNt27MhZ7Xmy8L-YXPkM8w6npyVHub3B331bbg-w9kvjt7Ff3j6U8WEkqOAZy2va06LGP0vgqio5yC07DYJXD2vrzOziFBb6DpYTYkZTRnwmAOJuJRWf4p2engmyltCkhkfy55R0gLn5AaUwxm0IvTpSzPZz8Wl1WkyvKOTz4xl0bYlPn7AMfPWamrwcwnhCkzrz-cgacYXzq0lI2pK0vw4PgzA1ctkRij-znczX" />
+                <span className="text-sm font-medium text-gray-700 dark:text-on-surface">Apple</span>
               </button>
             </div>
 
-            {/* Secondary Action */}
-            <div className="mt-8 text-center">
-              <p className="text-[12px] font-medium text-on-surface-variant/70">
-                New to the curator's stage?
-                <Link href="/signup" className="font-black text-primary hover:underline underline-offset-4 ml-1">
-                  Create an account
+            {/* Sign up link */}
+            {stage !== "signup" && (
+              <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
+                Don't have an account?{" "}
+                <Link href="/signup" className="font-medium text-primary hover:underline">
+                  Sign up
                 </Link>
               </p>
-            </div>
-          </div>
-
-          {/* Social Proof */}
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <div className="flex -space-x-2">
-              <img alt="" className="w-7 h-7 rounded-full border-2 border-white shadow-sm" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=30&h=30" />
-              <img alt="" className="w-7 h-7 rounded-full border-2 border-white shadow-sm" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=30&h=30" />
-            </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface-variant/40">Joined by 10k+ Creators</p>
+            )}
           </div>
         </div>
-      </main>
+      </div>
 
-      {/* Footer */}
-      <footer className="bg-transparent py-6 flex flex-col md:flex-row justify-center items-center gap-8 w-full border-t border-outline-variant/10 mt-auto">
-        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/30">
-          © 2024 LinkHub.
+      {/* Right Side - Preview/Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-2xl" />
+          <div className="absolute top-1/2 right-20 w-48 h-48 bg-white rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-1/3 w-40 h-40 bg-white rounded-full blur-2xl" />
         </div>
-        <div className="flex gap-8">
-          <Link href="#" className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/30 hover:text-primary transition-colors">Privacy</Link>
-          <Link href="#" className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/30 hover:text-primary transition-colors">Terms</Link>
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center items-center text-white p-12">
+          <div className="max-w-lg text-center">
+            <h2 className="text-4xl font-bold mb-6">
+              Connect Your World
+            </h2>
+            <p className="text-xl mb-8 text-white/90">
+              Share all your important links in one beautiful place. Build your online presence and connect with your audience effortlessly.
+            </p>
+            
+            {/* Features */}
+            <div className="grid grid-cols-1 gap-6 mb-12">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl">link</span>
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold mb-1">Unlimited Links</h3>
+                  <p className="text-white/80 text-sm">Add as many links as you need</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl">analytics</span>
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold mb-1">Real-time Analytics</h3>
+                  <p className="text-white/80 text-sm">Track your link performance</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl">palette</span>
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold mb-1">Customizable Design</h3>
+                  <p className="text-white/80 text-sm">Make it uniquely yours</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Proof */}
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                <img alt="" className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=32&h=32" />
+                <img alt="" className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=32&h=32" />
+                <img alt="" className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=32&h=32" />
+                <img alt="" className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=32&h=32" />
+              </div>
+              <span className="text-sm text-white/90">
+                Join 10,000+ creators
+              </span>
+            </div>
+          </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
-
