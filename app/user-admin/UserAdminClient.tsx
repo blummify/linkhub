@@ -10,7 +10,7 @@ import { LinksStyleTwoColumnLayout } from "../components/LinksStyleTwoColumnLayo
 import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
-import type { Link as DbLink } from "@prisma/client";
+import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
 import { EDITOR_MOBILE_PREVIEW_SHARED } from "../constants/editorMobilePreview";
 import { PROFILE_PUBLIC_URL } from "../constants/profile";
@@ -34,7 +34,7 @@ export default function UserAdminClient() {
     async function loadData() {
       try {
         const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
-        setLinks(dbLinks.map((l: DbLink) => ({
+        setLinks(dbLinks.map((l: LinkRow) => ({
           id: l.id,
           title: l.title,
           url: l.url,
