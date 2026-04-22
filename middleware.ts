@@ -11,8 +11,6 @@ function normalizePathname(pathname: string) {
   return pathname;
 }
 
-const LOGGED_IN_FROM_AUTH_HOME = "/user-dashboard";
-
 const PUBLIC_EXACT = new Set([
   "/",
   "/login",
@@ -32,12 +30,9 @@ export default auth((req) => {
 
   if (isApiAuthRoute) return undefined;
 
-  if (isAuthRoute) {
-    if (isLoggedIn) {
-      return Response.redirect(new URL(LOGGED_IN_FROM_AUTH_HOME, nextUrl));
-    }
-    return undefined;
-  }
+  // Always allow /login and /signup (even when signed in) so people can add another
+  // account, use incognito expectations, or sign out from the app and return here.
+  if (isAuthRoute) return undefined;
 
   if (!isLoggedIn && !isPublicRoute) {
     return Response.redirect(new URL("/login", nextUrl));
