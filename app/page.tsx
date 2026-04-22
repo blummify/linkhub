@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, type CSSProperties } from "react";
+import { SiteFooter } from "./components/SiteFooter";
 
 export default function Home() {
   useEffect(() => {
@@ -373,65 +374,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <footer className="w-full border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-950">
-        <div className="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto gap-6">
-          <div className="flex flex-col items-center md:items-start gap-4">
-            <div className="flex items-center justify-center hover:scale-105 transition-transform cursor-pointer">
-              <Image
-                src="/link_hub_logo.png"
-                alt="LinkHub logo"
-                width={128}
-                height={128}
-                loading="eager"
-                style={{ width: 'auto', height: 'auto' }}
-              />
-            </div>
-            <p className="font-inter text-sm text-slate-500 dark:text-slate-400">
-              © 2024 LinkHub Digital. All rights reserved.
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-8 font-inter text-sm text-slate-500">
-            <a
-              className="hover:text-indigo-600 hover:underline transition-all opacity-80 hover:opacity-100"
-              href="#"
-            >
-              Privacy Policy
-            </a>
-            <a
-              className="hover:text-indigo-600 hover:underline transition-all opacity-80 hover:opacity-100"
-              href="#"
-            >
-              Terms of Service
-            </a>
-            <a
-              className="hover:text-indigo-600 hover:underline transition-all opacity-80 hover:opacity-100"
-              href="#"
-            >
-              Contact Support
-            </a>
-          </div>
-          <div className="flex items-center gap-6">
-            <a
-              className="text-slate-500 hover:text-indigo-600 opacity-80 hover:opacity-100 hover:scale-125 transition-all"
-              href="#"
-            >
-              <span className="material-symbols-outlined">public</span>
-            </a>
-            <a
-              className="text-slate-500 hover:text-indigo-600 opacity-80 hover:opacity-100 hover:scale-125 transition-all"
-              href="#"
-            >
-              <span className="material-symbols-outlined">share</span>
-            </a>
-            <a
-              className="text-slate-500 hover:text-indigo-600 opacity-80 hover:opacity-100 hover:scale-125 transition-all"
-              href="#"
-            >
-              <span className="material-symbols-outlined">alternate_email</span>
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

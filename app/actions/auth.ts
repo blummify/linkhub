@@ -1,0 +1,80 @@
+"use server";
+
+import { db } from "@/lib/db";
+import bcrypt from "bcryptjs";
+import { signIn } from "@/auth";
+import { AuthError } from "next-auth";
+
+export async function checkUserExists(email: string) {
+  try {
+    const user = await db.user.findUnique({
+      where: { email },
+    });
+    return !!user;
+  } catch (error) {
+    console.error("Error checking user:", error);
+    return false;
+  }
+}
+
+export async function registerUser(formData: any) {
+  const { name, email, password } = formData;
+
+  try {
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return { error: "User already exists" };
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await db.user.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+      },
+    });
+
+    // Automatically sign in the user after registration
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: "/user-dashboard",
+    });
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: "Failed to sign in after registration" };
+    }
+    console.error("Registration error:", error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function loginWithCredentials(formData: any) {
+  const { email, password } = formData;
+
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: "/user-dashboard",
+    });
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return { error: "Invalid credentials" };
+        default:
+          return { error: "Something went wrong" };
+      }
+    }
+    throw error;
+  }
+}

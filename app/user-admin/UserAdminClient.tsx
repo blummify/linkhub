@@ -14,11 +14,10 @@ import type { ManagedLink } from "./components/types";
 import { EDITOR_MOBILE_PREVIEW_SHARED } from "../constants/editorMobilePreview";
 import { PROFILE_PUBLIC_URL } from "../constants/profile";
 
-const DEMO_LINKS: ManagedLink[] = [
-  { title: "Official Website", url: "https://johndoe.design", clicks: "1.2K" },
-  { title: "Latest Portfolio Drop", url: "https://behance.net/johndoe", clicks: "856" },
-  { title: "Instagram Profile", url: "https://instagram.com/johndoe", clicks: "0", draft: true },
-];
+import { getLinks, addLink, updateLink, deleteLink, getProfile } from "../actions/links";
+import { useEffect } from "react";
+
+const DEMO_LINKS: ManagedLink[] = [];
 
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
@@ -28,23 +27,41 @@ export default function UserAdminClient() {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
 
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
+        setLinks(dbLinks.map(l => ({
+          id: l.id,
+          title: l.title,
+          url: l.url,
+          clicks: String(l.clicks),
+          draft: l.draft,
+          icon: l.icon || undefined
+        })));
+        if (dbProfile) {
+          setAppearance(prev => ({
+            ...prev,
+            profileTitle: `@${dbProfile.userId}`, // Basic implementation
+            profileBio: dbProfile.bio || prev.profileBio,
+            profileLayout: dbProfile.layout || prev.profileLayout,
+            themeId: dbProfile.themeId || prev.themeId,
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to load data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
   const handleAddLink = () => {
     setEditingLink(null);
     setShowLinkModal(true);
-  };
-
-  const handleSaveLink = (newLink: ManagedLink) => {
-    if (editingLink !== null) {
-      const updatedLinks = [...links];
-      updatedLinks[editingLink.index] = newLink;
-      setLinks(updatedLinks);
-    } else {
-      setLinks([newLink, ...links]);
-    }
-  };
-
-  const handleDeleteLink = (link: ManagedLink, index: number) => {
-    setLinks(links.filter((_, i) => i !== index));
   };
 
   const handleEditLink = (link: ManagedLink, index: number) => {
@@ -52,19 +69,81 @@ export default function UserAdminClient() {
     setShowLinkModal(true);
   };
 
-  const handleToggleLink = (link: ManagedLink, index: number) => {
-    const updatedLinks = [...links];
-    updatedLinks[index] = { ...link, draft: !link.draft };
-    setLinks(updatedLinks);
+  const handleSaveLink = async (newLink: ManagedLink) => {
+    setIsLoading(true);
+    try {
+      if (editingLink !== null && editingLink.link.id) {
+        await updateLink(editingLink.link.id, {
+          title: newLink.title,
+          url: newLink.url,
+          icon: newLink.icon,
+        });
+        const updatedLinks = [...links];
+        updatedLinks[editingLink.index] = { ...newLink, id: editingLink.link.id };
+        setLinks(updatedLinks);
+      } else {
+        const result = await addLink({
+          title: newLink.title,
+          url: newLink.url,
+          icon: newLink.icon,
+        });
+        if (result.success && result.link) {
+          setLinks([{
+            ...newLink,
+            id: result.link.id,
+            clicks: String(result.link.clicks)
+          }, ...links]);
+        }
+      }
+      setShowLinkModal(false);
+    } catch (error) {
+      console.error("Failed to save link:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleUpdateLink = (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => {
-    const updatedLinks = [...links];
-    updatedLinks[index] = { ...link, ...updates };
-    setLinks(updatedLinks);
+  const handleDeleteLink = async (link: ManagedLink, index: number) => {
+    if (!link.id) return;
+    try {
+      await deleteLink(link.id);
+      setLinks(links.filter((_, i) => i !== index));
+    } catch (error) {
+      console.error("Failed to delete link:", error);
+    }
   };
 
-  const [appearance] = useState<AppearanceState>({
+  const handleToggleLink = async (link: ManagedLink, index: number) => {
+    if (!link.id) return;
+    try {
+      const newDraftState = !link.draft;
+      await updateLink(link.id, { draft: newDraftState });
+      const updatedLinks = [...links];
+      updatedLinks[index] = { ...link, draft: newDraftState };
+      setLinks(updatedLinks);
+    } catch (error) {
+      console.error("Failed to toggle link:", error);
+    }
+  };
+
+  const handleUpdateLink = async (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => {
+    if (!link.id) return;
+    try {
+      await updateLink(link.id, {
+        title: updates.title,
+        url: updates.url,
+        icon: updates.icon,
+        draft: updates.draft,
+      });
+      const updatedLinks = [...links];
+      updatedLinks[index] = { ...link, ...updates };
+      setLinks(updatedLinks);
+    } catch (error) {
+      console.error("Failed to update link:", error);
+    }
+  };
+
+  const [appearance, setAppearance] = useState<AppearanceState>({
     profileTitle: "@oseijoel6111",
     profileBio: "Connecting with your community.",
     profileLayout: "classic",
@@ -95,17 +174,22 @@ export default function UserAdminClient() {
             } ml-0 overflow-y-auto bg-surface`}
           >
             <div className="min-h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
-              {/* Left Column - Main Content */}
               <div className="flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
                 <div className="max-w-2xl mx-auto lg:mx-0 animate-fade-in-up">
-                  <ManageLinksSection 
-                    links={links} 
-                    onAddLink={handleAddLink}
-                    onEditLink={handleEditLink}
-                    onDeleteLink={handleDeleteLink}
-                    onToggleLink={handleToggleLink}
-                    onUpdateLink={handleUpdateLink}
-                  />
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    <ManageLinksSection 
+                      links={links} 
+                      onAddLink={handleAddLink}
+                      onEditLink={handleEditLink}
+                      onDeleteLink={handleDeleteLink}
+                      onToggleLink={handleToggleLink}
+                      onUpdateLink={handleUpdateLink}
+                    />
+                  )}
                 </div>
               </div>
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { SiteFooter } from "../components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Features",
@@ -260,86 +261,7 @@ export default function FeaturesPage() {
           </div>
         </section>
       </main>
-      <footer className="bg-slate-50 border-t border-slate-100">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-7xl mx-auto px-6 py-12">
-          <div>
-            <div className="flex items-center justify-center mb-4">
-              <Image
-                src="/link_hub_logo.png"
-                alt="LinkHub logo"
-                width={128}
-                height={128}
-                loading="eager"
-                style={{ width: 'auto', height: 'auto' }}
-              />
-            </div>
-            <p className="font-inter text-sm text-slate-500">
-              © 2024 LinkHub. The Digital Curator.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-inter text-xs uppercase tracking-widest text-slate-900 font-bold mb-4">
-              Company
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  className="font-inter text-sm text-slate-500 hover:text-indigo-500 transition-opacity"
-                  href="#"
-                >
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a
-                  className="font-inter text-sm text-slate-500 hover:text-indigo-500 transition-opacity"
-                  href="#"
-                >
-                  Careers
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-inter text-xs uppercase tracking-widest text-slate-900 font-bold mb-4">
-              Legal
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  className="font-inter text-sm text-slate-500 hover:text-indigo-500 transition-opacity"
-                  href="#"
-                >
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a
-                  className="font-inter text-sm text-slate-500 hover:text-indigo-500 transition-opacity"
-                  href="#"
-                >
-                  Terms of Service
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-inter text-xs uppercase tracking-widest text-slate-900 font-bold mb-4">
-              Support
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  className="font-inter text-sm text-slate-500 hover:text-indigo-500 transition-opacity"
-                  href="#"
-                >
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </>
   );
 }
