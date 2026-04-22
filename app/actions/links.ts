@@ -1,10 +1,11 @@
 "use server";
 
+import type { Link } from "@prisma/client";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
-export async function getLinks() {
+export async function getLinks(): Promise<Link[]> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
