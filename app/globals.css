@@ -175,6 +175,16 @@
 
 @source "../templates/**/*.html";
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   margin: 0;
   background: var(--lh-surface);
@@ -295,29 +305,28 @@ body {
   animation: revealUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* No filter:blur here — it breaks plain text when mixed with
+   background-clip (gradient) text, so only the gradient word looked animated. */
 @keyframes headline-pop {
   0% {
     opacity: 0;
-    transform: translateY(28px) scale(0.98);
-    filter: blur(14px);
+    transform: translateY(1.1em);
   }
-  60% {
+  55% {
     opacity: 1;
     transform: translateY(0) scale(1.02);
-    filter: blur(0);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 
 .headline-pop {
   opacity: 0;
-  animation: headline-pop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: headline-pop 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   animation-delay: var(--d, 0ms);
-  will-change: transform, filter, opacity;
+  will-change: transform, opacity;
 }
 
 @keyframes headline-accent-shift {
@@ -339,6 +348,84 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* Hero: one moving “lit” band; the rest of the text follows surface color (reads as black on light). */
+.headline-hero-sweep {
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  background-image: linear-gradient(
+    92deg,
+    var(--lh-on-surface) 0%,
+    var(--lh-on-surface) 28%,
+    var(--lh-primary) 38%,
+    #7c8fe8 47%,
+    #c4ccff 50%,
+    #7c8fe8 53%,
+    var(--lh-primary) 63%,
+    var(--lh-on-surface) 72%,
+    var(--lh-on-surface) 100%
+  );
+  background-size: 260% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  background-repeat: no-repeat;
+  animation: headline-hero-sweep-move 4.2s ease-in-out infinite;
+  animation-delay: 0.15s;
+}
+
+@keyframes headline-hero-sweep-move {
+  /* Band begins on the first words (color), then travels; unlit text reads as surface. */
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Soft cursor-following light in the hero (disabled in JS when prefers-reduced-motion) */
+.hero-spotlight {
+  --hx: 50%;
+  --hy: 32%;
+}
+
+.hero-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 95% 70% at var(--hx, 50%) var(--hy, 32%),
+    color-mix(in srgb, var(--lh-primary) 26%, transparent) 0%,
+    color-mix(in srgb, var(--lh-surface-tint) 10%, transparent) 38%,
+    transparent 62%
+  );
+  pointer-events: none;
+}
+
+.dark .hero-aurora {
+  background: radial-gradient(
+    ellipse 95% 70% at var(--hx, 50%) var(--hy, 32%),
+    color-mix(in srgb, var(--lh-primary) 18%, transparent) 0%,
+    color-mix(in srgb, var(--lh-primary-container) 12%, transparent) 42%,
+    transparent 62%
+  );
+}
+
+@keyframes hero-scroll-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 0.9;
+  }
+}
+
+.hero-scroll-hint {
+  animation: hero-scroll-bob 2.4s ease-in-out infinite;
 }
 
 @keyframes link-pulse {
@@ -422,6 +509,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .headline-pop,
   .headline-accent,
+  .headline-hero-sweep,
   .reveal-up,
   .animate-float,
   .pulse-primary,
@@ -437,6 +525,17 @@ body {
   .headline-pop {
     opacity: 1;
     transform: none;
-    filter: none;
+  }
+
+  .headline-hero-sweep {
+    background: none;
+    -webkit-text-fill-color: var(--lh-primary);
+    color: var(--lh-primary);
+    animation: none;
+  }
+
+  .hero-scroll-hint {
+    animation: none;
+    opacity: 0.55;
   }
 }

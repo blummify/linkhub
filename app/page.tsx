@@ -2,10 +2,30 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
 import { SiteFooter } from "./components/SiteFooter";
 
 export default function Home() {
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduceMotion(mq.matches);
+    const onChange = () => setReduceMotion(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  const onHeroPointerMove = (e: PointerEvent<HTMLElement>) => {
+    if (reduceMotion) return;
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 100;
+    const y = ((e.clientY - r.top) / r.height) * 100;
+    el.style.setProperty("--hx", `${x}%`);
+    el.style.setProperty("--hy", `${y}%`);
+  };
+
   useEffect(() => {
     const observerOptions: IntersectionObserverInit = {
       threshold: 0.15,
@@ -91,20 +111,30 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="pt-32 pb-24 px-6 max-w-7xl mx-auto relative">
-        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+      <section
+        className="hero-spotlight pt-32 pb-8 md:pb-12 px-6 max-w-7xl mx-auto relative"
+        onPointerMove={onHeroPointerMove}
+      >
+        {!reduceMotion && (
+          <div className="hero-aurora pointer-events-none" aria-hidden />
+        )}
+        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
           <div className="flex-1 text-center lg:text-left">
-            <h1 className="font-headline text-5xl md:text-7xl font-extrabold text-on-surface leading-[1.1] tracking-tight mb-8">
-              <span className="headline-pop block" style={{ ["--d"]: "100ms" } as CSSProperties}>
-                One Link,
-              </span>{" "}
-              <span className="headline-pop block" style={{ ["--d"]: "260ms" } as CSSProperties}>
-                <span className="headline-accent">Endless</span> Possibilities
+            <h1 className="font-headline text-5xl md:text-7xl font-extrabold leading-[1.1] tracking-tight mb-8">
+              <span
+                className="headline-pop block"
+                style={{ ["--d"]: "0ms" } as CSSProperties}
+              >
+                <span className="headline-hero-sweep block">
+                  One Link,
+                  <br />
+                  Endless Possibilities
+                </span>
               </span>
             </h1>
             <p
               className="reveal-up text-lg md:text-xl text-on-surface-variant max-w-xl mx-auto lg:mx-0 mb-12 leading-relaxed"
-              style={{ animationDelay: "0.3s" }}
+              style={{ animationDelay: "0.55s" }}
             >
               Consolidate your digital presence into a single, high-converting
               editorial stage. Designed for the modern curator who demands more
@@ -112,7 +142,7 @@ export default function Home() {
             </p>
             <div
               className="reveal-up flex flex-col sm:flex-row justify-center lg:justify-start gap-6 items-center"
-              style={{ animationDelay: "0.5s" }}
+              style={{ animationDelay: "0.72s" }}
             >
               <Link
                 href="/signup"
@@ -130,7 +160,7 @@ export default function Home() {
           </div>
           <div
             className="flex-1 w-full relative reveal-up"
-            style={{ animationDelay: "0.6s" }}
+            style={{ animationDelay: "0.9s" }}
           >
             <div className="animate-float relative z-10 mx-auto max-w-[320px]">
               <div className="relative rounded-[3rem] border-[12px] border-slate-900 bg-slate-900 shadow-[0_50px_100px_-20px_rgba(31,51,170,0.3)] p-4 aspect-[9/18.5] overflow-hidden">
@@ -200,9 +230,33 @@ export default function Home() {
             <div className="absolute -bottom-16 -left-16 w-80 h-80 bg-primary-container opacity-30 blur-[100px] rounded-full -z-10"></div>
           </div>
         </div>
+        <div className="relative z-10 flex flex-col items-center justify-center pt-6 md:pt-10">
+          <a
+            href="#trusted-creators"
+            className="group flex flex-col items-center gap-1.5 text-on-surface-variant/50 hover:text-primary transition-colors"
+            aria-label="Scroll to next section"
+          >
+            <span className="text-[10px] font-label font-bold uppercase tracking-[0.25em]">
+              Explore
+            </span>
+            <span
+              className={
+                reduceMotion
+                  ? "material-symbols-outlined text-2xl"
+                  : "material-symbols-outlined text-2xl hero-scroll-hint"
+              }
+              aria-hidden
+            >
+              expand_more
+            </span>
+          </a>
+        </div>
       </section>
 
-      <section className="py-12 bg-surface-container-low border-y border-surface-variant/30 relative overflow-hidden">
+      <section
+        id="trusted-creators"
+        className="py-12 bg-surface-container-low border-y border-surface-variant/30 relative overflow-hidden scroll-mt-24"
+      >
         <div className="max-w-7xl mx-auto px-6">
           <p className="text-center font-label text-xs uppercase tracking-[0.2em] text-on-surface-variant font-bold mb-8 opacity-70">
             Trusted by creators across
