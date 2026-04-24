@@ -284,8 +284,8 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant">
-                  Or continue with
+                <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant font-semibold tracking-wide">
+                  OR
                 </span>
               </div>
             </div>
