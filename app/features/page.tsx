@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PublicCtaActions } from "../components/PublicCtaActions";
 import { PublicNav } from "../components/PublicNav";
 import { SiteFooter } from "../components/SiteFooter";
 
@@ -208,14 +209,11 @@ export default function FeaturesPage() {
                 Ready to elevate <br />
                 your digital stage?
               </h2>
-              <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-                <button className="w-full md:w-auto bg-primary text-on-primary px-10 py-4 rounded-full font-headline font-bold text-lg hover:bg-primary-container transition-all active:scale-95">
-                  Get Started Free
-                </button>
-                <button className="w-full md:w-auto bg-surface/10 backdrop-blur-md text-white px-10 py-4 rounded-full font-headline font-bold text-lg hover:bg-white/20 transition-all active:scale-95">
-                  Book a Demo
-                </button>
-              </div>
+              <PublicCtaActions
+                primaryLabel="Get Started Free"
+                primaryClassName="w-full md:w-auto bg-primary text-on-primary px-10 py-4 rounded-full font-headline font-bold text-lg hover:bg-primary-container transition-all active:scale-95"
+                secondaryClassName="w-full md:w-auto bg-surface/10 backdrop-blur-md text-white px-10 py-4 rounded-full font-headline font-bold text-lg hover:bg-white/20 transition-all active:scale-95"
+              />
             </div>
           </div>
         </section>

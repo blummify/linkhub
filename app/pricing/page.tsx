@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PublicCtaActions } from "../components/PublicCtaActions";
 import { PublicNav } from "../components/PublicNav";
 import { SiteFooter } from "../components/SiteFooter";
 
@@ -310,14 +311,11 @@ export default function PricingPage() {
             <h2 className="font-headline font-extrabold text-4xl md:text-5xl leading-tight mb-8 text-white">
               Ready to curate your digital stage?
             </h2>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button className="px-8 py-4 bg-white text-indigo-900 font-bold rounded-full hover:bg-indigo-50 transition-colors shadow-lg shadow-black/20">
-                Get Started for Free
-              </button>
-              <button className="px-8 py-4 bg-indigo-800 text-white font-bold rounded-full border border-indigo-700 hover:bg-indigo-700 transition-colors">
-                Book a Demo
-              </button>
-            </div>
+            <PublicCtaActions
+              wrapperClassName="flex flex-col sm:flex-row gap-4"
+              primaryClassName="px-8 py-4 bg-white text-indigo-900 font-bold rounded-full hover:bg-indigo-50 transition-colors shadow-lg shadow-black/20"
+              secondaryClassName="px-8 py-4 bg-indigo-800 text-white font-bold rounded-full border border-indigo-700 hover:bg-indigo-700 transition-colors"
+            />
           </div>
           <div className="relative hidden md:block">
             <div className="bg-indigo-800/50 backdrop-blur-3xl rounded-3xl p-8 transform rotate-3 translate-x-12 translate-y-12 border border-white/10">
