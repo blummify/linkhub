@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
+import { PublicNav } from "../components/PublicNav";
 import { SiteFooter } from "../components/SiteFooter";
 
 export const metadata: Metadata = {
@@ -14,54 +13,7 @@ const filledIconStyle = {
 export default function PricingPage() {
   return (
     <div className="flex-1 selection:bg-primary-container selection:text-on-primary-container">
-      <nav className="fixed top-0 w-full z-50 glass-nav h-20">
-        <div className="flex justify-between items-center max-w-7xl mx-auto px-6 h-full">
-          <Link
-            href="/"
-            className="text-2xl font-black tracking-tight text-indigo-900"
-          >
-            <span className="flex items-center font-headline font-bold tracking-tight">
-              <span className="sr-only">LinkHub</span>
-              <Image
-                src="/link_hub_logo.png"
-                alt="LinkHub logo"
-                width={256}
-                height={256}
-                loading="eager"
-                className="h-auto w-32 max-w-full object-contain"
-              />
-            </span>
-          </Link>
-          <div className="hidden md:flex items-center gap-8">
-            <Link
-              className="text-slate-600 hover:text-indigo-600 transition-colors font-inter text-sm font-medium"
-              href="/features"
-            >
-              Features
-            </Link>
-            <Link
-              className="text-indigo-700 font-bold border-b-2 border-indigo-600 pb-1 font-inter text-sm font-medium"
-              href="/pricing"
-            >
-              Pricing
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="px-5 py-2 text-sm font-medium text-primary rounded-full hover:bg-surface-container-low/70 dark:hover:bg-white/5 transition-colors"
-            >
-              Login
-            </Link>
-            <Link
-              href="/signup"
-              className="px-6 py-2 text-sm font-semibold bg-primary text-on-primary rounded-full editorial-gradient scale-95 active:scale-90 transition-transform duration-200"
-            >
-              Sign Up
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNav activePage="pricing" />
       <main className="pt-32 pb-24 px-6">
         <header className="max-w-4xl mx-auto text-center mb-20">
           <h1 className="font-headline font-extrabold text-5xl md:text-6xl text-on-surface tracking-tight mb-6 leading-tight">
