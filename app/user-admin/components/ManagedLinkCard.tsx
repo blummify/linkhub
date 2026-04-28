@@ -23,11 +23,13 @@ export function ManagedLinkCard({
   const [tempTitle, setTempTitle] = useState(title);
   const [tempUrl, setTempUrl] = useState(url);
 
-  // Sync temp state when link prop changes (e.g. from modal or other sources)
+  // Sync temporary inline-edit fields when parent link values change.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setTempTitle(title);
     setTempUrl(url);
   }, [title, url]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleTitleSubmit = () => {
     if (tempTitle !== title && tempTitle.trim()) {

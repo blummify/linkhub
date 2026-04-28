@@ -32,7 +32,7 @@ export default function LoginPage() {
       } else {
         setStage("signup");
       }
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setIsValidating(false);
@@ -51,7 +51,7 @@ export default function LoginPage() {
       } else {
         router.push("/user-dashboard");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred.");
     } finally {
       setIsValidating(false);
@@ -360,7 +360,7 @@ export default function LoginPage() {
             {/* Sign up link */}
             {stage !== "signup" && (
               <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link href="/signup" className="font-medium text-primary hover:underline">
                   Sign up
                 </Link>

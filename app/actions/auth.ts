@@ -5,6 +5,15 @@ import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 
+type CredentialsFormData = {
+  email: string;
+  password: string;
+};
+
+type RegisterFormData = CredentialsFormData & {
+  name: string;
+};
+
 export async function checkUserExists(email: string) {
   try {
     const user = await db.user.findUnique({
@@ -17,7 +26,7 @@ export async function checkUserExists(email: string) {
   }
 }
 
-export async function registerUser(formData: any) {
+export async function registerUser(formData: RegisterFormData) {
   const { name, email, password } = formData;
 
   try {
@@ -48,7 +57,7 @@ export async function registerUser(formData: any) {
   }
 }
 
-export async function loginWithCredentials(formData: any) {
+export async function loginWithCredentials(formData: CredentialsFormData) {
   const { email, password } = formData;
 
   try {

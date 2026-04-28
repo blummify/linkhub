@@ -48,6 +48,8 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   const [url, setUrl] = useState("");
   const [icon, setIcon] = useState<string | undefined>(undefined);
 
+  // We intentionally mirror incoming edit data into local form state when modal context changes.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (initialLink) {
       setTitle(initialLink.title);
@@ -61,6 +63,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
       setShowEditor(false);
     }
   }, [initialLink, open]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!open) return null;
 
