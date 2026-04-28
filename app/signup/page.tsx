@@ -40,7 +40,17 @@ export default function SignupPage() {
       if (result?.error) {
         setError(result.error);
       } else {
+        const signInRes = await signIn("credentials", {
+          email: formData.email,
+          password: formData.password,
+          redirect: false,
+        });
+        if (signInRes?.error) {
+          setError("Account created. Please sign in with your email and password.");
+          return;
+        }
         router.push("/user-dashboard");
+        router.refresh();
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
@@ -70,10 +80,10 @@ export default function SignupPage() {
           {/* Logo */}
           <div className="mb-8">
             <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
-              <img 
-                src="/link_hub_logo.png" 
-                alt="LinkHub" 
-                className="w-32 h-auto"
+              <img
+                src="/link_hub_logo.png"
+                alt="LinkHub"
+                className="h-auto w-32 max-w-full object-contain"
               />
             </Link>
           </div>

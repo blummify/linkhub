@@ -18,7 +18,14 @@ export default function FeaturesPage() {
           >
             <span className="flex items-center">
               <span className="sr-only">LinkHub</span>
-              <Image src="/link_hub_logo.png" alt="LinkHub logo" width={128} height={128} loading="eager" style={{ width: 'auto', height: 'auto' }} />
+              <Image
+                src="/link_hub_logo.png"
+                alt="LinkHub logo"
+                width={256}
+                height={256}
+                loading="eager"
+                className="h-auto w-32 max-w-full object-contain"
+              />
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-8 font-headline font-semibold tracking-tight">

@@ -58,6 +58,7 @@ export const metadata: Metadata = {
 };
 
 import { SidebarProvider } from "./components/SidebarContext";
+import AuthSessionProvider from "./components/AuthSessionProvider";
 
 export default function RootLayout({
   children,
@@ -68,6 +69,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={`${manrope.variable} ${inter.variable} ${playfair.variable} ${outfit.variable} ${roboto.variable} ${openSans.variable} antialiased scroll-smooth`}
     >
       <head>
@@ -83,9 +85,11 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-surface font-body text-on-surface antialiased">
-        <SidebarProvider>
-          {children}
-        </SidebarProvider>
+        <AuthSessionProvider>
+          <SidebarProvider>
+            {children}
+          </SidebarProvider>
+        </AuthSessionProvider>
         <ThemeToggle />
       </body>
     </html>

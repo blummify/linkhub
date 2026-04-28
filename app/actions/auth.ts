@@ -31,26 +31,18 @@ export async function registerUser(formData: any) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = await db.user.create({
+    await db.user.create({
       data: {
         name,
         email,
         passwordHash,
+        profile: { create: {} },
       },
     });
 
-    // Automatically sign in the user after registration
-    await signIn("credentials", {
-      email,
-      password,
-      redirectTo: "/user-dashboard",
-    });
-
+    // Sign in on the client with `signIn("credentials", …)` so the session cookie is set reliably.
     return { success: true };
   } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Failed to sign in after registration" };
-    }
     console.error("Registration error:", error);
     return { error: "Something went wrong" };
   }

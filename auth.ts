@@ -8,6 +8,18 @@ import { db } from "@/lib/db";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(db),
+  events: {
+    /** OAuth (Google) creates `User` via the adapter; ensure a `Profile` row exists. */
+    async createUser({ user }) {
+      const id = user.id;
+      if (!id) return;
+      await db.profile.upsert({
+        where: { userId: id },
+        create: { userId: id },
+        update: {},
+      });
+    },
+  },
   providers: [
     ...authConfig.providers,
     Credentials({

@@ -1,10 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { signOut, useSession } from "next-auth/react";
 import { useSidebar } from "./SidebarContext";
+import UserAvatar from "./UserAvatar";
 
 export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
   const { isCollapsed, toggleSidebar } = useSidebar();
+  const { data: session } = useSession();
+  const user = session?.user;
+  const displayName =
+    user?.name?.trim() ||
+    user?.email?.split("@")[0] ||
+    "Account";
   const [isMobileSearch, setIsMobileSearch] = useState(false);
 
   useEffect(() => {
@@ -63,12 +71,13 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
 
         {/* User Profile with Dropdown */}
         <div className="relative group">
-          <button className="relative flex items-center gap-2 active:scale-95 transition-all duration-300">
+          <button type="button" className="relative flex items-center gap-2 active:scale-95 transition-all duration-300">
             <div className="absolute -inset-1.5 bg-gradient-to-tr from-primary/20 to-primary/0 rounded-full opacity-0 group-hover:opacity-100 blur-md transition-opacity" />
-            <img 
-              alt="User Profile" 
-              className="relative w-10 h-10 rounded-full border-2 border-white dark:border-surface shadow-lg object-cover ring-1 ring-outline-variant/40 group-hover:ring-primary/60 transition-all group-hover:rotate-6" 
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100"
+            <UserAvatar
+              src={user?.image}
+              name={user?.name}
+              email={user?.email}
+              className="relative w-10 h-10 rounded-full border-2 border-white dark:border-surface shadow-lg object-cover ring-1 ring-outline-variant/40 group-hover:ring-primary/60 transition-all group-hover:rotate-6"
             />
             <span className="material-symbols-outlined text-on-surface-variant text-[18px] group-hover:text-primary transition-colors hidden sm:block">keyboard_arrow_down</span>
           </button>
@@ -77,8 +86,8 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
           <div className="absolute top-full right-0 pt-3 w-56 opacity-0 translate-y-4 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
             <div className="bg-white/80 dark:bg-surface/80 backdrop-blur-xl border border-outline-variant/30 rounded-[1.5rem] shadow-2xl p-2 overflow-hidden">
               <div className="px-4 py-3 border-b border-outline-variant/20 mb-1">
-                <p className="text-[13px] font-black tracking-tight text-on-surface">Joel Blummer</p>
-                <p className="text-[11px] font-medium text-on-surface-variant/60">joel@example.com</p>
+                <p className="text-[13px] font-black tracking-tight text-on-surface">{displayName}</p>
+                <p className="text-[11px] font-medium text-on-surface-variant/60">{user?.email ?? ""}</p>
               </div>
               
               <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-bold text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors text-left group/item">
@@ -93,7 +102,11 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
               
               <div className="h-px bg-outline-variant/20 my-1 mx-2" />
               
-              <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-bold text-error/80 hover:bg-error/5 hover:text-error transition-colors text-left group/item">
+              <button
+                type="button"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-bold text-error/80 hover:bg-error/5 hover:text-error transition-colors text-left group/item"
+                onClick={() => void signOut({ callbackUrl: "/login" })}
+              >
                 <span className="material-symbols-outlined text-[20px]">logout</span>
                 Logout
               </button>

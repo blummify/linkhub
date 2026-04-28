@@ -10,10 +10,10 @@ export function SiteFooter() {
             <Image
               src="/link_hub_logo.png"
               alt="LinkHub logo"
-              width={128}
-              height={128}
+              width={256}
+              height={256}
               loading="eager"
-              style={{ width: "auto", height: "auto" }}
+              className="mx-auto h-auto w-32 max-w-full object-contain"
             />
           </div>
           <p className="text-slate-500 text-sm max-w-xs">

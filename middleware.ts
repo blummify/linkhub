@@ -19,10 +19,15 @@ const PUBLIC_EXACT = new Set([
   "/pricing",
 ]);
 
+/** Files in /public — must not require auth or `/_next/image` fetches get HTML (e.g. /login) and fail with "received null". */
+const PUBLIC_STATIC_EXT = /\.(ico|png|jpg|jpeg|gif|webp|svg|txt|xml|webmanifest|woff2?)$/i;
+
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { nextUrl } = req;
   const pathname = normalizePathname(nextUrl.pathname);
+
+  if (PUBLIC_STATIC_EXT.test(pathname)) return undefined;
 
   const isApiAuthRoute = pathname.startsWith("/api/auth");
   const isPublicRoute = PUBLIC_EXACT.has(pathname);

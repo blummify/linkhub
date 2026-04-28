@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { checkUserExists, loginWithCredentials } from "@/app/actions/auth";
+import { checkUserExists, loginWithCredentials, registerUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
-import { useFormStatus } from "react-dom";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [signupName, setSignupName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [stage, setStage] = useState<"email" | "password" | "signup">("email");
@@ -62,6 +62,42 @@ export default function LoginPage() {
     setStage("email");
   };
 
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    setError("");
+    setIsValidating(true);
+    try {
+      const result = await registerUser({
+        name: signupName,
+        email,
+        password,
+      });
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      const signInRes = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      if (signInRes?.error) {
+        setError("Account created. Please sign in with your password.");
+        return;
+      }
+      router.push("/user-dashboard");
+      router.refresh();
+    } catch {
+      setError("An unexpected error occurred.");
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
   return (
     <div className="h-screen bg-white dark:bg-surface flex overflow-hidden">
       {/* Left Side - Form */}
@@ -76,10 +112,10 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="mb-8">
             <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
-              <img 
-                src="/link_hub_logo.png" 
-                alt="LinkHub" 
-                className="w-32 h-auto"
+              <img
+                src="/link_hub_logo.png"
+                alt="LinkHub"
+                className="h-auto w-32 max-w-full object-contain"
               />
             </Link>
           </div>
@@ -199,15 +235,18 @@ export default function LoginPage() {
             )}
 
             {stage === "signup" && (
-              <form className="space-y-6">
+              <form onSubmit={handleSignup} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="signup-name">
                     Full Name
                   </label>
                   <input
+                    id="signup-name"
                     className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
                     placeholder="Alex Rivers"
                     type="text"
+                    value={signupName}
+                    onChange={(e) => setSignupName(e.target.value)}
                     required
                   />
                 </div>
@@ -225,14 +264,17 @@ export default function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="signup-password">
                     Password
                   </label>
                   <div className="relative">
                     <input
+                      id="signup-password"
                       className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface pr-12"
                       placeholder="••••••••"
                       type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
                     />
                     <button 
@@ -247,14 +289,17 @@ export default function LoginPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="signup-confirm">
                     Confirm Password
                   </label>
                   <div className="relative">
                     <input
+                      id="signup-confirm"
                       className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface pr-12"
                       placeholder="••••••••"
                       type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                     />
                     <button 
@@ -269,11 +314,18 @@ export default function LoginPage() {
                   </div>
                 </div>
                 <button
-                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                  disabled={isValidating}
+                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                   type="submit"
                 >
-                  Create Account
-                  <span className="material-symbols-outlined">arrow_forward</span>
+                  {isValidating ? (
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      Create Account
+                      <span className="material-symbols-outlined">arrow_forward</span>
+                    </>
+                  )}
                 </button>
               </form>
             )}

@@ -2,11 +2,20 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
 import { useSidebar } from "./SidebarContext";
+import UserAvatar from "./UserAvatar";
 
 export default function CollapsibleSidebar({ children, isAdmin = false }: { children: React.ReactNode; isAdmin?: boolean }) {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+  const user = session?.user;
+  const displayName =
+    user?.name?.trim() ||
+    user?.email?.split("@")[0] ||
+    (status === "loading" ? "…" : "Account");
+  const displayEmail = user?.email ?? "";
 
   const isActiveLink = (href: string) => {
     return pathname === href;
@@ -41,10 +50,10 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
       >
         {/* Logo Section */}
         <div className={`${isCollapsed ? 'mb-6' : 'mb-10'} flex justify-center ${isCollapsed ? 'pt-1' : 'pt-2'}`}>
-          <img 
-            src="/link_hub_logo.png" 
-            alt="LinkHub Logo" 
-            className={`${isCollapsed ? 'w-8 h-8' : 'w-32'}`}
+          <img
+            src="/link_hub_logo.png"
+            alt="LinkHub Logo"
+            className={`object-contain ${isCollapsed ? "h-8 w-8" : "h-auto w-32"}`}
           />
         </div>
         
@@ -93,17 +102,18 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
         <div className={`mt-auto ${isCollapsed ? 'p-1' : 'p-4'} space-y-2 pb-4`}>
           {/* User Profile */}
           <div className={`${isCollapsed ? 'justify-center' : 'flex items-center gap-3'} ${isCollapsed ? 'p-2' : 'p-3'} bg-surface-container-highest rounded-xl`}>
-            <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-full overflow-hidden`}>
-              <img 
-                alt="User Avatar" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI57sppD_FLi9ouIh-nc1Tcj4PF6vKEAcZmAdyk0FM0P-SgHL4GDKTwJojpoC4Zdgclz61XTPE4THKrbPyXX4zalYeXTqHkAbKlA85wWL3zAe8gityPPdlDtwuDU0upwunIQPs0M13K-oQ1Tq0ZgfR8cdmGtB_k1Vc8Hdb1TRCamkkRf4oYpPXWTH73M_JuKxNU08-S8VdQevKwYgDZtbUJPtCSxb09pJUEGDjVyW1zafOoKx6JbW26p684_qC_-pO6N_XlrhrrH10"
+            <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-full overflow-hidden shrink-0`}>
+              <UserAvatar
+                src={user?.image}
+                name={user?.name}
+                email={user?.email}
                 className="w-full h-full object-cover"
               />
             </div>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-on-surface truncate">Alex Rivers</p>
-                <p className="text-[11px] text-on-surface-variant truncate">alex@linkhub.com</p>
+                <p className="text-[13px] font-semibold text-on-surface truncate">{displayName}</p>
+                <p className="text-[11px] text-on-surface-variant truncate">{displayEmail || " "}</p>
               </div>
             )}
           </div>
@@ -114,10 +124,14 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
               <span className={`material-symbols-outlined ${isCollapsed ? 'text-base' : 'text-lg'}`}>help</span>
               {!isCollapsed && <span className="text-[13px]">Help Center</span>}
             </Link>
-            <Link className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-1 py-2' : 'px-3 py-2'} text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all`} href="/logout">
+            <button
+              type="button"
+              className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-1 py-2' : 'px-3 py-2'} text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded-lg transition-all text-left`}
+              onClick={() => void signOut({ callbackUrl: "/login" })}
+            >
               <span className={`material-symbols-outlined ${isCollapsed ? 'text-base' : 'text-lg'}`}>logout</span>
               {!isCollapsed && <span className="text-[13px]">Log Out</span>}
-            </Link>
+            </button>
           </div>
         </div>
       </aside>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 type ThemeMode = "light" | "dark";
 
@@ -11,24 +11,16 @@ function setThemeMode(mode: ThemeMode) {
   localStorage.setItem("theme", mode);
 }
 
-function getInitialThemeMode(): ThemeMode {
-  const stored = localStorage.getItem("theme");
-  if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
 export function ThemeToggle() {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    if (typeof window === "undefined") return "light";
-    try {
-      return getInitialThemeMode();
-    } catch {
-      return "light";
-    }
-  });
+  // Match SSR (always "light" for the toggle UI) so hydration agrees with the server.
+  // The inline script in layout already applied the real theme class on <html> before paint.
+  const [mode, setMode] = useState<ThemeMode>("light");
+
+  useLayoutEffect(() => {
+    setMode(document.documentElement.classList.contains("dark") ? "dark" : "light");
+  }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     try {
       setThemeMode(mode);
     } catch {}

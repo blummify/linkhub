@@ -72,11 +72,11 @@ export default function Home() {
               <Image
                 src="/link_hub_logo.png"
                 alt="LinkHub logo"
-                width={128}
-                height={128}
+                width={256}
+                height={256}
                 priority
                 loading="eager"
-                style={{ width: 'auto', height: 'auto' }}
+                className="h-auto w-32 max-w-full object-contain"
               />
             </span>
           </Link>
