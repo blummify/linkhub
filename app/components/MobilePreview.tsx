@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React from "react";
 import { bodyFontStack, headlineFontStack } from "../constants/previewFonts";
 
@@ -390,7 +391,7 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
             <div className="overflow-y-auto overflow-x-hidden scrollbar-hide pr-1 preview-shell min-h-0 w-full shrink-0 max-h-[calc(100%-6rem)]">
               <div className="flex flex-col items-center text-center pb-1">
                 <div
-                  className={`overflow-hidden shadow-xl flex items-center justify-center ${
+                  className={`relative overflow-hidden shadow-xl flex items-center justify-center ${
                     appearance.themeId === "midnight-oasis"
                       ? "shadow-black/30 border border-white/10 ring-4 ring-white/10"
                       : "shadow-slate-200/50 border border-slate-50 ring-4 ring-white/50"
@@ -407,7 +408,14 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                   }`}
                 >
                   {profileImageUrl ? (
-                    <img src={profileImageUrl} alt="" className="w-full h-full object-cover" />
+                    <Image
+                      src={profileImageUrl}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      unoptimized
+                      sizes="80px"
+                    />
                   ) : (
                     <span
                       className={`material-symbols-outlined text-4xl ${
