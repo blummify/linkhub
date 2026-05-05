@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-low": "#f4f2fc",
+                        "on-surface": "#1a1b22",
+                        "surface-bright": "#fbf8ff",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#83f5c3",
+                        "on-secondary-container": "#00714f",
+                        "on-primary-fixed-variant": "#2438ae",
+                        "inverse-primary": "#bbc3ff",
+                        "primary-fixed": "#dfe0ff",
+                        "surface": "#fbf8ff",
+                        "tertiary-fixed-dim": "#ffb59c",
+                        "tertiary-container": "#9f390e",
+                        "surface-container-high": "#e9e7f0",
+                        "on-tertiary-fixed": "#380c00",
+                        "outline-variant": "#c5c5d4",
+                        "on-secondary-fixed-variant": "#005138",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#cacfff",
+                        "secondary-fixed": "#86f8c6",
+                        "on-error-container": "#93000a",
+                        "primary": "#1f33aa",
+                        "secondary": "#006c4c",
+                        "on-secondary": "#ffffff",
+                        "background": "#fbf8ff",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#ffc6b3",
+                        "inverse-surface": "#2f3037",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#4052c7",
+                        "on-surface-variant": "#454652",
+                        "inverse-on-surface": "#f2eff9",
+                        "on-secondary-fixed": "#002114",
+                        "surface-dim": "#dbd9e2",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#822800",
+                        "tertiary": "#7c2500",
+                        "primary-fixed-dim": "#bbc3ff",
+                        "on-primary-fixed": "#000e5f",
+                        "surface-variant": "#e3e1ea",
+                        "surface-container": "#efedf6",
+                        "surface-container-highest": "#e3e1ea",
+                        "primary-container": "#3b4ec2",
+                        "tertiary-fixed": "#ffdbcf",
+                        "outline": "#757684",
+                        "on-background": "#1a1b22",
+                        "secondary-fixed-dim": "#69dbab"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-secondary-container">
+<!-- Sidebar Navigation -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col h-full p-4 border-r border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900">
+<div class="mb-8 px-4">
+<h1 class="text-xl font-bold tracking-tight text-indigo-700 dark:text-indigo-400">Super Admin</h1>
+<p class="text-xs text-slate-500 font-medium uppercase tracking-widest mt-1">System Control</p>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Dashboard -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<!-- User Management (ACTIVE) -->
+<a class="flex items-center gap-3 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="group" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="text-sm">User Management</span>
+</a>
+<!-- Platform Settings -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="text-sm font-medium">Platform Settings</span>
+</a>
+<!-- Monetization -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-sm font-medium">Monetization</span>
+</a>
+</nav>
+<div class="mt-auto pt-4 border-t border-slate-200/50">
+<div class="flex items-center gap-3 px-4">
+<img alt="Admin Avatar" class="w-10 h-10 rounded-full object-cover" data-alt="close-up portrait of a professional man with a friendly expression in a modern office environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuQRx_pi0YPkJFKYWG7dLVxH4IfVlYJmfY8DFF53B3U5a-ROamDp_V9XcjPPVllEL2RSzCgfYu74aXq8oJOk0S8gPftslvHzEwKtI5Ryi1uJ2C4-Iq78apIrzWvN3MbajiW_N169iF7IsHE3iQU-pw_K0GEV9kIsN4x-nVH9C37ZwI01u5eJlw_L7GvlND8PleyhFBza9T93D4Lgg6pTeYrlVoAt9jDqKd9YAKoQVVMpYCDImSArS3ZZcCfaMAQ3nwTxljXF3dEob_"/>
+<div class="overflow-hidden">
+<p class="text-sm font-bold truncate">Admin User</p>
+<p class="text-xs text-slate-500 truncate">admin@curator.studio</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen">
+<!-- Header -->
+<header class="h-16 px-8 flex justify-between items-center bg-white/70 backdrop-blur-xl border-b border-slate-200/50 sticky top-0 z-10">
+<h2 class="text-lg font-bold text-indigo-700">User Management</h2>
+<div class="flex items-center gap-4">
+<button class="hover:bg-slate-100 rounded-full p-2 transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="hover:bg-slate-100 rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="p-8 max-w-7xl mx-auto space-y-8">
+<!-- Filters & Search Bento Section -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="md:col-span-2 relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-highest border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Search by name, email or ID..." type="text"/>
+</div>
+<div class="relative">
+<select class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-xl text-sm appearance-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
+<option>All Roles</option>
+<option>Creator</option>
+<option>Agency</option>
+<option>Brand</option>
+</select>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-surface-container-high hover:bg-surface-variant rounded-xl text-sm font-semibold transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+                        Filters
+                    </button>
+<button class="px-4 py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/10 hover:scale-95 transition-transform">
+                        Add User
+                    </button>
+</div>
+</div>
+<!-- Stats Overview (Editorial Minimalist) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-surface-container-low p-6 rounded-xl">
+<p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Users</p>
+<h3 class="text-3xl font-black mt-2">12,482</h3>
+<div class="flex items-center gap-1 mt-2 text-secondary font-bold text-sm">
+<span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
+                        12% growth
+                    </div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border-l-4 border-secondary">
+<p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Pro Subscribers</p>
+<h3 class="text-3xl font-black mt-2">3,105</h3>
+<p class="text-sm text-slate-500 mt-2 font-medium">24.8% conversion rate</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl">
+<p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Active Today</p>
+<h3 class="text-3xl font-black mt-2">1,892</h3>
+<div class="w-full bg-slate-200 h-1.5 rounded-full mt-4">
+<div class="bg-primary h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+</div>
+</div>
+<!-- Main Data Table Container -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50">
+<th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
+<th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Joined Date</th>
+<th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Plan</th>
+<th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+<th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<!-- User Row 1 -->
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-primary font-bold">JD</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Jordan Davis</p>
+<p class="text-xs text-slate-500">jordan@creative.net</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600">Oct 12, 2023</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
+                                        Pro
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 text-sm text-secondary font-medium">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                        Active
+                                    </div>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors" title="Reset Password">
+<span class="material-symbols-outlined text-lg" data-icon="lock_reset">lock_reset</span>
+</button>
+<button class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors" title="Manage Plan">
+<span class="material-symbols-outlined text-lg" data-icon="edit_calendar">edit_calendar</span>
+</button>
+<button class="p-2 hover:bg-error-container/20 rounded-lg text-error transition-colors" title="Block User">
+<span class="material-symbols-outlined text-lg" data-icon="block">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- User Row 2 -->
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="Sarah Chen" class="w-10 h-10 rounded-lg object-cover" data-alt="professional portrait of an asian woman smiling in a bright studio with minimalist aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnHL8yArVfisSvJ0PJVJxQLP6VCOjqRBEtaKHpDqeD5I8_iG4KlYuDtku-AEb1InqQshONC4iBf87-I33Pb_8zp_tjOKVZqki6DylTICYA6eglViMhehmaQ6KQaTvVgkHWjgyvOhmcRfcOuDNaxQUmjU8WMKHQZYAZOHA2yS0o8G7UCMN7SEhU3uCIk_FslluDwNddlNfSZa6xzTEAlZrc4mFSOqWpWomU6rz8k03QLhmm51bUugAYUO8lwX9boG8DhAz42M7w7F0R"/>
+<div>
+<p class="text-sm font-bold text-on-surface">Sarah Chen</p>
+<p class="text-xs text-slate-500">schen.designs@gmail.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600">Nov 04, 2023</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-surface-container-high text-slate-600">
+                                        Free
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 text-sm text-secondary font-medium">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                        Active
+                                    </div>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="lock_reset">lock_reset</span>
+</button>
+<button class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="edit_calendar">edit_calendar</span>
+</button>
+<button class="p-2 hover:bg-error-container/20 rounded-lg text-error transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="block">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- User Row 3 -->
+<tr class="hover:bg-slate-50/50 transition-colors bg-error/5">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-slate-500 font-bold">MK</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Marcus Knight</p>
+<p class="text-xs text-slate-500">m.knight@void.co</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600">Aug 28, 2023</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
+                                        Pro
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 text-sm text-error font-medium">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                                        Blocked
+                                    </div>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="lock_reset">lock_reset</span>
+</button>
+<button class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="edit_calendar">edit_calendar</span>
+</button>
+<button class="px-3 py-1 bg-error text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors">
+                                            Unblock
+                                        </button>
+</div>
+</td>
+</tr>
+<!-- User Row 4 -->
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="Alex Rivera" class="w-10 h-10 rounded-lg object-cover" data-alt="close-up of a stylish man with facial hair in soft natural light with a neutral studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASuoGdXQpYjnwnrWJkbW4W97doPXgAj8yflYLZL15N_DYQwnN1XAIQ9XU4UgErE5UaADvCTJMJQrhvgSwa5qJb1fvZaZTueDpRCYO8Cvxc-Y127jtM8SKBafrkk6Ay0QlXfxoFa_bBYFH5U42Xq6mrBLogpl68BmB07g1pw5fujCKByZ1o24rZTY-WUtz1Swwpq1XJ_UW35LTmy-lhARzPuBiR9SeGq_mnYcRbTR8oud4OQHCZ658735rJz4ONIMyco4i3R7wv4tgZ"/>
+<div>
+<p class="text-sm font-bold text-on-surface">Alex Rivera</p>
+<p class="text-xs text-slate-500">arivera@hub.io</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600">Jan 15, 2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-surface-container-high text-slate-600">
+                                        Free
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 text-sm text-secondary font-medium">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                        Active
+                                    </div>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="lock_reset">lock_reset</span>
+</button>
+<button class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="edit_calendar">edit_calendar</span>
+</button>
+<button class="p-2 hover:bg-error-container/20 rounded-lg text-error transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="block">block</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 flex items-center justify-between border-t border-slate-100">
+<p class="text-sm text-slate-500 font-medium">Showing <span class="text-on-surface font-bold">1-10</span> of <span class="text-on-surface font-bold">12,482</span> users</p>
+<div class="flex items-center gap-1">
+<button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-white font-bold text-sm">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600 font-medium text-sm">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600 font-medium text-sm">3</button>
+<span class="px-2 text-slate-400">...</span>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600 font-medium text-sm">1,248</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer Details -->
+<div class="flex justify-between items-center text-xs text-slate-400 font-medium">
+<p>System Status: <span class="text-secondary font-bold">Operational</span></p>
+<div class="flex gap-4">
+<a class="hover:text-primary transition-colors" href="#">Data Export Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy Logs</a>
+</div>
+</div>
+</div>
+</main>
+</body></html>
