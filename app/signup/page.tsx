@@ -9,27 +9,90 @@ import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
 
+function validateEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ? ""
+    : "Enter a valid email address";
+}
+
+function validatePassword(password: string) {
+  if (password.length < 6) return "Minimum 6 characters";
+  if (!/[A-Z]/.test(password)) return "Must include an uppercase letter";
+  if (!/[0-9]/.test(password)) return "Must include a number";
+  return "";
+}
+
+type FieldErrors = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
 export default function SignupPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const getFieldError = (field: keyof FieldErrors, value: string): string => {
+    switch (field) {
+      case "name":
+        return value.trim() ? "" : "Full name is required";
+      case "email":
+        return validateEmail(value);
+      case "password":
+        return validatePassword(value);
+      case "confirmPassword":
+        return value === formData.password ? "" : "Passwords do not match";
+    }
+  };
+
+  const handleBlur = (field: keyof FieldErrors) => {
+    setFieldErrors((prev) => ({
+      ...prev,
+      [field]: getFieldError(field, formData[field]),
+    }));
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name as keyof FieldErrors]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateAll = (): boolean => {
+    const errors: FieldErrors = {
+      name: getFieldError("name", formData.name),
+      email: getFieldError("email", formData.email),
+      password: getFieldError("password", formData.password),
+      confirmPassword: getFieldError("confirmPassword", formData.confirmPassword),
+    };
+    setFieldErrors(errors);
+    return Object.values(errors).every((e) => !e);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+
+    if (!validateAll()) return;
 
     setIsLoading(true);
 
@@ -37,7 +100,7 @@ export default function SignupPage() {
       const result = await registerUser({
         name: formData.name,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       });
 
       if (result?.error) {
@@ -52,21 +115,17 @@ export default function SignupPage() {
           setError("Account created. Please sign in with your email and password.");
           return;
         }
-        router.push("/user-dashboard");
-        router.refresh();
+        setSuccess(true);
+        setTimeout(() => {
+          router.push("/user-dashboard");
+          router.refresh();
+        }, 1500);
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
   };
 
   const panelFeatures = [
@@ -85,107 +144,145 @@ export default function SignupPage() {
       panelFeatures={panelFeatures}
     >
       <div className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="name">
-                  Full Name
-                </label>
-                <input
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Alex Rivers"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
-                  Email Address
-                </label>
-                <input
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="alex@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <PasswordField
-                id="password"
-                name="password"
-                label="Password"
-                value={formData.password}
-                onChange={(value) => setFormData((prev) => ({ ...prev, password: value }))}
-                show={showPassword}
-                onToggleShow={() => setShowPassword(!showPassword)}
-              />
-              
-              <PasswordField
-                id="confirmPassword"
-                name="confirmPassword"
-                label="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={(value) => setFormData((prev) => ({ ...prev, confirmPassword: value }))}
-                show={showConfirmPassword}
-                onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
-              />
+        {success && (
+          <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm rounded-lg flex items-center gap-2">
+            <span className="material-symbols-outlined text-base">check_circle</span>
+            Account created! Redirecting you now...
+          </div>
+        )}
 
-              <div className="flex items-center">
-                <input
-                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-                  id="terms"
-                  type="checkbox"
-                  required
-                />
-                <label className="ml-2 text-sm text-gray-600 dark:text-on-surface-variant" htmlFor="terms">
-                  I agree to the <Link href="#" className="text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary hover:underline">Privacy Policy</Link>
-                </label>
-              </div>
-
-              <button
-                disabled={isLoading}
-                className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                type="submit"
-              >
-                {isLoading ? "Creating Account..." : "Create Account"}
-                {!isLoading && <span className="material-symbols-outlined">arrow_forward</span>}
-              </button>
-            </form>
-
-            {/* Social Signup */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant font-semibold tracking-wide">
-                  OR
-                </span>
-              </div>
-            </div>
-
-            <GoogleAuthButton
-              onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
-              label="Sign up with Google"
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="name">
+              Full Name
+            </label>
+            <input
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface ${
+                fieldErrors.name
+                  ? "border-red-400 dark:border-red-400"
+                  : "border-gray-300 dark:border-outline-variant"
+              }`}
+              id="name"
+              name="name"
+              type="text"
+              placeholder="Alex Rivers"
+              value={formData.name}
+              onChange={handleChange}
+              onBlur={() => handleBlur("name")}
             />
+            {fieldErrors.name && (
+              <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">error</span>
+                {fieldErrors.name}
+              </p>
+            )}
+          </div>
 
-            {/* Login link */}
-            <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
-              Already have an account?{" "}
-              <Link href="/login" className="font-medium text-primary hover:underline">
-                Log in
-              </Link>
-            </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
+              Email Address
+            </label>
+            <input
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface ${
+                fieldErrors.email
+                  ? "border-red-400 dark:border-red-400"
+                  : "border-gray-300 dark:border-outline-variant"
+              }`}
+              id="email"
+              name="email"
+              type="email"
+              placeholder="alex@example.com"
+              value={formData.email}
+              onChange={handleChange}
+              onBlur={() => handleBlur("email")}
+            />
+            {fieldErrors.email && (
+              <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">error</span>
+                {fieldErrors.email}
+              </p>
+            )}
+          </div>
+
+          <PasswordField
+            id="password"
+            name="password"
+            label="Password"
+            value={formData.password}
+            onChange={(value) => {
+              setFormData((prev) => ({ ...prev, password: value }));
+              if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: "" }));
+            }}
+            onBlur={() => handleBlur("password")}
+            show={showPassword}
+            onToggleShow={() => setShowPassword(!showPassword)}
+            showStrength
+            error={fieldErrors.password}
+          />
+
+          <PasswordField
+            id="confirmPassword"
+            name="confirmPassword"
+            label="Confirm Password"
+            value={formData.confirmPassword}
+            onChange={(value) => {
+              setFormData((prev) => ({ ...prev, confirmPassword: value }));
+              if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+            }}
+            onBlur={() => handleBlur("confirmPassword")}
+            show={showConfirmPassword}
+            onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
+            error={fieldErrors.confirmPassword}
+          />
+
+          <div className="flex items-center">
+            <input
+              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              id="terms"
+              type="checkbox"
+              required
+            />
+            <label className="ml-2 text-sm text-gray-600 dark:text-on-surface-variant" htmlFor="terms">
+              I agree to the{" "}
+              <Link href="#" className="text-primary hover:underline">Terms of Service</Link>{" "}
+              and{" "}
+              <Link href="#" className="text-primary hover:underline">Privacy Policy</Link>
+            </label>
+          </div>
+
+          <button
+            disabled={isLoading || success}
+            className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            type="submit"
+          >
+            {isLoading ? "Creating Account..." : "Create Account"}
+            {!isLoading && !success && <span className="material-symbols-outlined">arrow_forward</span>}
+          </button>
+        </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant font-semibold tracking-wide">
+              OR
+            </span>
+          </div>
+        </div>
+
+        <GoogleAuthButton
+          onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
+          label="Sign up with Google"
+        />
+
+        <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
+          Already have an account?{" "}
+          <Link href="/login" className="font-medium text-primary hover:underline">
+            Log in
+          </Link>
+        </p>
       </div>
     </AuthShell>
   );
 }
-
