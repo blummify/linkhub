@@ -141,7 +141,7 @@ export default function LoginPage() {
                 </div>
                 <button
                   disabled={isValidating}
-                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                   type="submit"
                 >
                   {isValidating ? (
