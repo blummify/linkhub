@@ -1,0 +1,5 @@
+git init                     
+git add .
+git commit -m "initial commit"
+git remote add origin https://github.com/oseijoel6111/blummify-linkhub.git  # if not already linked
+git push -u origin main
