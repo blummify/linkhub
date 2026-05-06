@@ -1,29 +1,54 @@
 'use client';
 
-import { platform } from "os"; 
-import {useEffect, useState } from "react"
+import { useEffect, useRef } from 'react';
 
-export function useShortKey(onTriger: () => void) {
-    const [modifier, setModifier] = useState<string>("Ctrl");
+interface UseShortKeyOptions {
+    modifier?: 'ctrl' | 'cmd';
+    key?: string;
+    enabled?: boolean;
+}
 
-    useEffect( ()=> {
-        const isMac = /mac/i.test(navigator.platform);
-        setModifier(isMac ? "⌘" : "Ctrl");
+export function useShortKey(
+    onTrigger: () => void,
+    options: UseShortKeyOptions = {}
+) {
+    const { modifier: manualModifier, key = 'k', enabled = true } = options;
+    const onTriggerRef = useRef(onTrigger);
 
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key.toLocaleLowerCase() !== "k") return;
+    const modifierDisplay = (() => {
+    if (manualModifier) {
+        return manualModifier === 'cmd' ? '⌘' : 'Ctrl';
+    }
+    const usesMetaKey = /mac|ipad|iphone/i.test(navigator.userAgent);
+    return usesMetaKey ? '⌘' : 'Ctrl';
+    })();
 
-            const isModifierPressed = isMac ? event.metaKey : event.ctrlKey;
+    useEffect(() => {
+    onTriggerRef.current = onTrigger;
+    }, [onTrigger]);
 
-            if (isModifierPressed) {
-                event.preventDefault();
-                onTriger();
-            }
-        };
+    useEffect(() => {
+    if (!enabled) return;
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onTriger]);
+    const usesMetaKey = /mac|ipad|iphone/i.test(navigator.userAgent);
+    const effectiveModifier = manualModifier ?? (usesMetaKey ? 'cmd' : 'ctrl');
 
-    return {modifier}
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key.toLowerCase() !== key.toLowerCase()) return;
+
+        const isModifierPressed = effectiveModifier === 'cmd' 
+        ? event.metaKey 
+        : event.ctrlKey;
+
+        if (isModifierPressed) {
+        event.preventDefault();
+        onTriggerRef.current();
+        }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [enabled, key, manualModifier]);
+
+    return { modifier: modifierDisplay };
 }

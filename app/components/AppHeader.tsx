@@ -62,6 +62,7 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-1.5 px-2 py-1 bg-surface-container-low border border-outline-variant/30 rounded-lg text-[10px] font-black text-on-surface-variant/60">
             <span className="text-[12px]">{modifier}</span>
+            <span className="text-[11px] opacity-60">+</span>
             <span>K</span>
           </div>
         </div>
