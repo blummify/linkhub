@@ -33,8 +33,10 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
     <>
       {/* Mobile Overlay */}
       {!isCollapsed && (
-        <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden transition-opacity cursor-default"
           onClick={toggleSidebar}
         />
       )}
@@ -58,38 +60,38 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
         </div>
         
         <nav className="flex-1 space-y-1">
-          <Link className={getLinkClasses('/user-admin')} href="/user-admin">
+          <Link aria-label="Links" aria-current={isActiveLink('/user-admin') ? "page" : undefined} className={getLinkClasses('/user-admin')} href="/user-admin">
             {isActiveLink('/user-admin') && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">link</span>
             {!isCollapsed && <span className="text-[13px]">Links</span>}
           </Link>
-          <Link className={getLinkClasses('/appearance')} href="/appearance">
+          <Link aria-label="Appearance" aria-current={isActiveLink('/appearance') ? "page" : undefined} className={getLinkClasses('/appearance')} href="/appearance">
             {isActiveLink('/appearance') && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">palette</span>
             {!isCollapsed && <span className="text-[13px]">Appearance</span>}
           </Link>
-          
-          <Link className={getLinkClasses('/analytics')} href="/analytics">
+
+          <Link aria-label="Analytics" aria-current={isActiveLink('/analytics') ? "page" : undefined} className={getLinkClasses('/analytics')} href="/analytics">
             {isActiveLink('/analytics') && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">analytics</span>
             {!isCollapsed && <span className="text-[13px]">Analytics</span>}
           </Link>
-          
-          <Link className={getLinkClasses('/admin/users')} href="/admin/users">
+
+          <Link aria-label="Users" aria-current={isActiveLink('/admin/users') ? "page" : undefined} className={getLinkClasses('/admin/users')} href="/admin/users">
             {isActiveLink('/admin/users') && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">groups</span>
             {!isCollapsed && <span className="text-[13px]">Users</span>}
           </Link>
-          
-          <Link className={getLinkClasses('/admin/settings')} href="/admin/settings">
+
+          <Link aria-label="Settings" aria-current={isActiveLink('/admin/settings') ? "page" : undefined} className={getLinkClasses('/admin/settings')} href="/admin/settings">
             {isActiveLink('/admin/settings') && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
@@ -137,9 +139,9 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 h-screen overflow-hidden relative flex flex-col">
+      <main id="main-content" className="flex-1 h-screen overflow-hidden relative flex flex-col">
         {children}
-      </div>
+      </main>
     </>
   );
 }

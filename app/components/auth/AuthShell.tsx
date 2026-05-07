@@ -60,7 +60,7 @@ export function AuthShell({
           </div>
 
           {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg flex items-center gap-2 animate-fade-in">
+            <div role="alert" className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg flex items-center gap-2 animate-fade-in">
               <span className="material-symbols-outlined text-base">error</span>
               {error}
             </div>
