@@ -181,12 +181,38 @@ export default function LoginPage() {
       panelFeatures={panelFeatures}
     >
       <div className="space-y-6">
-        {success && (
-          <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm rounded-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-base">check_circle</span>
-            Account created! Redirecting you now...
-          </div>
-        )}
+            {stage === "email" && (
+              <form onSubmit={handleContinue} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
+                    Email Address
+                  </label>
+                  <input
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <button
+                  disabled={isValidating}
+                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  type="submit"
+                >
+                  {isValidating ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      Continue
+                      <span className="material-symbols-outlined">arrow_forward</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
 
         {stage === "email" && (
           <form onSubmit={handleContinue} className="space-y-6" noValidate>
