@@ -15,8 +15,8 @@ export function PublicCtaActions({
 }: PublicCtaActionsProps) {
   return (
     <div className={wrapperClassName}>
-      <button className={primaryClassName}>{primaryLabel}</button>
-      <button className={secondaryClassName}>{secondaryLabel}</button>
+      <button className={`${primaryClassName} cursor-pointer`}>{primaryLabel}</button>
+      <button className={`${secondaryClassName} cursor-pointer`}>{secondaryLabel}</button>
     </div>
   );
 }
