@@ -132,96 +132,44 @@ export default function SignupPage() {
       panelFeatures={panelFeatures}
     >
       <div className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="name">
-                  Full Name
-                </label>
-                <input
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Alex Rivers"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
-                  Email Address
-                </label>
-                <input
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="alex@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <PasswordField
-                id="password"
-                name="password"
-                label="Password"
-                value={formData.password}
-                onChange={(value) => setFormData((prev) => ({ ...prev, password: value }))}
-                show={showPassword}
-                onToggleShow={() => setShowPassword(!showPassword)}
-              />
-              
-              <PasswordField
-                id="confirmPassword"
-                name="confirmPassword"
-                label="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={(value) => setFormData((prev) => ({ ...prev, confirmPassword: value }))}
-                show={showConfirmPassword}
-                onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
-              />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="name">
+              Full Name
+            </label>
+            <input
+              className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
+              id="name"
+              name="name"
+              type="text"
+              placeholder="Alex Rivers"
+              value={formData.name}
+              onChange={handleChange}
+              onBlur={() => handleBlur("name")}
+              required
+            />
+            {fieldErrors.name && (
+              <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">error</span>
+                {fieldErrors.name}
+              </p>
+            )}
+          </div>
 
-              <div className="flex items-center">
-                <input
-                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-                  id="terms"
-                  type="checkbox"
-                  required
-                />
-                <label className="ml-2 text-sm text-gray-600 dark:text-on-surface-variant" htmlFor="terms">
-                  I agree to the <Link href="#" className="text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary hover:underline">Privacy Policy</Link>
-                </label>
-              </div>
-
-              <button
-                disabled={isLoading}
-                className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-                type="submit"
-              >
-                {isLoading ? "Creating Account..." : "Create Account"}
-                {!isLoading && <span className="material-symbols-outlined">arrow_forward</span>}
-              </button>
-            </form>
-
-            {/* Social Signup */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant font-semibold tracking-wide">
-                  OR
-                </span>
-              </div>
-            </div>
-
-            <GoogleAuthButton
-              onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
-              label="Sign up with Google"
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
+              Email Address
+            </label>
+            <input
+              className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
+              id="email"
+              name="email"
+              type="email"
+              placeholder="alex@example.com"
+              value={formData.email}
+              onChange={handleChange}
+              onBlur={() => handleBlur("email")}
+              required
             />
             {fieldErrors.email && (
               <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
