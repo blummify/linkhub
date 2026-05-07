@@ -1,4 +1,4 @@
-## v0.0.7 (2026-05-07)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.0.6...v0.0.7\n\n## v0.0.6 (2026-05-07)\n\n## What's Changed
+## v0.0.9 (2026-05-07)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.0.8...v0.0.9\n\n## v0.0.7 (2026-05-07)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.0.6...v0.0.7\n\n## v0.0.6 (2026-05-07)\n\n## What's Changed
 * fix form validation error handling in login/signup by @Charles2205 in https://github.com/blummify/linkhub/pull/7
 
 ## New Contributors
