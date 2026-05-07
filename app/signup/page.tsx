@@ -227,7 +227,7 @@ export default function SignupPage() {
 
           <button
             disabled={isLoading || success}
-            className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             type="submit"
           >
             {isLoading ? "Creating Account..." : "Create Account"}
