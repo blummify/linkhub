@@ -8,19 +8,7 @@ import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
-
-function validateEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-    ? ""
-    : "Enter a valid email address";
-}
-
-function validatePassword(password: string) {
-  if (password.length < 6) return "Minimum 6 characters";
-  if (!/[A-Z]/.test(password)) return "Must include an uppercase letter";
-  if (!/[0-9]/.test(password)) return "Must include a number";
-  return "";
-}
+import { validateEmail, validatePassword } from "@/lib/validation/auth.schema";
 
 type FieldErrors = {
   name: string;
