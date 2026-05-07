@@ -8,6 +8,14 @@ import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
+import { validateEmail, validatePassword } from "@/lib/validation/auth.schema";
+
+type FieldErrors = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
 export default function SignupPage() {
   const router = useRouter();
@@ -15,21 +23,64 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const getFieldError = (field: keyof FieldErrors, value: string): string => {
+    switch (field) {
+      case "name":
+        return value.trim() ? "" : "Full name is required";
+      case "email":
+        return validateEmail(value);
+      case "password":
+        return validatePassword(value);
+      case "confirmPassword":
+        return value === formData.password ? "" : "Passwords do not match";
+    }
+  };
+
+  const handleBlur = (field: keyof FieldErrors) => {
+    setFieldErrors((prev) => ({
+      ...prev,
+      [field]: getFieldError(field, formData[field]),
+    }));
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name as keyof FieldErrors]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateAll = (): boolean => {
+    const errors: FieldErrors = {
+      name: getFieldError("name", formData.name),
+      email: getFieldError("email", formData.email),
+      password: getFieldError("password", formData.password),
+      confirmPassword: getFieldError("confirmPassword", formData.confirmPassword),
+    };
+    setFieldErrors(errors);
+    return Object.values(errors).every((e) => !e);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+
+    if (!validateAll()) return;
 
     setIsLoading(true);
 
@@ -37,7 +88,7 @@ export default function SignupPage() {
       const result = await registerUser({
         name: formData.name,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       });
 
       if (result?.error) {
@@ -52,21 +103,17 @@ export default function SignupPage() {
           setError("Account created. Please sign in with your email and password.");
           return;
         }
-        router.push("/user-dashboard");
-        router.refresh();
+        setSuccess(true);
+        setTimeout(() => {
+          router.push("/user-dashboard");
+          router.refresh();
+        }, 1500);
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
   };
 
   const panelFeatures = [
@@ -176,16 +223,93 @@ export default function SignupPage() {
               onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
               label="Sign up with Google"
             />
+            {fieldErrors.email && (
+              <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">error</span>
+                {fieldErrors.email}
+              </p>
+            )}
+          </div>
 
-            {/* Login link */}
-            <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
-              Already have an account?{" "}
-              <Link href="/login" className="font-medium text-primary hover:underline">
-                Log in
-              </Link>
-            </p>
+          <PasswordField
+            id="password"
+            name="password"
+            label="Password"
+            value={formData.password}
+            onChange={(value) => {
+              setFormData((prev) => ({ ...prev, password: value }));
+              if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: "" }));
+            }}
+            onBlur={() => handleBlur("password")}
+            show={showPassword}
+            onToggleShow={() => setShowPassword(!showPassword)}
+            showStrength
+            error={fieldErrors.password}
+          />
+
+          <PasswordField
+            id="confirmPassword"
+            name="confirmPassword"
+            label="Confirm Password"
+            value={formData.confirmPassword}
+            onChange={(value) => {
+              setFormData((prev) => ({ ...prev, confirmPassword: value }));
+              if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+            }}
+            onBlur={() => handleBlur("confirmPassword")}
+            show={showConfirmPassword}
+            onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
+            error={fieldErrors.confirmPassword}
+          />
+
+          <div className="flex items-center">
+            <input
+              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              id="terms"
+              type="checkbox"
+              required
+            />
+            <label className="ml-2 text-sm text-gray-600 dark:text-on-surface-variant" htmlFor="terms">
+              I agree to the{" "}
+              <Link href="#" className="text-primary hover:underline">Terms of Service</Link>{" "}
+              and{" "}
+              <Link href="#" className="text-primary hover:underline">Privacy Policy</Link>
+            </label>
+          </div>
+
+          <button
+            disabled={isLoading || success}
+            className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            type="submit"
+          >
+            {isLoading ? "Creating Account..." : "Create Account"}
+            {!isLoading && !success && <span className="material-symbols-outlined">arrow_forward</span>}
+          </button>
+        </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant font-semibold tracking-wide">
+              OR
+            </span>
+          </div>
+        </div>
+
+        <GoogleAuthButton
+          onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
+          label="Sign up with Google"
+        />
+
+        <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
+          Already have an account?{" "}
+          <Link href="/login" className="font-medium text-primary hover:underline">
+            Log in
+          </Link>
+        </p>
       </div>
     </AuthShell>
   );
 }
-
