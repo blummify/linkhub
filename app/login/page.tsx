@@ -8,6 +8,9 @@ import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
+import { validateEmail, validatePassword } from "@/lib/validation/auth.schema";
+
+type SignupErrors = { name: string; password: string; confirmPassword: string };
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,14 +23,28 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  // Field-level errors per stage
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [signupErrors, setSignupErrors] = useState<SignupErrors>({
+    name: "",
+    password: "",
+    confirmPassword: "",
+  });
 
   const handleContinue = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-
+    const err = validateEmail(email);
+    if (err) {
+      setEmailError(err);
+      return;
+    }
+    setEmailError("");
     setIsValidating(true);
     setError("");
-    
+
     try {
       const exists = await checkUserExists(email);
       if (exists) {
@@ -44,6 +61,11 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!password) {
+      setPasswordError("Password is required");
+      return;
+    }
+    setPasswordError("");
     setError("");
     setIsValidating(true);
 
@@ -63,22 +85,49 @@ export default function LoginPage() {
 
   const handleEditEmail = () => {
     setStage("email");
+    setError("");
+    setPasswordError("");
+  };
+
+  const getSignupFieldError = (
+    field: keyof SignupErrors,
+    value: string
+  ): string => {
+    switch (field) {
+      case "name":
+        return value.trim() ? "" : "Full name is required";
+      case "password":
+        return validatePassword(value);
+      case "confirmPassword":
+        return value === password ? "" : "Passwords do not match";
+    }
+  };
+
+  const handleSignupBlur = (field: keyof SignupErrors, value: string) => {
+    setSignupErrors((prev) => ({
+      ...prev,
+      [field]: getSignupFieldError(field, value),
+    }));
+  };
+
+  const validateSignupAll = (): boolean => {
+    const errors: SignupErrors = {
+      name: getSignupFieldError("name", signupName),
+      password: getSignupFieldError("password", password),
+      confirmPassword: getSignupFieldError("confirmPassword", confirmPassword),
+    };
+    setSignupErrors(errors);
+    return Object.values(errors).every((e) => !e);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+    if (!validateSignupAll()) return;
+
     setError("");
     setIsValidating(true);
     try {
-      const result = await registerUser({
-        name: signupName,
-        email,
-        password,
-      });
+      const result = await registerUser({ name: signupName, email, password });
       if (result?.error) {
         setError(result.error);
         return;
@@ -92,8 +141,11 @@ export default function LoginPage() {
         setError("Account created. Please sign in with your password.");
         return;
       }
-      router.push("/user-dashboard");
-      router.refresh();
+      setSuccess(true);
+      setTimeout(() => {
+        router.push("/user-dashboard");
+        router.refresh();
+      }, 1500);
     } catch {
       setError("An unexpected error occurred.");
     } finally {
@@ -109,13 +161,19 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      heading={stage === "email" ? "Welcome to LinkHub" : stage === "password" ? "Welcome Back" : "Join LinkHub"}
+      heading={
+        stage === "email"
+          ? "Welcome to LinkHub"
+          : stage === "password"
+          ? "Welcome Back"
+          : "Join LinkHub"
+      }
       subheading={
         stage === "email"
           ? "Enter your email to get started."
           : stage === "password"
-            ? "Please enter your password to continue."
-            : "Start your creative journey with LinkHub."
+          ? "Please enter your password to continue."
+          : "Start your creative journey with LinkHub."
       }
       error={error}
       panelTitle="Connect Your World"
@@ -156,140 +214,208 @@ export default function LoginPage() {
               </form>
             )}
 
-            {stage === "password" && (
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
-                    Email Address
-                  </label>
-                  <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-surface-container-low border border-gray-300 dark:border-outline-variant rounded-lg">
-                    <span className="text-gray-900 dark:text-on-surface">{email || "alex@example.com"}</span>
-                    <button 
-                      type="button" 
-                      onClick={handleEditEmail}
-                      className="text-primary hover:text-primary/80"
-                    >
-                      <span className="material-symbols-outlined">edit</span>
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <PasswordField
-                    id="password"
-                    label="Password"
-                    value={password}
-                    onChange={setPassword}
-                    show={showPassword}
-                    onToggleShow={() => setShowPassword(!showPassword)}
-                  />
-                  <div className="flex justify-end mt-2">
-                    <button type="button" className="text-sm text-primary hover:underline">
-                      Forgot password?
-                    </button>
-                  </div>
-                </div>
-                <button
-                  disabled={isValidating}
-                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-                  type="submit"
-                >
-                  {isValidating ? "Logging in..." : "Log In"}
-                </button>
-              </form>
-            )}
+        {stage === "email" && (
+          <form onSubmit={handleContinue} className="space-y-6" noValidate>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
+                Email Address
+              </label>
+              <input
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface ${
+                  emailError
+                    ? "border-red-400 dark:border-red-400"
+                    : "border-gray-300 dark:border-outline-variant"
+                }`}
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError("");
+                }}
+                onBlur={() => setEmailError(validateEmail(email))}
+              />
+              {emailError && (
+                <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {emailError}
+                </p>
+              )}
+            </div>
+            <button
+              disabled={isValidating}
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              type="submit"
+            >
+              {isValidating ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  Continue
+                  <span className="material-symbols-outlined">arrow_forward</span>
+                </>
+              )}
+            </button>
+          </form>
+        )}
 
-            {stage === "signup" && (
-              <form onSubmit={handleSignup} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="signup-name">
-                    Full Name
-                  </label>
-                  <input
-                    id="signup-name"
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
-                    placeholder="Alex Rivers"
-                    type="text"
-                    value={signupName}
-                    onChange={(e) => setSignupName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
-                    placeholder={email || "alex@example.com"}
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <PasswordField
-                    id="signup-password"
-                    label="Password"
-                    value={password}
-                    onChange={setPassword}
-                    show={showPassword}
-                    onToggleShow={() => setShowPassword(!showPassword)}
-                  />
-                </div>
-                <div>
-                  <PasswordField
-                    id="signup-confirm"
-                    label="Confirm Password"
-                    value={confirmPassword}
-                    onChange={setConfirmPassword}
-                    show={showConfirmPassword}
-                    onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
-                  />
-                </div>
+        {stage === "password" && (
+          <form onSubmit={handleLogin} className="space-y-6" noValidate>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
+                Email Address
+              </label>
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-surface-container-low border border-gray-300 dark:border-outline-variant rounded-lg">
+                <span className="text-gray-900 dark:text-on-surface">{email}</span>
                 <button
-                  disabled={isValidating}
-                  className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  type="submit"
+                  type="button"
+                  onClick={handleEditEmail}
+                  className="text-primary hover:text-primary/80"
                 >
-                  {isValidating ? (
-                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      Create Account
-                      <span className="material-symbols-outlined">arrow_forward</span>
-                    </>
-                  )}
+                  <span className="material-symbols-outlined">edit</span>
                 </button>
-              </form>
-            )}
-
-            {/* Social Login */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant font-semibold tracking-wide">
-                  OR
-                </span>
               </div>
             </div>
+            <div>
+              <PasswordField
+                id="password"
+                label="Password"
+                value={password}
+                onChange={(value) => {
+                  setPassword(value);
+                  if (passwordError) setPasswordError("");
+                }}
+                onBlur={() => setPasswordError(password ? "" : "Password is required")}
+                show={showPassword}
+                onToggleShow={() => setShowPassword(!showPassword)}
+                error={passwordError}
+              />
+              <div className="flex justify-end mt-2">
+                <button type="button" className="text-sm text-primary hover:underline">
+                  Forgot password?
+                </button>
+              </div>
+            </div>
+            <button
+              disabled={isValidating}
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              type="submit"
+            >
+              {isValidating ? "Logging in..." : "Log In"}
+            </button>
+          </form>
+        )}
 
-            <GoogleAuthButton
-              onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
-              label="Continue with Google"
+        {stage === "signup" && (
+          <form onSubmit={handleSignup} className="space-y-5" noValidate>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="signup-name">
+                Full Name
+              </label>
+              <input
+                id="signup-name"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface ${
+                  signupErrors.name
+                    ? "border-red-400 dark:border-red-400"
+                    : "border-gray-300 dark:border-outline-variant"
+                }`}
+                placeholder="Alex Rivers"
+                type="text"
+                value={signupName}
+                onChange={(e) => {
+                  setSignupName(e.target.value);
+                  if (signupErrors.name) setSignupErrors((prev) => ({ ...prev, name: "" }));
+                }}
+                onBlur={() => handleSignupBlur("name", signupName)}
+              />
+              {signupErrors.name && (
+                <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {signupErrors.name}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
+                Email Address
+              </label>
+              <input
+                className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg dark:bg-surface-container-low dark:text-on-surface opacity-75 cursor-default"
+                type="email"
+                value={email}
+                readOnly
+              />
+            </div>
+            <PasswordField
+              id="signup-password"
+              label="Password"
+              value={password}
+              onChange={(value) => {
+                setPassword(value);
+                if (signupErrors.password) setSignupErrors((prev) => ({ ...prev, password: "" }));
+              }}
+              onBlur={() => handleSignupBlur("password", password)}
+              show={showPassword}
+              onToggleShow={() => setShowPassword(!showPassword)}
+              showStrength
+              error={signupErrors.password}
             />
+            <PasswordField
+              id="signup-confirm"
+              label="Confirm Password"
+              value={confirmPassword}
+              onChange={(value) => {
+                setConfirmPassword(value);
+                if (signupErrors.confirmPassword)
+                  setSignupErrors((prev) => ({ ...prev, confirmPassword: "" }));
+              }}
+              onBlur={() => handleSignupBlur("confirmPassword", confirmPassword)}
+              show={showConfirmPassword}
+              onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
+              error={signupErrors.confirmPassword}
+            />
+            <button
+              disabled={isValidating || success}
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              type="submit"
+            >
+              {isValidating ? (
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  Create Account
+                  <span className="material-symbols-outlined">arrow_forward</span>
+                </>
+              )}
+            </button>
+          </form>
+        )}
 
-            {/* Sign up link */}
-            {stage !== "signup" && (
-              <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
-                Don&apos;t have an account?{" "}
-                <Link href="/signup" className="font-medium text-primary hover:underline">
-                  Sign up
-                </Link>
-              </p>
-            )}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant font-semibold tracking-wide">
+              OR
+            </span>
+          </div>
+        </div>
+
+        <GoogleAuthButton
+          onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
+          label="Continue with Google"
+        />
+
+        {stage !== "signup" && (
+          <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="font-medium text-primary hover:underline">
+              Sign up
+            </Link>
+          </p>
+        )}
       </div>
     </AuthShell>
   );
