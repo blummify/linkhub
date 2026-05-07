@@ -1,0 +1,24 @@
+name: Deploy to Testing
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy-testing:
+    name: Tag for testing deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create and push dev tag
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          TAG="v0.0.0-dev-${SHORT_SHA}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag $TAG
+          git push origin $TAG
