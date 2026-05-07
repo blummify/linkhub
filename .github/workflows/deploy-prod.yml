@@ -1,0 +1,54 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-prod:
+    name: SSH deploy to VPS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get release tag
+        id: tag
+        run: |
+          git fetch --tags
+          TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          echo "tag=${TAG:-v0.0.0}" >> $GITHUB_OUTPUT
+
+      - name: Notify deploy-ui (building)
+        run: |
+          curl -s -X POST ${{ secrets.DEPLOY_UI_URL }}/api/deployments/external \
+            -H "Authorization: Bearer ${{ secrets.DEPLOY_UI_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"repoId\":\"${{ secrets.REPO_ID }}\",\"tag\":\"${{ steps.tag.outputs.tag }}\",\"status\":\"BUILDING\"}"
+
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.VPS_APP_PATH }}
+            git pull origin main
+            npm ci
+            npx prisma migrate deploy
+            npm run build
+            pm2 startOrReload ecosystem.config.js --env production --update-env
+            pm2 save
+
+      - name: Notify deploy-ui (result)
+        if: always()
+        run: |
+          STATUS=$([[ "${{ job.status }}" == "success" ]] && echo "READY" || echo "ERROR")
+          curl -s -X PATCH ${{ secrets.DEPLOY_UI_URL }}/api/deployments/external \
+            -H "Authorization: Bearer ${{ secrets.DEPLOY_UI_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"repoId\":\"${{ secrets.REPO_ID }}\",\"tag\":\"${{ steps.tag.outputs.tag }}\",\"status\":\"${STATUS}\"}"
