@@ -1,6 +1,6 @@
 {
   "name": "linkhub",
-  "version": "0.1.0",
+  "version": "0.0.5",
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",
@@ -26,6 +26,9 @@
     "sharp": "^0.34.5",
     "zod": "^4.3.6"
   },
+  "overrides": {
+    "eslint": "9.39.4"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
@@ -35,7 +38,7 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^10",
+    "eslint": "^9.39.4",
     "eslint-config-next": "16.2.1",
     "jsdom": "^29.1.0",
     "tailwindcss": "^4",
