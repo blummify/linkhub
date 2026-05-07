@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { PublicCtaActions } from "../components/PublicCtaActions";
 import { PublicNav } from "../components/PublicNav";
 import { SiteFooter } from "../components/SiteFooter";
@@ -214,35 +215,45 @@ export default function PricingPage() {
             The world&apos;s most creative teams trust LinkHub
           </h4>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-            <img
+            <Image
               alt="Spotify"
-              className="h-8 md:h-10"
+              className="h-8 md:h-10 w-auto"
               data-alt="Logotype of Spotify in a clean minimalist style"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuDktKSEXPT6tQT4zjLx_wiV6UuriH-LAGSCXhwTirekzEPoasjONetH4HPqWTBevrIHtvBLQoyJYG59Fs3qwGTRXHZIrhLW9Vh1KvhLKJivMvExjWUHDO6U_qo9rsxuSPk_Sjmg3xta7xjXa7lj3W0CYyR4ZxT4aVdqCPbt-dNmat9kYSB-7x4pNxfESU8sw3SYdUPbV3wsbxfVIE2WrLYKt-Y9VY7cxJQLY590F3CdDUXgrflA2Ar-JBzsomOGfAX4JAp33BsMoKVI"
+              width={160}
+              height={40}
             />
-            <img
+            <Image
               alt="Notion"
-              className="h-8 md:h-10"
+              className="h-8 md:h-10 w-auto"
               data-alt="Logotype of Notion in a clean minimalist style"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuB38Vfn6mReYRrJOCtLKS9Sv-Weq6rw682BWqZ9sS_ckXYQLoQFKUtf-12p16tuOy4zKligEF5dFRZ93NOWDKOUgBswimmsUd0pZMfzeZV5pLDkUeL7_cLcnlB5jivbeiyrnLlYL5mfgM55oq4PXyO9FCuoZlsRbmsuSnndHolRzxkOh0nzhWV9pL_UJ-mapShKm8KPsuJBm5-_uoO2CQQT0SHGUJhTFmceXCxypqOwSaSLLn0S2fCDiQFnLIZrOMmE_tK30p4aPdiR"
+              width={160}
+              height={40}
             />
-            <img
+            <Image
               alt="Airbnb"
-              className="h-8 md:h-10"
+              className="h-8 md:h-10 w-auto"
               data-alt="Logotype of Airbnb in a clean minimalist style"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0JdyZFQYx0I3Dz_VUyA9e3fd9n-ikgH0offZ0fCJOoqCqiyucDKl-6Hhiv5_vs55wy9yl2EY5QHL3IGm8bbjqH6aHhTmlmt-cUaTV-sqJmy3lAh3115j6WgWpngLB9fmz5STBpgZbUe6LDXa7IFY8dESLnOT8RV5sMefnIbz59xBf0St5MhYNFxDW_ILTiaoXm4P7ylyALL-08-p2rXESDMcwmOT2NIhxM-Ai6gbWj4sRyQlB_E8Z4j-gc8xpsrIZLORcPQXuZyw5"
+              width={160}
+              height={40}
             />
-            <img
+            <Image
               alt="Dribbble"
-              className="h-8 md:h-10"
+              className="h-8 md:h-10 w-auto"
               data-alt="Logotype of Dribbble in a clean minimalist style"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMp6JB8zD8IAscI8rO5f5Dyu1vof5ndsVPYdK6IHq8B3_0xe4t0jyU5xVEl9iz7c9GLWOKm2Pvs7xN_OZazlBw2HhFdKgpTUvb3EoCeoDKQktd43mAZ47nrl7cMNGXcQQ2KYDxqSgSF07wl1UlpsDqplJYVV0-6YoMiLASNhfjIC_HyFuXU_ugeLYl-XK9sbYuJ0cipv7gxpXrqdKAnfLOYmfjwT4_CZky6a0NeyFYibNL591REkCmLTNs6S5urdU55C4x4HDh1ZBo"
+              width={160}
+              height={40}
             />
-            <img
+            <Image
               alt="Vimeo"
-              className="h-8 md:h-10"
+              className="h-8 md:h-10 w-auto"
               data-alt="Logotype of Vimeo in a clean minimalist style"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIzh4rmazSkDFo37Myl13XHLibRLOiEEPMzVgt0LZKkDdj6bRZxLztCFBzcMv9KvAtUe0f49UZQN4ZdMNL53DbiVxR7geiVBQmSzSlXkCQl2YA38Td9MgnohHSE1iz4yAHFC2Ivxf0JIVeeS4qqoBs294waw8A8v0zPp16B8Ncv2L94-b4AR7MFmJNunHqo2PurobdOikPYHI0T3l4ovxmvjGYaLrr06uxFZqPj1dqxLXq5i8IZ-xHOJMBZUTzbuIi1QNXfi-2i60D"
+              width={160}
+              height={40}
             />
           </div>
         </section>

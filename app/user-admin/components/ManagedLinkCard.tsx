@@ -11,10 +11,9 @@ export interface ManagedLinkCardProps {
   onUpdate?: (updates: Partial<ManagedLink>) => void;
 }
 
-export function ManagedLinkCard({ 
-  link, 
-  onEdit, 
-  onDelete, 
+export function ManagedLinkCard({
+  link,
+  onDelete,
   onToggle,
   onUpdate,
 }: ManagedLinkCardProps) {

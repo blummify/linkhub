@@ -6,7 +6,6 @@ import AppHeader from "../components/AppHeader";
 import { useSidebar } from "../components/SidebarContext";
 import { MobilePreview, type AppearanceState } from "../components/MobilePreview";
 import { ShareProfileModal } from "../components/ShareProfileModal";
-import { LinksStyleTwoColumnLayout } from "../components/LinksStyleTwoColumnLayout";
 import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";

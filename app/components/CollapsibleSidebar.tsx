@@ -1,12 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useSidebar } from "./SidebarContext";
 import UserAvatar from "./UserAvatar";
 
-export default function CollapsibleSidebar({ children, isAdmin = false }: { children: React.ReactNode; isAdmin?: boolean }) {
+export default function CollapsibleSidebar({ children }: { children: React.ReactNode; isAdmin?: boolean }) {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -50,9 +51,11 @@ export default function CollapsibleSidebar({ children, isAdmin = false }: { chil
       >
         {/* Logo Section */}
         <div className={`${isCollapsed ? 'mb-6' : 'mb-10'} flex justify-center ${isCollapsed ? 'pt-1' : 'pt-2'}`}>
-          <img
+          <Image
             src="/link_hub_logo.png"
             alt="LinkHub Logo"
+            width={256}
+            height={256}
             className={`object-contain ${isCollapsed ? "h-8 w-8" : "h-auto w-32"}`}
           />
         </div>
