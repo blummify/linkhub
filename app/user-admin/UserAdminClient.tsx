@@ -29,6 +29,24 @@ export default function UserAdminClient() {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  const [appearance, setAppearance] = useState<AppearanceState>({
+    profileTitle: "@oseijoel6111",
+    profileBio: "Connecting with your community.",
+    profileLayout: "classic",
+    themeId: "custom",
+    wallpaperStyle: "fill",
+    bgColor: "#ffffff",
+    textColor: "#1a1a1a",
+    buttonStyle: "solid",
+    buttonShadow: "none",
+    buttonRoundness: "full",
+    fontFamily: "Inter",
+    bodyFontFamily: "Inter",
+    titleSize: "small",
+    titleColor: "#000000",
+    footerStyle: "minimal",
+  });
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -142,24 +160,6 @@ export default function UserAdminClient() {
       console.error("Failed to update link:", error);
     }
   };
-
-  const [appearance, setAppearance] = useState<AppearanceState>({
-    profileTitle: "@oseijoel6111",
-    profileBio: "Connecting with your community.",
-    profileLayout: "classic",
-    themeId: "custom",
-    wallpaperStyle: "fill",
-    bgColor: "#ffffff",
-    textColor: "#1a1a1a",
-    buttonStyle: "solid",
-    buttonShadow: "none",
-    buttonRoundness: "full",
-    fontFamily: "Inter",
-    bodyFontFamily: "Inter",
-    titleSize: "small",
-    titleColor: "#000000",
-    footerStyle: "minimal",
-  });
 
   return (
     <div className="bg-surface text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
