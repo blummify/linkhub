@@ -30,7 +30,6 @@ function SectionLabel({ children }: { children: ReactNode }) {
 }
 
 const fieldLabel = "text-[10px] font-black uppercase tracking-widest text-on-surface-variant/50 pl-1";
-const colorFieldLabel = "text-[10px] font-black uppercase tracking-widest text-on-surface-variant/50";
 const inputClass =
   "w-full bg-surface-container-low/50 border border-outline-variant/20 rounded-2xl px-5 py-4 text-[13px] font-black tracking-tight text-on-surface placeholder:text-on-surface-variant/30 outline-none transition-all duration-300 focus:bg-white focus:ring-[6px] focus:ring-primary/5 focus:border-primary/40 shadow-sm shadow-on-surface/[0.02]";
 
