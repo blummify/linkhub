@@ -1,4 +1,8 @@
-## v0.0.4 (2026-05-07)\n\n## What's Changed
+## v0.0.5 (2026-05-07)\n\n## What's Changed
+* refactor: optimize search shortcut and integrate OS-aware key listener by @YawAsanteBoadu in https://github.com/blummify/linkhub/pull/8
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.0.4...v0.0.5\n\n## v0.0.4 (2026-05-07)\n\n## What's Changed
 * 86c9m4816 by @Morrison-web in https://github.com/blummify/linkhub/pull/10
 
 ## New Contributors
