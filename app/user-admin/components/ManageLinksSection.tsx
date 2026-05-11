@@ -1,6 +1,5 @@
 "use client";
 
-import { DashboardPageHeader } from "../../components/DashboardPageHeader";
 import type { ManagedLink } from "./types";
 import { ManagedLinkCard } from "./ManagedLinkCard";
 
@@ -22,26 +21,30 @@ export function ManageLinksSection({
   onUpdateLink,
 }: ManageLinksSectionProps) {
   return (
-    <div className="space-y-8 animate-fade-in">
-      <DashboardPageHeader
-        title="Manage Links"
-        description="Organize and optimize your digital presence."
-        actions={
+    <div className="animate-fade-in space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Your Links</h1>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            Manage and organize your digital presence.
+          </p>
+        </div>
+        {onAddLink ? (
           <button
             type="button"
             onClick={onAddLink}
-            className="group flex items-center gap-2.5 bg-primary text-on-primary px-6 py-3 rounded-2xl font-bold highlight-white/10 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all active:scale-95 active:translate-y-0"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-on-primary shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:shadow-xl active:scale-[0.98]"
           >
-            <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform duration-300">add</span>
-            <span className="text-[13px] tracking-tight">Add New Link</span>
+            <span className="material-symbols-outlined text-[20px]">add</span>
+            Add New Link
           </button>
-        }
-      />
+        ) : null}
+      </div>
 
       <div className="space-y-4">
         {links.map((link, idx) => (
           <ManagedLinkCard
-            key={`${link.url}-${idx}`}
+            key={link.id ?? `${link.url}-${idx}`}
             link={link}
             onEdit={onEditLink ? () => onEditLink(link, idx) : undefined}
             onDelete={onDeleteLink ? () => onDeleteLink(link, idx) : undefined}

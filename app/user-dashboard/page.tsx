@@ -1,5 +1,5 @@
-import LinksClient from "../links/LinksClient";
-import { Metadata } from "next";
+import UserAdminClient from "../user-admin/UserAdminClient";
+import { type Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Dashboard - Creator Hub",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function UserDashboardPage() {
-  return <LinksClient />;
+  return <UserAdminClient />;
 }

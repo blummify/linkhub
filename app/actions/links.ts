@@ -31,7 +31,7 @@ export async function addLink(data: { title: string; url: string; icon?: string 
         userId: session.user.id,
       },
     });
-    revalidatePath("/user-admin");
+    revalidatePath("/user-dashboard");
     return { success: true, link };
   } catch (error) {
     console.error("Error adding link:", error);
@@ -48,7 +48,7 @@ export async function updateLink(id: string, data: { title?: string; url?: strin
       where: { id, userId: session.user.id },
       data,
     });
-    revalidatePath("/user-admin");
+    revalidatePath("/user-dashboard");
     return { success: true, link };
   } catch (error) {
     console.error("Error updating link:", error);
@@ -64,7 +64,7 @@ export async function deleteLink(id: string) {
     await db.link.delete({
       where: { id, userId: session.user.id },
     });
-    revalidatePath("/user-admin");
+    revalidatePath("/user-dashboard");
     return { success: true };
   } catch (error) {
     console.error("Error deleting link:", error);

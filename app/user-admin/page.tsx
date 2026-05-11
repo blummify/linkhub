@@ -1,10 +1,6 @@
-import { type Metadata } from "next";
-import UserAdminClient from "./UserAdminClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "User Admin",
-};
-
+/** Canonical links hub is `/user-dashboard`; keep this URL working for bookmarks. */
 export default function UserAdminPage() {
-  return <UserAdminClient />;
+  redirect("/user-dashboard");
 }
