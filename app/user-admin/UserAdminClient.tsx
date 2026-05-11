@@ -16,13 +16,12 @@ import { PROFILE_PUBLIC_URL } from "../constants/profile";
 
 import { getLinks, addLink, updateLink, deleteLink, getProfile } from "../actions/links";
 import { useEffect } from "react";
-
-const DEMO_LINKS: ManagedLink[] = [];
+import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
 
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
   const [showShareModal, setShowShareModal] = useState(false);
-  const [links, setLinks] = useState<ManagedLink[]>(DEMO_LINKS);
+  const [links, setLinks] = useState<ManagedLink[]>([]);
   
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
@@ -51,14 +50,15 @@ export default function UserAdminClient() {
     async function loadData() {
       try {
         const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
-        setLinks(dbLinks.map((l: LinkRow) => ({
+        const fromDb = dbLinks.map((l: LinkRow) => ({
           id: l.id,
           title: l.title,
           url: l.url,
           clicks: String(l.clicks),
           draft: l.draft,
-          icon: l.icon || undefined
-        })));
+          icon: l.icon || undefined,
+        }));
+        setLinks([...DEMO_MANAGED_LINKS, ...fromDb]);
         if (dbProfile) {
           setAppearance(prev => ({
             ...prev,
@@ -70,6 +70,7 @@ export default function UserAdminClient() {
         }
       } catch (error) {
         console.error("Failed to load data:", error);
+        setLinks([...DEMO_MANAGED_LINKS]);
       } finally {
         setIsLoading(false);
       }
@@ -90,6 +91,19 @@ export default function UserAdminClient() {
   const handleSaveLink = async (newLink: ManagedLink) => {
     setIsLoading(true);
     try {
+      if (editingLink !== null && isDemoManagedLink(editingLink.link) && editingLink.link.id) {
+        const updatedLinks = [...links];
+        updatedLinks[editingLink.index] = {
+          ...editingLink.link,
+          ...newLink,
+          id: editingLink.link.id,
+          clicks: newLink.clicks || editingLink.link.clicks,
+          trendLabel: editingLink.link.trendLabel,
+        };
+        setLinks(updatedLinks);
+        setShowLinkModal(false);
+        return;
+      }
       if (editingLink !== null && editingLink.link.id) {
         await updateLink(editingLink.link.id, {
           title: newLink.title,
@@ -106,11 +120,14 @@ export default function UserAdminClient() {
           icon: newLink.icon,
         });
         if (result.success && result.link) {
-          setLinks([{
+          const entry: ManagedLink = {
             ...newLink,
             id: result.link.id,
-            clicks: String(result.link.clicks)
-          }, ...links]);
+            clicks: String(result.link.clicks),
+          };
+          const demos = links.filter(isDemoManagedLink);
+          const real = links.filter((l) => !isDemoManagedLink(l));
+          setLinks([...demos, entry, ...real]);
         }
       }
       setShowLinkModal(false);
@@ -122,6 +139,10 @@ export default function UserAdminClient() {
   };
 
   const handleDeleteLink = async (link: ManagedLink, index: number) => {
+    if (isDemoManagedLink(link)) {
+      setLinks(links.filter((_, i) => i !== index));
+      return;
+    }
     if (!link.id) return;
     try {
       await deleteLink(link.id);
@@ -132,6 +153,13 @@ export default function UserAdminClient() {
   };
 
   const handleToggleLink = async (link: ManagedLink, index: number) => {
+    if (isDemoManagedLink(link)) {
+      const newDraftState = !link.draft;
+      const updatedLinks = [...links];
+      updatedLinks[index] = { ...link, draft: newDraftState };
+      setLinks(updatedLinks);
+      return;
+    }
     if (!link.id) return;
     try {
       const newDraftState = !link.draft;
@@ -145,6 +173,12 @@ export default function UserAdminClient() {
   };
 
   const handleUpdateLink = async (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => {
+    if (isDemoManagedLink(link)) {
+      const updatedLinks = [...links];
+      updatedLinks[index] = { ...link, ...updates };
+      setLinks(updatedLinks);
+      return;
+    }
     if (!link.id) return;
     try {
       await updateLink(link.id, {

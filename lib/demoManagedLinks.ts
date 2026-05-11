@@ -1,0 +1,33 @@
+import type { ManagedLink } from "@/app/user-admin/components/types";
+
+const DEMO_ID_PREFIX = "__demo__";
+
+export function isDemoManagedLink(link: ManagedLink): boolean {
+  return link.id?.startsWith(DEMO_ID_PREFIX) ?? false;
+}
+
+/** Static examples (not persisted); aligned with the former LinksClient mock cards. */
+export const DEMO_MANAGED_LINKS: ManagedLink[] = [
+  {
+    id: `${DEMO_ID_PREFIX}official`,
+    title: "Official Website",
+    url: "https://johndoe.design",
+    clicks: "1,240",
+    draft: false,
+    trendLabel: "+12% this week",
+  },
+  {
+    id: `${DEMO_ID_PREFIX}portfolio`,
+    title: "Latest Portfolio Drop",
+    url: "https://behance.net/johndoe/vibe-check",
+    clicks: "856",
+    draft: false,
+  },
+  {
+    id: `${DEMO_ID_PREFIX}instagram`,
+    title: "Instagram Profile",
+    url: "https://instagram.com/johndoe",
+    clicks: "0",
+    draft: true,
+  },
+];

@@ -18,7 +18,12 @@ export default function CollapsibleSidebar({ children }: { children: React.React
     (status === "loading" ? "…" : "Account");
   const displayEmail = user?.email ?? "";
 
+  const linksHubHref = "/user-dashboard";
+
   const isActiveLink = (href: string) => {
+    if (href === linksHubHref) {
+      return pathname === linksHubHref || pathname === "/user-admin";
+    }
     return pathname === href;
   };
 
@@ -61,8 +66,8 @@ export default function CollapsibleSidebar({ children }: { children: React.React
         </div>
         
         <nav className="flex-1 space-y-1">
-          <Link className={getLinkClasses('/user-admin')} href="/user-admin">
-            {isActiveLink('/user-admin') && (
+          <Link className={getLinkClasses(linksHubHref)} href={linksHubHref}>
+            {isActiveLink(linksHubHref) && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
             )}
             <span className="material-symbols-outlined">link</span>
