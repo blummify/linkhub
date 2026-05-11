@@ -55,7 +55,7 @@ export default {
       return token;
     },
     /**
-     * After OAuth, NextAuth may return users to `callbackUrl` (e.g. /user-admin from a saved link).
+     * After OAuth, NextAuth may return users to `callbackUrl` (e.g. legacy `/user-admin` from a saved link).
      * We send them to the main app dashboard after sign-in instead of the editor route.
      */
     redirect({ url, baseUrl }) {

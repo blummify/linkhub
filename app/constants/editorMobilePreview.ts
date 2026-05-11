@@ -2,7 +2,7 @@ import type { MobilePreviewProps } from "../components/MobilePreview";
 import { DEFAULT_APPEARANCE } from "../components/MobilePreview";
 import { PROFILE_PUBLIC_URL } from "./profile";
 
-/** Preview column on `/links`, `/appearance`, and `/user-admin` (aligned layout + centering). */
+/** Preview column on `/links`, `/appearance`, and `/user-dashboard` (aligned layout + centering). */
 export const EDITOR_PREVIEW_COLUMN_CLASS =
   "px-5 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14 lg:!items-center";
 
