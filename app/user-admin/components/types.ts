@@ -6,4 +6,6 @@ export interface ManagedLink {
   clicks: string;
   draft?: boolean;
   icon?: string;
+  /** Optional green trend line under stats (e.g. "+12% this week") */
+  trendLabel?: string;
 }

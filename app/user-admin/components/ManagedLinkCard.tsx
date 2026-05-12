@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { isDemoManagedLink } from "@/lib/demoManagedLinks";
 import type { ManagedLink } from "./types";
 
 export interface ManagedLinkCardProps {
@@ -11,19 +12,19 @@ export interface ManagedLinkCardProps {
   onUpdate?: (updates: Partial<ManagedLink>) => void;
 }
 
-export function ManagedLinkCard({ 
-  link, 
-  onEdit, 
-  onDelete, 
+export function ManagedLinkCard({
+  link,
+  onEdit,
+  onDelete,
   onToggle,
   onUpdate,
 }: ManagedLinkCardProps) {
-  const { title, url, clicks, draft } = link;
+  const { title, url, clicks, draft, trendLabel } = link;
+  const isDemo = isDemoManagedLink(link);
   const [editingField, setEditingField] = useState<"title" | "url" | null>(null);
   const [tempTitle, setTempTitle] = useState(title);
   const [tempUrl, setTempUrl] = useState(url);
 
-  // Sync temporary inline-edit fields when parent link values change.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setTempTitle(title);
@@ -49,24 +50,37 @@ export function ManagedLinkCard({
     setEditingField(null);
   };
 
+  const showStats = !draft || Number(String(clicks).replace(/,/g, "")) > 0;
+
   return (
     <div
-      className={`group relative bg-surface-container-lowest rounded-[2rem] p-4 sm:p-5 flex items-start gap-3 sm:gap-4 border border-outline-variant/30 shadow-none transition-all hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 ${
-        draft ? "opacity-70 grayscale-[0.3]" : ""
+      className={`group relative flex overflow-hidden rounded-xl border border-outline-variant/40 bg-white shadow-sm transition-all hover:shadow-md dark:border-outline-variant/30 dark:bg-surface-container-lowest ${
+        draft ? "opacity-[0.92]" : ""
       }`}
     >
-      {/* Drag Indicator */}
-      <div className="mt-1.5 flex items-center justify-center text-on-surface-variant/20 group-hover:text-on-surface-variant/40 transition-colors cursor-grab">
-        <span className="material-symbols-outlined text-[18px] sm:text-[20px] select-none" aria-hidden>
-          drag_indicator
-        </span>
-      </div>
+      {!draft && (
+        <div
+          className="w-1 shrink-0 self-stretch bg-primary"
+          aria-hidden
+        />
+      )}
 
-      <div className="flex-1 min-w-0">
-        {/* Top Row: Title, URL and Action Switch */}
-        <div className="flex justify-between items-start gap-4 mb-4">
-          <div className="flex-1 min-w-0 space-y-0.5">
-            <div className="flex items-center gap-2 group/title w-full">
+      <div className="flex min-w-0 flex-1 gap-4 p-5 sm:gap-5 sm:p-6">
+        <div
+          className="mt-0.5 flex shrink-0 cursor-grab flex-col items-center justify-start text-on-surface-variant/35 transition-colors group-hover:text-on-surface-variant/55"
+          aria-hidden
+        >
+          <span className="material-symbols-outlined text-[20px] select-none">drag_indicator</span>
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 space-y-1">
+              {isDemo && (
+                <span className="mb-0.5 inline-flex rounded-md bg-primary-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-on-primary-container">
+                  Sample
+                </span>
+              )}
               {editingField === "title" ? (
                 <input
                   autoFocus
@@ -74,20 +88,18 @@ export function ManagedLinkCard({
                   onChange={(e) => setTempTitle(e.target.value)}
                   onBlur={handleTitleSubmit}
                   onKeyDown={(e) => e.key === "Enter" && handleTitleSubmit()}
-                  className="bg-transparent font-bold text-[15px] sm:text-[16px] text-on-surface tracking-tight outline-none border-b border-primary/30 w-full"
+                  className="w-full border-b border-primary/40 bg-transparent text-base font-semibold tracking-tight text-on-surface outline-none dark:border-primary/50"
                 />
               ) : (
-                <div 
+                <button
+                  type="button"
                   onClick={() => setEditingField("title")}
-                  className="flex items-center gap-2 cursor-pointer w-fit max-w-full"
+                  className="block w-full text-left"
                 >
-                  <h3 className="font-bold text-[15px] sm:text-[16px] text-on-surface tracking-tight truncate">{title}</h3>
-                  <span className="material-symbols-outlined text-[14px] sm:text-[16px] text-on-surface-variant/30 group-hover/title:text-primary transition-colors">edit</span>
-                </div>
+                  <h3 className="truncate text-base font-semibold tracking-tight text-on-surface">{title}</h3>
+                </button>
               )}
-            </div>
 
-            <div className="flex items-center gap-2 group/url w-full">
               {editingField === "url" ? (
                 <input
                   autoFocus
@@ -95,60 +107,80 @@ export function ManagedLinkCard({
                   onChange={(e) => setTempUrl(e.target.value)}
                   onBlur={handleUrlSubmit}
                   onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
-                  className="bg-transparent text-[13px] sm:text-[14px] text-on-surface-variant/70 font-medium outline-none border-b border-primary/20 w-full"
+                  className="w-full border-b border-primary/30 bg-transparent text-sm font-medium text-primary outline-none dark:border-primary/40"
                 />
               ) : (
-                <div 
+                <button
+                  type="button"
                   onClick={() => setEditingField("url")}
-                  className="flex items-center gap-2 cursor-pointer w-fit max-w-full"
+                  className={`block w-full truncate text-left text-sm font-medium underline-offset-2 hover:underline ${
+                    draft
+                      ? "italic text-on-surface-variant"
+                      : "text-primary"
+                  }`}
                 >
-                  <p className="text-[13px] sm:text-[14px] text-on-surface-variant/70 font-medium truncate">{url}</p>
-                  <span className="material-symbols-outlined text-[14px] sm:text-[16px] text-on-surface-variant/30 group-hover/url:text-primary transition-colors">edit</span>
-                </div>
+                  {url}
+                </button>
               )}
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 sm:gap-4 shrink-0 mt-0.5">
-            <button title="Share" className="text-on-surface-variant/40 hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-[18px] sm:text-[20px]">ios_share</span>
-            </button>
-            <button 
-              onClick={onToggle} 
-              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-full transition-all duration-300 ${
-                !draft ? 'bg-primary' : 'bg-outline-variant/40'
-              }`}
-            >
-              <div className={`absolute top-0.5 sm:top-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white rounded-full transition-all duration-300 ${
-                !draft ? 'left-6' : 'left-1'
-              }`} />
-            </button>
-          </div>
-        </div>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+              {onToggle ? (
+                <button
+                  type="button"
+                  onClick={onToggle}
+                  className="shrink-0 rounded-md outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-primary"
+                  title={draft ? "Publish link" : "Mark as draft"}
+                >
+                  {draft ? (
+                    <span className="inline-flex rounded-full bg-surface-container-high px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                      Draft
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Active</span>
+                  )}
+                </button>
+              ) : draft ? (
+                <span className="inline-flex rounded-full bg-surface-container-high px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                  Draft
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Active</span>
+              )}
 
-        {/* Bottom Row: Tool Icons & Stats */}
-        <div className="flex items-center justify-between mt-1">
-          <div className="flex items-center gap-4 sm:gap-5">
-            <div className="flex items-center gap-3 sm:gap-4 text-on-surface-variant/40">
-              <button title="Layout" className="hover:text-primary transition-colors"><span className="material-symbols-outlined text-[18px] sm:text-[20px]">grid_view</span></button>
-              <button title="Image" className="hover:text-primary transition-colors"><span className="material-symbols-outlined text-[18px] sm:text-[20px]">image</span></button>
-              <button title="Prioritize" className="hover:text-primary transition-colors"><span className="material-symbols-outlined text-[18px] sm:text-[20px]">star</span></button>
+              <button
+                type="button"
+                onClick={() => (onEdit ? onEdit() : setEditingField("title"))}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-primary"
+                title="Edit"
+              >
+                <span className="material-symbols-outlined text-[20px]">edit</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete?.()}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-error/10 hover:text-error"
+                aria-label={`Delete ${title}`}
+              >
+                <span className="material-symbols-outlined text-[20px]">delete</span>
+              </button>
             </div>
-            <div className="h-3 w-px bg-outline-variant/30" />
-            <div className="flex items-center gap-1.5 text-on-surface-variant/50 group/stats cursor-pointer hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-[16px] sm:text-[18px]">analytics</span>
-              <span className="text-[11px] sm:text-[12px] font-bold tracking-tight">{clicks} clicks</span>
-            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onDelete}
-            className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-error/10 hover:text-error rounded-xl text-on-surface-variant/30 transition-all active:scale-90"
-            aria-label={`Delete ${title}`}
-          >
-            <span className="material-symbols-outlined text-[18px] sm:text-[20px]">delete</span>
-          </button>
+          {showStats && (
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-on-surface-variant">
+              <span className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant/70">visibility</span>
+                <span className="font-medium">{clicks} clicks</span>
+              </span>
+              {trendLabel ? (
+                <span className="flex items-center gap-1.5 font-medium text-green-600 dark:text-green-400">
+                  <span className="material-symbols-outlined text-[18px]">trending_up</span>
+                  {trendLabel}
+                </span>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
     </div>

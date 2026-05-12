@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
+import { SiInstagram, SiSpotify, SiTiktok, SiYoutube } from "react-icons/si";
 import { PublicNav } from "./components/PublicNav";
 import { SiteFooter } from "./components/SiteFooter";
 
@@ -121,7 +123,7 @@ export default function Home() {
                 <div className="h-full w-full bg-surface rounded-[2rem] flex flex-col items-center pt-10 pb-6 px-6 relative overflow-hidden">
                   <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl"></div>
                   <div className="relative mb-8 text-center flex flex-col items-center">
-                    <div className="w-20 h-20 rounded-full border-4 border-white shadow-md mb-3 overflow-hidden bg-indigo-100 flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full border-4 border-white shadow-md mb-3 overflow-hidden bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
                       <span className="material-symbols-outlined text-primary text-4xl">
                         person
                       </span>
@@ -140,41 +142,51 @@ export default function Home() {
                         arrow_forward
                       </span>
                     </div>
-                    <div className="phone-link-2 w-full py-4 px-4 rounded-xl bg-white border border-surface-variant text-on-surface text-sm font-bold shadow-sm hover:shadow-md hover:scale-[1.05] hover:border-primary transition-all duration-300 cursor-pointer flex items-center justify-between group">
+                    <div className="phone-link-2 w-full py-4 px-4 rounded-xl bg-white dark:bg-slate-800 border border-surface-variant text-slate-900 dark:text-slate-100 text-sm font-bold shadow-sm hover:shadow-md hover:scale-[1.05] hover:border-primary transition-all duration-300 cursor-pointer flex items-center justify-between group">
                       <span>YouTube Channel</span>
                       <span className="material-symbols-outlined text-lg opacity-40 group-hover:translate-x-1 transition-transform">
                         play_circle
                       </span>
                     </div>
-                    <div className="phone-link-3 w-full py-4 px-4 rounded-xl bg-white border border-surface-variant text-on-surface text-sm font-bold shadow-sm hover:shadow-md hover:scale-[1.05] hover:border-primary transition-all duration-300 cursor-pointer flex items-center justify-between group">
+                    <div className="phone-link-3 w-full py-4 px-4 rounded-xl bg-white dark:bg-slate-800 border border-surface-variant text-slate-900 dark:text-slate-100 text-sm font-bold shadow-sm hover:shadow-md hover:scale-[1.05] hover:border-primary transition-all duration-300 cursor-pointer flex items-center justify-between group">
                       <span>Merch Store</span>
                       <span className="material-symbols-outlined text-lg opacity-40 group-hover:translate-x-1 transition-transform">
                         shopping_bag
                       </span>
                     </div>
-                    <div className="phone-link-4 w-full py-4 px-4 rounded-xl bg-white border border-surface-variant text-on-surface text-sm font-bold shadow-sm hover:shadow-md hover:scale-[1.05] hover:border-primary transition-all duration-300 cursor-pointer flex items-center justify-between group">
-                      <span>Portfolio 2024</span>
+                    <div className="phone-link-4 w-full py-4 px-4 rounded-xl bg-white dark:bg-slate-800 border border-surface-variant text-slate-900 dark:text-slate-100 text-sm font-bold shadow-sm hover:shadow-md hover:scale-[1.05] hover:border-primary transition-all duration-300 cursor-pointer flex items-center justify-between group">
+                      <span>My Portfolio</span>
                       <span className="material-symbols-outlined text-lg opacity-40 group-hover:translate-x-1 transition-transform">
                         link
                       </span>
                     </div>
                   </div>
-                  <div className="mt-auto flex gap-4 text-on-surface-variant">
-                    <span className="material-symbols-outlined text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all">
-                      photo_camera
-                    </span>
-                    <span className="material-symbols-outlined text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all">
-                      movie
-                    </span>
-                    <span className="material-symbols-outlined text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all">
-                      alternate_email
-                    </span>
+                  <div className="mt-auto flex gap-3 text-on-surface-variant">
+                    <SiInstagram
+                      aria-label="Instagram"
+                      className="text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all"
+                    />
+                    <SiTiktok
+                      aria-label="TikTok"
+                      className="text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all"
+                    />
+                    <SiYoutube
+                      aria-label="YouTube"
+                      className="text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all"
+                    />
+                    <SiSpotify
+                      aria-label="Spotify"
+                      className="text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all"
+                    />
                   </div>
-                  <div className="mt-6 flex items-center gap-1.5 grayscale opacity-40">
-                    <span className="material-symbols-outlined text-xs">hub</span>
-                    <span className="text-[10px] font-bold font-headline uppercase tracking-widest">
-                      LinkHub
-                    </span>
+                  <div className="mt-6 opacity-50 dark:opacity-70">
+                    <Image
+                      src="/link_hub_logo.png"
+                      alt="LinkHub"
+                      width={256}
+                      height={256}
+                      className="h-auto w-20 max-w-full object-contain"
+                    />
                   </div>
                 </div>
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-1/3 h-6 bg-slate-900 rounded-full"></div>
@@ -306,10 +318,13 @@ export default function Home() {
         <div className="flex flex-col md:flex-row items-center gap-20">
           <div className="w-full md:w-1/2 reveal-hidden">
             <div className="bg-surface-container-low rounded-3xl p-8 relative group">
-              <img
+              <Image
                 alt="Elegant dashboard showing clean data visualization charts with secondary green growth indicators and indigo accents"
                 className="rounded-xl shadow-lg w-full h-auto group-hover:scale-[1.02] transition-transform duration-700"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg1jSLuMCVc6TaFQCGlygspePy35lUZtxhyShDJDAav6xALtSK166JAWvEHYvufAHi2SaheMbkXZX1uBv-uIABVqsXTPv6vrvYvBe09hbtJ8tIDgj5mKZNPPBTc7NtXX5TYpc_ntBeeANO0KFcYgK5A7m2wlB6k3ji4eALe4h7ihfUJdNsP7CoYstmMFyvGMtXHaixRr67dS2bUFXAsbjhwutlalFMJemR4s6qT-TLttKzYdU5aY-7S_yQxJju__YWdCYLBmRm6F8G"
+                width={1200}
+                height={800}
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
               <div className="absolute -bottom-6 -right-6 bg-surface-bright p-6 rounded-2xl shadow-2xl max-w-[240px] group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-500">
                 <div className="flex items-center gap-3 mb-2">

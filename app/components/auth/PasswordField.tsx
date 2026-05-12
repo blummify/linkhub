@@ -9,7 +9,20 @@ type PasswordFieldProps = {
   onToggleShow: () => void;
   placeholder?: string;
   name?: string;
+  error?: string;
+  showStrength?: boolean;
+  onBlur?: () => void;
 };
+
+function getStrength(password: string) {
+  let score = 0;
+  if (password.length >= 6) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (score === 3) return { score, label: "Strong", barColor: "bg-green-500" };
+  if (score === 2) return { score, label: "Fair", barColor: "bg-yellow-500" };
+  return { score, label: "Weak", barColor: "bg-red-500" };
+}
 
 export function PasswordField({
   id,
@@ -20,7 +33,12 @@ export function PasswordField({
   onToggleShow,
   placeholder = "••••••••",
   name,
+  error,
+  showStrength,
+  onBlur,
 }: PasswordFieldProps) {
+  const strength = showStrength && value ? getStrength(value) : null;
+
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor={id}>
@@ -28,14 +46,18 @@ export function PasswordField({
       </label>
       <div className="relative">
         <input
-          className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface pr-12"
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface pr-12 ${
+            error
+              ? "border-red-400 dark:border-red-400"
+              : "border-gray-300 dark:border-outline-variant"
+          }`}
           id={id}
           name={name}
           type={show ? "text" : "password"}
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          required
+          onBlur={onBlur}
         />
         <button
           type="button"
@@ -48,6 +70,46 @@ export function PasswordField({
           </span>
         </button>
       </div>
+
+      {showStrength && value && strength && (
+        <div className="mt-2">
+          <div className="flex gap-1 mb-1">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`h-1 flex-1 rounded-full transition-colors ${
+                  i <= strength.score ? strength.barColor : "bg-gray-200 dark:bg-outline-variant"
+                }`}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 dark:text-on-surface-variant mb-1">{strength.label}</p>
+          <ul className="space-y-0.5">
+            {[
+              { met: value.length >= 6, label: "At least 6 characters" },
+              { met: /[A-Z]/.test(value), label: "One uppercase letter" },
+              { met: /[0-9]/.test(value), label: "One number" },
+            ].map((req) => (
+              <li
+                key={req.label}
+                className={`text-xs flex items-center gap-1 ${req.met ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-on-surface-variant"}`}
+              >
+                <span className="material-symbols-outlined text-[14px]">
+                  {req.met ? "check_circle" : "radio_button_unchecked"}
+                </span>
+                {req.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {error && (
+        <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+          <span className="material-symbols-outlined text-[14px]">error</span>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

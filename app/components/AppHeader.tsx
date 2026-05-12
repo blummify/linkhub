@@ -1,19 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useSidebar } from "./SidebarContext";
 import UserAvatar from "./UserAvatar";
+import { useShortKey } from "./hooks/useShortKey";
 
 export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const { data: session } = useSession();
+  const [isMobileSearch, setIsMobileSearch] = useState(false);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const {modifier} = useShortKey( ()=> {
+    searchInputRef.current?.focus();
+  });
+
   const user = session?.user;
   const displayName =
     user?.name?.trim() ||
     user?.email?.split("@")[0] ||
     "Account";
-  const [isMobileSearch, setIsMobileSearch] = useState(false);
+
 
   useEffect(() => {
     const checkMobile = () => setIsMobileSearch(window.innerWidth < 640);
@@ -50,12 +59,16 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
           </div>
           <input
             aria-label="Search"
+          ref = {searchInputRef}
             className="w-full bg-surface-container-low/40 border border-outline-variant/20 rounded-2xl pl-12 pr-4 sm:pr-14 py-2.5 text-[12px] sm:text-[13px] font-black text-on-surface tracking-tight placeholder:text-on-surface-variant/40 focus:ring-[6px] focus:ring-primary/5 focus:border-primary/40 focus:bg-white transition-all outline-none"
             placeholder={isAdmin ? (isMobileSearch ? "Search..." : "Search designers...") : "Search..."}
             type="text"
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-1.5 px-2 py-1 bg-surface-container-low border border-outline-variant/30 rounded-lg text-[10px] font-black text-on-surface-variant/60">
-            <span className="text-[12px]">⌘</span>
+            <span className="text-[12px]" suppressHydrationWarning>
+              {modifier}
+            </span>
+            <span className="text-[11px] opacity-60">+</span>
             <span>K</span>
           </div>
         </div>

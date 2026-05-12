@@ -6,7 +6,6 @@ import AppHeader from "../components/AppHeader";
 import { useSidebar } from "../components/SidebarContext";
 import { MobilePreview, type AppearanceState } from "../components/MobilePreview";
 import { ShareProfileModal } from "../components/ShareProfileModal";
-import { LinksStyleTwoColumnLayout } from "../components/LinksStyleTwoColumnLayout";
 import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
@@ -17,31 +16,49 @@ import { PROFILE_PUBLIC_URL } from "../constants/profile";
 
 import { getLinks, addLink, updateLink, deleteLink, getProfile } from "../actions/links";
 import { useEffect } from "react";
-
-const DEMO_LINKS: ManagedLink[] = [];
+import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
 
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
   const [showShareModal, setShowShareModal] = useState(false);
-  const [links, setLinks] = useState<ManagedLink[]>(DEMO_LINKS);
+  const [links, setLinks] = useState<ManagedLink[]>([]);
   
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
 
+  const [appearance, setAppearance] = useState<AppearanceState>({
+    profileTitle: "@oseijoel6111",
+    profileBio: "Connecting with your community.",
+    profileLayout: "classic",
+    themeId: "custom",
+    wallpaperStyle: "fill",
+    bgColor: "#ffffff",
+    textColor: "#1a1a1a",
+    buttonStyle: "solid",
+    buttonShadow: "none",
+    buttonRoundness: "full",
+    fontFamily: "Inter",
+    bodyFontFamily: "Inter",
+    titleSize: "small",
+    titleColor: "#000000",
+    footerStyle: "minimal",
+  });
+
   useEffect(() => {
     async function loadData() {
       try {
         const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
-        setLinks(dbLinks.map((l: LinkRow) => ({
+        const fromDb = dbLinks.map((l: LinkRow) => ({
           id: l.id,
           title: l.title,
           url: l.url,
           clicks: String(l.clicks),
           draft: l.draft,
-          icon: l.icon || undefined
-        })));
+          icon: l.icon || undefined,
+        }));
+        setLinks([...DEMO_MANAGED_LINKS, ...fromDb]);
         if (dbProfile) {
           setAppearance(prev => ({
             ...prev,
@@ -53,6 +70,7 @@ export default function UserAdminClient() {
         }
       } catch (error) {
         console.error("Failed to load data:", error);
+        setLinks([...DEMO_MANAGED_LINKS]);
       } finally {
         setIsLoading(false);
       }
@@ -73,6 +91,19 @@ export default function UserAdminClient() {
   const handleSaveLink = async (newLink: ManagedLink) => {
     setIsLoading(true);
     try {
+      if (editingLink !== null && isDemoManagedLink(editingLink.link) && editingLink.link.id) {
+        const updatedLinks = [...links];
+        updatedLinks[editingLink.index] = {
+          ...editingLink.link,
+          ...newLink,
+          id: editingLink.link.id,
+          clicks: newLink.clicks || editingLink.link.clicks,
+          trendLabel: editingLink.link.trendLabel,
+        };
+        setLinks(updatedLinks);
+        setShowLinkModal(false);
+        return;
+      }
       if (editingLink !== null && editingLink.link.id) {
         await updateLink(editingLink.link.id, {
           title: newLink.title,
@@ -89,11 +120,14 @@ export default function UserAdminClient() {
           icon: newLink.icon,
         });
         if (result.success && result.link) {
-          setLinks([{
+          const entry: ManagedLink = {
             ...newLink,
             id: result.link.id,
-            clicks: String(result.link.clicks)
-          }, ...links]);
+            clicks: String(result.link.clicks),
+          };
+          const demos = links.filter(isDemoManagedLink);
+          const real = links.filter((l) => !isDemoManagedLink(l));
+          setLinks([...demos, entry, ...real]);
         }
       }
       setShowLinkModal(false);
@@ -105,6 +139,10 @@ export default function UserAdminClient() {
   };
 
   const handleDeleteLink = async (link: ManagedLink, index: number) => {
+    if (isDemoManagedLink(link)) {
+      setLinks(links.filter((_, i) => i !== index));
+      return;
+    }
     if (!link.id) return;
     try {
       await deleteLink(link.id);
@@ -115,6 +153,13 @@ export default function UserAdminClient() {
   };
 
   const handleToggleLink = async (link: ManagedLink, index: number) => {
+    if (isDemoManagedLink(link)) {
+      const newDraftState = !link.draft;
+      const updatedLinks = [...links];
+      updatedLinks[index] = { ...link, draft: newDraftState };
+      setLinks(updatedLinks);
+      return;
+    }
     if (!link.id) return;
     try {
       const newDraftState = !link.draft;
@@ -128,6 +173,12 @@ export default function UserAdminClient() {
   };
 
   const handleUpdateLink = async (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => {
+    if (isDemoManagedLink(link)) {
+      const updatedLinks = [...links];
+      updatedLinks[index] = { ...link, ...updates };
+      setLinks(updatedLinks);
+      return;
+    }
     if (!link.id) return;
     try {
       await updateLink(link.id, {
@@ -143,24 +194,6 @@ export default function UserAdminClient() {
       console.error("Failed to update link:", error);
     }
   };
-
-  const [appearance, setAppearance] = useState<AppearanceState>({
-    profileTitle: "@oseijoel6111",
-    profileBio: "Connecting with your community.",
-    profileLayout: "classic",
-    themeId: "custom",
-    wallpaperStyle: "fill",
-    bgColor: "#ffffff",
-    textColor: "#1a1a1a",
-    buttonStyle: "solid",
-    buttonShadow: "none",
-    buttonRoundness: "full",
-    fontFamily: "Inter",
-    bodyFontFamily: "Inter",
-    titleSize: "small",
-    titleColor: "#000000",
-    footerStyle: "minimal",
-  });
 
   return (
     <div className="bg-surface text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">

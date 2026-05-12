@@ -2,7 +2,6 @@
 
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
-import { ThemeToggle } from "../ThemeToggle";
 import { useSidebar } from "../components/SidebarContext";
 import { MobilePreview } from "../components/MobilePreview";
 import { LinksPreviewPanel } from "../components/LinksPreviewPanel";

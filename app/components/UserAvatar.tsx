@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 type Props = {
@@ -16,9 +17,12 @@ export default function UserAvatar({ src, name, email, className }: Props) {
 
   if (showImg) {
     return (
-      <img
+      <Image
         src={src!}
         alt=""
+        width={96}
+        height={96}
+        unoptimized
         className={className}
         onError={() => setFailed(true)}
       />

@@ -31,8 +31,8 @@ export default function LinksClient() {
                   <h1 className="text-2xl font-semibold text-on-surface tracking-tight">Your Links</h1>
                   <p className="text-sm text-on-surface-variant mt-1">Manage and organize your digital presence.</p>
                 </div>
-                <button className="flex items-center gap-2 bg-secondary text-on-secondary px-6 py-3 rounded-full font-bold shadow-lg hover:bg-on-secondary-container transition-all active:scale-95">
-                  <span className="material-symbols-outlined">add</span>
+                <button className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-on-primary shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 active:scale-[0.98]">
+                  <span className="material-symbols-outlined text-[20px]">add</span>
                   Add New Link
                 </button>
               </div>
@@ -40,86 +40,100 @@ export default function LinksClient() {
               {/* Link Cards Container */}
               <div className="space-y-4">
                 {/* Link Card 1: Active */}
-                <div className="bg-surface-container-lowest rounded-xl p-6 flex gap-6 group relative overflow-hidden transition-all hover:translate-x-1">
-                  <div className="w-1 bg-secondary absolute left-0 top-0 h-full rounded-full"></div>
-                  <div className="flex flex-col items-center justify-center cursor-grab text-on-surface-variant hover:text-on-surface">
-                    <span className="material-symbols-outlined">drag_indicator</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-base text-on-surface">Official Website</h3>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase tracking-wider">
-                          Active
-                        </div>
-                        <button className="text-on-surface-variant hover:text-primary transition-colors">
-                          <span className="material-symbols-outlined text-xl">edit</span>
-                        </button>
-                        <button className="text-on-surface-variant hover:text-error transition-colors">
-                          <span className="material-symbols-outlined text-xl">delete</span>
-                        </button>
-                      </div>
+                <div className="group relative flex overflow-hidden rounded-xl border border-outline-variant/40 bg-white shadow-sm transition-all hover:shadow-md dark:border-outline-variant/30 dark:bg-surface-container-lowest">
+                  <div className="w-1 shrink-0 self-stretch bg-primary" aria-hidden />
+                  <div className="flex min-w-0 flex-1 gap-4 p-5 sm:gap-5 sm:p-6">
+                    <div className="mt-0.5 flex shrink-0 cursor-grab text-on-surface-variant/35">
+                      <span className="material-symbols-outlined text-[20px] select-none">drag_indicator</span>
                     </div>
-                    <p className="text-sm text-primary font-medium">https://johndoe.design</p>
-                    <div className="mt-3 flex items-center gap-4 text-xs text-on-surface-variant">
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-base">visibility</span> 1,240 clicks
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-base">trending_up</span> +12% this week
-                      </span>
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <h3 className="text-base font-semibold tracking-tight text-on-surface">Official Website</h3>
+                          <p className="text-sm font-medium text-primary">https://johndoe.design</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Active</span>
+                          <button type="button" className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary" aria-label="Edit">
+                            <span className="material-symbols-outlined text-[20px]">edit</span>
+                          </button>
+                          <button type="button" className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error/10 hover:text-error" aria-label="Delete">
+                            <span className="material-symbols-outlined text-[20px]">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-on-surface-variant">
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <span className="material-symbols-outlined text-[18px] text-on-surface-variant/70">visibility</span>
+                          1,240 clicks
+                        </span>
+                        <span className="flex items-center gap-1.5 font-medium text-green-600 dark:text-green-400">
+                          <span className="material-symbols-outlined text-[18px]">trending_up</span>
+                          +12% this week
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Link Card 2 */}
-                <div className="bg-surface-container-lowest rounded-xl p-6 flex gap-6 group relative transition-all hover:translate-x-1">
-                  <div className="w-1 bg-secondary absolute left-0 top-0 h-full rounded-full"></div>
-                  <div className="flex flex-col items-center justify-center cursor-grab text-on-surface-variant hover:text-on-surface">
-                    <span className="material-symbols-outlined">drag_indicator</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-base text-on-surface">Latest Portfolio Drop</h3>
-                      <div className="flex items-center gap-3">
-                        <button className="text-on-surface-variant hover:text-primary transition-colors">
-                          <span className="material-symbols-outlined text-xl">edit</span>
-                        </button>
-                        <button className="text-on-surface-variant hover:text-error transition-colors">
-                          <span className="material-symbols-outlined text-xl">delete</span>
-                        </button>
-                      </div>
+                <div className="group relative flex overflow-hidden rounded-xl border border-outline-variant/40 bg-white shadow-sm transition-all hover:shadow-md dark:border-outline-variant/30 dark:bg-surface-container-lowest">
+                  <div className="w-1 shrink-0 self-stretch bg-primary" aria-hidden />
+                  <div className="flex min-w-0 flex-1 gap-4 p-5 sm:gap-5 sm:p-6">
+                    <div className="mt-0.5 flex shrink-0 cursor-grab text-on-surface-variant/35">
+                      <span className="material-symbols-outlined text-[20px] select-none">drag_indicator</span>
                     </div>
-                    <p className="text-sm text-primary font-medium">https://behance.net/johndoe/vibe-check</p>
-                    <div className="mt-3 flex items-center gap-4 text-xs text-on-surface-variant">
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-base">visibility</span> 856 clicks
-                      </span>
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <h3 className="text-base font-semibold tracking-tight text-on-surface">Latest Portfolio Drop</h3>
+                          <p className="text-sm font-medium text-primary">https://behance.net/johndoe/vibe-check</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Active</span>
+                          <button type="button" className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary" aria-label="Edit">
+                            <span className="material-symbols-outlined text-[20px]">edit</span>
+                          </button>
+                          <button type="button" className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error/10 hover:text-error" aria-label="Delete">
+                            <span className="material-symbols-outlined text-[20px]">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-on-surface-variant">
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <span className="material-symbols-outlined text-[18px] text-on-surface-variant/70">visibility</span>
+                          856 clicks
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Link Card 3: Draft */}
-                <div className="bg-surface-container-lowest/60 rounded-xl p-6 flex gap-6 group relative transition-all opacity-80">
-                  <div className="flex flex-col items-center justify-center cursor-grab text-on-surface-variant">
-                    <span className="material-symbols-outlined">drag_indicator</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-base text-on-surface">Instagram Profile</h3>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-high text-on-surface-variant rounded text-[10px] font-bold uppercase tracking-wider">
-                          Draft
+                <div className="group relative flex overflow-hidden rounded-xl border border-outline-variant/40 bg-white opacity-[0.92] shadow-sm transition-all hover:shadow-md dark:border-outline-variant/30 dark:bg-surface-container-lowest">
+                  <div className="flex min-w-0 flex-1 gap-4 p-5 sm:gap-5 sm:p-6">
+                    <div className="mt-0.5 flex shrink-0 cursor-grab text-on-surface-variant/35">
+                      <span className="material-symbols-outlined text-[20px] select-none">drag_indicator</span>
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <h3 className="text-base font-semibold tracking-tight text-on-surface">Instagram Profile</h3>
+                          <p className="text-sm font-medium italic text-on-surface-variant">https://instagram.com/johndoe</p>
                         </div>
-                        <button className="text-on-surface-variant hover:text-primary transition-colors">
-                          <span className="material-symbols-outlined text-xl">edit</span>
-                        </button>
-                        <button className="text-on-surface-variant hover:text-error transition-colors">
-                          <span className="material-symbols-outlined text-xl">delete</span>
-                        </button>
+                        <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+                          <span className="inline-flex rounded-full bg-surface-container-high px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                            Draft
+                          </span>
+                          <button type="button" className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary" aria-label="Edit">
+                            <span className="material-symbols-outlined text-[20px]">edit</span>
+                          </button>
+                          <button type="button" className="flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant hover:bg-error/10 hover:text-error" aria-label="Delete">
+                            <span className="material-symbols-outlined text-[20px]">delete</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-sm text-on-surface-variant font-medium italic">https://instagram.com/johndoe</p>
                   </div>
                 </div>
               </div>
