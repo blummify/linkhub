@@ -41,7 +41,7 @@ export default function SignupPage() {
   const getFieldError = (field: keyof FieldErrors, value: string): string => {
     switch (field) {
       case "name":
-        return value.trim() ? "" : "Full name is Required ";
+        return value.trim() ? "" : "Full name is required. ";
       case "email":
         return validateEmail(value);
       case "password":
