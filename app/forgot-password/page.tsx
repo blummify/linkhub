@@ -3,9 +3,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { validateEmail } from "@/lib/validation/auth.schema";
+import { useRouter } from "next/navigation";
 
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -27,6 +29,7 @@ export default function ForgotPasswordPage() {
       // Simulating async work for now
       await new Promise((resolve) => setTimeout(resolve, 1200));
       setSuccess(true);
+      router.push("/reset-password");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
