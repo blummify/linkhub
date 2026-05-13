@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { ManagedLink } from "./types";
 import { SiInstagram, SiYoutube, SiSpotify, SiX } from "react-icons/si";
 import { TbWorld } from "react-icons/tb";
@@ -21,26 +21,11 @@ const PRESETS = [
 ];
 
 export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEditLinkModalProps) {
-  const [title, setTitle]               = useState("");
-  const [url, setUrl]                   = useState("");
-  const [icon, setIcon]                 = useState<string | undefined>(undefined);
-  const [draft, setDraft]               = useState(false);
+  const [title, setTitle]               = useState(() => initialLink?.title ?? "");
+  const [url, setUrl]                   = useState(() => initialLink?.url ?? "");
+  const [icon, setIcon]                 = useState<string | undefined>(() => initialLink?.icon);
+  const [draft, setDraft]               = useState(() => initialLink?.draft ?? false);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (initialLink) {
-      setTitle(initialLink.title);
-      setUrl(initialLink.url);
-      setIcon(initialLink.icon);
-      setDraft(initialLink.draft ?? false);
-    } else {
-      setTitle("");
-      setUrl("");
-      setIcon(undefined);
-      setDraft(false);
-    }
-    setSelectedPreset(null);
-  }, [initialLink, open]);
 
   if (!open) return null;
 
