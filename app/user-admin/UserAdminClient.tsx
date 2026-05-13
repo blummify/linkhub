@@ -24,6 +24,7 @@ export default function UserAdminClient() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  const [claimTimerFired, setClaimTimerFired] = useState(false);
   const [links, setLinks] = useState<ManagedLink[]>([]);
   
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -85,11 +86,15 @@ export default function UserAdminClient() {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && isFirstTimeUser) {
-      const timer = setTimeout(() => setShowClaimModal(true), 5000);
-      return () => clearTimeout(timer);
+    const timer = setTimeout(() => setClaimTimerFired(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (claimTimerFired && !isLoading && isFirstTimeUser) {
+      setShowClaimModal(true);
     }
-  }, [isLoading, isFirstTimeUser]);
+  }, [claimTimerFired, isLoading, isFirstTimeUser]);
 
   const handleClaimHandle = async (handle: string) => {
     const result = await claimHandle(handle);
