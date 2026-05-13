@@ -25,8 +25,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      // Replace with real API call
-      // Simulating async work for now
+      // Simulating API call
       await new Promise((resolve) => setTimeout(resolve, 1200));
       setSuccess(true);
       router.push("/reset-password");
