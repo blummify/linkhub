@@ -41,9 +41,9 @@ export default function NewPasswordPage() {
     return !passwordErr && !confirmErr && newPassword !== "";
   };
 
-  // UI-only submit handler – no backend import
+  // UI-only submit handler 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     setError("");
     if (!validateAll()) return;
 
@@ -52,7 +52,7 @@ export default function NewPasswordPage() {
     setTimeout(() => {
       setIsLoading(false);
       setSuccess(true);
-      // Redirect after 2 seconds
+
       setTimeout(() => {
         router.push("/login");
       }, 2000);
@@ -73,7 +73,6 @@ export default function NewPasswordPage() {
       panelTitle="Connect Your World"
       panelDescription="Share all your important links in one beautiful place. Build your online presence and connect with your audience effortlessly."
       panelFeatures={panelFeatures}
-      footerText="Join 10,000+ creators already building with LinkHub"
     >
       <div className="space-y-6">
         <Link
@@ -99,7 +98,6 @@ export default function NewPasswordPage() {
               onToggleShow={() => setShowNewPassword(!showNewPassword)}
               showStrength
               error={newPasswordError}
-              autoComplete="new-password"
             />
 
             <PasswordField
@@ -114,7 +112,6 @@ export default function NewPasswordPage() {
               show={showConfirmPassword}
               onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
               error={confirmPasswordError}
-              autoComplete="off"
             />
 
             <button
