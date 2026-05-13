@@ -14,13 +14,16 @@ import type { ManagedLink } from "./components/types";
 import { EDITOR_MOBILE_PREVIEW_SHARED } from "../constants/editorMobilePreview";
 import { PROFILE_PUBLIC_URL } from "../constants/profile";
 
-import { getLinks, addLink, updateLink, deleteLink, getProfile } from "../actions/links";
+import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim } from "../actions/links";
+import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { useEffect } from "react";
 import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
 
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [links, setLinks] = useState<ManagedLink[]>([]);
   
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -67,6 +70,9 @@ export default function UserAdminClient() {
             profileLayout: dbProfile.layout || prev.profileLayout,
             themeId: dbProfile.themeId || prev.themeId,
           }));
+          if (!dbProfile.hasClaimedHandle) {
+            setIsFirstTimeUser(true);
+          }
         }
       } catch (error) {
         console.error("Failed to load data:", error);
@@ -77,6 +83,28 @@ export default function UserAdminClient() {
     }
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && isFirstTimeUser) {
+      const timer = setTimeout(() => setShowClaimModal(true), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, isFirstTimeUser]);
+
+  const handleClaimHandle = async (handle: string) => {
+    const result = await claimHandle(handle);
+    if (result.success) {
+      setShowClaimModal(false);
+      setIsFirstTimeUser(false);
+    }
+    return result;
+  };
+
+  const handleDismissClaim = async () => {
+    await dismissHandleClaim();
+    setShowClaimModal(false);
+    setIsFirstTimeUser(false);
+  };
 
   const handleAddLink = () => {
     setEditingLink(null);
@@ -257,6 +285,12 @@ export default function UserAdminClient() {
             onClose={() => setShowLinkModal(false)}
             onSave={handleSaveLink}
             initialLink={editingLink?.link}
+          />
+
+          <ClaimHandleModal
+            open={showClaimModal}
+            onClose={handleDismissClaim}
+            onClaim={handleClaimHandle}
           />
 
           <ShareProfileModal
