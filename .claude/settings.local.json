@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(& \"C:\\\\Program Files\\\\nodejs\\\\node.exe\" \"C:\\\\Users\\\\cewud\\\\OneDrive\\\\Desktop\\\\linkhub\\\\node_modules\\\\.bin\\\\eslint.cmd\" --version 2>&1)",
-      "PowerShell(& \"C:\\\\Program Files\\\\nodejs\\\\node.exe\" \"C:\\\\Users\\\\cewud\\\\OneDrive\\\\Desktop\\\\linkhub\\\\node_modules\\\\eslint\\\\bin\\\\eslint.js\" \"C:\\\\Users\\\\cewud\\\\OneDrive\\\\Desktop\\\\linkhub\\\\app\\\\actions\\\\auth.ts\" 2>&1)"
-    ]
-  }
-}
