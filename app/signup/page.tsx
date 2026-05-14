@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { registerUser, sendVerificationCode } from "@/app/actions/auth";
+import { registerUser, checkUserExists, sendVerificationCode } from "@/app/actions/auth";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
@@ -21,6 +21,7 @@ export default function SignupPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -47,7 +48,7 @@ export default function SignupPage() {
   const getFieldError = (field: keyof FieldErrors, value: string): string => {
     switch (field) {
       case "name":
-        return value.trim() ? "" : "Full name is required";
+        return value.trim() ? "" : "Full name is required. ";
       case "email":
         return validateEmail(value);
       case "password":
@@ -62,6 +63,26 @@ export default function SignupPage() {
       ...prev,
       [field]: getFieldError(field, formData[field]),
     }));
+  };
+
+  const handleEmailBlur = async () => {
+    const formatError = validateEmail(formData.email);
+    if (formatError) {
+      setFieldErrors((prev) => ({ ...prev, email: formatError }));
+      return;
+    }
+    setIsCheckingEmail(true);
+    try {
+      const exists = await checkUserExists(formData.email);
+      setFieldErrors((prev) => ({
+        ...prev,
+        email: exists ? "An account with this email already exists." : "",
+      }));
+    } catch {
+      // silently ignore — full validation still runs on submit
+    } finally {
+      setIsCheckingEmail(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,7 +166,7 @@ export default function SignupPage() {
               value={formData.name}
               onChange={handleChange}
               onBlur={() => handleBlur("name")}
-              required
+              
             />
             {fieldErrors.name && (
               <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
@@ -159,21 +180,29 @@ export default function SignupPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
               Email Address
             </label>
-            <input
-              className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
-              id="email"
-              name="email"
-              type="email"
-              placeholder="alex@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              onBlur={() => handleBlur("email")}
-              required
-            />
+            <div className="relative">
+              <input
+                className="w-full px-4 py-3 border border-gray-300 dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface"
+                id="email"
+                name="email"
+                type="email"
+                placeholder="alex@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                onBlur={handleEmailBlur}
+                
+              />
+              {isCheckingEmail && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              )}
+            </div>
             {fieldErrors.email && (
-              <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+              <p className="mt-1 text-xs text-red-500 flex items-center gap-1 flex-wrap">
                 <span className="material-symbols-outlined text-[14px]">error</span>
                 {fieldErrors.email}
+                {fieldErrors.email.includes("already exists") && (
+                  <Link href="/login" className="underline font-semibold">Log in instead</Link>
+                )}
               </p>
             )}
           </div>
