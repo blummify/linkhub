@@ -17,6 +17,7 @@ const PUBLIC_EXACT = new Set([
   "/signup",
   "/features",
   "/pricing",
+  "/verify-email",
 ]);
 
 /** Files in /public — must not require auth or `/_next/image` fetches get HTML (e.g. /login) and fail with "received null". */
@@ -38,6 +39,14 @@ export default auth((req) => {
   // Always allow /login and /signup (even when signed in) so people can add another
   // account, use incognito expectations, or sign out from the app and return here.
   if (isAuthRoute) return undefined;
+
+  // Authenticated users with unverified email can only access public routes.
+  if (isLoggedIn && !req.auth?.user.emailVerified && !isPublicRoute) {
+    const verifyUrl = new URL("/verify-email", nextUrl);
+    if (req.auth?.user.email) verifyUrl.searchParams.set("email", req.auth.user.email);
+    verifyUrl.searchParams.set("source", "login");
+    return Response.redirect(verifyUrl);
+  }
 
   if (!isLoggedIn && !isPublicRoute) {
     return Response.redirect(new URL("/login", nextUrl));

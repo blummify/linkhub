@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { registerUser } from "@/app/actions/auth";
+import { registerUser, sendVerificationCode } from "@/app/actions/auth";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
@@ -23,7 +23,6 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,6 +35,14 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
   });
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const isFormComplete =
+    !!formData.name.trim() &&
+    !!formData.email &&
+    !!formData.password &&
+    !!formData.confirmPassword &&
+    agreedToTerms;
 
   const getFieldError = (field: keyof FieldErrors, value: string): string => {
     switch (field) {
@@ -94,20 +101,12 @@ export default function SignupPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        const signInRes = await signIn("credentials", {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
-        });
-        if (signInRes?.error) {
-          setError("Account created. Please sign in with your email and password.");
+        const codeResult = await sendVerificationCode(formData.email);
+        if ("error" in codeResult) {
+          setError(codeResult.error);
           return;
         }
-        setSuccess(true);
-        setTimeout(() => {
-          router.push("/user-dashboard");
-          router.refresh();
-        }, 1500);
+        router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
@@ -212,10 +211,11 @@ export default function SignupPage() {
 
           <div className="flex items-center">
             <input
-              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
               id="terms"
               type="checkbox"
-              required
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
             />
             <label className="ml-2 text-sm text-gray-600 dark:text-on-surface-variant" htmlFor="terms">
               I agree to the{" "}
@@ -226,12 +226,12 @@ export default function SignupPage() {
           </div>
 
           <button
-            disabled={isLoading || success}
+            disabled={isLoading || !isFormComplete}
             className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             type="submit"
           >
             {isLoading ? "Creating Account..." : "Create Account"}
-            {!isLoading && !success && <span className="material-symbols-outlined">arrow_forward</span>}
+            {!isLoading && <span className="material-symbols-outlined">arrow_forward</span>}
           </button>
         </form>
 

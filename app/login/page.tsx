@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { checkUserExists, loginWithCredentials, registerUser } from "@/app/actions/auth";
+import { checkUserExists, checkEmailVerified, registerUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
@@ -70,9 +70,14 @@ export default function LoginPage() {
     setIsValidating(true);
 
     try {
-      const result = await loginWithCredentials({ email, password });
-      if (result?.error) {
-        setError(result.error);
+      const signInResult = await signIn("credentials", { email, password, redirect: false });
+      if (signInResult?.error) {
+        setError("Invalid credentials");
+        return;
+      }
+      const emailVerified = await checkEmailVerified(email);
+      if (!emailVerified) {
+        router.push(`/verify-email?email=${encodeURIComponent(email)}&source=login`);
       } else {
         router.push("/user-dashboard");
       }
