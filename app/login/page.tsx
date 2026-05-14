@@ -264,9 +264,12 @@ export default function LoginPage() {
                 error={passwordError}
               />
               <div className="flex justify-end mt-2">
-                <button type="button" className="text-sm text-primary hover:underline cursor-pointer">
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-primary hover:underline cursor-pointer"
+                >
                   Forgot password?
-                </button>
+                </Link>
               </div>
             </div>
             <button
@@ -356,7 +359,7 @@ export default function LoginPage() {
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Create Account
+                  Create Account 
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </>
               )}
