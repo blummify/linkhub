@@ -10,6 +10,7 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,9 +19,10 @@ export default function ForgotPasswordPage() {
 
     const emailErr = validateEmail(email);
     if (emailErr) {
-      setError(emailErr);
+      setEmailError(emailErr);
       return;
     }
+    setEmailError("");
     setError("");
     setIsLoading(true);
 
@@ -80,19 +82,19 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  if (error) setError("");
+                  if (emailError) setEmailError("");
                 }}
-                onBlur={() => setError(validateEmail(email))}
+                onBlur={() => setEmailError(validateEmail(email))}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface ${
-                  error
+                  emailError
                     ? "border-red-400 dark:border-red-400"
                     : "border-gray-300 dark:border-outline-variant"
                 }`}
               />
-              {error && (
+              {emailError && (
                 <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">error</span>
-                  {error}
+                  {emailError}
                 </p>
               )}
             </div>
