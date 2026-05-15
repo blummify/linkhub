@@ -12,7 +12,7 @@ type AuthFeature = {
 
 type AuthShellProps = {
   heading: string;
-  subheading: string;
+  subheading: ReactNode;
   error?: string;
   children: ReactNode;
   panelTitle: string;

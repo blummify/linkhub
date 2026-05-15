@@ -125,15 +125,14 @@ export default function SignupPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        const codeResult = await sendVerificationCode(formData.email);
-        if ("error" in codeResult) {
-          setError(codeResult.error);
-          return;
-        }
-        router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+        const verifyUrl = `/verify-email?email=${encodeURIComponent(formData.email)}`;
+        // Fire email in background — user goes to verify page immediately
+        // If delivery fails they can resend from that page
+        sendVerificationCode(formData.email).catch(() => {});
+        router.push(verifyUrl);
       }
     } catch {
-      setError("An unexpected error occurred. Please try again.");
+      setError("Something went wrong while creating your account. Please try again.");
     } finally {
       setIsLoading(false);
     }
