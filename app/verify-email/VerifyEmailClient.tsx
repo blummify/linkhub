@@ -30,8 +30,10 @@ export default function VerifyEmailClient() {
 
   const emailFromParam = searchParams.get("email");
   const fromLogin = searchParams.get("source") === "login";
+  const needsResend = searchParams.get("resend") === "true" ||
+    (typeof window !== "undefined" && sessionStorage.getItem("lh_verify_resend") === "1");
   const email = emailFromParam ?? "";
-  const fromSignup = !!emailFromParam && !fromLogin;
+  const fromSignup = !!emailFromParam && !fromLogin && !needsResend;
   const autoSentRef = useRef(false);
   const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -54,6 +56,7 @@ export default function VerifyEmailClient() {
   };
 
   useEffect(() => {
+    sessionStorage.removeItem("lh_verify_resend");
     return () => { if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current); };
   }, []);
 
@@ -131,15 +134,21 @@ export default function VerifyEmailClient() {
 
   return (
     <AuthShell
-      heading="Verify Your Email"
-      subheading={`We've sent a 6-digit code to ${email || "your email"}. Enter it below to continue.`}
+      heading="Check your inbox"
+      subheading={
+        <>
+          We sent a 6-digit code to{" "}
+          <span className="font-semibold text-gray-900 dark:text-on-surface">{email || "your email"}</span>.
+          Enter it below to continue.
+        </>
+      }
       error={error}
       panelTitle="Keep Your Account Secure"
       panelDescription="Verifying your email keeps your account safe and protects your data."
       panelFeatures={PANEL_FEATURES}
     >
-      <div className="space-y-8">
-        <div className="flex gap-3 justify-between" onPaste={handlePaste}>
+      <div className="space-y-7">
+        <div className="flex gap-2" onPaste={handlePaste}>
           {digits.map((digit, i) => (
             <input
               key={i}
@@ -151,7 +160,11 @@ export default function VerifyEmailClient() {
               aria-label={`Digit ${i + 1} of 6`}
               onChange={(e) => handleDigitChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              className="w-12 h-14 text-center text-2xl font-black border-2 border-outline-variant/40 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all bg-surface-container-low/30 text-on-surface"
+              className={`w-16 h-16 text-center text-2xl font-black border-2 rounded-xl outline-none transition-all duration-150 ${
+                digit
+                  ? "border-primary bg-primary/10 text-primary dark:bg-primary/15"
+                  : "border-gray-200 dark:border-outline-variant/50 bg-gray-50 dark:bg-surface-container-low text-on-surface"
+              } focus:border-primary focus:ring-4 focus:ring-primary/15 focus:bg-primary/5 dark:focus:bg-primary/10`}
             />
           ))}
         </div>
@@ -159,21 +172,31 @@ export default function VerifyEmailClient() {
         <button
           onClick={handleSubmit}
           disabled={isLoading || digits.join("").length !== 6}
-          className="w-full bg-primary text-white py-3 px-4 rounded-lg font-bold tracking-wide hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full bg-primary text-white py-3.5 px-4 rounded-lg font-bold tracking-wide hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
         >
-          {isLoading ? "Verifying..." : "Verify & Continue"}
+          {isLoading ? (
+            <>
+              <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Verifying…
+            </>
+          ) : (
+            <>
+              Verify & Continue
+              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </>
+          )}
         </button>
 
-        <p className="text-center text-sm text-on-surface-variant">
-          Didn&apos;t receive the code?{" "}
+        <div className="text-center space-y-1">
+          <p className="text-sm text-gray-500 dark:text-on-surface-variant">Didn&apos;t receive the code?</p>
           <button
             onClick={handleResend}
             disabled={isResending || cooldown > 0}
-            className="font-semibold text-primary hover:underline disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="text-sm font-semibold text-primary hover:underline disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
-            {isResending ? "Sending..." : cooldown > 0 ? `Resend Code (${cooldown}s)` : "Resend Code"}
+            {isResending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend Code"}
           </button>
-        </p>
+        </div>
       </div>
     </AuthShell>
   );

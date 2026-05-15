@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { postly } from "@/lib/postly";
 import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import crypto from "crypto";
+import { createHash, randomBytes } from "crypto";
 
 type CredentialsFormData = {
   email: string;
@@ -45,7 +46,7 @@ export async function registerUser(formData: RegisterFormData) {
     });
 
     if (existingUser) {
-      return { error: "User already exists" };
+      return { error: "An account with this email already exists." };
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -62,33 +63,8 @@ export async function registerUser(formData: RegisterFormData) {
     return { success: true };
   } catch (error) {
     console.error("Registration error:", error);
-    return { error: "Something went wrong" };
+    return { error: "We couldn't complete your registration. Please try again." };
   }
-}
-
-function verificationEmailHtml(code: string): string {
-  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;margin:0;padding:40px 20px;">
-    <div style="max-width:480px;margin:0 auto;background:white;border-radius:16px;padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-      <h1 style="font-size:24px;font-weight:700;color:#111;margin:0 0 8px;">Verify your email</h1>
-      <p style="color:#666;margin:0 0 32px;">Enter this code in LinkHub to activate your account.</p>
-      <div style="text-align:center;background:#f0effe;border-radius:12px;padding:24px;margin-bottom:32px;">
-        <span style="font-size:40px;font-weight:900;letter-spacing:16px;color:#4F46E5;">${code}</span>
-      </div>
-      <p style="color:#999;font-size:13px;margin:0;">Expires in 24 hours. If you didn&apos;t create a LinkHub account, ignore this email.</p>
-    </div>
-  </div>`;
-}
-
-function getTransporter(): nodemailer.Transporter {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST ?? "smtp-relay.brevo.com",
-    port: Number(process.env.SMTP_PORT ?? "587"),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
-    },
-  });
 }
 
 async function createAndSendCode(email: string): Promise<{ success: true } | { error: string }> {
@@ -99,15 +75,29 @@ async function createAndSendCode(email: string): Promise<{ success: true } | { e
   await db.emailVerification.deleteMany({ where: { email } });
   await db.emailVerification.create({ data: { email, code: hashed, expiresAt } });
 
+  const user = await db.user.findUnique({ where: { email }, select: { name: true } });
+
+  console.log("[postly] sending verification email", {
+    to: email,
+    name: user?.name ?? "there",
+    baseUrl: process.env.POSTLY_BASE_URL,
+    hasApiKey: !!process.env.POSTLY_API_KEY,
+  });
+
   try {
-    await getTransporter().sendMail({
-      from: process.env.SMTP_FROM,
-      to: email,
-      subject: "Your LinkHub verification code",
-      html: verificationEmailHtml(code),
+    const result = await postly.send({
+      template: "linkhub-verification",
+      to: [email],
+      data: {
+        name: user?.name ?? "there",
+        code,
+        expiresInHours: 24,
+      },
     });
-  } catch {
-    return { error: "Failed to send verification email. Please try again." };
+    console.log("[postly] send success", result);
+  } catch (err) {
+    console.error("[postly] send failed", err);
+    return { error: "We couldn't send your verification email. You can request a new one from the next page." };
   }
 
   return { success: true };
@@ -116,8 +106,9 @@ async function createAndSendCode(email: string): Promise<{ success: true } | { e
 export async function sendVerificationCode(email: string): Promise<{ success: true } | { error: string }> {
   try {
     return await createAndSendCode(email);
-  } catch {
-    return { error: "Something went wrong. Please try again." };
+  } catch (err) {
+    console.error("[postly] unexpected error in sendVerificationCode", err);
+    return { error: "We couldn't send your verification email. You can request a new one from the next page." };
   }
 }
 
@@ -155,7 +146,7 @@ export async function verifyEmailCode(
 
     return { success: true, autoLoginToken };
   } catch {
-    return { error: "Something went wrong. Please try again." };
+    return { error: "Verification failed. Please request a new code and try again." };
   }
 }
 
@@ -168,7 +159,7 @@ export async function resendVerificationCode(email: string): Promise<{ success: 
     }
     return await createAndSendCode(email);
   } catch {
-    return { error: "Something went wrong. Please try again." };
+    return { error: "We couldn't send the verification email. Please try again in a moment." };
   }
 }
 
@@ -224,7 +215,7 @@ export async function resendVerificationEmail(email: string) {
     }
 
     // Generate a secure token
-    const token = crypto.randomBytes(32).toString("hex");
+    const token = randomBytes(32).toString("hex");
     const expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
 
     // Store token in VerificationToken table
