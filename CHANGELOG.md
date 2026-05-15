@@ -1,4 +1,8 @@
-## v0.1.8 (2026-05-15)\n\n## What's Changed
+## v0.1.9 (2026-05-15)\n\n## What's Changed
+* Feat/login auth workflow by @Morrison-web in https://github.com/blummify/linkhub/pull/25
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.8...v0.1.9\n\n## v0.1.8 (2026-05-15)\n\n## What's Changed
 * Update: disabled sign up button till all validation is checked by @Charles2205 in https://github.com/blummify/linkhub/pull/26
 
 
