@@ -2,7 +2,7 @@ import UserAnalyticsClient from "../user-analytics/UserAnalyticsClient";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Analytics - Creator Hub",
+  title: "Analytics",
   description: "View detailed analytics and performance metrics for your links.",
 };
 
