@@ -18,6 +18,7 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
   });
 
   const user = session?.user;
+  const isEmailVerified = !!user?.emailVerified;
   const displayName =
     user?.name?.trim() ||
     user?.email?.split("@")[0] ||
@@ -101,6 +102,17 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
               <div className="px-4 py-3 border-b border-outline-variant/20 mb-1">
                 <p className="text-[13px] font-black tracking-tight text-on-surface">{displayName}</p>
                 <p className="text-[11px] font-medium text-on-surface-variant/60">{user?.email ?? ""}</p>
+                {isEmailVerified ? (
+                  <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="material-symbols-outlined text-[12px]">verified</span>
+                    Email verified
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                    <span className="material-symbols-outlined text-[12px]">warning</span>
+                    Email not verified
+                  </span>
+                )}
               </div>
               
               <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-bold text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors text-left group/item">
