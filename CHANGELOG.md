@@ -1,4 +1,10 @@
-## v0.1.9 (2026-05-15)\n\n## What's Changed
+## v0.1.10 (2026-05-15)\n\n## What's Changed
+* 86c9gx24d by @Azizjhnsn in https://github.com/blummify/linkhub/pull/24
+
+## New Contributors
+* @Azizjhnsn made their first contribution in https://github.com/blummify/linkhub/pull/24
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.9...v0.1.10\n\n## v0.1.9 (2026-05-15)\n\n## What's Changed
 * Feat/login auth workflow by @Morrison-web in https://github.com/blummify/linkhub/pull/25
 
 
