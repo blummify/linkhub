@@ -24,6 +24,8 @@ export default function SignupPage() {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -136,6 +138,13 @@ export default function SignupPage() {
     }
   };
 
+  const isFormFilled =
+    formData.name.trim() !== "" &&
+    formData.email !== "" &&
+    formData.password !== "" &&
+    formData.confirmPassword !== "" &&
+    termsAccepted;
+
   const panelFeatures = [
     { icon: "rocket_launch", title: "Quick Setup", description: "Get started in minutes" },
     { icon: "dashboard_customize", title: "Beautiful Templates", description: "Professional designs ready to use" },
@@ -243,8 +252,9 @@ export default function SignupPage() {
               className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
               id="terms"
               type="checkbox"
-              checked={agreedToTerms}
-              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+
             />
             <label className="ml-2 text-sm text-gray-600 dark:text-on-surface-variant" htmlFor="terms">
               I agree to the{" "}
@@ -255,7 +265,7 @@ export default function SignupPage() {
           </div>
 
           <button
-            disabled={isLoading || !isFormComplete}
+            disabled={isLoading || success || !isFormFilled}
             className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             type="submit"
           >
