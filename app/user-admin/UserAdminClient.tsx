@@ -255,6 +255,7 @@ export default function UserAdminClient() {
           </main>
 
           <AddEditLinkModal
+            key={`${editingLink?.link.id ?? "new"}-${showLinkModal}`}
             open={showLinkModal}
             onClose={() => setShowLinkModal(false)}
             onSave={handleSaveLink}
