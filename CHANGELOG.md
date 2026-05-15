@@ -1,4 +1,8 @@
-## v0.1.13 (2026-05-15)\n\n## What's Changed
+## v0.1.14 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump @types/bcryptjs from 2.4.6 to 3.0.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/14
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.13...v0.1.14\n\n## v0.1.13 (2026-05-15)\n\n## What's Changed
 * Upgrade: Bump eslint from 9.39.4 to 10.3.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/18
 
 
