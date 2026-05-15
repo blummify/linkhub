@@ -79,13 +79,13 @@ export async function getProfile() {
   try {
     let profile = await db.profile.findUnique({
       where: { userId: session.user.id },
+      include: { user: true }, // ← pulls in name, email, image
     });
 
     if (!profile) {
       profile = await db.profile.create({
-        data: {
-          userId: session.user.id,
-        },
+        data: { userId: session.user.id },
+        include: { user: true }, // ← same here
       });
     }
 

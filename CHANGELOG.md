@@ -1,4 +1,34 @@
-## v0.1.4 (2026-05-12)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.3...v0.1.4\n\n## v0.1.3 (2026-05-11)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.2...v0.1.3\n\n## v0.1.2 (2026-05-11)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.1...v0.1.2\n\n## v0.1.1 (2026-05-07)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.0...v0.1.1\n\n## v0.0.9 (2026-05-07)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.0.8...v0.0.9\n\n## v0.0.7 (2026-05-07)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.0.6...v0.0.7\n\n## v0.0.6 (2026-05-07)\n\n## What's Changed
+## v0.1.11 (2026-05-15)\n\n## What's Changed
+* refactor: simplify AddEditLinkModal by removing unused categories by @oseijoel6111 in https://github.com/blummify/linkhub/pull/22
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.10...v0.1.11\n\n## v0.1.10 (2026-05-15)\n\n## What's Changed
+* 86c9gx24d by @Azizjhnsn in https://github.com/blummify/linkhub/pull/24
+
+## New Contributors
+* @Azizjhnsn made their first contribution in https://github.com/blummify/linkhub/pull/24
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.9...v0.1.10\n\n## v0.1.9 (2026-05-15)\n\n## What's Changed
+* Feat/login auth workflow by @Morrison-web in https://github.com/blummify/linkhub/pull/25
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.8...v0.1.9\n\n## v0.1.8 (2026-05-15)\n\n## What's Changed
+* Update: disabled sign up button till all validation is checked by @Charles2205 in https://github.com/blummify/linkhub/pull/26
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.7...v0.1.8\n\n## v0.1.7 (2026-05-14)\n\n## What's Changed
+* fix: align forgot-password error handling with login page by separati… by @YawAsanteBoadu in https://github.com/blummify/linkhub/pull/23
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.6...v0.1.7\n\n## v0.1.6 (2026-05-14)\n\n## What's Changed
+* 86c9fc0qh by @YawAsanteBoadu in https://github.com/blummify/linkhub/pull/20
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.5...v0.1.6\n\n## v0.1.5 (2026-05-14)\n\n## What's Changed
+* 86c9qh3mf | Sign Up with email Functionality by @Charles2205 in https://github.com/blummify/linkhub/pull/19
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.4...v0.1.5\n\n## v0.1.4 (2026-05-12)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.3...v0.1.4\n\n## v0.1.3 (2026-05-11)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.2...v0.1.3\n\n## v0.1.2 (2026-05-11)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.1...v0.1.2\n\n## v0.1.1 (2026-05-07)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.0...v0.1.1\n\n## v0.0.9 (2026-05-07)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.0.8...v0.0.9\n\n## v0.0.7 (2026-05-07)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.0.6...v0.0.7\n\n## v0.0.6 (2026-05-07)\n\n## What's Changed
 * fix form validation error handling in login/signup by @Charles2205 in https://github.com/blummify/linkhub/pull/7
 
 ## New Contributors
