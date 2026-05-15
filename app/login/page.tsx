@@ -31,7 +31,6 @@ export default function LoginPage() {
   const [success, setSuccess] = useState(false);
   const [isResending, setIsResending] = useState(false);
 
-  // ✅ Modal states
   const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
   const [showNoAccountModal, setShowNoAccountModal] = useState(false);
 
@@ -58,7 +57,6 @@ export default function LoginPage() {
       if (exists) {
         setStage("password");
       } else {
-        // ✅ Fix 2: show modal instead of toast + inline signup
         setShowNoAccountModal(true);
       }
     } catch {
@@ -81,13 +79,11 @@ export default function LoginPage() {
       const result = await loginWithCredentials({ email, password });
 
       if (result?.error === "email_not_verified") {
-        // ✅ Show unverified modal
         setShowUnverifiedModal(true);
         return;
       }
 
       if (result?.error) {
-        // ✅ Fix 1: show error below password field instead of toast
         setPasswordError("Incorrect password. Please try again.");
       } else {
         router.push("/user-dashboard");
@@ -217,7 +213,7 @@ export default function LoginPage() {
     >
       <div className="space-y-6">
 
-        {/* ✅ Unverified Email Modal */}
+        {/* Unverified Email Modal */}
         {showUnverifiedModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white dark:bg-surface rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 space-y-4">
@@ -256,7 +252,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* ✅ No Account Found Modal */}
+        {/* No Account Found Modal */}
         {showNoAccountModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white dark:bg-surface rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 space-y-4">
@@ -374,13 +370,10 @@ export default function LoginPage() {
                 error={passwordError}
               />
               <div className="flex justify-end mt-2">
-               feat/login-auth-workflow
-                <button
-                  type="button"
                 <Link
                   href="/forgot-password"
-                   className="text-sm text-primary hover:underline cursor-pointer"
-                
+                  className="text-sm text-primary hover:underline cursor-pointer"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -477,7 +470,7 @@ export default function LoginPage() {
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Create Account 
+                  Create Account
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </>
               )}
