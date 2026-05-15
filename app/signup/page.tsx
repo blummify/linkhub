@@ -144,6 +144,7 @@ export default function SignupPage() {
     formData.email !== "" &&
     formData.password !== "" &&
     formData.confirmPassword !== "" &&
+    formData.confirmPassword === formData.password &&
     termsAccepted;
 
   const panelFeatures = [
