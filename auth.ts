@@ -9,7 +9,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(db),
   events: {
-    /** OAuth (Google) creates `User` via the adapter; ensure a `Profile` row exists. */
     async createUser({ user }) {
       const id = user.id;
       if (!id) return;
@@ -43,6 +42,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!isValid) return null;
+
+        // ✅ Block unverified users
+        if (!user.emailVerified) {
+          throw new Error("email_not_verified");
+        }
 
         return {
           id: user.id,
