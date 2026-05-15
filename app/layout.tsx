@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Manrope, Open_Sans, Outfit, Playfair_Display, Roboto } from "next/font/google";
 import "./globals.css";
 import { ThemeToggle } from "./ThemeToggle";
+import { Toaster } from "sonner"; // ← added
 
 const manrope = Manrope({
   variable: "--next-font-manrope",
@@ -75,8 +76,6 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* Google Material Symbols variable font — not available via next/font; load as stylesheet. */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
@@ -94,6 +93,7 @@ export default function RootLayout({
             {children}
           </SidebarProvider>
         </AuthSessionProvider>
+        <Toaster position="top-center" richColors /> {/* ← added */}
         <ThemeToggle />
       </body>
     </html>
