@@ -1,4 +1,8 @@
-## v0.1.16 (2026-05-15)\n\n## What's Changed
+## v0.1.17 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump @types/node from 20.19.37 to 25.8.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/17
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.16...v0.1.17\n\n## v0.1.16 (2026-05-15)\n\n## What's Changed
 * Upgrade: Bump react from 19.2.4 to 19.2.6 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/16
 
 
