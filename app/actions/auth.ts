@@ -4,8 +4,7 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { createHash, randomBytes } from "crypto";
-import nodemailer from "nodemailer";
+import crypto from "crypto";
 
 type CredentialsFormData = {
   email: string;
@@ -60,7 +59,6 @@ export async function registerUser(formData: RegisterFormData) {
       },
     });
 
-    // Sign in on the client with `signIn("credentials", …)` so the session cookie is set reliably.
     return { success: true };
   } catch (error) {
     console.error("Registration error:", error);
@@ -185,6 +183,18 @@ export async function loginWithCredentials(formData: CredentialsFormData) {
     });
     return { success: true };
   } catch (error) {
+    if (error instanceof Error) {
+      const message = error.message ?? "";
+      const causeMessage = (error as any).cause?.err?.message ?? "";
+
+      if (
+        message.includes("email_not_verified") ||
+        causeMessage.includes("email_not_verified")
+      ) {
+        return { error: "email_not_verified" };
+      }
+    }
+
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
@@ -193,6 +203,46 @@ export async function loginWithCredentials(formData: CredentialsFormData) {
           return { error: "Something went wrong" };
       }
     }
+
     throw error;
+  }
+}
+
+// ✅ Resend verification email
+export async function resendVerificationEmail(email: string) {
+  try {
+    const user = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return { error: "No account found with this email." };
+    }
+
+    if (user.emailVerified) {
+      return { error: "This email is already verified." };
+    }
+
+    // Generate a secure token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
+
+    // Store token in VerificationToken table
+    await db.verificationToken.upsert({
+      where: { identifier_token: { identifier: email, token } },
+      create: { identifier: email, token, expires },
+      update: { token, expires },
+    });
+
+    const verificationUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+
+    // TODO: send email with verificationUrl using your email provider
+    // e.g. sendEmail({ to: email, subject: "Verify your email", body: verificationUrl })
+    console.log("Verification URL:", verificationUrl); // remove when email is wired up
+
+    return { success: true };
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    return { error: "Something went wrong. Please try again." };
   }
 }
