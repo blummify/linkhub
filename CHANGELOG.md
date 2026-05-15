@@ -1,4 +1,8 @@
-## v0.1.7 (2026-05-14)\n\n## What's Changed
+## v0.1.8 (2026-05-15)\n\n## What's Changed
+* Update: disabled sign up button till all validation is checked by @Charles2205 in https://github.com/blummify/linkhub/pull/26
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.7...v0.1.8\n\n## v0.1.7 (2026-05-14)\n\n## What's Changed
 * fix: align forgot-password error handling with login page by separati… by @YawAsanteBoadu in https://github.com/blummify/linkhub/pull/23
 
 
