@@ -1,4 +1,8 @@
-## v0.1.11 (2026-05-15)\n\n## What's Changed
+## v0.1.12 (2026-05-15)\n\n## What's Changed
+* 86c9qj88x - Claim Link Modal by @oseijoel6111 in https://github.com/blummify/linkhub/pull/21
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.11...v0.1.12\n\n## v0.1.11 (2026-05-15)\n\n## What's Changed
 * refactor: simplify AddEditLinkModal by removing unused categories by @oseijoel6111 in https://github.com/blummify/linkhub/pull/22
 
 
