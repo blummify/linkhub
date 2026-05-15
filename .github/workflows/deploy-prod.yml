@@ -6,8 +6,35 @@ on:
       - main
 
 jobs:
+  ci:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test -- --run
+
+      - name: Build
+        run: npm run build
+
   deploy-prod:
     name: SSH deploy to VPS
+    needs: [ci]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,13 +47,6 @@ jobs:
           git fetch --tags
           TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
           echo "tag=${TAG:-v0.0.0}" >> $GITHUB_OUTPUT
-
-      - name: Notify deploy-ui (building)
-        run: |
-          curl -s -X POST ${{ secrets.DEPLOY_UI_URL }}/api/deployments/external \
-            -H "Authorization: Bearer ${{ secrets.DEPLOY_UI_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"repoId\":\"${{ secrets.REPO_ID }}\",\"tag\":\"${{ steps.tag.outputs.tag }}\",\"status\":\"BUILDING\"}"
 
       - name: SSH deploy
         uses: appleboy/ssh-action@v1
