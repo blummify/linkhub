@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { AccountNotFoundModal } from "@/app/components/auth/AccountNotFoundModal";
+import { UnverifiedEmailModal } from "@/app/components/auth/UnverifiedEmailModal";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -213,80 +215,20 @@ export default function LoginPage() {
     >
       <div className="space-y-6">
 
-        {/* Unverified Email Modal */}
         {showUnverifiedModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white dark:bg-surface rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-yellow-500 text-3xl">
-                  mark_email_unread
-                </span>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-on-surface">
-                  Verify Your Email
-                </h2>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-on-surface-variant">
-                Your account hasn&apos;t been verified yet. Please check your
-                inbox and click the verification link we sent to{" "}
-                <span className="font-medium text-gray-900 dark:text-on-surface">
-                  {email}
-                </span>.
-              </p>
-              <p className="text-sm text-gray-600 dark:text-on-surface-variant">
-                Didn&apos;t receive it?{" "}
-                <button
-                  className="text-primary font-medium hover:underline cursor-pointer disabled:opacity-50"
-                  onClick={handleResendVerification}
-                  disabled={isResending}
-                >
-                  {isResending ? "Sending..." : "Resend verification email"}
-                </button>
-              </p>
-              <button
-                onClick={() => setShowUnverifiedModal(false)}
-                className="w-full mt-2 py-2 px-4 rounded-lg border border-gray-300 dark:border-outline-variant text-sm font-medium text-gray-700 dark:text-on-surface hover:bg-gray-50 dark:hover:bg-surface-container-low transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
+          <UnverifiedEmailModal
+            email={email}
+            isResending={isResending}
+            onClose={() => setShowUnverifiedModal(false)}
+            onVerify={handleResendVerification}
+          />
         )}
 
-        {/* No Account Found Modal */}
         {showNoAccountModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white dark:bg-surface rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-blue-500 text-3xl">
-                  person_search
-                </span>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-on-surface">
-                  No Account Found
-                </h2>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-on-surface-variant">
-                We couldn&apos;t find an account linked to{" "}
-                <span className="font-medium text-gray-900 dark:text-on-surface">
-                  {email}
-                </span>.
-                Would you like to create one?
-              </p>
-              <Link
-                href="/signup"
-                className="flex items-center justify-center gap-2 w-full bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-                onClick={() => setShowNoAccountModal(false)}
-              >
-                <span className="material-symbols-outlined text-[18px]">person_add</span>
-                Sign up
-              </Link>
-              <button
-                onClick={() => setShowNoAccountModal(false)}
-                className="w-full py-2 px-4 rounded-lg border border-gray-300 dark:border-outline-variant text-sm font-medium text-gray-700 dark:text-on-surface hover:bg-gray-50 dark:hover:bg-surface-container-low transition-colors cursor-pointer"
-              >
-                Try a different email
-              </button>
-            </div>
-          </div>
+          <AccountNotFoundModal
+            email={email}
+            onClose={() => setShowNoAccountModal(false)}
+          />
         )}
 
         {stage === "email" && (
@@ -322,7 +264,7 @@ export default function LoginPage() {
               )}
             </div>
             <button
-              disabled={isValidating}
+              disabled={isValidating || !email.trim() || !!validateEmail(email)}
               className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               type="submit"
             >

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { registerUser, checkUserExists, sendVerificationCode } from "@/app/actions/auth";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
@@ -19,6 +19,7 @@ type FieldErrors = {
 
 export default function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
@@ -28,7 +29,7 @@ export default function SignupPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: searchParams.get("email") ?? "",
     password: "",
     confirmPassword: "",
   });
