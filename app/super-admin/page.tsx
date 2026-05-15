@@ -2,7 +2,7 @@ import SuperAdminClient from "./SuperAdminClient";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Super Admin - Creator Hub",
+  title: "Super Admin",
   description: "System-wide administration and control center.",
 };
 

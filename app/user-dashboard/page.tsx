@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Dashboard - Creator Hub",
+  title: "Dashboard",
   description: "Manage and organize your digital presence.",
 };
 
