@@ -17,6 +17,8 @@ const PUBLIC_EXACT = new Set([
   "/signup",
   "/features",
   "/pricing",
+  "/forgot-password",
+  "/reset-password"
 ]);
 
 /** Files in /public — must not require auth or `/_next/image` fetches get HTML (e.g. /login) and fail with "received null". */
