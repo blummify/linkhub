@@ -3,7 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { checkUserExists, checkEmailVerified, registerUser } from "@/app/actions/auth";
+import { toast } from "sonner";
+import {
+  checkUserExists,
+  loginWithCredentials,
+  registerUser,
+  resendVerificationEmail,
+} from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
@@ -22,10 +28,12 @@ export default function LoginPage() {
   const [isValidating, setIsValidating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
-  // Field-level errors per stage
+  const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
+  const [showNoAccountModal, setShowNoAccountModal] = useState(false);
+
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [signupErrors, setSignupErrors] = useState<SignupErrors>({
@@ -43,17 +51,16 @@ export default function LoginPage() {
     }
     setEmailError("");
     setIsValidating(true);
-    setError("");
 
     try {
       const exists = await checkUserExists(email);
       if (exists) {
         setStage("password");
       } else {
-        setStage("signup");
+        setShowNoAccountModal(true);
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsValidating(false);
     }
@@ -66,23 +73,26 @@ export default function LoginPage() {
       return;
     }
     setPasswordError("");
-    setError("");
     setIsValidating(true);
 
     try {
-      const signInResult = await signIn("credentials", { email, password, redirect: false });
-      if (signInResult?.error) {
-        setError("Invalid credentials");
+      const result = await loginWithCredentials({ email, password });
+
+      if (result?.error === "email_not_verified") {
+        setShowUnverifiedModal(true);
         return;
       }
-      const emailVerified = await checkEmailVerified(email);
-      if (!emailVerified) {
-        router.push(`/verify-email?email=${encodeURIComponent(email)}&source=login`);
+
+      if (result?.error) {
+        setPasswordError("Incorrect password. Please try again.");
       } else {
         router.push("/user-dashboard");
       }
-    } catch {
-      setError("An unexpected error occurred.");
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+        return;
+      }
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsValidating(false);
     }
@@ -90,8 +100,23 @@ export default function LoginPage() {
 
   const handleEditEmail = () => {
     setStage("email");
-    setError("");
     setPasswordError("");
+  };
+
+  const handleResendVerification = async () => {
+    setIsResending(true);
+    try {
+      const result = await resendVerificationEmail(email);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Verification email sent! Please check your inbox.");
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   const getSignupFieldError = (
@@ -105,6 +130,8 @@ export default function LoginPage() {
         return validatePassword(value);
       case "confirmPassword":
         return value === password ? "" : "Passwords do not match";
+      default:
+        return "";
     }
   };
 
@@ -129,12 +156,11 @@ export default function LoginPage() {
     e.preventDefault();
     if (!validateSignupAll()) return;
 
-    setError("");
     setIsValidating(true);
     try {
       const result = await registerUser({ name: signupName, email, password });
       if (result?.error) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
       const signInRes = await signIn("credentials", {
@@ -143,16 +169,17 @@ export default function LoginPage() {
         redirect: false,
       });
       if (signInRes?.error) {
-        setError("Account created. Please sign in with your password.");
+        toast.error("Account created. Please sign in with your password.");
         return;
       }
       setSuccess(true);
+      toast.success("Account created successfully! Redirecting...");
       setTimeout(() => {
         router.push("/user-dashboard");
         router.refresh();
       }, 1500);
     } catch {
-      setError("An unexpected error occurred.");
+      toast.error("An unexpected error occurred.");
     } finally {
       setIsValidating(false);
     }
@@ -180,16 +207,95 @@ export default function LoginPage() {
           ? "Please enter your password to continue."
           : "Start your creative journey with LinkHub."
       }
-      error={error}
       panelTitle="Connect Your World"
       panelDescription="Share all your important links in one beautiful place. Build your online presence and connect with your audience effortlessly."
       panelFeatures={panelFeatures}
     >
       <div className="space-y-6">
+
+        {/* Unverified Email Modal */}
+        {showUnverifiedModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white dark:bg-surface rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-yellow-500 text-3xl">
+                  mark_email_unread
+                </span>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-on-surface">
+                  Verify Your Email
+                </h2>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-on-surface-variant">
+                Your account hasn&apos;t been verified yet. Please check your
+                inbox and click the verification link we sent to{" "}
+                <span className="font-medium text-gray-900 dark:text-on-surface">
+                  {email}
+                </span>.
+              </p>
+              <p className="text-sm text-gray-600 dark:text-on-surface-variant">
+                Didn&apos;t receive it?{" "}
+                <button
+                  className="text-primary font-medium hover:underline cursor-pointer disabled:opacity-50"
+                  onClick={handleResendVerification}
+                  disabled={isResending}
+                >
+                  {isResending ? "Sending..." : "Resend verification email"}
+                </button>
+              </p>
+              <button
+                onClick={() => setShowUnverifiedModal(false)}
+                className="w-full mt-2 py-2 px-4 rounded-lg border border-gray-300 dark:border-outline-variant text-sm font-medium text-gray-700 dark:text-on-surface hover:bg-gray-50 dark:hover:bg-surface-container-low transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* No Account Found Modal */}
+        {showNoAccountModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white dark:bg-surface rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-blue-500 text-3xl">
+                  person_search
+                </span>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-on-surface">
+                  No Account Found
+                </h2>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-on-surface-variant">
+                We couldn&apos;t find an account linked to{" "}
+                <span className="font-medium text-gray-900 dark:text-on-surface">
+                  {email}
+                </span>.
+                Would you like to create one?
+              </p>
+              <Link
+                href="/signup"
+                className="flex items-center justify-center gap-2 w-full bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                onClick={() => setShowNoAccountModal(false)}
+              >
+                <span className="material-symbols-outlined text-[18px]">person_add</span>
+                Sign up
+              </Link>
+              <button
+                onClick={() => setShowNoAccountModal(false)}
+                className="w-full py-2 px-4 rounded-lg border border-gray-300 dark:border-outline-variant text-sm font-medium text-gray-700 dark:text-on-surface hover:bg-gray-50 dark:hover:bg-surface-container-low transition-colors cursor-pointer"
+              >
+                Try a different email
+              </button>
+            </div>
+          </div>
+        )}
+
         {stage === "email" && (
           <form onSubmit={handleContinue} className="space-y-6" noValidate>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2"
+                htmlFor="email"
+              >
                 Email Address
               </label>
               <input
@@ -285,7 +391,10 @@ export default function LoginPage() {
         {stage === "signup" && (
           <form onSubmit={handleSignup} className="space-y-5" noValidate>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="signup-name">
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2"
+                htmlFor="signup-name"
+              >
                 Full Name
               </label>
               <input
@@ -300,7 +409,8 @@ export default function LoginPage() {
                 value={signupName}
                 onChange={(e) => {
                   setSignupName(e.target.value);
-                  if (signupErrors.name) setSignupErrors((prev) => ({ ...prev, name: "" }));
+                  if (signupErrors.name)
+                    setSignupErrors((prev) => ({ ...prev, name: "" }));
                 }}
                 onBlur={() => handleSignupBlur("name", signupName)}
               />
@@ -328,7 +438,8 @@ export default function LoginPage() {
               value={password}
               onChange={(value) => {
                 setPassword(value);
-                if (signupErrors.password) setSignupErrors((prev) => ({ ...prev, password: "" }));
+                if (signupErrors.password)
+                  setSignupErrors((prev) => ({ ...prev, password: "" }));
               }}
               onBlur={() => handleSignupBlur("password", password)}
               show={showPassword}
@@ -359,7 +470,7 @@ export default function LoginPage() {
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Create Account 
+                  Create Account
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </>
               )}
