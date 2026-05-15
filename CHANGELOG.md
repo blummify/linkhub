@@ -1,4 +1,8 @@
-## v0.1.12 (2026-05-15)\n\n## What's Changed
+## v0.1.13 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump eslint from 9.39.4 to 10.3.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/18
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.12...v0.1.13\n\n## v0.1.12 (2026-05-15)\n\n## What's Changed
 * 86c9qj88x - Claim Link Modal by @oseijoel6111 in https://github.com/blummify/linkhub/pull/21
 
 
