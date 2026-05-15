@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 type PasswordFieldProps = {
   id: string;
   label: string;
@@ -38,6 +40,30 @@ export function PasswordField({
   onBlur,
 }: PasswordFieldProps) {
   const strength = showStrength && value ? getStrength(value) : null;
+
+  const [criteriaVisible, setCriteriaVisible] = useState(true);
+  const [animatingOut, setAnimatingOut] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!showStrength) return;
+    const allMet = strength?.score === 3;
+
+    if (allMet && criteriaVisible && !animatingOut) {
+      setAnimatingOut(true);
+      timerRef.current = setTimeout(() => {
+        setCriteriaVisible(false);
+        setAnimatingOut(false);
+      }, 450);
+    } else if (!allMet && !criteriaVisible) {
+      setCriteriaVisible(true);
+    }
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [strength?.score, showStrength]);
 
   return (
     <div>
@@ -83,23 +109,25 @@ export function PasswordField({
             ))}
           </div>
           <p className="text-xs text-gray-500 dark:text-on-surface-variant mb-1">{strength.label}</p>
-          <ul className="space-y-0.5">
-            {[
-              { met: value.length >= 6, label: "At least 6 characters" },
-              { met: /[A-Z]/.test(value), label: "One uppercase letter" },
-              { met: /[0-9]/.test(value), label: "One number" },
-            ].map((req) => (
-              <li
-                key={req.label}
-                className={`text-xs flex items-center gap-1 ${req.met ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-on-surface-variant"}`}
-              >
-                <span className="material-symbols-outlined text-[14px]">
-                  {req.met ? "check_circle" : "radio_button_unchecked"}
-                </span>
-                {req.label}
-              </li>
-            ))}
-          </ul>
+          {criteriaVisible && (
+            <ul className={`space-y-0.5 ${animatingOut ? "animate-criteria-out" : "animate-criteria-in"}`}>
+              {[
+                { met: value.length >= 6, label: "At least 6 characters" },
+                { met: /[A-Z]/.test(value), label: "One uppercase letter" },
+                { met: /[0-9]/.test(value), label: "One number" },
+              ].map((req) => (
+                <li
+                  key={req.label}
+                  className={`text-xs flex items-center gap-1 ${req.met ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-on-surface-variant"}`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">
+                    {req.met ? "check_circle" : "radio_button_unchecked"}
+                  </span>
+                  {req.label}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
