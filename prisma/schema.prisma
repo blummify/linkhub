@@ -57,6 +57,15 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model EmailVerification {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  code      String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
 model Link {
   id          String   @id @default(cuid())
   title       String
