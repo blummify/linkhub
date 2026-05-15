@@ -2,7 +2,7 @@ import UserAdminClient from "../../user-admin/UserAdminClient";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard - Creator Hub",
+  title: "Admin Dashboard",
   description: "System administration and management dashboard.",
 };
 
