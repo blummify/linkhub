@@ -1,4 +1,28 @@
-## v0.1.10 (2026-05-15)\n\n## What's Changed
+## v0.1.16 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump react from 19.2.4 to 19.2.6 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/16
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.15...v0.1.16\n\n## v0.1.15 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump @tailwindcss/postcss from 4.2.4 to 4.3.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/15
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.14...v0.1.15\n\n## v0.1.14 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump @types/bcryptjs from 2.4.6 to 3.0.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/14
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.13...v0.1.14\n\n## v0.1.13 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump eslint from 9.39.4 to 10.3.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/18
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.12...v0.1.13\n\n## v0.1.12 (2026-05-15)\n\n## What's Changed
+* 86c9qj88x - Claim Link Modal by @oseijoel6111 in https://github.com/blummify/linkhub/pull/21
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.11...v0.1.12\n\n## v0.1.11 (2026-05-15)\n\n## What's Changed
+* refactor: simplify AddEditLinkModal by removing unused categories by @oseijoel6111 in https://github.com/blummify/linkhub/pull/22
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.10...v0.1.11\n\n## v0.1.10 (2026-05-15)\n\n## What's Changed
 * 86c9gx24d by @Azizjhnsn in https://github.com/blummify/linkhub/pull/24
 
 ## New Contributors
