@@ -29,7 +29,7 @@ export default function UserAdminClient() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [appearance, setAppearance] = useState<AppearanceState>({
-    profileTitle: "@oseijoel6111",
+    profileTitle: "",
     profileBio: "Connecting with your community.",
     profileLayout: "classic",
     themeId: "custom",
@@ -50,6 +50,9 @@ export default function UserAdminClient() {
     async function loadData() {
       try {
         const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
+        
+        console.log("Profile data:", dbProfile); // ← debugging line
+
         const fromDb = dbLinks.map((l: LinkRow) => ({
           id: l.id,
           title: l.title,
@@ -62,7 +65,7 @@ export default function UserAdminClient() {
         if (dbProfile) {
           setAppearance(prev => ({
             ...prev,
-            profileTitle: `@${dbProfile.userId}`, // Basic implementation
+            profileTitle: dbProfile.user?.name || dbProfile.user?.email || "My Profile",
             profileBio: dbProfile.bio || prev.profileBio,
             profileLayout: dbProfile.layout || prev.profileLayout,
             themeId: dbProfile.themeId || prev.themeId,
@@ -227,7 +230,6 @@ export default function UserAdminClient() {
                 </div>
               </div>
 
-              {/* Right Column - Preview Panel */}
               <div className="w-full lg:w-[460px] xl:w-[540px] bg-surface-container-low/50 border-t lg:border-t-0 lg:border-l border-outline-variant/30 relative py-12 lg:py-8 px-4 sm:px-6 flex flex-col items-center">
                 <div className="sticky top-24 lg:top-8 w-full flex flex-col items-center animate-fade-in-up delay-100">
                   <LinksPreviewPanel>
