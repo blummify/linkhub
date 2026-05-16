@@ -68,18 +68,19 @@ export async function registerUser(formData: RegisterFormData) {
 }
 
 async function createAndSendCode(email: string): Promise<{ success: true } | { error: string }> {
+  const user = await db.user.findUnique({ where: { email }, select: { id: true, name: true } });
+  if (!user) return { error: "No account found for this email." };
+
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const hashed = createHash("sha256").update(code).digest("hex");
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-  await db.emailVerification.deleteMany({ where: { email } });
-  await db.emailVerification.create({ data: { email, code: hashed, expiresAt } });
-
-  const user = await db.user.findUnique({ where: { email }, select: { name: true } });
+  await db.emailVerification.deleteMany({ where: { userId: user.id } });
+  await db.emailVerification.create({ data: { userId: user.id, code: hashed, expiresAt } });
 
   console.log("[postly] sending verification email", {
     to: email,
-    name: user?.name ?? "there",
+    name: user.name ?? "there",
     baseUrl: process.env.POSTLY_BASE_URL,
     hasApiKey: !!process.env.POSTLY_API_KEY,
   });
@@ -117,27 +118,30 @@ export async function verifyEmailCode(
   inputCode: string
 ): Promise<{ success: true; autoLoginToken: string } | { error: string }> {
   try {
-    const record = await db.emailVerification.findUnique({ where: { email } });
+    const user = await db.user.findUnique({ where: { email }, select: { id: true } });
+    if (!user) return { error: "No verification code found. Request a new one." };
+
+    const record = await db.emailVerification.findUnique({ where: { userId: user.id } });
     if (!record) return { error: "No verification code found. Request a new one." };
 
     if (record.expiresAt < new Date()) {
-      await db.emailVerification.delete({ where: { email } });
+      await db.emailVerification.delete({ where: { userId: user.id } });
       return { error: "Code expired. Please request a new one." };
     }
 
     if (createHash("sha256").update(inputCode).digest("hex") !== record.code) {
       const newAttempts = record.attempts + 1;
       if (newAttempts >= 5) {
-        await db.emailVerification.delete({ where: { email } });
+        await db.emailVerification.delete({ where: { userId: user.id } });
         return { error: "Too many incorrect attempts. Please request a new code." };
       }
-      await db.emailVerification.update({ where: { email }, data: { attempts: newAttempts } });
+      await db.emailVerification.update({ where: { userId: user.id }, data: { attempts: newAttempts } });
       const left = 5 - newAttempts;
       return { error: `Invalid code. ${left} attempt${left === 1 ? "" : "s"} remaining.` };
     }
 
-    await db.user.update({ where: { email }, data: { emailVerified: new Date() } });
-    await db.emailVerification.delete({ where: { email } });
+    await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
+    await db.emailVerification.delete({ where: { userId: user.id } });
 
     const autoLoginToken = randomBytes(32).toString("hex");
     await db.verificationToken.create({
@@ -152,10 +156,13 @@ export async function verifyEmailCode(
 
 export async function resendVerificationCode(email: string): Promise<{ success: true } | { error: string }> {
   try {
-    const existing = await db.emailVerification.findUnique({ where: { email } });
-    if (existing) {
-      const elapsed = (Date.now() - existing.createdAt.getTime()) / 1000;
-      if (elapsed < 60) return { error: `Please wait ${Math.ceil(60 - elapsed)}s before resending.` };
+    const user = await db.user.findUnique({ where: { email }, select: { id: true } });
+    if (user) {
+      const existing = await db.emailVerification.findUnique({ where: { userId: user.id } });
+      if (existing) {
+        const elapsed = (Date.now() - existing.createdAt.getTime()) / 1000;
+        if (elapsed < 60) return { error: `Please wait ${Math.ceil(60 - elapsed)}s before resending.` };
+      }
     }
     return await createAndSendCode(email);
   } catch {

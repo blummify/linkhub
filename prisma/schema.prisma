@@ -7,19 +7,20 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  passwordHash  String?
-  image         String?
-  role          String    @default("USER") // USER, ADMIN, SUPERADMIN
-  accounts      Account[]
-  sessions      Session[]
-  links         Link[]
-  profile       Profile?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                String             @id @default(cuid())
+  name              String?
+  email             String?            @unique
+  emailVerified     DateTime?
+  passwordHash      String?
+  image             String?
+  role              String             @default("USER") // USER, ADMIN, SUPERADMIN
+  accounts          Account[]
+  sessions          Session[]
+  links             Link[]
+  profile           Profile?
+  emailVerification EmailVerification?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model Account {
@@ -59,11 +60,12 @@ model VerificationToken {
 
 model EmailVerification {
   id        String   @id @default(cuid())
-  email     String   @unique
+  userId    String   @unique
   code      String
   expiresAt DateTime
   attempts  Int      @default(0)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Link {
