@@ -222,7 +222,7 @@ export default function VerifyEmailClient() {
                 aria-label={`Digit ${i + 1} of 6`}
                 onChange={(e) => handleDigitChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
-                className={`flex-1 min-w-0 h-12 sm:h-16 text-center text-xl sm:text-2xl font-black border-2 rounded-xl outline-none transition-all duration-150 ${
+                className={`flex-1 min-w-0 h-16 text-center text-2xl font-black border-2 rounded-xl outline-none transition-all duration-150 ${
                   digit
                     ? "border-primary bg-primary/10 text-primary dark:bg-primary/15"
                     : "border-gray-200 dark:border-outline-variant/50 bg-gray-50 dark:bg-surface-container-low text-on-surface"
