@@ -207,13 +207,27 @@ export default function SignupPage() {
               )}
             </div>
             {fieldErrors.email && (
-              <p className="mt-1 text-xs text-red-500 flex items-center gap-1 flex-wrap">
-                <span className="material-symbols-outlined text-[14px]">error</span>
-                {fieldErrors.email}
-                {fieldErrors.email.includes("already exists") && (
-                  <Link href="/login" className="underline font-semibold">Log in instead</Link>
-                )}
-              </p>
+              fieldErrors.email.includes("already exists") ? (
+                <div className="mt-2 p-3 bg-primary/5 border border-primary/20 rounded-lg flex items-start gap-3">
+                  <span className="material-symbols-outlined text-primary text-[18px] mt-0.5 shrink-0">person</span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-on-surface">Account already exists</p>
+                    <p className="text-xs text-gray-500 dark:text-on-surface-variant mt-0.5">This email is linked to an existing account.</p>
+                    <Link
+                      href="/login"
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline mt-1.5"
+                    >
+                      Log in instead
+                      <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {fieldErrors.email}
+                </p>
+              )
             )}
           </div>
 
