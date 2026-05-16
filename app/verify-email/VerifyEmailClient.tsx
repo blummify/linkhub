@@ -210,7 +210,7 @@ export default function VerifyEmailClient() {
         onBackClick={() => setShowExitModal(true)}
       >
         <div className="space-y-7">
-          <div className="flex gap-2" onPaste={handlePaste}>
+          <div className="flex gap-1.5 sm:gap-2 w-full" onPaste={handlePaste}>
             {digits.map((digit: string, i: number) => (
               <input
                 key={i}
@@ -222,7 +222,7 @@ export default function VerifyEmailClient() {
                 aria-label={`Digit ${i + 1} of 6`}
                 onChange={(e) => handleDigitChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
-                className={`w-16 h-16 text-center text-2xl font-black border-2 rounded-xl outline-none transition-all duration-150 ${
+                className={`flex-1 min-w-0 h-12 sm:h-16 text-center text-xl sm:text-2xl font-black border-2 rounded-xl outline-none transition-all duration-150 ${
                   digit
                     ? "border-primary bg-primary/10 text-primary dark:bg-primary/15"
                     : "border-gray-200 dark:border-outline-variant/50 bg-gray-50 dark:bg-surface-container-low text-on-surface"
