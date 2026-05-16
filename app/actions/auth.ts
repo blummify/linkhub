@@ -87,7 +87,7 @@ async function createAndSendCode(email: string): Promise<{ success: true } | { e
 
   try {
     const result = await postly.send({
-      template: "linkhub-verification",
+      template: process.env.POSTLY_TEMPLATE_VERIFICATION!,
       to: [email],
       data: {
         name: user?.name ?? "there",
