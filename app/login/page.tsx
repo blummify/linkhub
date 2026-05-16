@@ -283,18 +283,20 @@ export default function LoginPage() {
         {stage === "password" && (
           <form onSubmit={handleLogin} className="space-y-6" noValidate>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
-                Email Address
-              </label>
-              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-surface-container-low border border-gray-300 dark:border-outline-variant rounded-lg">
-                <span className="text-gray-900 dark:text-on-surface">{email}</span>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-on-surface">
+                  Email Address
+                </label>
                 <button
                   type="button"
                   onClick={handleEditEmail}
-                  className="text-primary hover:text-primary/80 cursor-pointer"
+                  className="text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
-                  <span className="material-symbols-outlined">edit</span>
+                  Change email
                 </button>
+              </div>
+              <div className="px-4 py-3 bg-gray-50 dark:bg-surface-container-low border border-gray-300 dark:border-outline-variant rounded-lg">
+                <span className="text-gray-900 dark:text-on-surface">{email}</span>
               </div>
             </div>
             <div>
