@@ -79,7 +79,7 @@ export default function Home() {
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg1jSLuMCVc6TaFQCGlygspePy35lUZtxhyShDJDAav6xALtSK166JAWvEHYvufAHi2SaheMbkXZX1uBv-uIABVqsXTPv6vrvYvBe09hbtJ8tIDgj5mKZNPPBTc7NtXX5TYpc_ntBeeANO0KFcYgK5A7m2wlB6k3ji4eALe4h7ihfUJdNsP7CoYstmMFyvGMtXHaixRr67dS2bUFXAsbjhwutlalFMJemR4s6qT-TLttKzYdU5aY-7S_yQxJju__YWdCYLBmRm6F8G"
                 width={1200}
                 height={800}
-                loading="lazy"
+                priority
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
               <div className="absolute -bottom-6 -right-6 bg-surface-bright p-6 rounded-2xl shadow-2xl max-w-[240px] group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-500">
