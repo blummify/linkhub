@@ -23,7 +23,7 @@ export function PublicNav({ activePage }: PublicNavProps) {
               alt="LinkHub logo"
               width={256}
               height={256}
-              loading="eager"
+              priority
               className="h-auto w-32 max-w-full object-contain"
             />
           </span>
