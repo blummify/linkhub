@@ -232,7 +232,7 @@ export default function LoginPage() {
         )}
 
         {stage === "email" && (
-          <form onSubmit={handleContinue} className="space-y-6" noValidate>
+          <form onSubmit={handleContinue} className="space-y-6 animate-stage-in" noValidate>
             <div>
               <label
                 className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2"
@@ -281,7 +281,7 @@ export default function LoginPage() {
         )}
 
         {stage === "password" && (
-          <form onSubmit={handleLogin} className="space-y-6" noValidate>
+          <form onSubmit={handleLogin} className="space-y-6 animate-stage-in" noValidate>
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-on-surface">
@@ -295,8 +295,9 @@ export default function LoginPage() {
                   Change email
                 </button>
               </div>
-              <div className="px-4 py-3 bg-gray-50 dark:bg-surface-container-low border border-gray-300 dark:border-outline-variant rounded-lg">
-                <span className="text-gray-900 dark:text-on-surface">{email}</span>
+              <div className="px-4 py-3 bg-gray-50 dark:bg-surface-container-low border border-emerald-200 dark:border-emerald-800/50 rounded-lg flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-[18px] text-emerald-500 shrink-0">check_circle</span>
+                <span className="text-sm text-gray-900 dark:text-on-surface truncate">{email}</span>
               </div>
             </div>
             <div>
@@ -333,7 +334,7 @@ export default function LoginPage() {
         )}
 
         {stage === "signup" && (
-          <form onSubmit={handleSignup} className="space-y-5" noValidate>
+          <form onSubmit={handleSignup} className="space-y-5 animate-stage-in" noValidate>
             <div>
               <label
                 className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2"
