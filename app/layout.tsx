@@ -52,8 +52,8 @@ export default function RootLayout({
       className={`${manrope.variable} ${inter.variable} antialiased scroll-smooth`}
     >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* fonts.gstatic.com hosts the Material Symbols woff2 — prefetch the DNS early */}
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         <script
           dangerouslySetInnerHTML={{
             __html:
