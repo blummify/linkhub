@@ -9,7 +9,6 @@ import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
 import { validateEmail, validatePassword } from "@/lib/validation/auth.schema";
-import { GoogleOneTap } from "@/app/components/auth/GoogleOneTap";
 
 type FieldErrors = {
   name: string;
@@ -295,11 +294,8 @@ function SignupPageContent() {
 
 export default function SignupPage() {
   return (
-    <>
-      <GoogleOneTap />
-      <Suspense>
-        <SignupPageContent />
-      </Suspense>
-    </>
+    <Suspense>
+      <SignupPageContent />
+    </Suspense>
   );
 }

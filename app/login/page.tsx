@@ -15,7 +15,6 @@ import {
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
-import { GoogleOneTap } from "@/app/components/auth/GoogleOneTap";
 import { PasswordField } from "@/app/components/auth/PasswordField";
 import { validateEmail, validatePassword } from "@/lib/validation/auth.schema";
 
@@ -196,7 +195,6 @@ export default function LoginPage() {
 
   return (
     <>
-    <GoogleOneTap />
     <AuthShell
       heading={
         stage === "email"
