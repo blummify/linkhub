@@ -70,26 +70,25 @@ export default function VerifyEmailClient() {
 
   // Mount: mark mounted, clean up session flags, restore cooldown
   useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => setMounted(true));
     sessionStorage.removeItem("lh_verify_resend");
 
     const until = sessionStorage.getItem("lh_cooldown_until");
     if (until) {
       const remaining = Math.ceil((parseInt(until) - Date.now()) / 1000);
-      if (remaining > 0) startCooldown(remaining);
+      if (remaining > 0) queueMicrotask(() => startCooldown(remaining));
       else sessionStorage.removeItem("lh_cooldown_until");
     }
 
     return () => {
       if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Signup path: code already sent — lock resend unless cooldown was already restored
   useEffect(() => {
     if (fromSignup && !sessionStorage.getItem("lh_cooldown_until")) {
-      startCooldown(60);
+      queueMicrotask(() => startCooldown(60));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

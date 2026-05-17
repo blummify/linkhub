@@ -25,7 +25,6 @@ export default function SignupPage() {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -39,15 +38,6 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
   });
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
-
-  const isFormComplete =
-    !!formData.name.trim() &&
-    !!formData.email &&
-    !!formData.password &&
-    !!formData.confirmPassword &&
-    agreedToTerms;
-
   const getFieldError = (field: keyof FieldErrors, value: string): string => {
     switch (field) {
       case "name":
@@ -266,7 +256,7 @@ export default function SignupPage() {
           </div>
 
           <button
-            disabled={isLoading || success || !isFormFilled}
+            disabled={isLoading || !isFormFilled}
             className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             type="submit"
           >
