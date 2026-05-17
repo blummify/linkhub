@@ -1,9 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { AccountNotFoundModal } from "@/app/components/auth/AccountNotFoundModal";
+import { UnverifiedEmailModal } from "@/app/components/auth/UnverifiedEmailModal";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { checkUserExists, loginWithCredentials, registerUser } from "@/app/actions/auth";
+import { toast } from "sonner";
+import {
+  checkUserExists,
+  loginWithCredentials,
+  registerUser,
+  resendVerificationEmail,
+} from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
@@ -22,10 +30,12 @@ export default function LoginPage() {
   const [isValidating, setIsValidating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
-  // Field-level errors per stage
+  const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
+  const [showNoAccountModal, setShowNoAccountModal] = useState(false);
+
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [signupErrors, setSignupErrors] = useState<SignupErrors>({
@@ -43,17 +53,16 @@ export default function LoginPage() {
     }
     setEmailError("");
     setIsValidating(true);
-    setError("");
 
     try {
       const exists = await checkUserExists(email);
       if (exists) {
         setStage("password");
       } else {
-        setStage("signup");
+        setShowNoAccountModal(true);
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsValidating(false);
     }
@@ -66,18 +75,26 @@ export default function LoginPage() {
       return;
     }
     setPasswordError("");
-    setError("");
     setIsValidating(true);
 
     try {
       const result = await loginWithCredentials({ email, password });
+
+      if (result?.error === "email_not_verified") {
+        setShowUnverifiedModal(true);
+        return;
+      }
+
       if (result?.error) {
-        setError(result.error);
+        setPasswordError("Incorrect password. Please try again.");
       } else {
         router.push("/user-dashboard");
       }
-    } catch {
-      setError("An unexpected error occurred.");
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+        return;
+      }
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsValidating(false);
     }
@@ -85,8 +102,23 @@ export default function LoginPage() {
 
   const handleEditEmail = () => {
     setStage("email");
-    setError("");
     setPasswordError("");
+  };
+
+  const handleResendVerification = async () => {
+    setIsResending(true);
+    try {
+      const result = await resendVerificationEmail(email);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Verification email sent! Please check your inbox.");
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   const getSignupFieldError = (
@@ -100,6 +132,8 @@ export default function LoginPage() {
         return validatePassword(value);
       case "confirmPassword":
         return value === password ? "" : "Passwords do not match";
+      default:
+        return "";
     }
   };
 
@@ -124,12 +158,11 @@ export default function LoginPage() {
     e.preventDefault();
     if (!validateSignupAll()) return;
 
-    setError("");
     setIsValidating(true);
     try {
       const result = await registerUser({ name: signupName, email, password });
       if (result?.error) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
       const signInRes = await signIn("credentials", {
@@ -138,16 +171,17 @@ export default function LoginPage() {
         redirect: false,
       });
       if (signInRes?.error) {
-        setError("Account created. Please sign in with your password.");
+        toast.error("Account created. Please sign in with your password.");
         return;
       }
       setSuccess(true);
+      toast.success("Account created successfully! Redirecting...");
       setTimeout(() => {
         router.push("/user-dashboard");
         router.refresh();
       }, 1500);
     } catch {
-      setError("An unexpected error occurred.");
+      toast.error("An unexpected error occurred.");
     } finally {
       setIsValidating(false);
     }
@@ -175,16 +209,35 @@ export default function LoginPage() {
           ? "Please enter your password to continue."
           : "Start your creative journey with LinkHub."
       }
-      error={error}
       panelTitle="Connect Your World"
       panelDescription="Share all your important links in one beautiful place. Build your online presence and connect with your audience effortlessly."
       panelFeatures={panelFeatures}
     >
       <div className="space-y-6">
+
+        {showUnverifiedModal && (
+          <UnverifiedEmailModal
+            email={email}
+            isResending={isResending}
+            onClose={() => setShowUnverifiedModal(false)}
+            onVerify={handleResendVerification}
+          />
+        )}
+
+        {showNoAccountModal && (
+          <AccountNotFoundModal
+            email={email}
+            onClose={() => setShowNoAccountModal(false)}
+          />
+        )}
+
         {stage === "email" && (
-          <form onSubmit={handleContinue} className="space-y-6" noValidate>
+          <form onSubmit={handleContinue} className="space-y-6 animate-stage-in" noValidate>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="email">
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2"
+                htmlFor="email"
+              >
                 Email Address
               </label>
               <input
@@ -211,7 +264,7 @@ export default function LoginPage() {
               )}
             </div>
             <button
-              disabled={isValidating}
+              disabled={isValidating || !email.trim() || !!validateEmail(email)}
               className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               type="submit"
             >
@@ -228,20 +281,23 @@ export default function LoginPage() {
         )}
 
         {stage === "password" && (
-          <form onSubmit={handleLogin} className="space-y-6" noValidate>
+          <form onSubmit={handleLogin} className="space-y-6 animate-stage-in" noValidate>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2">
-                Email Address
-              </label>
-              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-surface-container-low border border-gray-300 dark:border-outline-variant rounded-lg">
-                <span className="text-gray-900 dark:text-on-surface">{email}</span>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-on-surface">
+                  Email Address
+                </label>
                 <button
                   type="button"
                   onClick={handleEditEmail}
-                  className="text-primary hover:text-primary/80 cursor-pointer"
+                  className="text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
-                  <span className="material-symbols-outlined">edit</span>
+                  Change email
                 </button>
+              </div>
+              <div className="px-4 py-3 bg-gray-50 dark:bg-surface-container-low border border-emerald-200 dark:border-emerald-800/50 rounded-lg flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-[18px] text-emerald-500 shrink-0">check_circle</span>
+                <span className="text-sm text-gray-900 dark:text-on-surface truncate">{email}</span>
               </div>
             </div>
             <div>
@@ -278,9 +334,12 @@ export default function LoginPage() {
         )}
 
         {stage === "signup" && (
-          <form onSubmit={handleSignup} className="space-y-5" noValidate>
+          <form onSubmit={handleSignup} className="space-y-5 animate-stage-in" noValidate>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="signup-name">
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2"
+                htmlFor="signup-name"
+              >
                 Full Name
               </label>
               <input
@@ -295,7 +354,8 @@ export default function LoginPage() {
                 value={signupName}
                 onChange={(e) => {
                   setSignupName(e.target.value);
-                  if (signupErrors.name) setSignupErrors((prev) => ({ ...prev, name: "" }));
+                  if (signupErrors.name)
+                    setSignupErrors((prev) => ({ ...prev, name: "" }));
                 }}
                 onBlur={() => handleSignupBlur("name", signupName)}
               />
@@ -323,7 +383,8 @@ export default function LoginPage() {
               value={password}
               onChange={(value) => {
                 setPassword(value);
-                if (signupErrors.password) setSignupErrors((prev) => ({ ...prev, password: "" }));
+                if (signupErrors.password)
+                  setSignupErrors((prev) => ({ ...prev, password: "" }));
               }}
               onBlur={() => handleSignupBlur("password", password)}
               show={showPassword}
@@ -354,7 +415,7 @@ export default function LoginPage() {
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Create Account 
+                  Create Account
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </>
               )}

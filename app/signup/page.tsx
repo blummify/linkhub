@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { registerUser, checkUserExists } from "@/app/actions/auth";
+import { registerUser, checkUserExists, sendVerificationCode } from "@/app/actions/auth";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
@@ -19,15 +19,17 @@ type FieldErrors = {
 
 export default function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: searchParams.get("email") ?? "",
     password: "",
     confirmPassword: "",
   });
@@ -37,6 +39,14 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
   });
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const isFormComplete =
+    !!formData.name.trim() &&
+    !!formData.email &&
+    !!formData.password &&
+    !!formData.confirmPassword &&
+    agreedToTerms;
 
   const getFieldError = (field: keyof FieldErrors, value: string): string => {
     switch (field) {
@@ -115,27 +125,26 @@ export default function SignupPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        const signInRes = await signIn("credentials", {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
-        });
-        if (signInRes?.error) {
-          setError("Account created. Please sign in with your email and password.");
-          return;
-        }
-        setSuccess(true);
-        setTimeout(() => {
-          router.push("/user-dashboard");
-          router.refresh();
-        }, 1500);
+        const verifyUrl = `/verify-email?email=${encodeURIComponent(formData.email)}`;
+        // Fire email in background — user goes to verify page immediately
+        // If delivery fails they can resend from that page
+        sendVerificationCode(formData.email).catch(() => {});
+        router.push(verifyUrl);
       }
     } catch {
-      setError("An unexpected error occurred. Please try again.");
+      setError("Something went wrong while creating your account. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const isFormFilled =
+    formData.name.trim() !== "" &&
+    formData.email !== "" &&
+    formData.password !== "" &&
+    formData.confirmPassword !== "" &&
+    formData.confirmPassword === formData.password &&
+    termsAccepted;
 
   const panelFeatures = [
     { icon: "rocket_launch", title: "Quick Setup", description: "Get started in minutes" },
@@ -241,10 +250,12 @@ export default function SignupPage() {
 
           <div className="flex items-center">
             <input
-              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
               id="terms"
               type="checkbox"
-              
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+
             />
             <label className="ml-2 text-sm text-gray-600 dark:text-on-surface-variant" htmlFor="terms">
               I agree to the{" "}
@@ -255,12 +266,12 @@ export default function SignupPage() {
           </div>
 
           <button
-            disabled={isLoading || success}
+            disabled={isLoading || success || !isFormFilled}
             className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             type="submit"
           >
             {isLoading ? "Creating Account..." : "Create Account"}
-            {!isLoading && !success && <span className="material-symbols-outlined">arrow_forward</span>}
+            {!isLoading && <span className="material-symbols-outlined">arrow_forward</span>}
           </button>
         </form>
 

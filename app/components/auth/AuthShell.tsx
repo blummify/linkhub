@@ -12,12 +12,13 @@ type AuthFeature = {
 
 type AuthShellProps = {
   heading: string;
-  subheading: string;
+  subheading: ReactNode;
   error?: string;
   children: ReactNode;
   panelTitle: string;
   panelDescription: string;
   panelFeatures: AuthFeature[];
+  onBackClick?: () => void;
 };
 
 export function AuthShell({
@@ -28,20 +29,25 @@ export function AuthShell({
   panelTitle,
   panelDescription,
   panelFeatures,
+  onBackClick,
 }: AuthShellProps) {
+  const backClass = "group inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-primary transition-colors mb-8";
+
   return (
-    <div className="h-screen bg-white dark:bg-surface flex overflow-hidden">
-      <div className="w-full lg:w-1/2 flex flex-col px-8 sm:px-12 lg:px-16 xl:px-20 py-8 overflow-y-auto">
+    <div className="min-h-screen lg:h-screen bg-white dark:bg-surface flex overflow-x-hidden">
+      <div className="w-full lg:w-1/2 flex flex-col px-5 sm:px-10 lg:px-16 xl:px-20 py-6 sm:py-8 overflow-y-auto">
         <div className="max-w-md mx-auto w-full">
-          <Link
-            href="/"
-            className="group inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-primary transition-colors mb-8"
-          >
-            <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">
-              arrow_back
-            </span>
-            Back to home
-          </Link>
+          {onBackClick ? (
+            <button onClick={onBackClick} className={backClass}>
+              <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+              Back to home
+            </button>
+          ) : (
+            <Link href="/" className={backClass}>
+              <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+              Back to home
+            </Link>
+          )}
 
           <div className="mb-8">
             <Link href="/" className="inline-block hover:opacity-80 transition-opacity">

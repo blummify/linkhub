@@ -9,7 +9,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(db),
   events: {
-    /** OAuth (Google) creates `User` via the adapter; ensure a `Profile` row exists. */
     async createUser({ user }) {
       const id = user.id;
       if (!id) return;
@@ -17,6 +16,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         where: { userId: id },
         create: { userId: id },
         update: {},
+      });
+      await db.user.update({
+        where: { id },
+        data: { emailVerified: new Date() },
       });
     },
   },
@@ -27,22 +30,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        autoLoginToken: { label: "Auto Login Token", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email) return null;
+        const email = credentials.email as string;
 
-        const user = await db.user.findUnique({
-          where: { email: credentials.email as string },
-        });
+        if (credentials.autoLoginToken) {
+          const record = await db.verificationToken.findFirst({
+            where: { identifier: `auto:${email}` },
+          });
+          if (!record || record.expires < new Date()) return null;
+          if (record.token !== (credentials.autoLoginToken as string)) return null;
+          await db.verificationToken.deleteMany({ where: { identifier: `auto:${email}` } });
+          const verified = await db.user.findUnique({ where: { email } });
+          if (!verified) return null;
+          return { id: verified.id, email: verified.email, name: verified.name, role: verified.role, emailVerified: verified.emailVerified };
+        }
 
+        if (!credentials?.password) return null;
+        const user = await db.user.findUnique({ where: { email } });
         if (!user || !user.passwordHash) return null;
-
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        );
-
+        const isValid = await bcrypt.compare(credentials.password as string, user.passwordHash);
         if (!isValid) return null;
+
+        // ✅ Block unverified users
+        if (!user.emailVerified) {
+          throw new Error("email_not_verified");
+        }
 
         return {
           id: user.id,

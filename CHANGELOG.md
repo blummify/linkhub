@@ -1,4 +1,50 @@
-## v0.1.6 (2026-05-14)\n\n## What's Changed
+## v0.1.22 (2026-05-16)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.21...v0.1.22\n\n## v0.1.21 (2026-05-16)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.20...v0.1.21\n\n## v0.1.20 (2026-05-15)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.19...v0.1.20\n\n## v0.1.19 (2026-05-15)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.18...v0.1.19\n\n## v0.1.18 (2026-05-15)\n\n**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.17...v0.1.18\n\n## v0.1.17 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump @types/node from 20.19.37 to 25.8.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/17
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.16...v0.1.17\n\n## v0.1.16 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump react from 19.2.4 to 19.2.6 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/16
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.15...v0.1.16\n\n## v0.1.15 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump @tailwindcss/postcss from 4.2.4 to 4.3.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/15
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.14...v0.1.15\n\n## v0.1.14 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump @types/bcryptjs from 2.4.6 to 3.0.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/14
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.13...v0.1.14\n\n## v0.1.13 (2026-05-15)\n\n## What's Changed
+* Upgrade: Bump eslint from 9.39.4 to 10.3.0 by @dependabot[bot] in https://github.com/blummify/linkhub/pull/18
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.12...v0.1.13\n\n## v0.1.12 (2026-05-15)\n\n## What's Changed
+* 86c9qj88x - Claim Link Modal by @oseijoel6111 in https://github.com/blummify/linkhub/pull/21
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.11...v0.1.12\n\n## v0.1.11 (2026-05-15)\n\n## What's Changed
+* refactor: simplify AddEditLinkModal by removing unused categories by @oseijoel6111 in https://github.com/blummify/linkhub/pull/22
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.10...v0.1.11\n\n## v0.1.10 (2026-05-15)\n\n## What's Changed
+* 86c9gx24d by @Azizjhnsn in https://github.com/blummify/linkhub/pull/24
+
+## New Contributors
+* @Azizjhnsn made their first contribution in https://github.com/blummify/linkhub/pull/24
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.9...v0.1.10\n\n## v0.1.9 (2026-05-15)\n\n## What's Changed
+* Feat/login auth workflow by @Morrison-web in https://github.com/blummify/linkhub/pull/25
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.8...v0.1.9\n\n## v0.1.8 (2026-05-15)\n\n## What's Changed
+* Update: disabled sign up button till all validation is checked by @Charles2205 in https://github.com/blummify/linkhub/pull/26
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.7...v0.1.8\n\n## v0.1.7 (2026-05-14)\n\n## What's Changed
+* fix: align forgot-password error handling with login page by separati… by @YawAsanteBoadu in https://github.com/blummify/linkhub/pull/23
+
+
+**Full Changelog**: https://github.com/blummify/linkhub/compare/v0.1.6...v0.1.7\n\n## v0.1.6 (2026-05-14)\n\n## What's Changed
 * 86c9fc0qh by @YawAsanteBoadu in https://github.com/blummify/linkhub/pull/20
 
 

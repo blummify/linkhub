@@ -79,13 +79,13 @@ export async function getProfile() {
   try {
     let profile = await db.profile.findUnique({
       where: { userId: session.user.id },
+      include: { user: true }, // ← pulls in name, email, image
     });
 
     if (!profile) {
       profile = await db.profile.create({
-        data: {
-          userId: session.user.id,
-        },
+        data: { userId: session.user.id },
+        include: { user: true }, // ← same here
       });
     }
 
@@ -93,5 +93,50 @@ export async function getProfile() {
   } catch (error) {
     console.error("Error fetching profile:", error);
     return null;
+  }
+}
+
+const HANDLE_REGEX = /^[a-zA-Z0-9_]{3,24}$/;
+
+export async function claimHandle(handle: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  if (!HANDLE_REGEX.test(handle)) {
+    return { error: "Handle must be 3–24 characters: letters, numbers, underscores only." };
+  }
+
+  try {
+    const taken = await db.profile.findFirst({ where: { handle } });
+    if (taken && taken.userId !== session.user.id) {
+      return { error: "That handle is already taken. Try another." };
+    }
+
+    await db.profile.update({
+      where: { userId: session.user.id },
+      data: { handle, hasClaimedHandle: true },
+    });
+
+    revalidatePath("/user-dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Error claiming handle:", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+}
+
+export async function dismissHandleClaim() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    await db.profile.update({
+      where: { userId: session.user.id },
+      data: { hasClaimedHandle: true },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error dismissing handle claim:", error);
+    return { error: "Something went wrong." };
   }
 }

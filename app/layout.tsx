@@ -1,42 +1,24 @@
 import type { Metadata } from "next";
-import { Inter, Manrope, Open_Sans, Outfit, Playfair_Display, Roboto } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { ThemeToggle } from "./ThemeToggle";
+import { Toaster } from "sonner";
+import { SidebarProvider } from "./components/SidebarContext";
+import AuthSessionProvider from "./components/AuthSessionProvider";
+import { MaterialSymbols } from "./components/MaterialSymbols";
 
 const manrope = Manrope({
   variable: "--next-font-manrope",
   subsets: ["latin"],
   weight: ["400", "600", "700", "800"],
+  display: "swap",
 });
 
 const inter = Inter({
   variable: "--next-font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "700", "800"],
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
-});
-
-const roboto = Roboto({
-  variable: "--font-roboto",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-});
-
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -57,9 +39,6 @@ export const metadata: Metadata = {
   },
 };
 
-import { SidebarProvider } from "./components/SidebarContext";
-import AuthSessionProvider from "./components/AuthSessionProvider";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -70,17 +49,11 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${inter.variable} ${playfair.variable} ${outfit.variable} ${roboto.variable} ${openSans.variable} antialiased scroll-smooth`}
+      className={`${manrope.variable} ${inter.variable} antialiased scroll-smooth`}
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* Google Material Symbols variable font — not available via next/font; load as stylesheet. */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-        />
         <script
           dangerouslySetInnerHTML={{
             __html:
@@ -89,11 +62,13 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-surface font-body text-on-surface antialiased">
+        <MaterialSymbols />
         <AuthSessionProvider>
           <SidebarProvider>
             {children}
           </SidebarProvider>
         </AuthSessionProvider>
+        <Toaster position="top-center" richColors />
         <ThemeToggle />
       </body>
     </html>

@@ -7,6 +7,7 @@ const POST_SIGN_IN_DEFAULT = "/user-dashboard";
 type SessionUser = NonNullable<DefaultSession["user"]> & {
   id: string;
   role: string;
+  emailVerified?: Date | null;
 };
 
 export default {
@@ -26,14 +27,16 @@ export default {
         user.name = token.name ?? null;
         user.email = token.email ?? null;
         user.image = token.picture ?? null;
+        user.emailVerified = (token.emailVerified as Date | null) ?? null;
       }
       return session;
     },
     async jwt({ token, user, account, profile }) {
       if (user) {
-        token.role = (user as { role?: string }).role ?? "USER";
+        token.role = user.role ?? "USER";
         token.name = user.name ?? null;
         token.email = user.email ?? null;
+        token.emailVerified = user.emailVerified ?? null;
         token.picture =
           user.image ??
           (typeof profile === "object" &&
