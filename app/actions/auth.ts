@@ -219,7 +219,8 @@ export async function sendResetLink(email: string): Promise<{ success: true } | 
       await db.passwordResetToken.deleteMany({ where: { userId: user.id } });
       await db.passwordResetToken.create({ data: { userId: user.id, tokenHash, expiresAt } });
 
-      const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${rawToken}`;
+      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+      const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
       const name = user.name ?? "there";
 
       // Fire email after the response is returned — doesn't block the UI
@@ -228,7 +229,7 @@ export async function sendResetLink(email: string): Promise<{ success: true } | 
           await postly.send({
             template: process.env.POSTLY_TEMPLATE_FORGOT_PASSWORD!,
             to: [email],
-            data: { name, resetUrl, expiresInHours: 1 },
+            data: { name, email, resetUrl, expiresInHours: 1 },
           });
         } catch (err) {
           console.error("[postly] reset link send failed", err);
