@@ -95,8 +95,6 @@ describe("AddEditLinkModal", () => {
     fireEvent.change(screen.getByPlaceholderText("https://"), {
       target: { value: "https://draft.com" },
     });
-    const onSave = vi.fn();
-    // Re-render to verify—just confirm DRAFT button is clickable
     expect(screen.getByRole("button", { name: "DRAFT" })).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import AppHeader from "../AppHeader";
 import { SidebarProvider } from "../SidebarContext";
 
