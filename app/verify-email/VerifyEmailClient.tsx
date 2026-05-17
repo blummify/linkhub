@@ -162,8 +162,8 @@ export default function VerifyEmailClient() {
       return;
     }
     guardActiveRef.current = false;
-    await signIn("credentials", { email, autoLoginToken: result.autoLoginToken, redirect: false });
-    router.push("/user-dashboard");
+    await signIn("credentials", { email, autoLoginToken: result.autoLoginToken, redirect: false, callbackUrl: "/user-dashboard" });
+    router.replace("/user-dashboard");
   };
 
   const handleResend = async () => {
