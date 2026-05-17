@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { registerUser, checkUserExists, sendVerificationCode } from "@/app/actions/auth";
 import { signIn } from "next-auth/react";
@@ -17,7 +17,7 @@ type FieldErrors = {
   confirmPassword: string;
 };
 
-export default function SignupPage() {
+function SignupPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
@@ -289,5 +289,13 @@ export default function SignupPage() {
         </p>
       </div>
     </AuthShell>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupPageContent />
+    </Suspense>
   );
 }
