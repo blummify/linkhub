@@ -245,6 +245,19 @@ export async function sendResetLink(email: string): Promise<{ success: true } | 
   }
 }
 
+export async function validateResetToken(token: string): Promise<{ valid: true } | { error: string }> {
+  try {
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const record = await db.passwordResetToken.findUnique({ where: { tokenHash } });
+    if (!record) return { error: "This reset link is invalid or has already been used." };
+    if (record.usedAt) return { error: "This reset link has already been used." };
+    if (record.expiresAt < new Date()) return { error: "This reset link has expired. Please request a new one." };
+    return { valid: true };
+  } catch {
+    return { error: "Something went wrong. Please try again." };
+  }
+}
+
 export async function resetPassword(
   token: string,
   newPassword: string

@@ -1,12 +1,6 @@
-"use client";
-
-import { useState, Suspense } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
-import { PasswordField } from "@/app/components/auth/PasswordField";
-import { validatePassword } from "@/lib/validation/auth.schema";
-import { resetPassword } from "@/app/actions/auth";
+import { validateResetToken } from "@/app/actions/auth";
+import { ResetPasswordClient } from "./ResetPasswordClient";
 
 const panelFeatures = [
   { icon: "link", title: "Unlimited Links", description: "Add as many links as you want to your profile without any restrictions." },
@@ -14,156 +8,28 @@ const panelFeatures = [
   { icon: "palette", title: "Customizable Design", description: "Make your page truly yours with custom themes, fonts, and colors." },
 ];
 
-function ResetPasswordForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+export default async function NewPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>;
+}) {
+  const { token } = await searchParams;
 
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [newPasswordError, setNewPasswordError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  let initialState: "valid" | "invalid" | "used" | "expired" = "invalid";
+  let tokenError = "";
 
-  const handleNewPasswordBlur = () => {
-    setNewPasswordError(validatePassword(newPassword));
-  };
-
-  const handleConfirmBlur = () => {
-    if (confirmPassword && confirmPassword !== newPassword) {
-      setConfirmPasswordError("Passwords do not match");
+  if (token) {
+    const result = await validateResetToken(token);
+    if ("valid" in result) {
+      initialState = "valid";
     } else {
-      setConfirmPasswordError("");
+      tokenError = result.error;
+      if (result.error.includes("already been used")) initialState = "used";
+      else if (result.error.includes("expired")) initialState = "expired";
+      else initialState = "invalid";
     }
-  };
-
-  const validateAll = (): boolean => {
-    const passwordErr = validatePassword(newPassword);
-    const confirmErr = confirmPassword !== newPassword ? "Passwords do not match" : "";
-    setNewPasswordError(passwordErr);
-    setConfirmPasswordError(confirmErr);
-    return !passwordErr && !confirmErr && newPassword !== "";
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (!validateAll()) return;
-    if (!token) {
-      setError("Reset link is missing. Please use the link from your email.");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await resetPassword(token, newPassword);
-      if ("error" in result) {
-        setError(result.error);
-      } else {
-        setSuccess(true);
-        setTimeout(() => router.push("/login"), 2500);
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!token) {
-    return (
-      <div className="text-center space-y-4">
-        <span className="material-symbols-outlined text-red-500 text-5xl">link_off</span>
-        <p className="text-gray-700 dark:text-on-surface">
-          This reset link is invalid. Please request a new one.
-        </p>
-        <Link href="/forgot-password" className="text-primary hover:underline font-medium">
-          Request a new link
-        </Link>
-      </div>
-    );
   }
 
-  if (success) {
-    return (
-      <div className="text-center space-y-4">
-        <div className="flex justify-center">
-          <span className="material-symbols-outlined text-green-500 text-5xl">check_circle</span>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-on-surface">Password Reset Successfully!</h3>
-        <p className="text-sm text-gray-600 dark:text-on-surface-variant">
-          Your password has been reset. Redirecting to login…
-        </p>
-        <Link
-          href="/login"
-          className="inline-block w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors text-center"
-        >
-          Go to Login
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-        <PasswordField
-          id="new-password"
-          label="New Password"
-          value={newPassword}
-          onChange={(value) => {
-            setNewPassword(value);
-            if (newPasswordError) setNewPasswordError("");
-          }}
-          onBlur={handleNewPasswordBlur}
-          show={showNewPassword}
-          onToggleShow={() => setShowNewPassword(!showNewPassword)}
-          showStrength
-          error={newPasswordError}
-        />
-
-        <PasswordField
-          id="confirm-password"
-          label="Confirm Password"
-          value={confirmPassword}
-          onChange={(value) => {
-            setConfirmPassword(value);
-            if (confirmPasswordError) setConfirmPasswordError("");
-          }}
-          onBlur={handleConfirmBlur}
-          show={showConfirmPassword}
-          onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
-          error={confirmPasswordError}
-        />
-
-        {error && (
-          <p className="text-sm text-red-500 flex items-center gap-1">
-            <span className="material-symbols-outlined text-[14px]">error</span>
-            {error}
-          </p>
-        )}
-
-        <button
-          disabled={isLoading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
-          className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
-          type="submit"
-        >
-          {isLoading ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            "Reset Password"
-          )}
-        </button>
-      </form>
-    </>
-  );
-}
-
-export default function NewPasswordPage() {
   return (
     <AuthShell
       heading="Set New Password"
@@ -173,9 +39,11 @@ export default function NewPasswordPage() {
       panelFeatures={panelFeatures}
     >
       <div className="space-y-6">
-        <Suspense fallback={<div className="h-8 animate-pulse bg-gray-100 rounded" />}>
-          <ResetPasswordForm />
-        </Suspense>
+        <ResetPasswordClient
+          token={token ?? null}
+          initialState={initialState}
+          tokenError={tokenError}
+        />
       </div>
     </AuthShell>
   );
