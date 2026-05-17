@@ -183,7 +183,7 @@ export async function loginWithCredentials(formData: CredentialsFormData) {
   } catch (error) {
     if (error instanceof Error) {
       const message = error.message ?? "";
-      const causeMessage = (error as any).cause?.err?.message ?? "";
+      const causeMessage = (error as { cause?: { err?: { message?: string } } }).cause?.err?.message ?? "";
 
       if (
         message.includes("email_not_verified") ||
