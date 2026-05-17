@@ -3,17 +3,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { validateEmail } from "@/lib/validation/auth.schema";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { forgotPassword } from "@/app/actions/auth";
 
 
+
 export default function ForgotPasswordPage() {
-  const router = useRouter();
+  // const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,12 +30,13 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      const result = await forgotPassword({email});
-      setSuccess(true);
-      if (result?.error) {
+      const result = await forgotPassword({ email });
+        if (result?.error) {
         setError(result.error);
-        return
+        return;
       }
+      setSuccessMessage(result.message ?? ""); 
+      setSuccess(true);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -60,7 +63,7 @@ export default function ForgotPasswordPage() {
         {success ? (
           <div className="text-center space-y-4">
             <p className="text-gray-700 dark:text-on-surface">
-              Check your inbox for a password reset link.
+              {successMessage}
             </p>
             <Link
               href="/login"

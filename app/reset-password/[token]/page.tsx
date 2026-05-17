@@ -3,13 +3,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { PasswordField } from "@/app/components/auth/PasswordField";
 import { validatePassword } from "@/lib/validation/auth.schema";
+import { resetPassword } from "@/app/actions/auth";
 
 export default function NewPasswordPage() {
   const router = useRouter();
+  const params = useParams();
+  const token = params.token as string;
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -41,22 +45,29 @@ export default function NewPasswordPage() {
     return !passwordErr && !confirmErr && newPassword !== "";
   };
 
-  // UI-only submit handler 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     setError("");
     if (!validateAll()) return;
 
     setIsLoading(true);
-    // Simulate network delay
-    setTimeout(() => {
-      setIsLoading(false);
-      setSuccess(true);
+    try {
+      const result = await resetPassword(token, { password: newPassword, confirmPassword });
 
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      setSuccess(true);
       setTimeout(() => {
         router.push("/login");
       }, 2000);
-    }, 1500);
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const panelFeatures = [

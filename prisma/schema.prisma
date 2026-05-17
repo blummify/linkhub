@@ -20,6 +20,7 @@ model User {
   profile       Profile?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  passwordResetTokens PasswordResetToken?
 }
 
 model Account {
@@ -79,4 +80,15 @@ model Profile {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String
+  lookupKey String   @unique
+  userId    String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

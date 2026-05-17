@@ -17,8 +17,7 @@ const PUBLIC_EXACT = new Set([
   "/signup",
   "/features",
   "/pricing",
-  "/forgot-password",
-  "/reset-password"
+  "/forgot-password"
 ]);
 
 /** Files in /public — must not require auth or `/_next/image` fetches get HTML (e.g. /login) and fail with "received null". */
@@ -32,7 +31,7 @@ export default auth((req) => {
   if (PUBLIC_STATIC_EXT.test(pathname)) return undefined;
 
   const isApiAuthRoute = pathname.startsWith("/api/auth");
-  const isPublicRoute = PUBLIC_EXACT.has(pathname);
+  const isPublicRoute = PUBLIC_EXACT.has(pathname) || pathname.startsWith("/reset-password/");
   const isAuthRoute = pathname === "/login" || pathname === "/signup";
 
   if (isApiAuthRoute) return undefined;
