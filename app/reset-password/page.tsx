@@ -110,14 +110,6 @@ function ResetPasswordForm() {
 
   return (
     <>
-      <Link
-        href="/login"
-        className="inline-flex items-center gap-1 text-sm text-primary hover:underline mb-2 cursor-pointer"
-      >
-        <span className="material-symbols-outlined text-sm">arrow_back</span>
-        Back to Login
-      </Link>
-
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         <PasswordField
           id="new-password"
@@ -156,7 +148,7 @@ function ResetPasswordForm() {
         )}
 
         <button
-          disabled={isLoading}
+          disabled={isLoading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
           className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
           type="submit"
         >
