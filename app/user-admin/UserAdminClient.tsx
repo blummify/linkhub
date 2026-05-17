@@ -22,7 +22,6 @@ import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showClaimModal, setShowClaimModal] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimTimerFired, setClaimTimerFired] = useState(false);
   const [links, setLinks] = useState<ManagedLink[]>([]);
@@ -93,16 +92,11 @@ export default function UserAdminClient() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    if (claimTimerFired && !isLoading && isFirstTimeUser) {
-      setShowClaimModal(true);
-    }
-  }, [claimTimerFired, isLoading, isFirstTimeUser]);
+  const showClaimModal = claimTimerFired && !isLoading && isFirstTimeUser;
 
   const handleClaimHandle = async (handle: string) => {
     const result = await claimHandle(handle);
     if (result.success) {
-      setShowClaimModal(false);
       setIsFirstTimeUser(false);
     }
     return result;
@@ -110,7 +104,6 @@ export default function UserAdminClient() {
 
   const handleDismissClaim = async () => {
     await dismissHandleClaim();
-    setShowClaimModal(false);
     setIsFirstTimeUser(false);
   };
 
