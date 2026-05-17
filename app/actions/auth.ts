@@ -207,6 +207,52 @@ export async function loginWithCredentials(formData: CredentialsFormData) {
   }
 }
 
+export async function signInWithGoogleOneTap(
+  credential: string
+): Promise<{ autoLoginToken: string; email: string } | { error: string }> {
+  try {
+    const { createRemoteJWKSet, jwtVerify } = await import("jose");
+    const JWKS = createRemoteJWKSet(new URL("https://www.googleapis.com/oauth2/v3/certs"));
+    const { payload } = await jwtVerify(credential, JWKS, {
+      audience: process.env.GOOGLE_CLIENT_ID!,
+      issuer: ["accounts.google.com", "https://accounts.google.com"],
+    });
+
+    const { sub: googleId, email, name, picture, email_verified } = payload as {
+      sub: string; email: string; name: string; picture: string; email_verified: boolean;
+    };
+
+    if (!email_verified) return { error: "Google account email is not verified." };
+
+    let user = await db.user.findUnique({ where: { email } });
+
+    if (!user) {
+      user = await db.user.create({
+        data: { email, name, image: picture, emailVerified: new Date(), profile: { create: {} } },
+      });
+    } else if (!user.emailVerified) {
+      await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
+    }
+
+    await db.account.upsert({
+      where: { provider_providerAccountId: { provider: "google", providerAccountId: googleId } },
+      create: { userId: user.id, type: "oauth", provider: "google", providerAccountId: googleId },
+      update: {},
+    });
+
+    const autoLoginToken = randomBytes(32).toString("hex");
+    await db.verificationToken.deleteMany({ where: { identifier: `auto:${email}` } });
+    await db.verificationToken.create({
+      data: { identifier: `auto:${email}`, token: autoLoginToken, expires: new Date(Date.now() + 2 * 60 * 1000) },
+    });
+
+    return { autoLoginToken, email };
+  } catch (err) {
+    console.error("[signInWithGoogleOneTap] error", err);
+    return { error: "Google sign-in failed. Please try again." };
+  }
+}
+
 export async function sendResetLink(email: string): Promise<{ success: true } | { error: string }> {
   try {
     const user = await db.user.findUnique({ where: { email }, select: { id: true, name: true } });
