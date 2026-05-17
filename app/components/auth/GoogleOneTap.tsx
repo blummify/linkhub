@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { signInWithGoogleOneTap } from "@/app/actions/auth";
@@ -19,50 +19,73 @@ declare global {
   }
 }
 
-export function GoogleOneTap() {
+export function GoogleOneTap({ clientId }: { clientId: string }) {
   const router = useRouter();
 
+  const handleCredential = useCallback(
+    async ({ credential }: { credential: string }) => {
+      const result = await signInWithGoogleOneTap(credential);
+      if ("error" in result) {
+        console.error("[OneTap]", result.error);
+        return;
+      }
+      await signIn("credentials", {
+        email: result.email,
+        autoLoginToken: result.autoLoginToken,
+        redirect: false,
+        callbackUrl: "/user-dashboard",
+      });
+      router.replace("/user-dashboard");
+    },
+    [router]
+  );
+
   useEffect(() => {
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) return;
 
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
+    let addedScript: HTMLScriptElement | null = null;
 
-    script.onload = () => {
-      window.google?.accounts.id.initialize({
+    const initOneTap = () => {
+      // Guard against multiple initialize() calls (React Strict Mode double-mount)
+      if (!window.google?.accounts?.id) return;
+      window.google.accounts.id.initialize({
         client_id: clientId,
-        callback: async ({ credential }: { credential: string }) => {
-          const result = await signInWithGoogleOneTap(credential);
-          if ("error" in result) {
-            console.error("[OneTap]", result.error);
-            return;
-          }
-          await signIn("credentials", {
-            email: result.email,
-            autoLoginToken: result.autoLoginToken,
-            redirect: false,
-            callbackUrl: "/user-dashboard",
-          });
-          router.replace("/user-dashboard");
-        },
+        callback: handleCredential,
         auto_select: true,
         cancel_on_tap_outside: false,
         context: "signin",
       });
-
-      window.google?.accounts.id.prompt();
+      window.google.accounts.id.prompt();
     };
 
-    document.head.appendChild(script);
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[src="https://accounts.google.com/gsi/client"]'
+    );
+
+    if (existing) {
+      // Script already in DOM — either loaded or loading
+      if (window.google) {
+        initOneTap();
+      } else {
+        existing.addEventListener("load", initOneTap, { once: true });
+      }
+    } else {
+      addedScript = document.createElement("script");
+      addedScript.src = "https://accounts.google.com/gsi/client";
+      addedScript.async = true;
+      addedScript.defer = true;
+      addedScript.addEventListener("load", initOneTap, { once: true });
+      document.head.appendChild(addedScript);
+    }
 
     return () => {
       window.google?.accounts.id.cancel();
-      if (document.head.contains(script)) document.head.removeChild(script);
+      // Only remove the script we added — not a pre-existing one
+      if (addedScript && document.head.contains(addedScript)) {
+        document.head.removeChild(addedScript);
+      }
     };
-  }, [router]);
+  }, [clientId, handleCredential]);
 
   return null;
 }
