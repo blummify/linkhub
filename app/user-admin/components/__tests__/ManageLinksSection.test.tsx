@@ -9,9 +9,11 @@ const links: ManagedLink[] = [
 ];
 
 describe("ManageLinksSection", () => {
-  it("renders the 'Your Links' heading", () => {
+  it("renders the page heading", () => {
     render(<ManageLinksSection links={[]} />);
-    expect(screen.getByText("Your Links")).toBeInTheDocument();
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading).toHaveTextContent(/your/i);
+    expect(heading).toHaveTextContent(/links/i);
   });
 
   it("renders all provided links", () => {
