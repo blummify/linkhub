@@ -14,11 +14,12 @@ model User {
   passwordHash      String?
   image             String?
   role              String             @default("USER") // USER, ADMIN, SUPERADMIN
-  accounts          Account[]
-  sessions          Session[]
-  links             Link[]
-  profile           Profile?
-  emailVerification EmailVerification?
+  accounts             Account[]
+  sessions             Session[]
+  links                Link[]
+  profile              Profile?
+  emailVerification    EmailVerification?
+  passwordResetTokens  PasswordResetToken[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -92,4 +93,14 @@ model Profile {
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
