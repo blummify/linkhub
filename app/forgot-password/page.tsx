@@ -3,11 +3,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { validateEmail } from "@/lib/validation/auth.schema";
-import { useRouter } from "next/navigation";
-
+import { sendResetLink } from "@/app/actions/auth";
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -27,10 +25,12 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      // Simulating API call
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      setSuccess(true);
-      router.push("/reset-password");
+      const result = await sendResetLink(email);
+      if ("error" in result) {
+        setError(result.error);
+      } else {
+        setSuccess(true);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -56,8 +56,11 @@ export default function ForgotPasswordPage() {
       <div className="space-y-6">
         {success ? (
           <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <span className="material-symbols-outlined text-primary text-5xl">mark_email_read</span>
+            </div>
             <p className="text-gray-700 dark:text-on-surface">
-              Check your inbox for a password reset link.
+              If an account exists for <span className="font-medium">{email}</span>, you&apos;ll receive a reset link shortly. Check your inbox.
             </p>
             <Link
               href="/login"

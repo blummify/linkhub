@@ -194,6 +194,7 @@ export default function LoginPage() {
   ];
 
   return (
+    <>
     <AuthShell
       heading={
         stage === "email"
@@ -449,5 +450,6 @@ export default function LoginPage() {
         )}
       </div>
     </AuthShell>
+    </>
   );
 }

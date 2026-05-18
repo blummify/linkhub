@@ -50,13 +50,13 @@ export function PasswordField({
     const allMet = strength?.score === 3;
 
     if (allMet && criteriaVisible && !animatingOut) {
-      setAnimatingOut(true);
+      queueMicrotask(() => setAnimatingOut(true));
       timerRef.current = setTimeout(() => {
         setCriteriaVisible(false);
         setAnimatingOut(false);
       }, 450);
     } else if (!allMet && !criteriaVisible) {
-      setCriteriaVisible(true);
+      queueMicrotask(() => setCriteriaVisible(true));
     }
 
     return () => {

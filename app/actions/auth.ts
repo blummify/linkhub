@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { createHash, randomBytes } from "crypto";
+import { after } from "next/server";
 
 type CredentialsFormData = {
   email: string;
@@ -183,7 +184,7 @@ export async function loginWithCredentials(formData: CredentialsFormData) {
   } catch (error) {
     if (error instanceof Error) {
       const message = error.message ?? "";
-      const causeMessage = (error as any).cause?.err?.message ?? "";
+      const causeMessage = (error as { cause?: { err?: { message?: string } } }).cause?.err?.message ?? "";
 
       if (
         message.includes("email_not_verified") ||
@@ -203,6 +204,133 @@ export async function loginWithCredentials(formData: CredentialsFormData) {
     }
 
     throw error;
+  }
+}
+
+export async function signInWithGoogleOneTap(
+  credential: string
+): Promise<{ autoLoginToken: string; email: string } | { error: string }> {
+  try {
+    const { createRemoteJWKSet, jwtVerify } = await import("jose");
+    const JWKS = createRemoteJWKSet(new URL("https://www.googleapis.com/oauth2/v3/certs"));
+    const { payload } = await jwtVerify(credential, JWKS, {
+      audience: process.env.GOOGLE_CLIENT_ID!,
+      issuer: ["accounts.google.com", "https://accounts.google.com"],
+    });
+
+    const { sub: googleId, email, name, picture, email_verified } = payload as {
+      sub: string; email: string; name: string; picture: string; email_verified: boolean;
+    };
+
+    if (!email_verified) return { error: "Google account email is not verified." };
+
+    let user = await db.user.findUnique({ where: { email } });
+
+    if (!user) {
+      user = await db.user.create({
+        data: { email, name, image: picture, emailVerified: new Date(), profile: { create: {} } },
+      });
+    } else if (!user.emailVerified) {
+      await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
+    }
+
+    await db.account.upsert({
+      where: { provider_providerAccountId: { provider: "google", providerAccountId: googleId } },
+      create: { userId: user.id, type: "oauth", provider: "google", providerAccountId: googleId },
+      update: {},
+    });
+
+    const autoLoginToken = randomBytes(32).toString("hex");
+    await db.verificationToken.deleteMany({ where: { identifier: `auto:${email}` } });
+    await db.verificationToken.create({
+      data: { identifier: `auto:${email}`, token: autoLoginToken, expires: new Date(Date.now() + 2 * 60 * 1000) },
+    });
+
+    return { autoLoginToken, email };
+  } catch (err) {
+    console.error("[signInWithGoogleOneTap] error", err);
+    return { error: "Google sign-in failed. Please try again." };
+  }
+}
+
+export async function sendResetLink(email: string): Promise<{ success: true } | { error: string }> {
+  try {
+    const user = await db.user.findUnique({ where: { email }, select: { id: true, name: true } });
+
+    if (user) {
+      const rawToken = randomBytes(32).toString("hex");
+      const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await db.passwordResetToken.deleteMany({ where: { userId: user.id } });
+      await db.passwordResetToken.create({ data: { userId: user.id, tokenHash, expiresAt } });
+
+      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+      const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
+      const name = user.name ?? "there";
+
+      // Fire email after the response is returned — doesn't block the UI
+      after(async () => {
+        try {
+          await postly.send({
+            template: process.env.POSTLY_TEMPLATE_FORGOT_PASSWORD!,
+            to: [email],
+            data: { name, email, resetUrl, expiresInHours: 1 },
+          });
+        } catch (err) {
+          console.error("[postly] reset link send failed", err);
+        }
+      });
+    }
+
+    // Always return success to avoid leaking whether the email exists
+    return { success: true };
+  } catch (err) {
+    console.error("[sendResetLink] error", err);
+    return { error: "Something went wrong. Please try again." };
+  }
+}
+
+export async function validateResetToken(token: string): Promise<{ valid: true } | { error: string }> {
+  try {
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const record = await db.passwordResetToken.findUnique({ where: { tokenHash } });
+    if (!record) return { error: "This reset link is invalid or has already been used." };
+    if (record.usedAt) return { error: "This reset link has already been used." };
+    if (record.expiresAt < new Date()) return { error: "This reset link has expired. Please request a new one." };
+    return { valid: true };
+  } catch {
+    return { error: "Something went wrong. Please try again." };
+  }
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string
+): Promise<{ success: true } | { error: string }> {
+  try {
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+
+    // Fetch token record and hash the new password in parallel
+    const [record, passwordHash] = await Promise.all([
+      db.passwordResetToken.findUnique({ where: { tokenHash } }),
+      bcrypt.hash(newPassword, 10),
+    ]);
+
+    if (!record) return { error: "This reset link is invalid or has already been used." };
+    if (record.usedAt) return { error: "This reset link has already been used." };
+    if (record.expiresAt < new Date()) return { error: "This reset link has expired. Please request a new one." };
+
+    // Write both DB updates concurrently
+    await Promise.all([
+      db.user.update({ where: { id: record.userId }, data: { passwordHash } }),
+      db.passwordResetToken.update({ where: { tokenHash }, data: { usedAt: new Date() } }),
+    ]);
+
+    return { success: true };
+  } catch (err) {
+    console.error("[resetPassword] error", err);
+    return { error: "Something went wrong. Please try again." };
   }
 }
 
