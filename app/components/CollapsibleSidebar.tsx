@@ -99,10 +99,17 @@ export default function CollapsibleSidebar({ children }: { children: React.React
             {!isCollapsed && (
               <>
               <span className="text-[13px]">Links</span>
-              <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full 
+              {isLoadingCount ? (
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full 
                 bg-primary/10 text-primary">
                 {linkCount}
               </span>
+              ) : (
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full 
+                bg-primary/10 text-primary">
+                {linkCount}
+              </span>
+              )}
               </>
             )}
 
