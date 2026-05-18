@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useRef } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useSidebar } from "./SidebarContext";
 import UserAvatar from "./UserAvatar";
 import { useShortKey } from "./hooks/useShortKey";
 
-export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
+export default function AppHeader({}: { isAdmin?: boolean }) {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const { data: session } = useSession();
-  const [isMobileSearch, setIsMobileSearch] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -23,14 +22,6 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
     user?.name?.trim() ||
     user?.email?.split("@")[0] ||
     "Account";
-
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobileSearch(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
   
   return (
     <header 
