@@ -29,9 +29,9 @@ describe("ManagedLinkCard", () => {
     expect(screen.getByText("+10% this week")).toBeInTheDocument();
   });
 
-  it("shows 'Active' badge for a published link", () => {
+  it("shows 'Published' badge for a published link", () => {
     render(<ManagedLinkCard link={link} />);
-    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByText("Published")).toBeInTheDocument();
   });
 
   it("shows 'Draft' badge for a draft link", () => {
