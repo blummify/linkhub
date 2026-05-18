@@ -51,17 +51,17 @@ export default function AppHeader({ isAdmin = false }: { isAdmin?: boolean }) {
         </button>
 
         {/* Enhanced Search Bar */}
-        <div className="relative w-full max-w-xl group">
+        <div className="relative w-full group">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center">
-            <span className="material-symbols-outlined text-on-surface-variant/60 text-[18px] sm:text-[22px] group-focus-within:text-primary transition-colors">search</span>
+            <span className="material-symbols-outlined text-on-surface-variant/60 text-[18px] sm:text-[20px] group-focus-within:text-primary transition-colors">search</span>
           </div>
-          <input 
+          <input
           ref = {searchInputRef}
-            className="w-full bg-surface-container-low/40 border border-outline-variant/20 rounded-2xl pl-12 pr-4 sm:pr-14 py-2.5 text-[12px] sm:text-[13px] font-black text-on-surface tracking-tight placeholder:text-on-surface-variant/40 focus:ring-[6px] focus:ring-primary/5 focus:border-primary/40 focus:bg-white transition-all outline-none" 
-            placeholder={isAdmin ? (isMobileSearch ? "Search..." : "Search designers...") : "Search..."} 
+            className="w-full bg-surface-container-low/40 border border-outline-variant/20 rounded-full pl-12 pr-4 sm:pr-14 py-2 text-[13px] font-normal text-on-surface placeholder:text-on-surface-variant/40 focus:ring-[6px] focus:ring-primary/5 focus:border-primary/40 focus:bg-white transition-all outline-none cursor-text"
+            placeholder="Search links, pages, analytics…"
             type="text"
           />
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-1.5 px-2 py-1 bg-surface-container-low border border-outline-variant/30 rounded-lg text-[10px] font-black text-on-surface-variant/60">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-low border border-outline-variant/30 rounded-full text-[10px] font-black text-on-surface-variant/60">
             <span className="text-[12px]" suppressHydrationWarning>
               {modifier}
             </span>

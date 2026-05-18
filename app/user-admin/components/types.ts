@@ -8,4 +8,6 @@ export interface ManagedLink {
   icon?: string;
   /** Optional green trend line under stats (e.g. "+12% this week") */
   trendLabel?: string;
+  /** Display date string e.g. "Apr 2" */
+  createdAt?: string;
 }
