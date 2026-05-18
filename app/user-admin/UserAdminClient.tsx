@@ -237,20 +237,21 @@ export default function UserAdminClient() {
             } ml-0 overflow-y-auto bg-surface`}
           >
             <div className="min-h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
-              <div className="flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-                <div className="max-w-2xl mx-auto lg:mx-0 animate-fade-in-up">
+              <div className="flex-1 min-w-0 px-4 py-8 sm:px-8 lg:px-10 lg:py-10">
+                <div className="w-full animate-fade-in-up">
                   {isLoading ? (
                     <div className="flex items-center justify-center h-64">
                       <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                     </div>
                   ) : (
-                    <ManageLinksSection 
-                      links={links} 
+                    <ManageLinksSection
+                      links={links}
                       onAddLink={handleAddLink}
                       onEditLink={handleEditLink}
                       onDeleteLink={handleDeleteLink}
                       onToggleLink={handleToggleLink}
                       onUpdateLink={handleUpdateLink}
+                      onReorderLinks={setLinks}
                     />
                   )}
                 </div>
