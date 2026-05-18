@@ -6,6 +6,8 @@ import { Toaster } from "sonner";
 import { SidebarProvider } from "./components/SidebarContext";
 import AuthSessionProvider from "./components/AuthSessionProvider";
 import { MaterialSymbols } from "./components/MaterialSymbols";
+import { GoogleOneTap } from "./components/auth/GoogleOneTap";
+import { auth } from "@/auth";
 
 const manrope = Manrope({
   variable: "--next-font-manrope",
@@ -39,11 +41,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
   return (
     <html
       lang="en"
@@ -52,8 +55,8 @@ export default function RootLayout({
       className={`${manrope.variable} ${inter.variable} antialiased scroll-smooth`}
     >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* fonts.gstatic.com hosts the Material Symbols woff2 — prefetch the DNS early */}
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script
           dangerouslySetInnerHTML={{
             __html:
@@ -68,6 +71,9 @@ export default function RootLayout({
             {children}
           </SidebarProvider>
         </AuthSessionProvider>
+        {!session && process.env.GOOGLE_CLIENT_ID && (
+          <GoogleOneTap clientId={process.env.GOOGLE_CLIENT_ID} />
+        )}
         <Toaster position="top-center" richColors />
         <ThemeToggle />
       </body>

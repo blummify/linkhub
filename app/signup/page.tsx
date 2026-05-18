@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { registerUser, checkUserExists, sendVerificationCode } from "@/app/actions/auth";
 import { signIn } from "next-auth/react";
@@ -17,7 +17,7 @@ type FieldErrors = {
   confirmPassword: string;
 };
 
-export default function SignupPage() {
+function SignupPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +25,6 @@ export default function SignupPage() {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -39,15 +38,6 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
   });
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
-
-  const isFormComplete =
-    !!formData.name.trim() &&
-    !!formData.email &&
-    !!formData.password &&
-    !!formData.confirmPassword &&
-    agreedToTerms;
-
   const getFieldError = (field: keyof FieldErrors, value: string): string => {
     switch (field) {
       case "name":
@@ -266,7 +256,7 @@ export default function SignupPage() {
           </div>
 
           <button
-            disabled={isLoading || success || !isFormFilled}
+            disabled={isLoading || !isFormFilled}
             className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             type="submit"
           >
@@ -299,5 +289,13 @@ export default function SignupPage() {
         </p>
       </div>
     </AuthShell>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupPageContent />
+    </Suspense>
   );
 }
