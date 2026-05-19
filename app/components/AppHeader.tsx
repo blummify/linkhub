@@ -24,52 +24,98 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
     "Account";
   
   return (
-    <header 
+    <header
       id="header"
-      className={`fixed top-0 right-0 z-40 bg-white/70 dark:bg-surface/70 backdrop-blur-2xl border-b border-outline-variant/30 flex justify-between items-center h-16 px-4 sm:px-8 transition-all duration-300 ease-in-out ${
+      className={`fixed top-0 right-0 z-40 bg-white/80 backdrop-blur-2xl border-b flex justify-between items-center h-16 px-4 sm:px-8 transition-all duration-300 ease-in-out ${
         isCollapsed ? 'lg:w-[calc(100%-5rem)] w-full' : 'lg:w-[calc(100%-12rem)] sm:lg:w-[calc(100%-16rem)] w-full'
       }`}
+      style={{ borderBottomColor: '#eef0f7' }}
     >
-      <div className="flex items-center gap-4 sm:gap-8 flex-1 min-w-0">
+      <div className="flex items-center gap-4 sm:gap-6 flex-1 min-w-0">
         {/* Toggle Sidebar Button */}
-        <button 
+        <button
           onClick={toggleSidebar}
-          className="w-9 h-9 shrink-0 rounded-full border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all bg-white dark:bg-surface shadow-sm active:scale-90"
+          className="shrink-0 flex items-center justify-center transition-all active:scale-90"
+          style={{
+            width: 38, height: 38,
+            borderRadius: 12,
+            border: '1px solid #eef0f7',
+            background: 'white',
+            color: '#6b75a3',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#d6dae9'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#eef0f7'; }}
         >
           <span className="material-symbols-outlined text-[20px] font-black">
             {isCollapsed ? 'menu_open' : 'menu'}
           </span>
         </button>
 
-        {/* Enhanced Search Bar */}
+        {/* Search Bar */}
         <div className="relative w-full group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center">
-            <span className="material-symbols-outlined text-on-surface-variant/60 text-[18px] sm:text-[20px] group-focus-within:text-primary transition-colors">search</span>
+          <div className="absolute left-[14px] top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b75a3" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35"/>
+            </svg>
           </div>
           <input
-          ref = {searchInputRef}
-            className="w-full bg-surface-container-low/40 border border-outline-variant/20 rounded-full pl-12 pr-4 sm:pr-14 py-2 text-[13px] font-normal text-on-surface placeholder:text-on-surface-variant/40 focus:ring-[6px] focus:ring-primary/5 focus:border-primary/40 focus:bg-white transition-all outline-none cursor-text"
+            ref={searchInputRef}
+            className="w-full pl-[42px] pr-4 sm:pr-[90px] text-[14px] text-[#0b1020] placeholder:text-[#6b75a3] outline-none transition-all"
+            style={{
+              height: 42,
+              borderRadius: 12,
+              background: 'white',
+              border: '1px solid #eef0f7',
+            }}
+            onFocus={e => {
+              e.currentTarget.style.borderColor = '#6873ff';
+              e.currentTarget.style.boxShadow = '0 0 0 4px rgba(104,115,255,0.12)';
+            }}
+            onBlur={e => {
+              e.currentTarget.style.borderColor = '#eef0f7';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
             placeholder="Search links, pages, analytics…"
             type="text"
           />
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-low border border-outline-variant/30 rounded-full text-[10px] font-black text-on-surface-variant/60">
-            <span className="text-[12px]" suppressHydrationWarning>
-              {modifier}
-            </span>
-            <span className="text-[11px] opacity-60">+</span>
-            <span>K</span>
+          <div
+            className="absolute right-[14px] top-1/2 -translate-y-1/2 hidden lg:inline-flex items-center gap-[3px]"
+            style={{
+              fontFamily: 'monospace',
+              fontSize: 11,
+              color: '#6b75a3',
+              padding: '3px 7px',
+              borderRadius: 6,
+              background: '#eef0f7',
+              border: '1px solid #d6dae9',
+              borderBottomWidth: 2,
+            }}
+          >
+            <span suppressHydrationWarning>{modifier}</span>
+            <span style={{ opacity: 0.6 }}>K</span>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 sm:gap-6 shrink-0 ml-4">
+      <div className="flex items-center gap-3 shrink-0 ml-4">
         {/* Action Icons */}
         <div className="hidden md:flex items-center gap-1.5">
-          <button className="w-10 h-10 flex items-center justify-center rounded-xl text-on-surface-variant transition-all hover:bg-primary/5 hover:text-primary active:scale-90 group relative">
+          <button
+            className="relative flex items-center justify-center transition-all active:scale-90"
+            style={{ width: 38, height: 38, borderRadius: 12, border: '1px solid #eef0f7', background: 'white', color: '#6b75a3' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#d6dae9'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#eef0f7'; }}
+          >
             <span className="material-symbols-outlined text-[20px] font-medium">notifications</span>
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-white shadow-sm" />
+            <span className="absolute top-[9px] right-[10px] w-[7px] h-[7px] rounded-full border-2 border-white" style={{ background: '#e11d48' }} />
           </button>
-          <button className="w-10 h-10 flex items-center justify-center rounded-xl text-on-surface-variant transition-all hover:bg-primary/5 hover:text-primary active:scale-90">
+          <button
+            className="flex items-center justify-center transition-all active:scale-90"
+            style={{ width: 38, height: 38, borderRadius: 12, border: '1px solid #eef0f7', background: 'white', color: '#6b75a3' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#d6dae9'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#eef0f7'; }}
+          >
             <span className="material-symbols-outlined text-[20px] font-medium">help</span>
           </button>
         </div>

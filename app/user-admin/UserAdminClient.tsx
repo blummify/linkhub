@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import AppHeader from "../components/AppHeader";
 import { useSidebar } from "../components/SidebarContext";
 import { MobilePreview, type AppearanceState } from "../components/MobilePreview";
 import { ShareProfileModal } from "../components/ShareProfileModal";
-import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
+import { PhoneFrame } from "../components/PhoneFrame";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
@@ -228,38 +227,129 @@ export default function UserAdminClient() {
     <div className="bg-surface text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
       <CollapsibleSidebar isAdmin={true}>
         <div className="flex-1 flex flex-col min-h-screen relative">
-          <AppHeader isAdmin={true} />
-
           <main
             id="mainContent"
-            className={`flex-1 pt-16 transition-all duration-500 ease-in-out ${
+            className={`flex-1 transition-all duration-500 ease-in-out ${
               isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
-            } ml-0 overflow-y-auto bg-surface`}
+            } ml-0 overflow-y-auto bg-surface h-screen`}
           >
-            <div className="min-h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
-              <div className="flex-1 min-w-0 px-4 py-8 sm:px-8 lg:px-10 lg:py-10">
-                <div className="w-full animate-fade-in-up">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-64">
-                      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    </div>
-                  ) : (
-                    <ManageLinksSection
-                      links={links}
-                      onAddLink={handleAddLink}
-                      onEditLink={handleEditLink}
-                      onDeleteLink={handleDeleteLink}
-                      onToggleLink={handleToggleLink}
-                      onUpdateLink={handleUpdateLink}
-                      onReorderLinks={setLinks}
-                    />
-                  )}
-                </div>
+            <div className="flex flex-col lg:flex-row min-h-screen">
+              {/* Center section */}
+              <div
+                className="flex-1 animate-fade-in-up"
+                style={{ padding: "22px 32px 40px", minWidth: 0 }}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <ManageLinksSection
+                    links={links}
+                    onAddLink={handleAddLink}
+                    onEditLink={handleEditLink}
+                    onDeleteLink={handleDeleteLink}
+                    onToggleLink={handleToggleLink}
+                    onUpdateLink={handleUpdateLink}
+                    onReorderLinks={setLinks}
+                  />
+                )}
               </div>
 
-              <div className="w-full lg:w-[460px] xl:w-[540px] bg-surface-container-low/50 border-t lg:border-t-0 lg:border-l border-outline-variant/30 relative py-12 lg:py-8 px-4 sm:px-6 flex flex-col items-center">
-                <div className="sticky top-24 lg:top-8 w-full flex flex-col items-center animate-fade-in-up delay-100">
-                  <LinksPreviewPanel>
+              {/* Preview panel */}
+              <div
+                className="hidden lg:flex shrink-0 flex-col items-center relative border-l"
+                style={{
+                  width: 420,
+                  background: "linear-gradient(180deg, #f0f2fb 0%, #e9ecf8 100%)",
+                  borderColor: "#eef0f7",
+                  padding: "28px 24px",
+                  position: "sticky",
+                  top: 0,
+                  height: "100vh",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Radial glow overlays */}
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  aria-hidden
+                  style={{
+                    backgroundImage:
+                      "radial-gradient(circle at 20% 10%, rgba(104,115,255,0.12), transparent 50%), radial-gradient(circle at 80% 80%, rgba(59,70,224,0.10), transparent 50%)",
+                  }}
+                />
+
+                {/* Preview header */}
+                <div className="relative z-10 flex items-start justify-between w-full shrink-0" style={{ marginBottom: 18 }}>
+                  <div>
+                    <div style={{
+                      fontFamily: "Georgia, 'Times New Roman', serif",
+                      fontStyle: "italic",
+                      fontWeight: 400,
+                      fontSize: 22,
+                      letterSpacing: "-0.01em",
+                      color: "#0b1020",
+                    }}>
+                      Live preview
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 2 }}>
+                      {PROFILE_PUBLIC_URL.split("/")[0]}/<span style={{ color: "#3b46e0", fontWeight: 500 }}>{PROFILE_PUBLIC_URL.split("/")[1]}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center" style={{ gap: 6 }}>
+                    <button
+                      type="button"
+                      title="Share"
+                      onClick={() => setShowShareModal(true)}
+                      className="flex items-center justify-center transition-all cursor-pointer"
+                      style={{ width: 32, height: 32, borderRadius: 8, border: 0, background: "white", color: "#6b75a3", boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7"; (e.currentTarget as HTMLButtonElement).style.color = "#0b1020"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "white"; (e.currentTarget as HTMLButtonElement).style.color = "#6b75a3"; }}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
+                      </svg>
+                    </button>
+                    <a
+                      href={`https://${PROFILE_PUBLIC_URL}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Open in new tab"
+                      className="flex items-center justify-center transition-all cursor-pointer"
+                      style={{ width: 32, height: 32, borderRadius: 8, background: "white", color: "#6b75a3", boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)", textDecoration: "none" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = "#eef0f7"; (e.currentTarget as HTMLAnchorElement).style.color = "#0b1020"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = "white"; (e.currentTarget as HTMLAnchorElement).style.color = "#6b75a3"; }}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Device tabs */}
+                <div
+                  className="relative z-10 flex self-center shrink-0"
+                  style={{
+                    background: "rgba(255,255,255,0.7)",
+                    border: "1px solid rgba(255,255,255,0.9)",
+                    backdropFilter: "blur(8px)",
+                    borderRadius: 99,
+                    padding: 3,
+                    marginBottom: 18,
+                  }}
+                >
+                  <div style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, color: "#0b1020", background: "white", borderRadius: 99, boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)", cursor: "default" }}>
+                    📱 Mobile
+                  </div>
+                  <div style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, color: "#6b75a3", borderRadius: 99, cursor: "default" }}>
+                    💻 Desktop
+                  </div>
+                </div>
+
+                <div className="relative z-10 animate-fade-in-up delay-100">
+                  <PhoneFrame>
                     <MobilePreview
                       {...EDITOR_MOBILE_PREVIEW_SHARED}
                       appearance={appearance}
@@ -268,14 +358,12 @@ export default function UserAdminClient() {
                         .map(l => ({ kind: 'button', title: l.title, url: l.url, icon: l.icon, accent: true }))
                       }
                       linkDensity="relaxed"
-                      headerTitle=""
-                      headerSubtitle=""
-                      showHeaderTuneButton={false}
                       syncLabel={null}
                       showDeviceFooter={false}
                       onShareBarClick={() => setShowShareModal(true)}
+                      bare={true}
                     />
-                  </LinksPreviewPanel>
+                  </PhoneFrame>
                 </div>
               </div>
             </div>
