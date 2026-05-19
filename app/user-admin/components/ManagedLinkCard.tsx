@@ -83,6 +83,7 @@ export function ManagedLinkCard({
   isOverlay = false,
 }: ManagedLinkCardProps) {
   const { title, url, clicks, draft, trendLabel, createdAt } = link;
+  const visualStatus = link.status ?? (draft ? "unpublished" : "published");
   const [editingField, setEditingField] = useState<"title" | "url" | null>(null);
   const [tempTitle, setTempTitle] = useState(title);
   const [tempUrl, setTempUrl] = useState(url);
@@ -113,21 +114,17 @@ export function ManagedLinkCard({
     setEditingField(null);
   };
 
-  const showStats = !draft || Number(String(clicks).replace(/,/g, "")) > 0;
+  const showStats = visualStatus !== "draft" || Number(String(clicks).replace(/,/g, "")) > 0;
   const iconKey = (link.icon && link.icon in ICON_MAP)
     ? (link.icon as IconKey)
     : detectIconKey(link.url);
   const iconEntry = iconKey ? ICON_MAP[iconKey] : undefined;
 
+  const accentColor = visualStatus === "published" ? "#3b46e0" : "#d6dae9";
   const cardBoxShadow = isOverlay
     ? "0 20px 40px -8px rgba(15,23,42,0.18)"
-    : draft
-    ? "inset 3px 0 0 #d6dae9"
-    : "inset 3px 0 0 #3b46e0";
-
-  const hoverBoxShadow = draft
-    ? "inset 3px 0 0 #d6dae9, 0 4px 14px -4px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04)"
-    : "inset 3px 0 0 #3b46e0, 0 4px 14px -4px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04)";
+    : `inset 3px 0 0 ${accentColor}`;
+  const hoverBoxShadow = `inset 3px 0 0 ${accentColor}, 0 4px 14px -4px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04)`;
 
   return (
     <div
@@ -211,7 +208,7 @@ export function ManagedLinkCard({
                   </button>
                 )}
 
-                {!draft && (
+                {visualStatus === "published" && (
                   <span
                     className="shrink-0 uppercase"
                     style={{
@@ -225,6 +222,22 @@ export function ManagedLinkCard({
                     }}
                   >
                     Published
+                  </span>
+                )}
+                {visualStatus === "unpublished" && (
+                  <span
+                    className="shrink-0 uppercase"
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
+                      padding: "2.5px 7px",
+                      borderRadius: 5,
+                      background: "#f1f3ff",
+                      color: "#3a4474",
+                    }}
+                  >
+                    Unpublished
                   </span>
                 )}
               </div>
@@ -251,7 +264,7 @@ export function ManagedLinkCard({
                     fontFamily: "monospace",
                   }}
                 >
-                  {url}
+                  {url.replace(/^https?:\/\//, "")}
                 </button>
               )}
             </div>
@@ -260,7 +273,7 @@ export function ManagedLinkCard({
             <div className="flex shrink-0 items-center gap-1">
               {/* Toggle / Draft pill */}
               {onToggle ? (
-                draft ? (
+                visualStatus === "draft" ? (
                   <button
                     type="button"
                     onClick={onToggle}
@@ -283,13 +296,13 @@ export function ManagedLinkCard({
                   <button
                     type="button"
                     onClick={onToggle}
-                    title="Mark as draft"
+                    title={visualStatus === "published" ? "Unpublish" : "Publish"}
                     className="relative shrink-0 cursor-pointer outline-none transition-colors duration-200 mr-2"
                     style={{
                       width: 38,
                       height: 22,
                       borderRadius: 99,
-                      background: "#3b46e0",
+                      background: visualStatus === "published" ? "#3b46e0" : "#d6dae9",
                       border: 0,
                     }}
                   >
@@ -301,7 +314,7 @@ export function ManagedLinkCard({
                         top: 2,
                         left: 2,
                         boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                        transform: "translateX(16px)",
+                        transform: visualStatus === "published" ? "translateX(16px)" : "translateX(0)",
                       }}
                     />
                   </button>
@@ -353,7 +366,7 @@ export function ManagedLinkCard({
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
                     <path strokeLinecap="round" d="M16 2v4M8 2v4M3 10h18"/>
                   </svg>
-                  {draft ? "Created" : "Added"} {createdAt}
+                  {visualStatus === "draft" ? "Created" : "Added"} {createdAt}
                 </span>
               ) : null}
             </div>
