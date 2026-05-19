@@ -22,6 +22,8 @@ import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
 import { AnalyticsCards } from "./AnalyticsCards";
 import { DashboardTopBar } from "./DashboardTopBar";
+import { DeleteConfirmDialog } from "../../components/DeleteConfirmDialog";
+import { CommandPalette } from "../../components/CommandPalette";
 
 export interface ManageLinksSectionProps {
   links: ManagedLink[];
@@ -90,6 +92,8 @@ export function ManageLinksSection({
 }: ManageLinksSectionProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ link: ManagedLink; index: number } | null>(null);
+  const [showPalette, setShowPalette] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -97,8 +101,8 @@ export function ManageLinksSection({
 
   const filteredLinks = links.filter((link) => {
     if (activeTab === "all") return true;
-    if (activeTab === "published") return !link.draft;
-    return !!link.draft;
+    const vs = link.status ?? (link.draft ? "unpublished" : "published");
+    return vs === activeTab;
   });
 
   const activeLink = activeId
@@ -136,14 +140,31 @@ export function ManageLinksSection({
   return (
     <div className="animate-fade-in space-y-6">
       {/* Inline topbar — search, menu toggle, notifications */}
-      <DashboardTopBar />
+      <DashboardTopBar onSearchClick={() => setShowPalette(true)} />
+
+      <CommandPalette
+        open={showPalette}
+        onClose={() => setShowPalette(false)}
+        links={links}
+        onAddLink={onAddLink}
+      />
+
+      <DeleteConfirmDialog
+        open={pendingDelete !== null}
+        link={pendingDelete?.link}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) onDeleteLink?.(pendingDelete.link, pendingDelete.index);
+          setPendingDelete(null);
+        }}
+      />
 
       {/* Header row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1
             className="leading-[1.05]"
-            style={{ fontSize: 38, fontWeight: 400, letterSpacing: "-0.02em", color: "#0b1020", fontFamily: "Georgia, 'Times New Roman', serif" }}
+            style={{ fontSize: 38, fontWeight: 400, letterSpacing: "-0.02em", color: "#0b1020", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}
           >
             <em style={{ fontStyle: "italic" }}>Your</em>{" "}
             <em style={{ fontStyle: "italic", color: "#3b46e0" }}>links.</em>
@@ -240,7 +261,7 @@ export function ManageLinksSection({
                   key={getLinkId(link) + idx}
                   link={link}
                   onEdit={onEditLink ? () => onEditLink(link, originalIndex) : undefined}
-                  onDelete={onDeleteLink ? () => onDeleteLink(link, originalIndex) : undefined}
+                  onDelete={onDeleteLink ? () => setPendingDelete({ link, index: originalIndex }) : undefined}
                   onToggle={onToggleLink ? () => onToggleLink(link, originalIndex) : undefined}
                   onUpdate={
                     onUpdateLink
