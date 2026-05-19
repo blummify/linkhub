@@ -10,7 +10,8 @@ import {
   checkUserExists,
   loginWithCredentials,
   registerUser,
-  resendVerificationEmail,
+  resendVerificationCode,
+  sendVerificationCode,
 } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
@@ -30,7 +31,6 @@ export default function LoginPage() {
   const [isValidating, setIsValidating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [isResending, setIsResending] = useState(false);
 
   const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
@@ -108,11 +108,12 @@ export default function LoginPage() {
   const handleResendVerification = async () => {
     setIsResending(true);
     try {
-      const result = await resendVerificationEmail(email);
-      if (result?.error) {
+      const result = await resendVerificationCode(email);
+      if ("error" in result) {
         toast.error(result.error);
       } else {
-        toast.success("Verification email sent! Please check your inbox.");
+        toast.success("Verification code sent! Check your inbox.");
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -165,21 +166,8 @@ export default function LoginPage() {
         toast.error(result.error);
         return;
       }
-      const signInRes = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-      if (signInRes?.error) {
-        toast.error("Account created. Please sign in with your password.");
-        return;
-      }
-      setSuccess(true);
-      toast.success("Account created successfully! Redirecting...");
-      setTimeout(() => {
-        router.push("/user-dashboard");
-        router.refresh();
-      }, 1500);
+      sendVerificationCode(email).catch(() => {});
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch {
       toast.error("An unexpected error occurred.");
     } finally {
@@ -408,7 +396,7 @@ export default function LoginPage() {
               error={signupErrors.confirmPassword}
             />
             <button
-              disabled={isValidating || success}
+              disabled={isValidating}
               className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               type="submit"
             >
