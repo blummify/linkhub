@@ -31,7 +31,6 @@ export default function LoginPage() {
   const [isValidating, setIsValidating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [isResending, setIsResending] = useState(false);
 
   const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
@@ -110,7 +109,7 @@ export default function LoginPage() {
     setIsResending(true);
     try {
       const result = await resendVerificationCode(email);
-      if (result?.error) {
+      if ("error" in result) {
         toast.error(result.error);
       } else {
         toast.success("Verification code sent! Check your inbox.");
@@ -397,7 +396,7 @@ export default function LoginPage() {
               error={signupErrors.confirmPassword}
             />
             <button
-              disabled={isValidating || success}
+              disabled={isValidating}
               className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               type="submit"
             >
