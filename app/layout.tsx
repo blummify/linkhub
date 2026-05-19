@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google";
+import { Inter, Manrope, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { ThemeToggle } from "./ThemeToggle";
 import { Toaster } from "sonner";
@@ -8,6 +8,14 @@ import AuthSessionProvider from "./components/AuthSessionProvider";
 import { MaterialSymbols } from "./components/MaterialSymbols";
 import { GoogleOneTap } from "./components/auth/GoogleOneTap";
 import { auth } from "@/auth";
+
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
+});
 
 const manrope = Manrope({
   variable: "--next-font-manrope",
@@ -52,7 +60,7 @@ export default async function RootLayout({
       lang="en"
       suppressHydrationWarning
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${inter.variable} antialiased scroll-smooth`}
+      className={`${manrope.variable} ${inter.variable} ${instrumentSerif.variable} antialiased scroll-smooth`}
     >
       <head>
         {/* fonts.gstatic.com hosts the Material Symbols woff2 — prefetch the DNS early */}
