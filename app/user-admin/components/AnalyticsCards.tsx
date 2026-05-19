@@ -124,7 +124,7 @@ export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
                       fontSize: 22,
                       fontWeight: 400,
                       fontStyle: "italic",
-                      fontFamily: "Georgia, 'Times New Roman', serif",
+                      fontFamily: "var(--font-instrument-serif), Georgia, serif",
                       color: "#0b1020",
                       letterSpacing: "-0.02em",
                     }}
@@ -146,7 +146,7 @@ export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
                     fontSize: 26,
                     fontWeight: 400,
                     fontStyle: "italic",
-                    fontFamily: "Georgia, 'Times New Roman', serif",
+                    fontFamily: "var(--font-instrument-serif), Georgia, serif",
                     color: "#0b1020",
                     letterSpacing: "-0.02em",
                   }}

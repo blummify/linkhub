@@ -4,11 +4,11 @@ import { useRef } from "react";
 import { useSidebar } from "../../components/SidebarContext";
 import { useShortKey } from "../../components/hooks/useShortKey";
 
-export function DashboardTopBar() {
+export function DashboardTopBar({ onSearchClick }: { onSearchClick?: () => void }) {
   const { toggleSidebar } = useSidebar();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { modifier } = useShortKey(() => {
-    searchInputRef.current?.focus();
+    onSearchClick ? onSearchClick() : searchInputRef.current?.focus();
   });
 
   return (
@@ -37,7 +37,11 @@ export function DashboardTopBar() {
       </button>
 
       {/* Search bar */}
-      <div className="relative flex-1 flex items-center" style={{ height: 42 }}>
+      <div
+        className="relative flex-1 flex items-center"
+        style={{ height: 42, cursor: onSearchClick ? "pointer" : "text" }}
+        onClick={onSearchClick}
+      >
         <div className="absolute left-[14px] top-1/2 -translate-y-1/2 pointer-events-none">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b75a3" strokeWidth="2">
             <circle cx="11" cy="11" r="8"/>
@@ -47,14 +51,17 @@ export function DashboardTopBar() {
         <input
           ref={searchInputRef}
           type="text"
+          readOnly={!!onSearchClick}
           placeholder="Search links, pages, analytics…"
           className="w-full h-full pl-[42px] pr-4 lg:pr-[90px] text-[14px] text-[#0b1020] placeholder:text-[#6b75a3] outline-none transition-all"
           style={{
             borderRadius: 12,
             background: "white",
             border: "1px solid #eef0f7",
+            cursor: onSearchClick ? "pointer" : "text",
           }}
           onFocus={e => {
+            if (onSearchClick) { e.currentTarget.blur(); onSearchClick(); return; }
             e.currentTarget.style.borderColor = "#6873ff";
             e.currentTarget.style.boxShadow = "0 0 0 4px rgba(104,115,255,0.12)";
           }}
