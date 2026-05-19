@@ -10,7 +10,8 @@ import {
   checkUserExists,
   loginWithCredentials,
   registerUser,
-  resendVerificationEmail,
+  resendVerificationCode,
+  sendVerificationCode,
 } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
@@ -108,11 +109,12 @@ export default function LoginPage() {
   const handleResendVerification = async () => {
     setIsResending(true);
     try {
-      const result = await resendVerificationEmail(email);
+      const result = await resendVerificationCode(email);
       if (result?.error) {
         toast.error(result.error);
       } else {
-        toast.success("Verification email sent! Please check your inbox.");
+        toast.success("Verification code sent! Check your inbox.");
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -165,21 +167,8 @@ export default function LoginPage() {
         toast.error(result.error);
         return;
       }
-      const signInRes = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-      if (signInRes?.error) {
-        toast.error("Account created. Please sign in with your password.");
-        return;
-      }
-      setSuccess(true);
-      toast.success("Account created successfully! Redirecting...");
-      setTimeout(() => {
-        router.push("/user-dashboard");
-        router.refresh();
-      }, 1500);
+      sendVerificationCode(email).catch(() => {});
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch {
       toast.error("An unexpected error occurred.");
     } finally {
