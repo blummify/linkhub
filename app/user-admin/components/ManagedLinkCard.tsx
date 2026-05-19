@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
-import { isDemoManagedLink } from "@/lib/demoManagedLinks";
 import type { ManagedLink } from "./types";
 import { SiInstagram, SiYoutube, SiSpotify, SiX, SiBehance } from "react-icons/si";
 import { TbWorld } from "react-icons/tb";
@@ -54,6 +53,7 @@ function RowBtn({
     <button
       type="button"
       title={title}
+      aria-label={title}
       onClick={onClick}
       className="flex items-center justify-center cursor-pointer transition-all duration-150"
       style={{
@@ -83,7 +83,6 @@ export function ManagedLinkCard({
   isOverlay = false,
 }: ManagedLinkCardProps) {
   const { title, url, clicks, draft, trendLabel, createdAt } = link;
-  const isDemo = isDemoManagedLink(link);
   const [editingField, setEditingField] = useState<"title" | "url" | null>(null);
   const [tempTitle, setTempTitle] = useState(title);
   const [tempUrl, setTempUrl] = useState(url);
