@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
 import { AnalyticsCards } from "./AnalyticsCards";
+import { DashboardTopBar } from "./DashboardTopBar";
 
 export interface ManageLinksSectionProps {
   links: ManagedLink[];
@@ -134,14 +135,20 @@ export function ManageLinksSection({
 
   return (
     <div className="animate-fade-in space-y-6">
+      {/* Inline topbar — search, menu toggle, notifications */}
+      <DashboardTopBar />
+
       {/* Header row */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-on-surface">
-            <em style={{ fontStyle: "italic", fontFamily: "Georgia, serif" }}>Your</em>{" "}
-            <span className="text-primary">links.</span>
+          <h1
+            className="leading-[1.05]"
+            style={{ fontSize: 38, fontWeight: 400, letterSpacing: "-0.02em", color: "#0b1020", fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            <em style={{ fontStyle: "italic" }}>Your</em>{" "}
+            <em style={{ fontStyle: "italic", color: "#3b46e0" }}>links.</em>
           </h1>
-          <p className="mt-1 text-sm text-on-surface-variant">
+          <p className="mt-1.5" style={{ fontSize: 13.5, color: "#6b75a3" }}>
             Manage and organize your digital presence — one click at a time.
           </p>
         </div>
@@ -149,12 +156,29 @@ export function ManageLinksSection({
           <button
             type="button"
             onClick={onAddLink}
-            className="inline-flex shrink-0 items-center rounded-full px-5 py-2.5 text-sm font-medium text-white transition-colors duration-150 cursor-pointer active:scale-[0.98]"
-            style={{ backgroundColor: "#5B4FF5" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#4A3EE0")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#5B4FF5")}
+            className="inline-flex shrink-0 items-center gap-2 text-white cursor-pointer transition-all duration-150 active:scale-[0.98]"
+            style={{
+              borderRadius: 99,
+              padding: "11px 18px 11px 14px",
+              fontSize: 13.5,
+              fontWeight: 600,
+              border: 0,
+              background: "linear-gradient(180deg, #3b46e0, #2a37c0)",
+              boxShadow: "0 6px 18px -6px rgba(59,70,224,0.55), inset 0 1px 0 rgba(255,255,255,0.15)",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 10px 22px -6px rgba(59,70,224,0.55), inset 0 1px 0 rgba(255,255,255,0.15)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 18px -6px rgba(59,70,224,0.55), inset 0 1px 0 rgba(255,255,255,0.15)";
+            }}
           >
-            + Add new link
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/>
+            </svg>
+            Add new link
           </button>
         ) : null}
       </div>
@@ -163,9 +187,10 @@ export function ManageLinksSection({
       <AnalyticsCards />
 
       {/* Filter tab bar */}
-      <div className="flex items-center justify-between gap-4">
-        <span className="shrink-0 text-sm text-on-surface-variant">
-          {filteredLinks.length} link{filteredLinks.length !== 1 ? "s" : ""} · sorted by recent
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="mr-auto" style={{ fontSize: 12.5, color: "#6b75a3" }}>
+          <b style={{ color: "#0b1020", fontWeight: 600 }}>{filteredLinks.length} link{filteredLinks.length !== 1 ? "s" : ""}</b>
+          {" · sorted by recent"}
         </span>
         <div className="flex items-center gap-1 overflow-x-auto">
           {TABS.map(({ key, label }) => (
@@ -173,11 +198,22 @@ export function ManageLinksSection({
               key={key}
               type="button"
               onClick={() => setActiveTab(key)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-150 cursor-pointer ${
-                activeTab === key
-                  ? "bg-[#1a1a2e] text-white"
-                  : "text-on-surface-variant hover:bg-surface-container-low"
-              }`}
+              className="shrink-0 cursor-pointer transition-all duration-150"
+              style={{
+                borderRadius: 99,
+                padding: "6px 12px",
+                fontSize: 12.5,
+                fontWeight: 500,
+                border: "1px solid transparent",
+                background: activeTab === key ? "#0b1020" : "transparent",
+                color: activeTab === key ? "white" : "#3a4474",
+              }}
+              onMouseEnter={e => {
+                if (activeTab !== key) (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7";
+              }}
+              onMouseLeave={e => {
+                if (activeTab !== key) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              }}
             >
               {label}
             </button>
