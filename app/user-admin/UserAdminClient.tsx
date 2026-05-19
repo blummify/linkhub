@@ -3,14 +3,13 @@
 import { useState } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { useSidebar } from "../components/SidebarContext";
-import { MobilePreview, type AppearanceState } from "../components/MobilePreview";
+import { type AppearanceState } from "../components/MobilePreview";
 import { ShareProfileModal } from "../components/ShareProfileModal";
-import { PhoneFrame } from "../components/PhoneFrame";
+import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
-import { EDITOR_MOBILE_PREVIEW_SHARED } from "../constants/editorMobilePreview";
 import { PROFILE_PUBLIC_URL } from "../constants/profile";
 
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim } from "../actions/links";
@@ -181,19 +180,21 @@ export default function UserAdminClient() {
   };
 
   const handleToggleLink = async (link: ManagedLink, index: number) => {
+    const currentStatus = link.status ?? (link.draft ? "unpublished" : "published");
+    const willBePublished = currentStatus !== "published";
+    const newStatus = willBePublished ? "published" : "unpublished";
+
     if (isDemoManagedLink(link)) {
-      const newDraftState = !link.draft;
       const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, draft: newDraftState };
+      updatedLinks[index] = { ...link, draft: !willBePublished, status: newStatus };
       setLinks(updatedLinks);
       return;
     }
     if (!link.id) return;
     try {
-      const newDraftState = !link.draft;
-      await updateLink(link.id, { draft: newDraftState });
+      await updateLink(link.id, { draft: !willBePublished });
       const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, draft: newDraftState };
+      updatedLinks[index] = { ...link, draft: !willBePublished, status: newStatus };
       setLinks(updatedLinks);
     } catch (error) {
       console.error("Failed to toggle link:", error);
@@ -257,114 +258,14 @@ export default function UserAdminClient() {
               </div>
 
               {/* Preview panel */}
-              <div
-                className="hidden lg:flex shrink-0 flex-col items-center relative border-l"
-                style={{
-                  width: 420,
-                  background: "linear-gradient(180deg, #f0f2fb 0%, #e9ecf8 100%)",
-                  borderColor: "#eef0f7",
-                  padding: "28px 24px",
-                  position: "sticky",
-                  top: 0,
-                  height: "100vh",
-                  overflow: "hidden",
-                }}
-              >
-                {/* Radial glow overlays */}
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  aria-hidden
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at 20% 10%, rgba(104,115,255,0.12), transparent 50%), radial-gradient(circle at 80% 80%, rgba(59,70,224,0.10), transparent 50%)",
-                  }}
+              <div className="hidden lg:block">
+                <DashboardPreviewPanel
+                  links={links}
+                  displayName={appearance.profileTitle || "Your Name"}
+                  handle={PROFILE_PUBLIC_URL.split("/").pop() ?? ""}
+                  publicUrl={PROFILE_PUBLIC_URL}
+                  onShareClick={() => setShowShareModal(true)}
                 />
-
-                {/* Preview header */}
-                <div className="relative z-10 flex items-start justify-between w-full shrink-0" style={{ marginBottom: 18 }}>
-                  <div>
-                    <div style={{
-                      fontFamily: "Georgia, 'Times New Roman', serif",
-                      fontStyle: "italic",
-                      fontWeight: 400,
-                      fontSize: 22,
-                      letterSpacing: "-0.01em",
-                      color: "#0b1020",
-                    }}>
-                      Live preview
-                    </div>
-                    <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 2 }}>
-                      {PROFILE_PUBLIC_URL.split("/")[0]}/<span style={{ color: "#3b46e0", fontWeight: 500 }}>{PROFILE_PUBLIC_URL.split("/")[1]}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center" style={{ gap: 6 }}>
-                    <button
-                      type="button"
-                      title="Share"
-                      onClick={() => setShowShareModal(true)}
-                      className="flex items-center justify-center transition-all cursor-pointer"
-                      style={{ width: 32, height: 32, borderRadius: 8, border: 0, background: "white", color: "#6b75a3", boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7"; (e.currentTarget as HTMLButtonElement).style.color = "#0b1020"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "white"; (e.currentTarget as HTMLButtonElement).style.color = "#6b75a3"; }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
-                      </svg>
-                    </button>
-                    <a
-                      href={`https://${PROFILE_PUBLIC_URL}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Open in new tab"
-                      className="flex items-center justify-center transition-all cursor-pointer"
-                      style={{ width: 32, height: 32, borderRadius: 8, background: "white", color: "#6b75a3", boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)", textDecoration: "none" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = "#eef0f7"; (e.currentTarget as HTMLAnchorElement).style.color = "#0b1020"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = "white"; (e.currentTarget as HTMLAnchorElement).style.color = "#6b75a3"; }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
-                      </svg>
-                    </a>
-                  </div>
-                </div>
-
-                {/* Device tabs */}
-                <div
-                  className="relative z-10 flex self-center shrink-0"
-                  style={{
-                    background: "rgba(255,255,255,0.7)",
-                    border: "1px solid rgba(255,255,255,0.9)",
-                    backdropFilter: "blur(8px)",
-                    borderRadius: 99,
-                    padding: 3,
-                    marginBottom: 18,
-                  }}
-                >
-                  <div style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, color: "#0b1020", background: "white", borderRadius: 99, boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)", cursor: "default" }}>
-                    📱 Mobile
-                  </div>
-                  <div style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, color: "#6b75a3", borderRadius: 99, cursor: "default" }}>
-                    💻 Desktop
-                  </div>
-                </div>
-
-                <div className="relative z-10 animate-fade-in-up delay-100">
-                  <PhoneFrame>
-                    <MobilePreview
-                      {...EDITOR_MOBILE_PREVIEW_SHARED}
-                      appearance={appearance}
-                      linkRows={links
-                        .filter(l => !l.draft)
-                        .map(l => ({ kind: 'button', title: l.title, url: l.url, icon: l.icon, accent: true }))
-                      }
-                      linkDensity="relaxed"
-                      syncLabel={null}
-                      showDeviceFooter={false}
-                      onShareBarClick={() => setShowShareModal(true)}
-                      bare={true}
-                    />
-                  </PhoneFrame>
-                </div>
               </div>
             </div>
           </main>
