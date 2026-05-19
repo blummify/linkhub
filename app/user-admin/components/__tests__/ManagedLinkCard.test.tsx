@@ -35,13 +35,13 @@ describe("ManagedLinkCard", () => {
   });
 
   it("shows 'Draft' badge for a draft link", () => {
-    render(<ManagedLinkCard link={{ ...link, draft: true }} />);
-    expect(screen.getAllByText("Draft")[0]).toBeInTheDocument();
+    render(<ManagedLinkCard link={{ ...link, draft: true }} onToggle={vi.fn()} />);
+    expect(screen.getByText("Draft")).toBeInTheDocument();
   });
 
-  it("shows 'Sample' badge for demo links", () => {
+  it("does not show a Sample badge for demo links", () => {
     render(<ManagedLinkCard link={{ ...link, id: "__demo__test" }} />);
-    expect(screen.getByText("Sample")).toBeInTheDocument();
+    expect(screen.queryByText("Sample")).not.toBeInTheDocument();
   });
 
   it("calls onDelete when the delete button is clicked", () => {
