@@ -224,14 +224,14 @@ export default function UserAdminClient() {
   };
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
+    <div className="bg-[#f7f8fc] text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
       <CollapsibleSidebar isAdmin={true}>
         <div className="flex-1 flex flex-col min-h-screen relative">
           <main
             id="mainContent"
             className={`flex-1 transition-all duration-500 ease-in-out ${
               isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
-            } ml-0 overflow-y-auto bg-surface h-screen`}
+            } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
           >
             <div className="flex flex-col lg:flex-row min-h-screen">
               {/* Center section */}
