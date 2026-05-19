@@ -6,7 +6,7 @@ interface StatCardData {
   label: string;
   value?: string;
   change?: string;
-  changeType?: "green" | "blue";
+  changeType?: "green";
   sparkData?: number[];
   countryCode?: string;
   cityName?: string;
@@ -21,22 +21,22 @@ const DEFAULT_CARDS: StatCardData[] = [
   {
     label: "TOTAL CLICKS",
     value: "2,096",
-    change: "~ +12.4%",
+    change: "+12.4%",
     changeType: "green",
     sparkData: [10, 12, 9, 14, 11, 16, 15, 18, 20, 19],
   },
   {
     label: "PROFILE VIEWS",
     value: "854",
-    change: "~ +8.1%",
+    change: "+8.1%",
     changeType: "green",
     sparkData: [8, 10, 9, 11, 10, 12, 13, 11, 14, 15],
   },
   {
     label: "CTR",
     value: "63.2%",
-    change: "~ +3.0%",
-    changeType: "blue",
+    change: "+3.0%",
+    changeType: "green",
     sparkData: [12, 11, 13, 12, 14, 13, 14, 15, 14, 16],
   },
   {
@@ -47,7 +47,7 @@ const DEFAULT_CARDS: StatCardData[] = [
   },
 ];
 
-function Sparkline({ values, color }: { values: number[]; color: "green" | "blue" }) {
+function Sparkline({ values, color }: { values: number[]; color: "green" }) {
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
@@ -74,7 +74,7 @@ function Sparkline({ values, color }: { values: number[]; color: "green" | "blue
       <polyline
         points={points}
         fill="none"
-        stroke={color === "green" ? "#16a34a" : "#3b46e0"}
+        stroke="#16a34a"
         strokeWidth={1.5}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -160,13 +160,13 @@ export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
                       marginTop: 4,
                       fontSize: 11.5,
                       fontWeight: 500,
-                      color: card.changeType === "blue" ? "#3b46e0" : "#16a34a",
+                      color: "#16a34a",
                     }}
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M7 17l5-5 4 4 6-7"/>
                     </svg>
-                    {card.change.replace("~ ", "")}
+                    {card.change}
                   </div>
                 )}
                 {card.sparkData && card.changeType && (
