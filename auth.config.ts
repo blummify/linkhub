@@ -37,7 +37,9 @@ export default {
         token.role = user.role ?? "USER";
         token.name = user.name ?? null;
         token.email = user.email ?? null;
-        token.emailVerified = user.emailVerified ?? null;
+        // Google already verifies email ownership; don't require a separate code step
+        token.emailVerified =
+          user.emailVerified ?? (account?.provider === "google" ? new Date() : null);
         token.picture =
           user.image ??
           (typeof profile === "object" &&
