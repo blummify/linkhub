@@ -264,6 +264,11 @@ export interface MobilePreviewProps {
   linkDensity?: "default" | "relaxed";
   /** Show the Report / Privacy / Join button at the bottom of the phone screen */
   showDeviceFooter?: boolean;
+  /**
+   * Skip the outer phone shell (dark frame + notch + screen background).
+   * Use when PhoneFrame wraps this component and provides the shell.
+   */
+  bare?: boolean;
 }
 
 export const MobilePreview: React.FC<MobilePreviewProps> = ({
@@ -285,6 +290,7 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
   className = "",
   linkDensity = "default",
   showDeviceFooter = false,
+  bare = false,
 }) => {
   const rows = linkRows.length ? linkRows : DEFAULT_LINK_ROWS;
   const slug = appearance.profileTitle.replace(/^@/, "") || "profile";
@@ -305,6 +311,113 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                 : "ring-slate-200/90 dark:ring-slate-600/50"
             }`
           : "shadow-sm";
+
+  if (bare) {
+    return (
+      <div className="w-full h-full flex flex-col min-h-0" style={previewTypographyVars(appearance)}>
+        <style>{previewInjectedCss(appearance)}</style>
+        <style>{previewCardButtonStyleCss(appearance)}</style>
+        <style>{previewTypographyCss()}</style>
+
+        <div className="overflow-y-auto overflow-x-hidden scrollbar-hide preview-shell min-h-0 w-full flex-1">
+          <div className="flex flex-col items-center text-center pb-1">
+            <div
+              className={`relative overflow-hidden shadow-xl flex items-center justify-center ${
+                appearance.themeId === "midnight-oasis"
+                  ? "shadow-black/30 border border-white/10 ring-4 ring-white/10"
+                  : "shadow-slate-200/50 border border-slate-50 ring-4 ring-white/50"
+              } mb-5 ${
+                profileAvatarShape === "rounded" ? "w-20 h-20 rounded-3xl" : "w-20 h-20 rounded-full"
+              } ${
+                appearance.themeId === "air"
+                  ? "bg-slate-100"
+                  : appearance.themeId === "midnight-oasis"
+                    ? "bg-slate-800/60"
+                    : "bg-white"
+              }`}
+            >
+              {profileImageUrl ? (
+                <Image src={profileImageUrl} alt="" fill className="object-cover" unoptimized sizes="80px" />
+              ) : (
+                <span
+                  className={`material-symbols-outlined text-4xl ${
+                    appearance.themeId === "bliss"
+                      ? "text-fuchsia-600"
+                      : appearance.themeId === "midnight-oasis"
+                        ? "text-sky-400"
+                        : "text-primary"
+                  }`}
+                >
+                  {profileIcon}
+                </span>
+              )}
+            </div>
+            <h3
+              className={`preview-headline font-black tracking-tight mb-1 ${appearance.titleSize === "large" ? "text-xl" : "text-lg sm:text-xl"}`}
+              style={{ color: appearance.titleColor }}
+            >
+              {appearance.profileTitle}
+            </h3>
+            <p className="preview-body-text text-[10px] sm:text-[11px] font-medium leading-relaxed px-2 opacity-80 max-w-[220px] mb-5">
+              {appearance.profileBio}
+            </p>
+            <div className="w-full text-left space-y-2.5">
+              {rows.map((row, idx) =>
+                row.kind === "label" ? (
+                  <div key={`${row.title}-${idx}`} className="flex items-center justify-center px-1.5">
+                    <span className="preview-label text-[11px] font-semibold tracking-tight">{row.title}</span>
+                  </div>
+                ) : (
+                  <a
+                    key={`${row.title}-${idx}`}
+                    href={row.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-preview-btn={linkBtnStyle}
+                    className={`preview-card preview-card-btn w-full px-2.5 sm:px-3 ${linkCardRadius} flex items-center justify-start hover:translate-x-0.5 transition-all ${row.url ? "cursor-pointer" : "cursor-default"} py-2 sm:py-2.5 ${linkCardShadow} ${row.accent ? "border-l-[3px] border-l-primary" : ""}`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {row.icon ? (
+                        <span className="material-symbols-outlined text-[14px] opacity-70 shrink-0">{row.icon}</span>
+                      ) : (
+                        <div className="w-4 shrink-0" />
+                      )}
+                      <span className="preview-link-title font-bold text-[11px] leading-snug truncate">{row.title}</span>
+                    </div>
+                  </a>
+                ),
+              )}
+            </div>
+          </div>
+        </div>
+
+        {showDeviceFooter && (
+          <div
+            className={`pt-3 sm:pt-4 border-t flex flex-col items-center gap-2.5 sm:gap-3 shrink-0 ${
+              appearance.themeId === "midnight-oasis" ? "border-white/10" : "border-slate-100/80"
+            }`}
+          >
+            <button
+              type="button"
+              className={`px-3 py-1 rounded-full font-bold text-[8px] sm:text-[9px] shadow-sm ${
+                appearance.themeId === "midnight-oasis" ? "bg-white text-slate-900" : "bg-slate-900 text-white"
+              }`}
+            >
+              Join {slug} on Linktree
+            </button>
+            <div
+              className={`flex gap-3 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest ${
+                appearance.themeId === "midnight-oasis" ? "text-slate-500" : "text-slate-300"
+              }`}
+            >
+              <span>Report</span>
+              <span>Privacy</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`flex flex-col items-center w-full min-w-0 ${className}`}>
@@ -369,17 +482,17 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
         )}
 
         <div
-          className={`relative z-10 mx-auto w-full max-w-[320px] aspect-[320/560] sm:aspect-auto sm:h-[580px] sm:w-[320px] bg-slate-950 rounded-[3rem] sm:rounded-[3.5rem] p-3 ring-[10px] sm:ring-[12px] ring-slate-900 border border-slate-800/50 shadow-[0px_80px_120px_-20px_rgba(0,0,0,0.25)] ${
+          className={`relative z-10 mx-auto w-full max-w-[260px] aspect-[260/530] sm:aspect-auto sm:h-[530px] sm:w-[260px] bg-slate-950 rounded-[42px] p-2 ring-[8px] ring-slate-900 border border-slate-800/50 shadow-[0px_40px_80px_-20px_rgba(30,42,138,0.25),0px_16px_32px_-16px_rgba(15,23,42,0.12)] ${
             relaxed
-              ? "shadow-2xl shadow-black/40"
+              ? "shadow-[0px_40px_80px_-20px_rgba(30,42,138,0.25),0px_16px_32px_-16px_rgba(15,23,42,0.12)]"
               : ""
           }`}
         >
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-6 bg-slate-950 rounded-full z-20 border border-slate-800/30" />
+          <div className="absolute top-[14px] left-1/2 -translate-x-1/2 w-[90px] h-[22px] bg-slate-950 rounded-full z-20" />
 
           <div
-            className={`w-full h-full rounded-[2.2rem] sm:rounded-[3rem] overflow-hidden relative flex flex-col min-h-0 pt-14 sm:pt-16 pb-4 sm:pb-5 transition-all duration-700 ${
-              relaxed ? "px-5 sm:px-6" : "px-4 sm:px-5"
+            className={`w-full h-full rounded-[34px] overflow-hidden relative flex flex-col min-h-0 pt-12 pb-4 transition-all duration-700 ${
+              relaxed ? "px-5" : "px-4"
             }`}
             style={{ ...phoneFrameBackground(appearance), ...previewTypographyVars(appearance) }}
           >
