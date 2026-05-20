@@ -243,8 +243,7 @@ export default function UserAdminClient() {
               <div className="flex flex-col lg:flex-row min-h-screen">
                 {/* Center section */}
                 <div
-                  className="flex-1 animate-fade-in-up"
-                  style={{ padding: "22px 32px 40px", minWidth: 0 }}
+                  className="flex-1 animate-fade-in-up min-w-0 px-4 pt-[22px] pb-10 sm:px-6 lg:px-8"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center h-64">
