@@ -7,10 +7,12 @@ import { useSidebar } from "../components/SidebarContext";
 import { MobilePreview } from "../components/MobilePreview";
 import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
 import { LinksStyleTwoColumnLayout } from "../components/LinksStyleTwoColumnLayout";
-import { EDITOR_MOBILE_PREVIEW_SHARED, EDITOR_PREVIEW_COLUMN_CLASS } from "../constants/editorMobilePreview";
+import { EDITOR_PREVIEW_COLUMN_CLASS } from "../constants/editorMobilePreview";
+import { useEditorMobilePreview } from "../hooks/useEditorMobilePreview";
 
 export default function LinksClient() {
   const { isCollapsed } = useSidebar();
+  const mobilePreviewProps = useEditorMobilePreview({ linkDensity: "relaxed" });
 
   return (
     <div className="bg-surface text-on-surface min-h-screen antialiased flex overflow-hidden">
@@ -162,7 +164,7 @@ export default function LinksClient() {
             }
             preview={
               <LinksPreviewPanel>
-                <MobilePreview {...EDITOR_MOBILE_PREVIEW_SHARED} linkDensity="relaxed" />
+                <MobilePreview {...mobilePreviewProps} />
               </LinksPreviewPanel>
             }
           />
