@@ -347,7 +347,7 @@ export default function UserAnalyticsClient() {
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
         >
-          <div style={{ padding: "22px 40px 56px", maxWidth: 1180, margin: "0 auto" }}>
+          <div className="flex-1 animate-fade-in-up" style={{ padding: "22px 32px 60px", minWidth: 0 }}>
             <DashboardTopBar
               searchPlaceholder="Search metrics, date ranges, actions…"
               onSearchClick={() => setShowPalette(true)}
