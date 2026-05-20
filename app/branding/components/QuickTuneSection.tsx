@@ -1,5 +1,6 @@
 "use client";
 
+import { BRANDING_BUTTON_SHAPES } from "@/app/constants/brandingButtonShapes";
 import { BRANDING_HEADING_FONT_OPTIONS } from "@/app/constants/brandingFonts";
 
 const ACCENT_PRESETS: { color: string; gradient: string }[] = [
@@ -10,12 +11,6 @@ const ACCENT_PRESETS: { color: string; gradient: string }[] = [
   { color: "#7c3aed", gradient: "linear-gradient(135deg, #7c3aed, #a78bfa)" },
   { color: "#0891b2", gradient: "linear-gradient(135deg, #0891b2, #22d3ee)" },
   { color: "#1a1a1a", gradient: "linear-gradient(135deg, #1a1a1a, #525252)" },
-];
-
-const BUTTON_SHAPES: { id: string; label: string; radius: number }[] = [
-  { id: "square", label: "Square", radius: 0 },
-  { id: "rounded", label: "Rounded", radius: 4 },
-  { id: "pill", label: "Pill", radius: 999 },
 ];
 
 interface QuickTuneSectionProps {
@@ -118,7 +113,7 @@ export function QuickTuneSection({
         <div>
           <p style={qtLabel}>Button shape</p>
           <div style={{ display: "flex", gap: 8 }}>
-            {BUTTON_SHAPES.map(({ id, label, radius }) => {
+            {BRANDING_BUTTON_SHAPES.map(({ id, label, radiusPx }) => {
               const active = buttonStyle === id;
               return (
                 <button
@@ -143,7 +138,7 @@ export function QuickTuneSection({
                     style={{
                       width: "100%",
                       height: 12,
-                      borderRadius: radius,
+                      borderRadius: radiusPx,
                       background: "#0b1020",
                     }}
                   />
