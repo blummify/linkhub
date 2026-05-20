@@ -6,7 +6,7 @@ import type { ManagedLink } from "../user-admin/components/types";
 
 const NAV_ITEMS = [
   { label: "Links",     href: "/user-dashboard", icon: "links"      },
-  { label: "Branding",  href: "/appearance",     icon: "appearance" },
+  { label: "Branding",  href: "/branding",       icon: "appearance" },
   { label: "Analytics", href: "/user-analytics", icon: "analytics"  },
 ];
 

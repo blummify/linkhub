@@ -135,19 +135,44 @@ function ShareNetIcon({ network }: { network: string }) {
   return null;
 }
 
+// ── Theme helpers ──────────────────────────────────────────────────────────────
+function isDarkBg(hex: string): boolean {
+  if (!hex.startsWith("#") || hex.length < 7) return false;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 < 128;
+}
+
+export interface AppearanceTheme {
+  bgColor?: string;
+  textColor?: string;
+  titleColor?: string;
+  buttonStyle?: string;
+}
+
 // ── Phone screen content ──────────────────────────────────────────────────────
 function PhoneScreenContent({
   displayName,
   handle,
   links,
   avatarSize = 70,
+  appearance,
 }: {
   displayName: string;
   handle: string;
   links: ManagedLink[];
   avatarSize?: number;
+  appearance?: AppearanceTheme;
 }) {
   const initial = displayName.charAt(0).toUpperCase() || "?";
+  const dark = appearance?.bgColor ? isDarkBg(appearance.bgColor) : false;
+  const titleColor = appearance?.titleColor ?? "#0b1020";
+  const subtitleColor = dark ? "rgba(255,255,255,0.5)" : "#6b75a3";
+  const linkCardBg = dark ? "rgba(255,255,255,0.08)" : "white";
+  const linkCardBorder = dark ? "rgba(255,255,255,0.10)" : "#eef0f7";
+  const linkTextColor = dark ? "rgba(255,255,255,0.88)" : "#0b1020";
+  const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
   const published = links.filter(
     (l) => (l.status ?? (l.draft ? "unpublished" : "published")) === "published"
   );
@@ -196,7 +221,7 @@ function PhoneScreenContent({
           fontFamily: "var(--font-instrument-serif), Georgia, serif",
           fontStyle: "italic",
           fontSize: 19,
-          color: "#0b1020",
+          color: titleColor,
           letterSpacing: "-0.01em",
           textAlign: "center",
           lineHeight: 1.1,
@@ -211,7 +236,7 @@ function PhoneScreenContent({
           style={{
             fontSize: 11.5,
             fontFamily: "'Geist Mono', ui-monospace, 'Courier New', monospace",
-            color: "#3b46e0",
+            color: dark ? "rgba(255,255,255,0.55)" : "#3b46e0",
             marginTop: 3,
           }}
         >
@@ -223,7 +248,7 @@ function PhoneScreenContent({
       <div
         style={{
           fontSize: 11,
-          color: "#6b75a3",
+          color: subtitleColor,
           margin: "8px 12px 16px",
           textAlign: "center",
           lineHeight: 1.5,
@@ -240,11 +265,11 @@ function PhoneScreenContent({
             title={label}
             style={{
               width: 26, height: 26,
-              background: "white",
+              background: dark ? "rgba(255,255,255,0.1)" : "white",
               borderRadius: "50%",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#6b75a3",
-              boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)",
+              color: subtitleColor,
+              boxShadow: dark ? "none" : "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)",
             }}
           >
             {svg}
@@ -269,7 +294,7 @@ function PhoneScreenContent({
           <div
             style={{
               textAlign: "center",
-              color: "#6b75a3",
+              color: subtitleColor,
               fontSize: 11,
               padding: "20px 0",
             }}
@@ -281,8 +306,8 @@ function PhoneScreenContent({
             <div
               key={link.id ?? i}
               style={{
-                background: "white",
-                border: "1px solid #eef0f7",
+                background: linkCardBg,
+                border: `1px solid ${linkCardBorder}`,
                 borderRadius: 12,
                 padding: "11px 14px",
                 display: "flex",
@@ -290,8 +315,8 @@ function PhoneScreenContent({
                 gap: 10,
                 fontSize: 12.5,
                 fontWeight: 500,
-                color: "#0b1020",
-                boxShadow: "0 2px 6px rgba(15,23,42,0.04)",
+                color: linkTextColor,
+                boxShadow: dark ? "none" : "0 2px 6px rgba(15,23,42,0.04)",
               }}
             >
               <PhoneLinkIcon iconKey={link.icon} />
@@ -306,7 +331,7 @@ function PhoneScreenContent({
               >
                 {link.title}
               </span>
-              <span style={{ color: "#a8aecb", flexShrink: 0 }}>
+              <span style={{ color: linkChevronColor, flexShrink: 0 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
                 </svg>
@@ -391,7 +416,7 @@ function PreviewActionBtn({
 }
 
 // ── Phone shell (frame + notch + gradient screen) ─────────────────────────────
-function PhoneShell({ children }: { children: React.ReactNode }) {
+function PhoneShell({ children, bgColor }: { children: React.ReactNode; bgColor?: string }) {
   return (
     <div
       style={{
@@ -424,7 +449,7 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
           borderRadius: 34,
           overflow: "hidden",
           position: "relative",
-          background: "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
+          background: bgColor ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
           padding: "44px 22px 22px",
           display: "flex",
           flexDirection: "column",
@@ -451,7 +476,7 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
 }
 
 // ── Browser shell (desktop mode) ──────────────────────────────────────────────
-function BrowserShell({ children }: { children: React.ReactNode }) {
+function BrowserShell({ children, bgColor }: { children: React.ReactNode; bgColor?: string }) {
   return (
     <div
       style={{
@@ -504,7 +529,7 @@ function BrowserShell({ children }: { children: React.ReactNode }) {
       <div
         style={{
           position: "absolute", top: 32, left: 0, right: 0, bottom: 0,
-          background: "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
+          background: bgColor ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
           padding: "24px 28px 24px",
           display: "flex", flexDirection: "column",
           overflow: "hidden",
@@ -674,6 +699,8 @@ export interface DashboardPreviewPanelProps {
   publicUrl: string;
   /** Panel width (default 420) */
   width?: number;
+  /** Optional theme applied to the phone/browser screen for the branding editor */
+  appearance?: AppearanceTheme;
 }
 
 export function DashboardPreviewPanel({
@@ -682,6 +709,7 @@ export function DashboardPreviewPanel({
   handle = "",
   publicUrl,
   width = 420,
+  appearance,
 }: DashboardPreviewPanelProps) {
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -999,20 +1027,22 @@ export function DashboardPreviewPanel({
         }}
       >
         {device === "desktop" ? (
-          <BrowserShell>
+          <BrowserShell bgColor={appearance?.bgColor}>
             <PhoneScreenContent
               displayName={displayName}
               handle={handle}
               links={links}
               avatarSize={76}
+              appearance={appearance}
             />
           </BrowserShell>
         ) : (
-          <PhoneShell>
+          <PhoneShell bgColor={appearance?.bgColor}>
             <PhoneScreenContent
               displayName={displayName}
               handle={handle}
               links={links}
+              appearance={appearance}
             />
           </PhoneShell>
         )}

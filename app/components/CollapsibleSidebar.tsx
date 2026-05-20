@@ -19,7 +19,7 @@ import UpgradeCard from "./UpgradeCard";
 
 const NAV_ITEMS = [
   { label: "Links",     href: "/user-dashboard", Icon: LinksIcon,      showBadge: true },
-  { label: "Branding",  href: "/appearance",     Icon: AppearanceIcon              },
+  { label: "Branding",  href: "/branding",       Icon: AppearanceIcon              },
   { label: "Analytics", href: "/user-analytics", Icon: AnalyticsIcon               },
 ];
 
@@ -86,7 +86,7 @@ export default function CollapsibleSidebar({
         {/* Brand */}
 
       <div className={`flex items-center justify-center ${isCollapsed ? 'mb-6 pt-1' : 'mb-8 pt-2'}`} >
-        <Link href="/">
+        <Link href="/user-dashboard">
           <Image
             src="/link_hub_logo.png"
             alt="LinkHub Logo"
