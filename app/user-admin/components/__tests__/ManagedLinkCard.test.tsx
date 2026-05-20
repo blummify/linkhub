@@ -16,7 +16,7 @@ describe("ManagedLinkCard", () => {
   it("renders the link title and URL", () => {
     render(<ManagedLinkCard link={link} />);
     expect(screen.getByText("My Website")).toBeInTheDocument();
-    expect(screen.getByText("https://example.com")).toBeInTheDocument();
+    expect(screen.getByText("example.com")).toBeInTheDocument();
   });
 
   it("shows click count in stats", () => {
@@ -34,9 +34,9 @@ describe("ManagedLinkCard", () => {
     expect(screen.getByText("Published")).toBeInTheDocument();
   });
 
-  it("shows 'Draft' badge for a draft link", () => {
+  it("shows 'Unpublished' badge for a draft link", () => {
     render(<ManagedLinkCard link={{ ...link, draft: true }} onToggle={vi.fn()} />);
-    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(screen.getByText("Unpublished")).toBeInTheDocument();
   });
 
   it("does not show a Sample badge for demo links", () => {
@@ -58,10 +58,10 @@ describe("ManagedLinkCard", () => {
     expect(onEdit).toHaveBeenCalledOnce();
   });
 
-  it("calls onToggle when the draft/active badge is clicked", () => {
+  it("calls onToggle when the publish toggle is clicked", () => {
     const onToggle = vi.fn();
     render(<ManagedLinkCard link={link} onToggle={onToggle} />);
-    fireEvent.click(screen.getByTitle("Mark as draft"));
+    fireEvent.click(screen.getByTitle("Unpublish"));
     expect(onToggle).toHaveBeenCalledOnce();
   });
 

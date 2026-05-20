@@ -199,24 +199,30 @@ function SourceIcon({ name }: { name: string }) {
 function DonutChart() {
   const cx = 50, cy = 50, r = 36, sw = 14;
   const C = 2 * Math.PI * r;
-  let offset = 0;
-  const segments = DEVICES.map((d, i) => {
-    const dash = (d.pct / 100) * C;
-    const el = (
-      <circle
-        key={i}
-        cx={cx} cy={cy} r={r}
-        fill="none"
-        stroke={d.color}
-        strokeWidth={sw}
-        strokeDasharray={`${dash} ${C - dash}`}
-        strokeDashoffset={-offset}
-        transform={`rotate(-90 ${cx} ${cy})`}
-      />
-    );
-    offset += dash;
-    return el;
-  });
+  const segments = DEVICES.reduce<{
+    nodes: React.ReactNode[];
+    offset: number;
+  }>(
+    (acc, d, i) => {
+      const dash = (d.pct / 100) * C;
+      acc.nodes.push(
+        <circle
+          key={i}
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke={d.color}
+          strokeWidth={sw}
+          strokeDasharray={`${dash} ${C - dash}`}
+          strokeDashoffset={-acc.offset}
+          transform={`rotate(-90 ${cx} ${cy})`}
+        />
+      );
+      return { nodes: acc.nodes, offset: acc.offset + dash };
+    },
+    { nodes: [], offset: 0 }
+  ).nodes;
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
