@@ -3,9 +3,6 @@
 import { useState, useEffect } from "react";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import type { ManagedLink } from "./types";
-import { SiInstagram, SiYoutube, SiSpotify, SiX, SiBehance } from "react-icons/si";
-import { TbWorld } from "react-icons/tb";
-
 export interface ManagedLinkCardProps {
   link: ManagedLink;
   onEdit?: () => void;
@@ -17,14 +14,60 @@ export interface ManagedLinkCardProps {
   isOverlay?: boolean;
 }
 
-const ICON_MAP = {
-  website:   { Icon: TbWorld,     bgColor: "#eff6ff", textColor: "#3b82f6"  },
-  instagram: { Icon: SiInstagram, bgColor: "#fdf2f8", textColor: "#ec4899"  },
-  youtube:   { Icon: SiYoutube,   bgColor: "#fef2f2", textColor: "#ef4444"  },
-  twitter:   { Icon: SiX,         bgColor: "#f3f4f6", textColor: "#374151"  },
-  spotify:   { Icon: SiSpotify,   bgColor: "#f0fdf4", textColor: "#16a34a"  },
-  behance:   { Icon: SiBehance,   bgColor: "#e9f3ff", textColor: "#1565d8"  },
-} as const;
+function IconGlobe() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path strokeLinecap="round" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+    </svg>
+  );
+}
+function IconInstagram() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="2" y="2" width="20" height="20" rx="5"/>
+      <circle cx="12" cy="12" r="4"/>
+      <circle cx="17.5" cy="6.5" r=".5" fill="currentColor"/>
+    </svg>
+  );
+}
+function IconYoutube() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42 29 29 0 001 12a29 29 0 00.46 5.58 2.78 2.78 0 001.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.96A29 29 0 0023 12a29 29 0 00-.46-5.58zM9.75 15.02V8.98L15.5 12z"/>
+    </svg>
+  );
+}
+function IconX() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  );
+}
+function IconSpotify() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+    </svg>
+  );
+}
+function IconBehance() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M6.938 4.503c.702 0 1.34.06 1.92.188.577.13 1.07.33 1.485.61.41.28.733.65.96 1.12.225.47.34 1.05.34 1.73 0 .74-.17 1.36-.506 1.86-.337.5-.837.9-1.502 1.22.906.26 1.576.72 2.022 1.37.448.66.665 1.45.665 2.36 0 .75-.13 1.39-.41 1.93-.28.55-.67 1-1.16 1.35-.49.35-1.05.6-1.697.76-.645.16-1.3.24-1.97.24H0V4.503h6.938zm-.485 5.38H3.351V6.636h2.72c.5 0 .912.1 1.23.305.32.2.48.53.48 1 0 .496-.165.828-.494 1.002-.33.174-.762.26-1.293.26l-.54-.004v.003zm-3.1 1.485v2.996H6.46c.448 0 .84-.065 1.182-.2.34-.13.625-.3.854-.51.23-.21.4-.46.513-.745.112-.285.17-.596.17-.936 0-.356-.052-.68-.162-.97a2.023 2.023 0 00-.474-.75 2.088 2.088 0 00-.764-.48c-.3-.114-.64-.172-1.02-.172H3.353zm12.32 4.5c.448 0 .838-.09 1.17-.27.335-.18.59-.436.764-.77h2.43c-.316 1.12-1.006 1.954-2.067 2.498-1.06.543-2.196.815-3.406.815-.95 0-1.82-.157-2.607-.47-.79-.312-1.47-.754-2.04-1.323-.57-.57-1.01-1.25-1.32-2.042-.308-.79-.463-1.663-.463-2.617 0-.925.16-1.79.48-2.593.32-.8.764-1.5 1.335-2.093.57-.593 1.25-1.058 2.04-1.394.79-.336 1.65-.504 2.578-.504.97 0 1.85.178 2.63.536.78.358 1.442.843 1.985 1.455.542.612.956 1.333 1.243 2.16.287.83.41 1.72.37 2.676h-8.09c.046 1.004.322 1.75.83 2.242.507.49 1.14.736 1.9.736zm1.934-5.004c-.072-.93-.34-1.65-.81-2.163-.47-.513-1.1-.77-1.886-.77-.825 0-1.474.267-1.95.8-.475.535-.73 1.243-.76 2.13h5.406zM14.8 3.75h5.407v1.25H14.8V3.75z"/>
+    </svg>
+  );
+}
+
+const ICON_MAP: Record<string, { Icon: () => React.ReactElement; bgColor: string; textColor: string }> = {
+  website:   { Icon: IconGlobe,     bgColor: "#eff6ff", textColor: "#3b82f6" },
+  instagram: { Icon: IconInstagram, bgColor: "#fdf2f8", textColor: "#ec4899" },
+  youtube:   { Icon: IconYoutube,   bgColor: "#fef2f2", textColor: "#ef4444" },
+  twitter:   { Icon: IconX,         bgColor: "#f3f4f6", textColor: "#374151" },
+  spotify:   { Icon: IconSpotify,   bgColor: "#f0fdf4", textColor: "#16a34a" },
+  behance:   { Icon: IconBehance,   bgColor: "#e9f3ff", textColor: "#1565d8" },
+};
 
 type IconKey = keyof typeof ICON_MAP;
 
@@ -173,7 +216,7 @@ export function ManagedLinkCard({
           }}
         >
           {iconEntry ? (
-            <iconEntry.Icon style={{ fontSize: 18, color: iconEntry.textColor }} />
+            <iconEntry.Icon />
           ) : (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
