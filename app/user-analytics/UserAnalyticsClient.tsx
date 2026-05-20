@@ -354,22 +354,14 @@ export default function UserAnalyticsClient() {
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
         >
-          <div className="flex-1 animate-fade-in-up" style={{ padding: "22px 32px 60px", minWidth: 0 }}>
+          <div className="flex-1 animate-fade-in-up min-w-0 px-4 pt-[22px] pb-14 sm:px-6 lg:px-8">
             <DashboardTopBar
               searchPlaceholder="Search metrics, date ranges, actions…"
               onSearchClick={() => setShowPalette(true)}
             />
 
             {/* Page head */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-end",
-                justifyContent: "space-between",
-                gap: 20,
-                marginBottom: 28,
-              }}
-            >
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-7">
               <div>
                 <div style={{ fontSize: 12, color: "#6b75a3", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                   <span>Workspace</span>
@@ -379,10 +371,10 @@ export default function UserAnalyticsClient() {
                   <span style={{ color: "#0b1020", fontWeight: 500 }}>Analytics</span>
                 </div>
                 <h1
+                  className="text-[32px] sm:text-[42px]"
                   style={{
                     fontFamily: "var(--font-instrument-serif), Georgia, serif",
                     fontStyle: "italic",
-                    fontSize: 42,
                     lineHeight: 1,
                     letterSpacing: "-0.02em",
                     color: "#0b1020",
@@ -396,7 +388,7 @@ export default function UserAnalyticsClient() {
                 </p>
               </div>
 
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div className="flex gap-2 items-center flex-wrap">
                 {/* Range pills */}
                 <div
                   style={{
@@ -462,14 +454,7 @@ export default function UserAnalyticsClient() {
             </div>
 
             {/* KPI row */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: 14,
-                marginBottom: 24,
-              }}
-            >
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
               {/* Total clicks */}
               <div style={kpiCard}>
                 <div style={kpiLabel}>
@@ -567,7 +552,7 @@ export default function UserAnalyticsClient() {
             </div>
 
             {/* Top links + Sources */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mb-3.5">
 
               {/* Top links */}
               <div style={panelCard}>
@@ -656,7 +641,7 @@ export default function UserAnalyticsClient() {
             </div>
 
             {/* Devices + Geography */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
 
               {/* Devices donut */}
               <div style={panelCard}>

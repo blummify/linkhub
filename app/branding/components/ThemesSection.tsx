@@ -349,13 +349,7 @@ export function ThemesSection({
         })}
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
-        }}
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {filteredThemes.map((theme) => (
           <ThemePreviewCard
             key={theme.id}
