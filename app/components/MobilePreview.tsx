@@ -2,6 +2,11 @@
 
 import Image from "next/image";
 import React from "react";
+import {
+  BRANDING_HEADING_FONT_OPTIONS,
+  brandingHeadingFontStack,
+  isBrandingHeadlineFont,
+} from "../constants/brandingFonts";
 import { bodyFontStack, headlineFontStack } from "../constants/previewFonts";
 
 export interface AppearanceState {
@@ -11,6 +16,10 @@ export interface AppearanceState {
   themeId: string;
   wallpaperStyle: string;
   bgColor: string;
+  /** Full screen background (solid or gradient) from branding themes */
+  bgStyle?: string;
+  /** Explicit light/dark preview mode (from branding themes) */
+  dark?: boolean;
   textColor: string;
   buttonStyle: string;
   buttonShadow: string;
@@ -19,6 +28,8 @@ export interface AppearanceState {
   fontFamily: string;
   /** Bio + link rows in preview */
   bodyFontFamily: string;
+  /** Extra headline styles when using branding fonts (italic, weight) */
+  headlineStyle?: React.CSSProperties;
   titleSize: "small" | "large";
   titleColor: string;
   footerStyle: "minimal" | "default" | "socials";
@@ -26,20 +37,23 @@ export interface AppearanceState {
 
 /** Demo defaults aligned with the Appearance / Links editor mock data */
 export const DEFAULT_APPEARANCE: AppearanceState = {
-  profileTitle: "@yourname",
-  profileBio: "Digital Curator & Designer",
+  profileTitle: "Your Name",
+  profileBio: "Connecting with your community.",
   profileLayout: "classic",
-  themeId: "custom",
+  themeId: "monochrome",
   wallpaperStyle: "fill",
-  bgColor: "#fcfaff",
-  textColor: "#1e293b",
-  buttonStyle: "flat",
+  bgColor: "#ffffff",
+  bgStyle: "#ffffff",
+  dark: false,
+  textColor: "#0b1020",
+  buttonStyle: "rounded",
   buttonShadow: "none",
   buttonRoundness: "full",
-  fontFamily: "Inter",
-  bodyFontFamily: "Inter",
+  fontFamily: "Instrument Serif",
+  bodyFontFamily: "Geist",
+  headlineStyle: { fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.01em" },
   titleSize: "small",
-  titleColor: "#0f172a",
+  titleColor: "#3b46e0",
   footerStyle: "minimal",
 };
 
@@ -57,14 +71,27 @@ const DEFAULT_LINK_ROWS: PreviewLinkRow[] = [];
 
 /** Maps editor values (`solid` legacy) to preview link-button variants */
 export function normalizePreviewButtonStyle(s: string): "flat" | "rounded" | "outline" | "shadow" {
-  if (s === "solid") return "flat";
+  if (s === "solid" || s === "square") return "flat";
+  if (s === "pill") return "shadow";
   if (s === "flat" || s === "rounded" || s === "outline" || s === "shadow") return s;
   return "flat";
 }
 
+function isPreviewDark(appearance: AppearanceState): boolean {
+  if (appearance.dark !== undefined) return appearance.dark;
+  return appearance.themeId === "midnight-oasis" || appearance.themeId === "midnight";
+}
+
+function previewHeadlineStack(name: string): string {
+  if (BRANDING_HEADING_FONT_OPTIONS.some((f) => f.value === name)) {
+    return brandingHeadingFontStack(name);
+  }
+  return headlineFontStack(name);
+}
+
 function previewTypographyVars(appearance: AppearanceState): React.CSSProperties {
   return {
-    ["--preview-headline-font" as string]: headlineFontStack(appearance.fontFamily),
+    ["--preview-headline-font" as string]: previewHeadlineStack(appearance.fontFamily),
     ["--preview-body-font" as string]: bodyFontStack(appearance.bodyFontFamily),
   };
 }
@@ -76,6 +103,22 @@ function previewTypographyCss(): string {
             .preview-shell .preview-label,
             .preview-shell .preview-link-title { font-family: var(--preview-body-font, inherit); }
           `;
+}
+
+function previewHeadlineClass(appearance: AppearanceState): string {
+  const branding = isBrandingHeadlineFont(appearance.fontFamily);
+  const size =
+    appearance.titleSize === "large" ? "text-xl" : "text-lg sm:text-xl";
+  return `preview-headline ${branding ? "font-normal" : "font-black"} tracking-tight mb-1 ${size}`;
+}
+
+function previewHeadlineInlineStyle(
+  appearance: AppearanceState
+): React.CSSProperties {
+  return {
+    color: appearance.titleColor,
+    ...appearance.headlineStyle,
+  };
 }
 
 function outlineBorderForTheme(themeId: string): string {
@@ -102,7 +145,25 @@ function previewCardButtonStyleCss(appearance: AppearanceState): string {
 }
 
 function phoneFrameBackground(appearance: AppearanceState): React.CSSProperties {
+  if (appearance.bgStyle) {
+    return { background: appearance.bgStyle };
+  }
+
   const { themeId, bgColor } = appearance;
+  if (themeId === "monochrome" || themeId === "editorial") {
+    return { backgroundColor: "#ffffff" };
+  }
+  if (themeId === "cream") {
+    return { backgroundColor: "#f5efe6" };
+  }
+  if (themeId === "paper") {
+    return { backgroundColor: "#f4f1ea" };
+  }
+  if (themeId === "midnight") {
+    return {
+      backgroundImage: "linear-gradient(180deg, #0b1020 0%, #1a2244 100%)",
+    };
+  }
   if (themeId === "agate") {
     return {
       backgroundColor: "#0ea5e9",
@@ -137,6 +198,20 @@ function phoneFrameBackground(appearance: AppearanceState): React.CSSProperties 
 
 function previewInjectedCss(appearance: AppearanceState): string {
   const { themeId, textColor } = appearance;
+
+  if (isPreviewDark(appearance)) {
+    return `
+            .preview-shell { color: ${textColor}; }
+            .preview-card {
+              background: rgba(255,255,255,0.08);
+              color: rgba(255,255,255,0.9);
+              border: 1px solid rgba(255,255,255,0.12);
+            }
+            .preview-label { color: rgba(255,255,255,0.55); }
+            .preview-link-title { color: rgba(255,255,255,0.9); }
+          `;
+  }
+
   if (themeId === "agate") {
     return `
             .preview-shell { color: ${textColor}; }
@@ -306,7 +381,7 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
           : "shadow-xl shadow-black/20 ring-0"
         : relaxed
           ? `shadow-md ring-1 ${
-              appearance.themeId === "midnight-oasis"
+              isPreviewDark(appearance)
                 ? "ring-white/10"
                 : "ring-slate-200/90 dark:ring-slate-600/50"
             }`
@@ -353,8 +428,8 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
               )}
             </div>
             <h3
-              className={`preview-headline font-black tracking-tight mb-1 ${appearance.titleSize === "large" ? "text-xl" : "text-lg sm:text-xl"}`}
-              style={{ color: appearance.titleColor }}
+              className={previewHeadlineClass(appearance)}
+              style={previewHeadlineInlineStyle(appearance)}
             >
               {appearance.profileTitle}
             </h3>
@@ -544,8 +619,8 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
                   )}
                 </div>
                 <h3
-                  className={`preview-headline font-black tracking-tight mb-1 ${appearance.titleSize === "large" ? "text-xl" : "text-lg sm:text-xl"}`}
-                  style={{ color: appearance.titleColor }}
+                  className={previewHeadlineClass(appearance)}
+                  style={previewHeadlineInlineStyle(appearance)}
                 >
                   {appearance.profileTitle}
                 </h3>

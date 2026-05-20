@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { ManagedLink } from "../user-admin/components/types";
 
@@ -19,11 +20,27 @@ interface PaletteItem {
   action: () => void;
 }
 
+interface BrandingThemeOption {
+  id: string;
+  name: string;
+  tag?: string;
+}
+
 interface CommandPaletteProps {
   open: boolean;
   onClose: () => void;
   links?: ManagedLink[];
   onAddLink?: () => void;
+  /** Branding page: themes, fonts, navigation */
+  variant?: "links" | "branding" | "analytics";
+  brandingThemes?: BrandingThemeOption[];
+  onSelectTheme?: (themeId: string) => void;
+  onRandomTheme?: () => void;
+  /** Analytics page: called when user picks a date range */
+  onSelectRange?: (range: "7" | "30" | "90" | "all") => void;
+  /** Analytics page: called when user triggers CSV export */
+  onExport?: () => void;
+  searchPlaceholder?: string;
 }
 
 function NavIcon({ type }: { type: string }) {
@@ -72,7 +89,19 @@ function highlight(text: string, query: string) {
   );
 }
 
-export function CommandPalette({ open, onClose, links = [], onAddLink }: CommandPaletteProps) {
+export function CommandPalette({
+  open,
+  onClose,
+  links = [],
+  onAddLink,
+  variant = "links",
+  brandingThemes = [],
+  onSelectTheme,
+  onRandomTheme,
+  onSelectRange,
+  onExport,
+  searchPlaceholder,
+}: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const router = useRouter();
@@ -87,22 +116,122 @@ export function CommandPalette({ open, onClose, links = [], onAddLink }: Command
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   const buildItems = useCallback((): PaletteItem[] => {
     const q = query.toLowerCase();
 
-    const quickActions: PaletteItem[] = [
-      {
-        id: "add-link",
-        label: "Add new link",
-        group: "Quick actions",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/>
-          </svg>
-        ),
-        action: () => { onAddLink?.(); onClose(); },
-      },
-    ].filter(item => !q || item.label.toLowerCase().includes(q));
+    const quickActions: PaletteItem[] =
+      variant === "branding"
+        ? [
+            {
+              id: "random-theme",
+              label: "Random theme",
+              description: "Pick a free theme at random",
+              group: "Quick actions",
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="2" width="20" height="20" rx="2.18"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 8h.01M8 8h.01M16 16h.01M8 16h.01M12 12h.01"/>
+                </svg>
+              ),
+              action: () => {
+                onRandomTheme?.();
+                onClose();
+              },
+            },
+          ].filter(
+            (item) =>
+              !q ||
+              item.label.toLowerCase().includes(q) ||
+              (item.description?.toLowerCase().includes(q) ?? false)
+          )
+        : variant === "analytics"
+        ? ([
+            { id: "range-7",   label: "Last 7 days",   description: "Switch to 7-day view",   range: "7"   as const },
+            { id: "range-30",  label: "Last 30 days",  description: "Switch to 30-day view",  range: "30"  as const },
+            { id: "range-90",  label: "Last 90 days",  description: "Switch to 90-day view",  range: "90"  as const },
+            { id: "range-all", label: "All time",       description: "View all-time data",     range: "all" as const },
+          ] as { id: string; label: string; description: string; range: "7" | "30" | "90" | "all" }[])
+            .filter((item) => !q || item.label.toLowerCase().includes(q) || item.description.toLowerCase().includes(q))
+            .map((item): PaletteItem => ({
+              id: item.id,
+              label: item.label,
+              description: item.description,
+              group: "Date range",
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+              ),
+              action: () => { onSelectRange?.(item.range); onClose(); },
+            }))
+            .concat(
+              !q || "export csv".includes(q)
+                ? [{
+                    id: "export-csv",
+                    label: "Export CSV",
+                    description: "Download analytics data",
+                    group: "Actions",
+                    icon: (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                      </svg>
+                    ),
+                    action: () => { onExport?.(); onClose(); },
+                  }]
+                : []
+            )
+        : [
+            {
+              id: "add-link",
+              label: "Add new link",
+              group: "Quick actions",
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/>
+                </svg>
+              ),
+              action: () => {
+                onAddLink?.();
+                onClose();
+              },
+            },
+          ].filter((item) => !q || item.label.toLowerCase().includes(q));
+
+    const themeItems: PaletteItem[] =
+      variant === "branding"
+        ? brandingThemes
+            .filter(
+              (t) =>
+                !q ||
+                t.name.toLowerCase().includes(q) ||
+                (t.tag?.toLowerCase().includes(q) ?? false)
+            )
+            .map((t) => ({
+              id: `theme-${t.id}`,
+              label: t.name,
+              description: t.tag,
+              group: "Themes",
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/>
+                </svg>
+              ),
+              action: () => {
+                onSelectTheme?.(t.id);
+                onClose();
+              },
+            }))
+        : [];
 
     const navItems: PaletteItem[] = NAV_ITEMS
       .filter(n => !q || n.label.toLowerCase().includes(q))
@@ -114,25 +243,48 @@ export function CommandPalette({ open, onClose, links = [], onAddLink }: Command
         action: () => { router.push(n.href); onClose(); },
       }));
 
-    const linkItems: PaletteItem[] = links
-      .filter(l => !q || l.title.toLowerCase().includes(q) || l.url.toLowerCase().includes(q))
-      .slice(0, 6)
-      .map(l => ({
-        id: `link-${l.id ?? l.url}`,
-        label: l.title,
-        description: l.url.replace(/^https?:\/\//, ""),
-        group: "Links",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-          </svg>
-        ),
-        action: () => { window.open(l.url, "_blank", "noopener,noreferrer"); onClose(); },
-      }));
+    const linkItems: PaletteItem[] =
+      variant === "links"
+        ? links
+            .filter(
+              (l) =>
+                !q ||
+                l.title.toLowerCase().includes(q) ||
+                l.url.toLowerCase().includes(q)
+            )
+            .slice(0, 6)
+            .map((l) => ({
+              id: `link-${l.id ?? l.url}`,
+              label: l.title,
+              description: l.url.replace(/^https?:\/\//, ""),
+              group: "Links",
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                </svg>
+              ),
+              action: () => {
+                window.open(l.url, "_blank", "noopener,noreferrer");
+                onClose();
+              },
+            }))
+        : [];
 
-    return [...quickActions, ...navItems, ...linkItems];
-  }, [query, links, onAddLink, onClose, router]);
+    return [...quickActions, ...themeItems, ...navItems, ...linkItems];
+  }, [
+    query,
+    links,
+    onAddLink,
+    onClose,
+    router,
+    variant,
+    brandingThemes,
+    onSelectTheme,
+    onRandomTheme,
+    onSelectRange,
+    onExport,
+  ]);
 
   const items = buildItems();
 
@@ -160,7 +312,15 @@ export function CommandPalette({ open, onClose, links = [], onAddLink }: Command
     el?.scrollIntoView({ block: "nearest" });
   }, [activeIndex]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
+
+  const placeholder =
+    searchPlaceholder ??
+    (variant === "branding"
+      ? "Search themes, fonts, colors…"
+      : variant === "analytics"
+      ? "Search metrics, date ranges, actions…"
+      : "Search links, pages, actions…");
 
   // Group items
   const groups: { group: string; items: (PaletteItem & { flatIndex: number })[] }[] = [];
@@ -172,10 +332,24 @@ export function CommandPalette({ open, onClose, links = [], onAddLink }: Command
     else groups.push({ group: item.group, items: [entry] });
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex items-start justify-center"
-      style={{ paddingTop: "13vh", background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)" }}
+      className="flex items-start justify-center"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 9999,
+        paddingTop: "13vh",
+        background: "rgba(11,16,32,0.55)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        boxSizing: "border-box",
+      }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
@@ -210,7 +384,7 @@ export function CommandPalette({ open, onClose, links = [], onAddLink }: Command
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search links, pages, actions…"
+            placeholder={placeholder}
             className="flex-1 bg-transparent outline-none"
             style={{ fontSize: 15, color: "#0b1020" }}
           />
@@ -351,6 +525,7 @@ export function CommandPalette({ open, onClose, links = [], onAddLink }: Command
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
