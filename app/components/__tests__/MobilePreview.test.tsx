@@ -20,6 +20,39 @@ describe("MobilePreview", () => {
     expect(screen.getByText("Creator & designer")).toBeInTheDocument();
   });
 
+  it("applies button shape to link card border radius", () => {
+    const { container, rerender } = render(
+      <MobilePreview
+        appearance={{
+          ...DEFAULT_APPEARANCE,
+          buttonRoundness: "square",
+        }}
+        linkRows={[{ kind: "button", title: "Portfolio", url: "https://x.com" }]}
+        showHeaderChrome={false}
+        showPublicUrlBar={false}
+        showDeviceFooter={false}
+      />
+    );
+    const link = container.querySelector(".preview-card-btn");
+    expect(link?.className).toContain("rounded-none");
+
+    rerender(
+      <MobilePreview
+        appearance={{
+          ...DEFAULT_APPEARANCE,
+          buttonRoundness: "pill",
+        }}
+        linkRows={[{ kind: "button", title: "Portfolio", url: "https://x.com" }]}
+        showHeaderChrome={false}
+        showPublicUrlBar={false}
+        showDeviceFooter={false}
+      />
+    );
+    expect(container.querySelector(".preview-card-btn")?.className).toContain(
+      "rounded-full"
+    );
+  });
+
   it("renders link rows when provided", () => {
     render(
       <MobilePreview
