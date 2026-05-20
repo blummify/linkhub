@@ -89,16 +89,18 @@ export default function CollapsibleSidebar({
       >
         {/* Brand */}
 
-      <div className={` flex items-center justify-center  ${isCollapsed ? 'mb-6 pt-1' : 'mb-8 pt-2'}`} >
-      <Image
-        src="/link_hub_logo.png"
-        alt="LinkHub Logo"
-        width={isCollapsed ? 32 : 128}
-        height={isCollapsed ? 32 : 128}
-        className={`object-contain transition-all duration-300 ${
-          isCollapsed ? "h-8 w-8" : "h-auto w-32"
-        }`}
-      />
+      <div className={`flex items-center justify-center ${isCollapsed ? 'mb-6 pt-1' : 'mb-8 pt-2'}`} >
+        <Link href="/">
+          <Image
+            src="/link_hub_logo.png"
+            alt="LinkHub Logo"
+            width={isCollapsed ? 32 : 128}
+            height={isCollapsed ? 32 : 128}
+            className={`object-contain transition-all duration-300 cursor-pointer hover:opacity-80 ${
+              isCollapsed ? "h-8 w-8" : "h-auto w-32"
+            }`}
+          />
+        </Link>
       </div>
 
         {/* WORKSPACE label */}
