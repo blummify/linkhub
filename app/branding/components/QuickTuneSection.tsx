@@ -1,24 +1,22 @@
 "use client";
 
-import { HEADLINE_FONT_OPTIONS } from "@/app/constants/previewFonts";
+import { BRANDING_HEADING_FONT_OPTIONS } from "@/app/constants/brandingFonts";
 
-const ACCENT_PRESETS = [
-  "#3b46e0",
-  "#0f172a",
-  "#16a34a",
-  "#dc2626",
-  "#d97706",
-  "#7c3aed",
-  "#0891b2",
+const ACCENT_PRESETS: { color: string; gradient: string }[] = [
+  { color: "#3b46e0", gradient: "linear-gradient(135deg, #3b46e0, #6873ff)" },
+  { color: "#16a34a", gradient: "linear-gradient(135deg, #16a34a, #4ade80)" },
+  { color: "#d97706", gradient: "linear-gradient(135deg, #d97706, #fbbf24)" },
+  { color: "#e11d48", gradient: "linear-gradient(135deg, #e11d48, #fb7185)" },
+  { color: "#7c3aed", gradient: "linear-gradient(135deg, #7c3aed, #a78bfa)" },
+  { color: "#0891b2", gradient: "linear-gradient(135deg, #0891b2, #22d3ee)" },
+  { color: "#1a1a1a", gradient: "linear-gradient(135deg, #1a1a1a, #525252)" },
 ];
 
 const BUTTON_SHAPES: { id: string; label: string; radius: number }[] = [
-  { id: "flat",    label: "Square",  radius: 4  },
-  { id: "rounded", label: "Rounded", radius: 12 },
-  { id: "shadow",  label: "Pill",    radius: 99 },
+  { id: "square", label: "Square", radius: 0 },
+  { id: "rounded", label: "Rounded", radius: 4 },
+  { id: "pill", label: "Pill", radius: 999 },
 ];
-
-const FONT_PICKS = HEADLINE_FONT_OPTIONS.slice(0, 4) as unknown as string[];
 
 interface QuickTuneSectionProps {
   accentColor: string;
@@ -29,13 +27,13 @@ interface QuickTuneSectionProps {
   onFontFamilyChange: (v: string) => void;
 }
 
-const subLabel: React.CSSProperties = {
-  fontSize: 10.5,
-  fontWeight: 600,
+const qtLabel: React.CSSProperties = {
+  fontSize: 11.5,
+  fontWeight: 500,
   color: "#6b75a3",
-  letterSpacing: "0.10em",
+  marginBottom: 10,
   textTransform: "uppercase",
-  marginBottom: 12,
+  letterSpacing: "0.07em",
 };
 
 export function QuickTuneSection({
@@ -46,7 +44,7 @@ export function QuickTuneSection({
   onButtonStyleChange,
   onFontFamilyChange,
 }: QuickTuneSectionProps) {
-  const isPreset = ACCENT_PRESETS.includes(accentColor);
+  const isPreset = ACCENT_PRESETS.some((p) => p.color === accentColor);
 
   return (
     <div
@@ -55,184 +53,169 @@ export function QuickTuneSection({
         border: "1px solid #eef0f7",
         borderRadius: 18,
         padding: "22px 24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 24,
       }}
     >
-      {/* Accent color */}
-      <div>
-        <p style={subLabel}>Accent color</p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          {ACCENT_PRESETS.map((color) => (
-            <button
-              key={color}
-              type="button"
-              onClick={() => onAccentColorChange(color)}
-              title={color}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                border: 0,
-                background: color,
-                cursor: "pointer",
-                flexShrink: 0,
-                boxShadow:
-                  accentColor === color
-                    ? `0 0 0 2.5px white, 0 0 0 4.5px ${color}`
-                    : "none",
-                transition: "box-shadow 0.15s",
-              }}
-            />
-          ))}
-
-          {/* Custom color picker */}
-          <label
-            title="Custom color"
-            style={{ position: "relative", width: 28, height: 28, cursor: "pointer", flexShrink: 0 }}
-          >
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                borderRadius: "50%",
-                border: `2px ${isPreset ? "dashed" : "solid"} ${isPreset ? "#d6dae9" : accentColor}`,
-                background: isPreset ? "white" : accentColor,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-                boxShadow: !isPreset
-                  ? `0 0 0 2.5px white, 0 0 0 4.5px ${accentColor}`
-                  : "none",
-                transition: "box-shadow 0.15s",
-              }}
-            >
-              {isPreset && (
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a8aecb" strokeWidth="2">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path strokeLinecap="round" d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/>
-                </svg>
-              )}
-            </div>
-            <input
-              type="color"
-              value={accentColor}
-              onChange={(e) => onAccentColorChange(e.target.value)}
-              style={{
-                position: "absolute",
-                inset: 0,
-                opacity: 0,
-                width: "100%",
-                height: "100%",
-                cursor: "pointer",
-              }}
-            />
-          </label>
-        </div>
-      </div>
-
-      {/* Button shape */}
-      <div>
-        <p style={subLabel}>Button shape</p>
-        <div style={{ display: "flex", gap: 8 }}>
-          {BUTTON_SHAPES.map(({ id, label, radius }) => {
-            const active = buttonStyle === id;
-            return (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 22,
+        }}
+      >
+        <div>
+          <p style={qtLabel}>Accent color</p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {ACCENT_PRESETS.map(({ color, gradient }) => (
               <button
-                key={id}
+                key={color}
                 type="button"
-                onClick={() => onButtonStyleChange(id)}
+                onClick={() => onAccentColorChange(color)}
+                title={color}
                 style={{
-                  flex: 1,
-                  padding: "10px 0",
+                  width: 32,
+                  height: 32,
                   borderRadius: 10,
-                  fontSize: 12.5,
-                  fontWeight: active ? 700 : 500,
-                  border: "1px solid",
-                  borderColor: active ? "#3b46e0" : "#eef0f7",
-                  background: active ? "#f0f1ff" : "white",
-                  color: active ? "#3b46e0" : "#6b75a3",
+                  border: accentColor === color ? "2px solid #0b1020" : "2px solid transparent",
+                  background: gradient,
                   cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "all 0.15s",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 8,
+                  boxShadow:
+                    accentColor === color ? "0 0 0 2px white inset" : "none",
+                  transition: "all 0.15s ease",
                 }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#d6dae9";
-                    (e.currentTarget as HTMLButtonElement).style.background = "#f7f8fc";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#eef0f7";
-                    (e.currentTarget as HTMLButtonElement).style.background = "white";
-                  }
-                }}
-              >
-                <div
-                  style={{
-                    width: 44,
-                    height: 18,
-                    borderRadius: radius,
-                    background: active ? "#3b46e0" : "#d6dae9",
-                    transition: "background 0.15s",
-                  }}
-                />
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Heading font */}
-      <div>
-        <p style={subLabel}>Heading font</p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {FONT_PICKS.map((name) => {
-            const active = fontFamily === name;
-            return (
-              <button
-                key={name}
-                type="button"
-                onClick={() => onFontFamilyChange(name)}
+              />
+            ))}
+            <label title="Custom color" style={{ position: "relative", cursor: "pointer" }}>
+              <div
                 style={{
-                  padding: "7px 14px",
-                  borderRadius: 99,
-                  fontSize: 13,
-                  border: "1px solid",
-                  borderColor: active ? "#3b46e0" : "#eef0f7",
-                  background: active ? "#f0f1ff" : "white",
-                  color: active ? "#3b46e0" : "#6b75a3",
-                  fontWeight: active ? 700 : 500,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "all 0.15s",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#d6dae9";
-                    (e.currentTarget as HTMLButtonElement).style.background = "#f7f8fc";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#eef0f7";
-                    (e.currentTarget as HTMLButtonElement).style.background = "white";
-                  }
+                  width: 32,
+                  height: 32,
+                  borderRadius: 10,
+                  border: `1.5px dashed ${isPreset ? "#d6dae9" : accentColor}`,
+                  background: isPreset ? "transparent" : accentColor,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#6b75a3",
                 }}
               >
-                {name}
-              </button>
-            );
-          })}
+                {isPreset && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/>
+                  </svg>
+                )}
+              </div>
+              <input
+                type="color"
+                value={accentColor}
+                onChange={(e) => onAccentColorChange(e.target.value)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  opacity: 0,
+                  width: "100%",
+                  height: "100%",
+                  cursor: "pointer",
+                }}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <p style={qtLabel}>Button shape</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            {BUTTON_SHAPES.map(({ id, label, radius }) => {
+              const active = buttonStyle === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onButtonStyleChange(id)}
+                  style={{
+                    flex: 1,
+                    padding: "14px 8px",
+                    border: `1.5px solid ${active ? "#3b46e0" : "#eef0f7"}`,
+                    borderRadius: 12,
+                    background: active ? "#f0f1ff" : "white",
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 8,
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "100%",
+                      height: 12,
+                      borderRadius: radius,
+                      background: "#0b1020",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: active ? "#3b46e0" : "#6b75a3",
+                    }}
+                  >
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <p style={qtLabel}>Heading font</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {BRANDING_HEADING_FONT_OPTIONS.map((font) => {
+              const active = fontFamily === font.value;
+              return (
+                <button
+                  key={font.id}
+                  type="button"
+                  onClick={() => onFontFamilyChange(font.value)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "9px 12px",
+                    border: `1px solid ${active ? "#3b46e0" : "#eef0f7"}`,
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    background: active ? "#f0f1ff" : "white",
+                    transition: "all 0.15s ease",
+                    width: "100%",
+                    textAlign: "left",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 14,
+                      color: "#0b1020",
+                      fontFamily: font.stack,
+                      ...("previewStyle" in font ? font.previewStyle : {}),
+                    }}
+                  >
+                    {font.name}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      color: "#6b75a3",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
+                    {font.type}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

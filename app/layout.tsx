@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeToggle } from "./ThemeToggle";
 import { Toaster } from "sonner";
 import { SidebarProvider } from "./components/SidebarContext";
+import { BrandingAppearanceProvider } from "./components/BrandingAppearanceContext";
 import AuthSessionProvider from "./components/AuthSessionProvider";
 import { MaterialSymbols } from "./components/MaterialSymbols";
 import { GoogleOneTap } from "./components/auth/GoogleOneTap";
@@ -76,7 +77,9 @@ export default async function RootLayout({
         <MaterialSymbols />
         <AuthSessionProvider>
           <SidebarProvider>
-            {children}
+            <BrandingAppearanceProvider>
+              {children}
+            </BrandingAppearanceProvider>
           </SidebarProvider>
         </AuthSessionProvider>
         {!session && process.env.GOOGLE_CLIENT_ID && (

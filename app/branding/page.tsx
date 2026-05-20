@@ -1,11 +1,16 @@
 import AppearanceClient from "./AppearanceClient";
-import { Metadata } from "next";
+import { BrandingAppearanceProvider } from "../components/BrandingAppearanceContext";
+import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Appearance",
+  title: "Branding",
   description: "Customize your public profile to reflect your brand's unique style.",
 };
 
-export default function AppearancePage() {
-  return <AppearanceClient />;
+export default function BrandingPage() {
+  return (
+    <BrandingAppearanceProvider>
+      <AppearanceClient />
+    </BrandingAppearanceProvider>
+  );
 }
