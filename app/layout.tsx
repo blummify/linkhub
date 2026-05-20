@@ -31,23 +31,6 @@ const inter = Inter({
   display: "swap",
 });
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ['latin'],
-  variable: '--font-serif',
-  style: ['normal', 'italic'],
-  weight: "400"
-});
-
-const geist = Geist({
-  subsets: ['latin'],
-  variable: '--font-sans',
-});
-
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
-});
-
 export const metadata: Metadata = {
   title: {
     default: "LinkHub",
