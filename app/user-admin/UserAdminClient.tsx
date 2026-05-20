@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { useSidebar } from "../components/SidebarContext";
-import { type AppearanceState } from "../components/MobilePreview";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
+import { useBrandingAppearance } from "../components/BrandingAppearanceContext";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
-import { PROFILE_PUBLIC_URL } from "../constants/profile";
-
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim } from "../actions/links";
+import { getBrandingThemeById } from "@/lib/brandingState";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { DeleteConfirmDialog } from "../components/DeleteConfirmDialog";
 import { CommandPalette } from "../components/CommandPalette";
@@ -30,31 +29,23 @@ export default function UserAdminClient() {
   const [showPalette, setShowPalette] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
+  const profileMergedRef = useRef(false);
+  const pendingProfileRef = useRef<Awaited<ReturnType<typeof getProfile>>>(null);
 
-  const [appearance, setAppearance] = useState<AppearanceState>({
-    profileTitle: "",
-    profileBio: "Connecting with your community.",
-    profileLayout: "classic",
-    themeId: "custom",
-    wallpaperStyle: "fill",
-    bgColor: "#ffffff",
-    textColor: "#1a1a1a",
-    buttonStyle: "solid",
-    buttonShadow: "none",
-    buttonRoundness: "full",
-    fontFamily: "Inter",
-    bodyFontFamily: "Inter",
-    titleSize: "small",
-    titleColor: "#000000",
-    footerStyle: "minimal",
-  });
+  const {
+    state: branding,
+    theme,
+    previewAppearance,
+    publicUrl,
+    patchState,
+    randomTheme,
+    hydrated,
+  } = useBrandingAppearance();
 
   useEffect(() => {
     async function loadData() {
       try {
         const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
-        
-        console.log("Profile data:", dbProfile); // ← debugging line
 
         const fromDb = dbLinks.map((l: LinkRow) => ({
           id: l.id,
@@ -66,13 +57,7 @@ export default function UserAdminClient() {
         }));
         setLinks([...DEMO_MANAGED_LINKS, ...fromDb]);
         if (dbProfile) {
-          setAppearance(prev => ({
-            ...prev,
-            profileTitle: dbProfile.user?.name || dbProfile.user?.email || "My Profile",
-            profileBio: dbProfile.bio || prev.profileBio,
-            profileLayout: dbProfile.layout || prev.profileLayout,
-            themeId: dbProfile.themeId || prev.themeId,
-          }));
+          pendingProfileRef.current = dbProfile;
           if (!dbProfile.hasClaimedHandle) {
             setIsFirstTimeUser(true);
           }
@@ -86,6 +71,24 @@ export default function UserAdminClient() {
     }
     loadData();
   }, []);
+
+  useEffect(() => {
+    const dbProfile = pendingProfileRef.current;
+    if (!hydrated || profileMergedRef.current || !dbProfile) return;
+    profileMergedRef.current = true;
+    const patch: Partial<typeof branding> = {};
+    const name = dbProfile.user?.name || dbProfile.user?.email;
+    if (name) patch.displayName = name;
+    if (dbProfile.handle) patch.handle = dbProfile.handle;
+    if (dbProfile.bio) patch.bio = dbProfile.bio;
+    if (dbProfile.themeId && dbProfile.themeId !== "default") {
+      const theme = getBrandingThemeById(dbProfile.themeId);
+      patch.themeId = theme.id;
+      patch.accentColor = theme.screen.titleColor;
+      patch.userPickedTheme = true;
+    }
+    if (Object.keys(patch).length > 0) patchState(patch);
+  }, [hydrated, patchState]);
 
   useEffect(() => {
     const timer = setTimeout(() => setClaimTimerFired(true), 1000);
@@ -266,9 +269,13 @@ export default function UserAdminClient() {
                 <div className="hidden lg:block">
                   <DashboardPreviewPanel
                     links={links}
-                    displayName={appearance.profileTitle || "Your Name"}
-                    handle={PROFILE_PUBLIC_URL.split("/").pop() ?? ""}
-                    publicUrl={PROFILE_PUBLIC_URL}
+                    displayName={branding.displayName || "Your Name"}
+                    handle={branding.handle}
+                    bio={branding.bio}
+                    publicUrl={publicUrl}
+                    appearance={previewAppearance}
+                    themeLabel={theme.name}
+                    onRandomTheme={randomTheme}
                   />
                 </div>
               </div>

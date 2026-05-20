@@ -4,7 +4,13 @@ import { useRef } from "react";
 import { useSidebar } from "../../components/SidebarContext";
 import { useShortKey } from "../../components/hooks/useShortKey";
 
-export function DashboardTopBar({ onSearchClick }: { onSearchClick?: () => void }) {
+export function DashboardTopBar({
+  onSearchClick,
+  searchPlaceholder = "Search links, pages, analytics…",
+}: {
+  onSearchClick?: () => void;
+  searchPlaceholder?: string;
+}) {
   const { toggleSidebar } = useSidebar();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { modifier } = useShortKey(() => {
@@ -52,7 +58,7 @@ export function DashboardTopBar({ onSearchClick }: { onSearchClick?: () => void 
           ref={searchInputRef}
           type="text"
           readOnly={!!onSearchClick}
-          placeholder="Search links, pages, analytics…"
+          placeholder={searchPlaceholder}
           className="w-full h-full pl-[42px] pr-4 lg:pr-[90px] text-[14px] text-[#0b1020] placeholder:text-[#6b75a3] outline-none transition-all"
           style={{
             borderRadius: 12,

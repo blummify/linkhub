@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { ManagedLink } from "../user-admin/components/types";
 
 // ── Icon bg/fg per link type ──────────────────────────────────────────────────
@@ -146,27 +147,34 @@ function isDarkBg(hex: string): boolean {
 
 export interface AppearanceTheme {
   bgColor?: string;
+  bgStyle?: string;
+  dark?: boolean;
   textColor?: string;
   titleColor?: string;
   buttonStyle?: string;
+  headlineFont?: string;
 }
 
 // ── Phone screen content ──────────────────────────────────────────────────────
 function PhoneScreenContent({
   displayName,
   handle,
+  bio,
   links,
   avatarSize = 70,
   appearance,
 }: {
   displayName: string;
   handle: string;
+  bio?: string;
   links: ManagedLink[];
   avatarSize?: number;
   appearance?: AppearanceTheme;
 }) {
   const initial = displayName.charAt(0).toUpperCase() || "?";
-  const dark = appearance?.bgColor ? isDarkBg(appearance.bgColor) : false;
+  const dark =
+    appearance?.dark ??
+    (appearance?.bgColor ? isDarkBg(appearance.bgColor) : false);
   const titleColor = appearance?.titleColor ?? "#0b1020";
   const subtitleColor = dark ? "rgba(255,255,255,0.5)" : "#6b75a3";
   const linkCardBg = dark ? "rgba(255,255,255,0.08)" : "white";
@@ -196,7 +204,9 @@ function PhoneScreenContent({
             background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "white",
-            fontFamily: "var(--font-instrument-serif), Georgia, serif",
+            fontFamily:
+              appearance?.headlineFont ??
+              'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)',
             fontSize: Math.round(avatarSize * 0.4), fontStyle: "italic",
             boxShadow: "0 10px 24px -8px rgba(59,70,224,0.45)",
             border: "3px solid white",
@@ -218,7 +228,9 @@ function PhoneScreenContent({
       {/* Name */}
       <div
         style={{
-          fontFamily: "var(--font-instrument-serif), Georgia, serif",
+          fontFamily:
+            appearance?.headlineFont ??
+            'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)',
           fontStyle: "italic",
           fontSize: 19,
           color: titleColor,
@@ -235,7 +247,7 @@ function PhoneScreenContent({
         <div
           style={{
             fontSize: 11.5,
-            fontFamily: "'Geist Mono', ui-monospace, 'Courier New', monospace",
+            fontFamily: 'var(--branding-font-mono, "Geist Mono", ui-monospace, monospace)',
             color: dark ? "rgba(255,255,255,0.55)" : "#3b46e0",
             marginTop: 3,
           }}
@@ -254,7 +266,7 @@ function PhoneScreenContent({
           lineHeight: 1.5,
         }}
       >
-        Connecting with your community &mdash; one link at a time.
+        {bio || "Connecting with your community — one link at a time."}
       </div>
 
       {/* Social icons row */}
@@ -416,7 +428,15 @@ function PreviewActionBtn({
 }
 
 // ── Phone shell (frame + notch + gradient screen) ─────────────────────────────
-function PhoneShell({ children, bgColor }: { children: React.ReactNode; bgColor?: string }) {
+function PhoneShell({
+  children,
+  bgStyle,
+  showGlow = false,
+}: {
+  children: React.ReactNode;
+  bgStyle?: string;
+  showGlow?: boolean;
+}) {
   return (
     <div
       style={{
@@ -449,24 +469,25 @@ function PhoneShell({ children, bgColor }: { children: React.ReactNode; bgColor?
           borderRadius: 34,
           overflow: "hidden",
           position: "relative",
-          background: bgColor ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
+          background: bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
           padding: "44px 22px 22px",
           display: "flex",
           flexDirection: "column",
         }}
       >
-        {/* Radial glow */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: 0, left: 0, right: 0,
-            height: 140,
-            background: "radial-gradient(circle at 50% -20%, rgba(104,115,255,0.22), transparent 70%)",
-            pointerEvents: "none",
-            zIndex: 1,
-          }}
-        />
+        {showGlow && (
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: 0, left: 0, right: 0,
+              height: 140,
+              background: "radial-gradient(circle at 50% -20%, rgba(104,115,255,0.22), transparent 70%)",
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          />
+        )}
         <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
           {children}
         </div>
@@ -476,7 +497,7 @@ function PhoneShell({ children, bgColor }: { children: React.ReactNode; bgColor?
 }
 
 // ── Browser shell (desktop mode) ──────────────────────────────────────────────
-function BrowserShell({ children, bgColor }: { children: React.ReactNode; bgColor?: string }) {
+function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyle?: string }) {
   return (
     <div
       style={{
@@ -517,7 +538,7 @@ function BrowserShell({ children, bgColor }: { children: React.ReactNode; bgColo
             border: "1px solid #e2e5ef",
             display: "flex", alignItems: "center", paddingLeft: 8,
             fontSize: 9, color: "#6b75a3",
-            fontFamily: "'Geist Mono', ui-monospace, 'Courier New', monospace",
+            fontFamily: 'var(--branding-font-mono, "Geist Mono", ui-monospace, monospace)',
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}
         >
@@ -529,7 +550,7 @@ function BrowserShell({ children, bgColor }: { children: React.ReactNode; bgColo
       <div
         style={{
           position: "absolute", top: 32, left: 0, right: 0, bottom: 0,
-          background: bgColor ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
+          background: bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
           padding: "24px 28px 24px",
           display: "flex", flexDirection: "column",
           overflow: "hidden",
@@ -555,7 +576,16 @@ function SocialConfirmDialog({
 }) {
   const [copied, setCopied] = useState(false);
 
-  if (!network) return null;
+  useEffect(() => {
+    if (!network) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [network]);
+
+  if (!network || typeof document === "undefined") return null;
 
   const handleCopy = async () => {
     try {
@@ -565,15 +595,31 @@ function SocialConfirmDialog({
     } catch { /* clipboard not available */ }
   };
 
-  return (
+  return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
       style={{
-        position: "fixed", inset: 0, zIndex: 300,
-        display: "flex", alignItems: "center", justifyContent: "center",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         padding: 24,
-        background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)",
+        boxSizing: "border-box",
+        background: "rgba(11,16,32,0.55)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         style={{
@@ -583,6 +629,7 @@ function SocialConfirmDialog({
           boxShadow: "0 40px 80px -20px rgba(15,23,42,0.4), 0 16px 32px -16px rgba(15,23,42,0.2)",
           animation: "scIn 0.25s cubic-bezier(0.16,1,0.3,1)",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         <style>{`
           @keyframes scIn {
@@ -622,7 +669,7 @@ function SocialConfirmDialog({
           <span
             style={{
               flex: 1, fontSize: 11.5, color: "#3b46e0",
-              fontFamily: "'Geist Mono', ui-monospace, 'Courier New', monospace",
+              fontFamily: 'var(--branding-font-mono, "Geist Mono", ui-monospace, monospace)',
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}
           >
@@ -685,7 +732,8 @@ function SocialConfirmDialog({
           </a>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -695,24 +743,30 @@ export interface DashboardPreviewPanelProps {
   displayName: string;
   /** URL slug after the last slash, e.g. "joelosei" */
   handle?: string;
+  bio?: string;
   /** Full public URL without protocol, e.g. "linkhub.co/joelosei" */
   publicUrl: string;
   /** Panel width (default 420) */
   width?: number;
   /** Optional theme applied to the phone/browser screen for the branding editor */
   appearance?: AppearanceTheme;
+  /** When set, replaces the light/dark toggle with a theme footer bar */
+  themeLabel?: string;
+  onRandomTheme?: () => void;
 }
 
 export function DashboardPreviewPanel({
   links,
   displayName,
   handle = "",
+  bio,
   publicUrl,
   width = 420,
   appearance,
+  themeLabel,
+  onRandomTheme,
 }: DashboardPreviewPanelProps) {
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [showSharePop, setShowSharePop] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareConfirm, setShareConfirm] = useState<ShareNetwork | null>(null);
@@ -749,6 +803,14 @@ export function DashboardPreviewPanel({
   const slashIdx = publicUrl.lastIndexOf("/");
   const domain = slashIdx >= 0 ? publicUrl.slice(0, slashIdx + 1) : publicUrl;
   const slug   = slashIdx >= 0 ? publicUrl.slice(slashIdx + 1)     : "";
+
+  const screenBg =
+    appearance?.bgStyle ??
+    appearance?.bgColor ??
+    "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)";
+  const screenDark =
+    appearance?.dark ??
+    (appearance?.bgColor ? isDarkBg(appearance.bgColor) : false);
 
   return (
     <div
@@ -792,7 +854,8 @@ export function DashboardPreviewPanel({
         <div>
           <div
             style={{
-              fontFamily: "var(--font-instrument-serif), Georgia, serif",
+              fontFamily:
+                'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)',
               fontStyle: "italic",
               fontSize: 22,
               letterSpacing: "-0.01em",
@@ -878,7 +941,7 @@ export function DashboardPreviewPanel({
                       flex: 1,
                       fontSize: 12,
                       color: "#3b46e0",
-                      fontFamily: "'Geist Mono', ui-monospace, 'Courier New', monospace",
+                      fontFamily: 'var(--branding-font-mono, "Geist Mono", ui-monospace, monospace)',
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                       background: "#f7f8fc", borderRadius: 8,
                       padding: "6px 10px",
@@ -1027,20 +1090,22 @@ export function DashboardPreviewPanel({
         }}
       >
         {device === "desktop" ? (
-          <BrowserShell bgColor={appearance?.bgColor}>
+          <BrowserShell bgStyle={screenBg}>
             <PhoneScreenContent
               displayName={displayName}
               handle={handle}
+              bio={bio}
               links={links}
               avatarSize={76}
               appearance={appearance}
             />
           </BrowserShell>
         ) : (
-          <PhoneShell bgColor={appearance?.bgColor}>
+          <PhoneShell bgStyle={screenBg} showGlow={screenDark}>
             <PhoneScreenContent
               displayName={displayName}
               handle={handle}
+              bio={bio}
               links={links}
               appearance={appearance}
             />
@@ -1048,68 +1113,81 @@ export function DashboardPreviewPanel({
         )}
       </div>
 
-      {/* Theme switch */}
-      <div
-        style={{
-          marginTop: 16,
-          display: "inline-flex",
-          background: "rgba(255,255,255,0.7)",
-          backdropFilter: "blur(8px)",
-          borderRadius: 99,
-          padding: 3,
-          alignSelf: "center",
-          position: "relative",
-          zIndex: 10,
-          border: "1px solid rgba(255,255,255,0.9)",
-        }}
-      >
-        <button
-          type="button"
-          aria-label="Light mode"
-          onClick={() => setTheme("light")}
+      {themeLabel ? (
+        <div
           style={{
-            width: 30, height: 30,
-            borderRadius: "50%",
-            background: theme === "light" ? "white" : "transparent",
-            border: 0,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: theme === "light" ? "#3b46e0" : "#6b75a3",
-            cursor: "pointer",
-            boxShadow: theme === "light"
-              ? "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)"
-              : "none",
-            transition: "all 0.15s",
+            marginTop: 14,
+            background: "rgba(255,255,255,0.7)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.9)",
+            borderRadius: 12,
+            padding: "12px 14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "relative",
+            zIndex: 10,
           }}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-            <circle cx="12" cy="12" r="5"/>
-            <path strokeLinecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-          </svg>
-        </button>
-
-        <button
-          type="button"
-          aria-label="Dark mode"
-          onClick={() => setTheme("dark")}
-          style={{
-            width: 30, height: 30,
-            borderRadius: "50%",
-            background: theme === "dark" ? "white" : "transparent",
-            border: 0,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: theme === "dark" ? "#3b46e0" : "#6b75a3",
-            cursor: "pointer",
-            boxShadow: theme === "dark"
-              ? "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)"
-              : "none",
-            transition: "all 0.15s",
-          }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-          </svg>
-        </button>
-      </div>
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#6b75a3",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                fontWeight: 500,
+              }}
+            >
+              Current theme
+            </div>
+            <div
+              style={{
+                fontFamily:
+                  'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)',
+                fontStyle: "italic",
+                fontSize: 14,
+                color: "#0b1020",
+                marginTop: 2,
+              }}
+            >
+              {themeLabel}
+            </div>
+          </div>
+          {onRandomTheme && (
+            <button
+              type="button"
+              title="Random theme"
+              onClick={onRandomTheme}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: "white",
+                boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)",
+                border: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#6b75a3",
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#0b1020";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#6b75a3";
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+                <rect x="2" y="2" width="20" height="20" rx="2.18"/>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 8h.01M8 8h.01M16 16h.01M8 16h.01M12 12h.01"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      ) : null}
 
       {/* Social share confirm dialog */}
       {shareConfirm && (
