@@ -22,17 +22,17 @@ import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
 import { AnalyticsCards } from "./AnalyticsCards";
 import { DashboardTopBar } from "./DashboardTopBar";
-import { DeleteConfirmDialog } from "../../components/DeleteConfirmDialog";
-import { CommandPalette } from "../../components/CommandPalette";
 
 export interface ManageLinksSectionProps {
   links: ManagedLink[];
   onAddLink?: () => void;
   onEditLink?: (link: ManagedLink, index: number) => void;
   onDeleteLink?: (link: ManagedLink, index: number) => void;
+  onRequestDelete?: (link: ManagedLink, index: number) => void;
   onToggleLink?: (link: ManagedLink, index: number) => void;
   onUpdateLink?: (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => void;
   onReorderLinks?: (newLinks: ManagedLink[]) => void;
+  onSearchOpen?: () => void;
 }
 
 type TabKey = "all" | "published" | "unpublished" | "draft";
@@ -86,14 +86,14 @@ export function ManageLinksSection({
   onAddLink,
   onEditLink,
   onDeleteLink,
+  onRequestDelete,
   onToggleLink,
   onUpdateLink,
   onReorderLinks,
+  onSearchOpen,
 }: ManageLinksSectionProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<{ link: ManagedLink; index: number } | null>(null);
-  const [showPalette, setShowPalette] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -140,24 +140,7 @@ export function ManageLinksSection({
   return (
     <div className="animate-fade-in space-y-6">
       {/* Inline topbar — search, menu toggle, notifications */}
-      <DashboardTopBar onSearchClick={() => setShowPalette(true)} />
-
-      <CommandPalette
-        open={showPalette}
-        onClose={() => setShowPalette(false)}
-        links={links}
-        onAddLink={onAddLink}
-      />
-
-      <DeleteConfirmDialog
-        open={pendingDelete !== null}
-        link={pendingDelete?.link}
-        onClose={() => setPendingDelete(null)}
-        onConfirm={() => {
-          if (pendingDelete) onDeleteLink?.(pendingDelete.link, pendingDelete.index);
-          setPendingDelete(null);
-        }}
-      />
+      <DashboardTopBar onSearchClick={onSearchOpen} />
 
       {/* Header row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -261,7 +244,7 @@ export function ManageLinksSection({
                   key={getLinkId(link) + idx}
                   link={link}
                   onEdit={onEditLink ? () => onEditLink(link, originalIndex) : undefined}
-                  onDelete={onDeleteLink ? () => setPendingDelete({ link, index: originalIndex }) : undefined}
+                  onDelete={onRequestDelete ? () => onRequestDelete(link, originalIndex) : (onDeleteLink ? () => onDeleteLink(link, originalIndex) : undefined)}
                   onToggle={onToggleLink ? () => onToggleLink(link, originalIndex) : undefined}
                   onUpdate={
                     onUpdateLink
