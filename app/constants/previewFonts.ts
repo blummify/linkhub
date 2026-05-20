@@ -7,12 +7,14 @@ export type BodyFontOption = (typeof BODY_FONT_OPTIONS)[number];
 
 export function headlineFontStack(name: string): string {
   switch (name) {
+    case "Geist":
+      return "var(--branding-font-sans)";
     case "Inter":
       return "var(--next-font-inter), ui-sans-serif, system-ui, sans-serif";
     case "Manrope":
       return "var(--next-font-manrope), ui-sans-serif, system-ui, sans-serif";
     case "Playfair Display":
-      return "var(--font-playfair), Georgia, ui-serif, serif";
+      return "var(--branding-font-playfair)";
     case "Outfit":
       return "var(--font-outfit), ui-sans-serif, system-ui, sans-serif";
     default:
@@ -22,6 +24,8 @@ export function headlineFontStack(name: string): string {
 
 export function bodyFontStack(name: string): string {
   switch (name) {
+    case "Geist":
+      return "var(--branding-font-sans)";
     case "Inter":
       return "var(--next-font-inter), ui-sans-serif, system-ui, sans-serif";
     case "Roboto":
@@ -29,6 +33,6 @@ export function bodyFontStack(name: string): string {
     case "Open Sans":
       return "var(--font-open-sans), ui-sans-serif, system-ui, sans-serif";
     default:
-      return "var(--next-font-inter), ui-sans-serif, system-ui, sans-serif";
+      return "var(--branding-font-sans)";
   }
 }
