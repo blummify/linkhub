@@ -326,16 +326,6 @@ export function CommandPalette({
     el?.scrollIntoView({ block: "nearest" });
   }, [clampedActiveIndex]);
 
-  if (!open || typeof document === "undefined") return null;
-
-  const placeholder =
-    searchPlaceholder ??
-    (variant === "branding"
-      ? "Search themes, fonts, colors…"
-      : variant === "analytics"
-      ? "Search metrics, date ranges, actions…"
-      : "Search links, pages, actions…");
-
   const groups = useMemo(() => {
     const result: { group: string; items: (PaletteItem & { flatIndex: number })[] }[] = [];
     let flatIndex = 0;
@@ -347,6 +337,16 @@ export function CommandPalette({
     }
     return result;
   }, [items]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  const placeholder =
+    searchPlaceholder ??
+    (variant === "branding"
+      ? "Search themes, fonts, colors…"
+      : variant === "analytics"
+      ? "Search metrics, date ranges, actions…"
+      : "Search links, pages, actions…");
 
   return createPortal(
     <div
