@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
-import { isDemoManagedLink } from "@/lib/demoManagedLinks";
 import type { ManagedLink } from "./types";
 import { SiInstagram, SiYoutube, SiSpotify, SiX, SiBehance } from "react-icons/si";
 import { TbWorld } from "react-icons/tb";
@@ -19,12 +18,12 @@ export interface ManagedLinkCardProps {
 }
 
 const ICON_MAP = {
-  website:   { Icon: TbWorld,     bg: "bg-blue-50",   color: "text-blue-500"  },
-  instagram: { Icon: SiInstagram, bg: "bg-pink-50",   color: "text-pink-500"  },
-  youtube:   { Icon: SiYoutube,   bg: "bg-red-50",    color: "text-red-500"   },
-  twitter:   { Icon: SiX,         bg: "bg-gray-100",  color: "text-gray-700"  },
-  spotify:   { Icon: SiSpotify,   bg: "bg-green-50",  color: "text-green-600" },
-  behance:   { Icon: SiBehance,   bg: "bg-blue-100",  color: "text-blue-600"  },
+  website:   { Icon: TbWorld,     bgColor: "#eff6ff", textColor: "#3b82f6"  },
+  instagram: { Icon: SiInstagram, bgColor: "#fdf2f8", textColor: "#ec4899"  },
+  youtube:   { Icon: SiYoutube,   bgColor: "#fef2f2", textColor: "#ef4444"  },
+  twitter:   { Icon: SiX,         bgColor: "#f3f4f6", textColor: "#374151"  },
+  spotify:   { Icon: SiSpotify,   bgColor: "#f0fdf4", textColor: "#16a34a"  },
+  behance:   { Icon: SiBehance,   bgColor: "#e9f3ff", textColor: "#1565d8"  },
 } as const;
 
 type IconKey = keyof typeof ICON_MAP;
@@ -38,6 +37,41 @@ function detectIconKey(url: string): IconKey | undefined {
   return undefined;
 }
 
+function RowBtn({
+  children,
+  title,
+  danger,
+  onClick,
+}: {
+  children: React.ReactNode;
+  title?: string;
+  danger?: boolean;
+  onClick?: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      className="flex items-center justify-center cursor-pointer transition-all duration-150"
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        border: 0,
+        background: hovered ? (danger ? "#fde8ec" : "#eef0f7") : "transparent",
+        color: hovered ? (danger ? "#e11d48" : "#0b1020") : "#6b75a3",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function ManagedLinkCard({
   link,
   onEdit,
@@ -49,10 +83,11 @@ export function ManagedLinkCard({
   isOverlay = false,
 }: ManagedLinkCardProps) {
   const { title, url, clicks, draft, trendLabel, createdAt } = link;
-  const isDemo = isDemoManagedLink(link);
+  const visualStatus = link.status ?? (draft ? "unpublished" : "published");
   const [editingField, setEditingField] = useState<"title" | "url" | null>(null);
   const [tempTitle, setTempTitle] = useState(title);
   const [tempUrl, setTempUrl] = useState(url);
+  const [isHovered, setIsHovered] = useState(false);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -79,64 +114,78 @@ export function ManagedLinkCard({
     setEditingField(null);
   };
 
-  const showStats = !draft || Number(String(clicks).replace(/,/g, "")) > 0;
+  const showStats = visualStatus !== "draft" || Number(String(clicks).replace(/,/g, "")) > 0;
   const iconKey = (link.icon && link.icon in ICON_MAP)
     ? (link.icon as IconKey)
     : detectIconKey(link.url);
   const iconEntry = iconKey ? ICON_MAP[iconKey] : undefined;
 
+  const accentColor = visualStatus === "published" ? "#3b46e0" : "#d6dae9";
+  const cardBoxShadow = isOverlay
+    ? "0 20px 40px -8px rgba(15,23,42,0.18)"
+    : `inset 3px 0 0 ${accentColor}`;
+  const hoverBoxShadow = `inset 3px 0 0 ${accentColor}, 0 4px 14px -4px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04)`;
+
   return (
     <div
-      className={`group relative flex overflow-hidden rounded-xl border border-outline-variant/40 bg-white shadow-sm transition-all duration-150 hover:bg-[#f8f8ff] hover:shadow-md dark:border-outline-variant/30 dark:bg-surface-container-lowest ${
-        draft ? "opacity-[0.92]" : ""
-      } ${isOverlay ? "shadow-2xl rotate-[0.5deg] scale-[1.01]" : ""}`}
+      className={`group relative flex transition-all duration-200 ${isOverlay ? "rotate-[0.5deg] scale-[1.01]" : ""}`}
+      style={{
+        background: "white",
+        border: `1px solid ${isHovered ? "#d6dae9" : "#eef0f7"}`,
+        borderRadius: 16,
+        padding: "16px 16px 16px 14px",
+        boxShadow: isOverlay ? "0 20px 40px -8px rgba(15,23,42,0.18)" : isHovered ? hoverBoxShadow : cardBoxShadow,
+        transform: isHovered && !isOverlay ? "translateY(-1px)" : "translateY(0)",
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Left accent border — published only */}
-      {!draft && (
-        <div
-          className="w-[3px] shrink-0 self-stretch"
-          style={{ backgroundColor: "#5B4FF5" }}
-          aria-hidden
-        />
-      )}
-
-      <div className="flex min-w-0 flex-1 gap-3 p-4 sm:gap-4 sm:p-5">
+      <div className="flex min-w-0 flex-1 gap-3 sm:gap-[14px]">
         {/* Drag handle */}
         <div
           {...dragHandleListeners}
           {...dragHandleAttributes}
-          className={`mt-1 flex shrink-0 flex-col items-center justify-start text-on-surface-variant/35 transition-colors group-hover:text-on-surface-variant/60 ${
+          className={`flex shrink-0 items-start justify-center pt-1 transition-colors ${
             isOverlay ? "cursor-grabbing" : "cursor-grab"
           }`}
+          style={{ color: isHovered ? "#6b75a3" : "#a8aecb" }}
           aria-label="Drag to reorder"
         >
-          <span className="material-symbols-outlined text-[20px] select-none">drag_indicator</span>
+          <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
+            <circle cx="2" cy="2" r="1.2" fill="currentColor"/>
+            <circle cx="8" cy="2" r="1.2" fill="currentColor"/>
+            <circle cx="2" cy="7" r="1.2" fill="currentColor"/>
+            <circle cx="8" cy="7" r="1.2" fill="currentColor"/>
+            <circle cx="2" cy="12" r="1.2" fill="currentColor"/>
+            <circle cx="8" cy="12" r="1.2" fill="currentColor"/>
+          </svg>
         </div>
 
         {/* Platform icon */}
         <div
-          className={`mt-0.5 w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-            iconEntry?.bg ?? "bg-surface-container-high"
-          }`}
+          className="shrink-0 flex items-center justify-center mt-0.5"
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 10,
+            background: iconEntry ? iconEntry.bgColor : "linear-gradient(135deg,#eef1ff,#dbe2ff)",
+            color: iconEntry ? iconEntry.textColor : "#2a37c0",
+          }}
         >
           {iconEntry ? (
-            <iconEntry.Icon className={`text-[18px] ${iconEntry.color}`} />
+            <iconEntry.Icon style={{ fontSize: 18, color: iconEntry.textColor }} />
           ) : (
-            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">link</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+            </svg>
           )}
         </div>
 
-        <div className="min-w-0 flex-1 space-y-2.5">
+        <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1 space-y-1">
-              {/* Sample badge */}
-              {isDemo && (
-                <span className="mb-0.5 inline-flex rounded-md bg-primary-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-on-primary-container">
-                  Sample
-                </span>
-              )}
-
-              {/* Title + status badge */}
+            <div className="min-w-0 flex-1">
+              {/* Title + status tag */}
               <div className="flex items-center gap-2 min-w-0">
                 {editingField === "title" ? (
                   <input
@@ -145,27 +194,50 @@ export function ManagedLinkCard({
                     onChange={(e) => setTempTitle(e.target.value)}
                     onBlur={handleTitleSubmit}
                     onKeyDown={(e) => e.key === "Enter" && handleTitleSubmit()}
-                    className="min-w-0 flex-1 border-b border-primary/40 bg-transparent text-base font-semibold tracking-tight text-on-surface outline-none dark:border-primary/50"
+                    className="min-w-0 flex-1 border-b bg-transparent outline-none font-semibold"
+                    style={{ fontSize: 15, color: "#0b1020", borderBottomColor: "#6873ff" }}
                   />
                 ) : (
                   <button
                     type="button"
                     onClick={() => setEditingField("title")}
-                    className="min-w-0 flex-1 text-left"
+                    className="min-w-0 shrink truncate text-left"
+                    style={{ fontSize: 15, fontWeight: 600, color: "#0b1020", letterSpacing: "-0.01em" }}
                   >
-                    <h3 className="truncate text-base font-semibold tracking-tight text-on-surface">
-                      {title}
-                    </h3>
+                    {title}
                   </button>
                 )}
 
-                {draft ? (
-                  <span className="shrink-0 inline-flex items-center rounded-full bg-surface-container-high px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">
-                    Draft
-                  </span>
-                ) : (
-                  <span className="shrink-0 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700">
+                {visualStatus === "published" && (
+                  <span
+                    className="shrink-0 uppercase"
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
+                      padding: "2.5px 7px",
+                      borderRadius: 5,
+                      background: "#e8f6ee",
+                      color: "#16a34a",
+                    }}
+                  >
                     Published
+                  </span>
+                )}
+                {visualStatus === "unpublished" && (
+                  <span
+                    className="shrink-0 uppercase"
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
+                      padding: "2.5px 7px",
+                      borderRadius: 5,
+                      background: "#f1f3ff",
+                      color: "#3a4474",
+                    }}
+                  >
+                    Unpublished
                   </span>
                 )}
               </div>
@@ -178,77 +250,123 @@ export function ManagedLinkCard({
                   onChange={(e) => setTempUrl(e.target.value)}
                   onBlur={handleUrlSubmit}
                   onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
-                  className="w-full border-b border-primary/30 bg-transparent text-sm font-medium text-primary outline-none dark:border-primary/40"
+                  className="w-full bg-transparent outline-none border-b"
+                  style={{ fontSize: 13, color: "#3b46e0", borderBottomColor: "#6873ff", fontFamily: "monospace" }}
                 />
               ) : (
                 <button
                   type="button"
                   onClick={() => setEditingField("url")}
-                  className={`block w-full truncate text-left text-sm font-medium underline-offset-2 hover:underline ${
-                    draft ? "italic text-on-surface-variant" : "text-primary"
-                  }`}
+                  className="block max-w-full truncate text-left hover:underline underline-offset-2"
+                  style={{
+                    fontSize: 13,
+                    color: "#6b75a3",
+                    fontFamily: "monospace",
+                  }}
                 >
-                  {url}
+                  {url.replace(/^https?:\/\//, "")}
                 </button>
               )}
             </div>
 
             {/* Right actions */}
-            <div className="flex shrink-0 items-center gap-2">
-              {/* Toggle switch */}
+            <div className="flex shrink-0 items-center gap-1">
+              {/* Toggle / Draft pill */}
               {onToggle ? (
-                <button
-                  type="button"
-                  onClick={onToggle}
-                  title={draft ? "Publish link" : "Mark as draft"}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-150 outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-primary ${
-                    draft ? "bg-surface-container-high" : "bg-[#5B4FF5]"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-150 ${
-                      draft ? "translate-x-1" : "translate-x-6"
-                    }`}
-                  />
-                </button>
+                visualStatus === "draft" ? (
+                  <button
+                    type="button"
+                    onClick={onToggle}
+                    title="Click to publish"
+                    className="cursor-pointer transition-all duration-150 mr-2 uppercase hover:opacity-80"
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      letterSpacing: "0.08em",
+                      padding: "4px 10px",
+                      borderRadius: 99,
+                      background: "#eef0f7",
+                      color: "#3a4474",
+                      border: 0,
+                    }}
+                  >
+                    Draft
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onToggle}
+                    title={visualStatus === "published" ? "Unpublish" : "Publish"}
+                    className="relative shrink-0 cursor-pointer outline-none transition-colors duration-200 mr-2"
+                    style={{
+                      width: 38,
+                      height: 22,
+                      borderRadius: 99,
+                      background: visualStatus === "published" ? "#3b46e0" : "#d6dae9",
+                      border: 0,
+                    }}
+                  >
+                    <span
+                      className="absolute rounded-full bg-white transition-transform duration-200"
+                      style={{
+                        width: 18,
+                        height: 18,
+                        top: 2,
+                        left: 2,
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                        transform: visualStatus === "published" ? "translateX(16px)" : "translateX(0)",
+                      }}
+                    />
+                  </button>
+                )
               ) : null}
 
-              <button
-                type="button"
-                onClick={() => (onEdit ? onEdit() : setEditingField("title"))}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors duration-150 hover:bg-primary/10 hover:text-primary cursor-pointer"
+              <RowBtn
                 title="Edit"
+                onClick={() => (onEdit ? onEdit() : setEditingField("title"))}
               >
-                <span className="material-symbols-outlined text-[18px]">edit</span>
-              </button>
-              <button
-                type="button"
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4z"/>
+                </svg>
+              </RowBtn>
+
+              <RowBtn
+                title={`Delete ${title}`}
+                danger
                 onClick={() => onDelete?.()}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors duration-150 hover:bg-error/10 hover:text-error cursor-pointer"
-                aria-label={`Delete ${title}`}
               >
-                <span className="material-symbols-outlined text-[18px]">delete</span>
-              </button>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+              </RowBtn>
             </div>
           </div>
 
           {/* Stats row */}
           {showStats && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-on-surface-variant">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2" style={{ fontSize: 12, color: "#6b75a3" }}>
               <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-on-surface-variant/70">visibility</span>
-                <span className="font-medium">{clicks} clicks</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                {clicks} clicks
               </span>
               {trendLabel ? (
-                <span className="flex items-center gap-1.5 font-medium text-green-600 dark:text-green-400">
-                  <span className="material-symbols-outlined text-[16px]">trending_up</span>
+                <span className="flex items-center gap-1.5 font-medium" style={{ color: "#16a34a" }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17l5-5 4 4 6-7"/>
+                  </svg>
                   {trendLabel}
                 </span>
               ) : null}
               {createdAt ? (
                 <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-on-surface-variant/70">calendar_today</span>
-                  <span className="font-medium">{draft ? "Created" : "Added"} {createdAt}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <path strokeLinecap="round" d="M16 2v4M8 2v4M3 10h18"/>
+                  </svg>
+                  {visualStatus === "draft" ? "Created" : "Added"} {createdAt}
                 </span>
               ) : null}
             </div>
