@@ -57,13 +57,21 @@ export function BrandingAppearanceProvider({
   const [state, setState] = useState<BrandingAppearanceState>(getDefaultBrandingState);
   const [isDirty, setIsDirty] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [needsStorageSync, setNeedsStorageSync] = useState(true);
 
-  useEffect(() => {
-    const loaded = loadBrandingState();
-    baselineRef.current = loaded;
-    setState(loaded);
+  if (needsStorageSync && typeof window !== "undefined") {
+    setNeedsStorageSync(false);
+    setState(loadBrandingState());
     setHydrated(true);
-  }, []);
+  }
+
+  const baselineInitialized = useRef(false);
+  useEffect(() => {
+    if (hydrated && !baselineInitialized.current) {
+      baselineInitialized.current = true;
+      baselineRef.current = state;
+    }
+  }, [hydrated, state]);
 
   useEffect(() => {
     if (!hydrated) return;

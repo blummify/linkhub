@@ -47,7 +47,7 @@ const DEFAULT_CARDS: StatCardData[] = [
   },
 ];
 
-function Sparkline({ values, color }: { values: number[]; color: "green" }) {
+function Sparkline({ values }: { values: number[]; color: "green" }) {
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
