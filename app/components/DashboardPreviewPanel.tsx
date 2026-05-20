@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { ManagedLink } from "../user-admin/components/types";
 
 // ── Icon bg/fg per link type ──────────────────────────────────────────────────
@@ -89,18 +89,68 @@ const SOCIAL_ICONS = [
   },
 ];
 
-// ── Phone screen content (avatar, bio, social icons, links, footer) ────────────
+// ── Share network definitions ─────────────────────────────────────────────────
+const SHARE_NETWORKS = [
+  { key: "twitter",  label: "X / Twitter", bg: "#0f1419" },
+  { key: "facebook", label: "Facebook",    bg: "#1877f2" },
+  { key: "whatsapp", label: "WhatsApp",    bg: "#25d366" },
+  { key: "linkedin", label: "LinkedIn",    bg: "#0a66c2" },
+];
+
+type ShareNetwork = typeof SHARE_NETWORKS[number];
+
+function buildShareUrl(network: string, fullUrl: string): string {
+  const encoded = encodeURIComponent(fullUrl);
+  const text = encodeURIComponent("Check out my linkhub!");
+  switch (network) {
+    case "twitter":  return `https://twitter.com/intent/tweet?url=${encoded}&text=${text}`;
+    case "facebook": return `https://www.facebook.com/sharer/sharer.php?u=${encoded}`;
+    case "whatsapp": return `https://wa.me/?text=${text}%20${encoded}`;
+    case "linkedin": return `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`;
+    default:         return fullUrl;
+  }
+}
+
+function ShareNetIcon({ network }: { network: string }) {
+  if (network === "twitter") return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  );
+  if (network === "facebook") return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+    </svg>
+  );
+  if (network === "whatsapp") return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  );
+  if (network === "linkedin") return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+    </svg>
+  );
+  return null;
+}
+
+// ── Phone screen content ──────────────────────────────────────────────────────
 function PhoneScreenContent({
   displayName,
   handle,
   links,
+  avatarSize = 70,
 }: {
   displayName: string;
   handle: string;
   links: ManagedLink[];
+  avatarSize?: number;
 }) {
   const initial = displayName.charAt(0).toUpperCase() || "?";
-  const published = links.filter((l) => !l.draft);
+  const published = links.filter(
+    (l) => (l.status ?? (l.draft ? "unpublished" : "published")) === "published"
+  );
 
   return (
     <div
@@ -116,20 +166,19 @@ function PhoneScreenContent({
       <div style={{ position: "relative", marginBottom: 12 }}>
         <div
           style={{
-            width: 70, height: 70,
+            width: avatarSize, height: avatarSize,
             borderRadius: "50%",
             background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "white",
             fontFamily: "var(--font-instrument-serif), Georgia, serif",
-            fontSize: 28, fontStyle: "italic",
+            fontSize: Math.round(avatarSize * 0.4), fontStyle: "italic",
             boxShadow: "0 10px 24px -8px rgba(59,70,224,0.45)",
             border: "3px solid white",
           }}
         >
           {initial}
         </div>
-        {/* Online dot */}
         <div
           style={{
             position: "absolute", bottom: 2, right: 2,
@@ -287,23 +336,25 @@ function PhoneScreenContent({
   );
 }
 
-// ── Small action icon button (share / open-in-new-tab) ────────────────────────
+// ── Small action icon button ──────────────────────────────────────────────────
 function PreviewActionBtn({
   children,
   title,
   onClick,
   href,
+  active,
 }: {
   children: React.ReactNode;
   title: string;
   onClick?: () => void;
   href?: string;
+  active?: boolean;
 }) {
   const style: React.CSSProperties = {
     width: 32, height: 32,
     borderRadius: 8,
-    background: "white",
-    color: "#6b75a3",
+    background: active ? "#eef0f7" : "white",
+    color: active ? "#0b1020" : "#6b75a3",
     boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)",
     display: "flex", alignItems: "center", justifyContent: "center",
     border: 0,
@@ -319,8 +370,8 @@ function PreviewActionBtn({
       (e.currentTarget as HTMLElement).style.color = "#0b1020";
     },
     onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
-      (e.currentTarget as HTMLElement).style.background = "white";
-      (e.currentTarget as HTMLElement).style.color = "#6b75a3";
+      (e.currentTarget as HTMLElement).style.background = active ? "#eef0f7" : "white";
+      (e.currentTarget as HTMLElement).style.color = active ? "#0b1020" : "#6b75a3";
     },
   };
 
@@ -366,7 +417,6 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
           zIndex: 20,
         }}
       />
-
       {/* Screen */}
       <div
         style={{
@@ -400,15 +450,228 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ── Browser shell (desktop mode) ──────────────────────────────────────────────
+function BrowserShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: 360, height: 480,
+        background: "white",
+        borderRadius: 10,
+        border: "1px solid #d6dae9",
+        overflow: "hidden",
+        flexShrink: 0,
+        boxShadow: "0 20px 40px -12px rgba(15,23,42,0.18), 0 8px 16px -8px rgba(15,23,42,0.10)",
+        transition: "all 0.35s cubic-bezier(0.16,1,0.3,1)",
+      }}
+    >
+      {/* Chrome bar */}
+      <div
+        style={{
+          position: "absolute", top: 0, left: 0, right: 0,
+          height: 32,
+          background: "#f3f4f8",
+          borderBottom: "1px solid #e2e5ef",
+          borderRadius: "10px 10px 0 0",
+          display: "flex", alignItems: "center",
+          paddingLeft: 12,
+        }}
+      >
+        {/* Traffic lights */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff5f56" }} />
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffbd2e" }} />
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#27c93f" }} />
+        </div>
+        {/* URL bar */}
+        <div
+          style={{
+            flex: 1, margin: "0 12px", height: 18,
+            background: "white", borderRadius: 4,
+            border: "1px solid #e2e5ef",
+            display: "flex", alignItems: "center", paddingLeft: 8,
+            fontSize: 9, color: "#6b75a3",
+            fontFamily: "'Geist Mono', ui-monospace, 'Courier New', monospace",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}
+        >
+          linkhub.co
+        </div>
+      </div>
+
+      {/* Screen area */}
+      <div
+        style={{
+          position: "absolute", top: 32, left: 0, right: 0, bottom: 0,
+          background: "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
+          padding: "24px 28px 24px",
+          display: "flex", flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Social share confirm dialog ───────────────────────────────────────────────
+function SocialConfirmDialog({
+  network,
+  shareUrl,
+  onClose,
+}: {
+  network: ShareNetwork | null;
+  shareUrl: string;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  if (!network) return null;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard not available */ }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 300,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 24,
+        background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        style={{
+          width: "100%", maxWidth: 380,
+          background: "white", borderRadius: 20,
+          padding: "28px 28px 24px",
+          boxShadow: "0 40px 80px -20px rgba(15,23,42,0.4), 0 16px 32px -16px rgba(15,23,42,0.2)",
+          animation: "scIn 0.25s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        <style>{`
+          @keyframes scIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `}</style>
+
+        {/* Network icon */}
+        <div
+          style={{
+            width: 44, height: 44, borderRadius: "50%",
+            background: network.bg, color: "white",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            marginBottom: 16,
+          }}
+        >
+          <ShareNetIcon network={network.key} />
+        </div>
+
+        <h2 style={{ fontSize: 17, fontWeight: 700, color: "#0b1020", marginBottom: 6, letterSpacing: "-0.01em" }}>
+          Share on {network.label}
+        </h2>
+        <p style={{ fontSize: 13.5, color: "#6b75a3", marginBottom: 16, lineHeight: 1.55 }}>
+          Preview the link before opening it in a new tab.
+        </p>
+
+        {/* Share URL row */}
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            background: "#f7f8fc", borderRadius: 10,
+            padding: "8px 10px 8px 12px",
+            marginBottom: 20,
+          }}
+        >
+          <span
+            style={{
+              flex: 1, fontSize: 11.5, color: "#3b46e0",
+              fontFamily: "'Geist Mono', ui-monospace, 'Courier New', monospace",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}
+          >
+            {shareUrl}
+          </span>
+          <button
+            type="button"
+            onClick={handleCopy}
+            title={copied ? "Copied!" : "Copy link"}
+            style={{
+              width: 28, height: 28, borderRadius: 7, border: "1px solid #eef0f7",
+              background: copied ? "#dcfce7" : "white",
+              color: copied ? "#16a34a" : "#6b75a3",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", flexShrink: 0, transition: "all 0.15s",
+            }}
+          >
+            {copied ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5"/>
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              flex: 1, padding: "10px 0", borderRadius: 99, border: 0,
+              background: "#eef0f7", color: "#1a2244",
+              fontSize: 13.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#d6dae9"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7"; }}
+          >
+            Cancel
+          </button>
+          <a
+            href={shareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            style={{
+              flex: 1, padding: "10px 0", borderRadius: 99, border: 0,
+              background: network.bg, color: "white",
+              fontSize: 13.5, fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              textDecoration: "none",
+            }}
+          >
+            Open in new tab
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 export interface DashboardPreviewPanelProps {
   links: ManagedLink[];
   displayName: string;
-  /** URL slug after the slash, e.g. "joelosei" */
+  /** URL slug after the last slash, e.g. "joelosei" */
   handle?: string;
   /** Full public URL without protocol, e.g. "linkhub.co/joelosei" */
   publicUrl: string;
-  onShareClick?: () => void;
   /** Panel width (default 420) */
   width?: number;
 }
@@ -418,13 +681,43 @@ export function DashboardPreviewPanel({
   displayName,
   handle = "",
   publicUrl,
-  onShareClick,
   width = 420,
 }: DashboardPreviewPanelProps) {
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [showSharePop, setShowSharePop] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [shareConfirm, setShareConfirm] = useState<ShareNetwork | null>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
 
-  // Split publicUrl into domain and slug for the coloured handle display
+  const fullUrl = `https://${publicUrl}`;
+
+  // Close share popover on outside click
+  useEffect(() => {
+    if (!showSharePop) return;
+    const handler = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShowSharePop(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showSharePop]);
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard not available */ }
+  };
+
+  const handleSocialClick = (net: ShareNetwork) => {
+    setShowSharePop(false);
+    setShareConfirm(net);
+  };
+
+  // Split publicUrl for coloured handle display
   const slashIdx = publicUrl.lastIndexOf("/");
   const domain = slashIdx >= 0 ? publicUrl.slice(0, slashIdx + 1) : publicUrl;
   const slug   = slashIdx >= 0 ? publicUrl.slice(slashIdx + 1)     : "";
@@ -465,7 +758,7 @@ export function DashboardPreviewPanel({
           justifyContent: "space-between",
           marginBottom: 18,
           position: "relative",
-          zIndex: 10,
+          zIndex: 50,
         }}
       >
         <div>
@@ -487,14 +780,164 @@ export function DashboardPreviewPanel({
         </div>
 
         <div style={{ display: "flex", gap: 6 }}>
-          {onShareClick && (
-            <PreviewActionBtn title="Share" onClick={onShareClick}>
+          {/* Share button + popover */}
+          <div ref={shareRef} style={{ position: "relative" }}>
+            <PreviewActionBtn
+              title="Share"
+              onClick={() => setShowSharePop((p) => !p)}
+              active={showSharePop}
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
               </svg>
             </PreviewActionBtn>
-          )}
-          <PreviewActionBtn title="Open in new tab" href={`https://${publicUrl}`}>
+
+            {/* Share popover */}
+            {showSharePop && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 10px)", right: 0,
+                  width: 260,
+                  background: "white",
+                  borderRadius: 16,
+                  border: "1px solid #eef0f7",
+                  boxShadow: "0 20px 40px -12px rgba(15,23,42,0.18), 0 8px 16px -8px rgba(15,23,42,0.10)",
+                  zIndex: 100,
+                  overflow: "visible",
+                  animation: "popIn 0.18s cubic-bezier(0.16,1,0.3,1)",
+                }}
+              >
+                <style>{`
+                  @keyframes popIn {
+                    from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+                    to   { opacity: 1; transform: translateY(0) scale(1); }
+                  }
+                `}</style>
+
+                {/* Upward caret arrow */}
+                <div
+                  style={{
+                    position: "absolute", top: -6, right: 10,
+                    width: 12, height: 12,
+                    background: "white",
+                    borderLeft: "1px solid #eef0f7",
+                    borderTop: "1px solid #eef0f7",
+                    transform: "rotate(45deg)",
+                  }}
+                />
+
+                {/* Popover header */}
+                <div
+                  style={{
+                    padding: "14px 16px 12px",
+                    borderBottom: "1px solid #f2f4fb",
+                    fontSize: 12, fontWeight: 600, color: "#0b1020",
+                  }}
+                >
+                  Share your linkhub
+                </div>
+
+                {/* URL copy row */}
+                <div
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "12px 14px",
+                  }}
+                >
+                  <span
+                    style={{
+                      flex: 1,
+                      fontSize: 12,
+                      color: "#3b46e0",
+                      fontFamily: "'Geist Mono', ui-monospace, 'Courier New', monospace",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      background: "#f7f8fc", borderRadius: 8,
+                      padding: "6px 10px",
+                    }}
+                  >
+                    {publicUrl}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyUrl}
+                    title={copied ? "Copied!" : "Copy link"}
+                    style={{
+                      width: 32, height: 32, borderRadius: 8,
+                      border: "1px solid #eef0f7",
+                      background: copied ? "#dcfce7" : "white",
+                      color: copied ? "#16a34a" : "#6b75a3",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", flexShrink: 0, transition: "all 0.15s",
+                    }}
+                  >
+                    {copied ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5"/>
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+
+                {/* Divider */}
+                <div style={{ height: 1, background: "#f2f4fb", margin: "0 14px" }} />
+
+                {/* 2×2 social grid */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 8,
+                    padding: "12px 14px 14px",
+                  }}
+                >
+                  {SHARE_NETWORKS.map((net) => (
+                    <button
+                      key={net.key}
+                      type="button"
+                      onClick={() => handleSocialClick(net)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "9px 10px", borderRadius: 10,
+                        background: "#f7f8fc", border: "1px solid #eef0f7",
+                        color: "#1a2244", fontSize: 12, fontWeight: 500,
+                        cursor: "pointer", fontFamily: "inherit",
+                        transition: "all 0.15s",
+                        whiteSpace: "nowrap", overflow: "hidden",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7";
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = "#d6dae9";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.background = "#f7f8fc";
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = "#eef0f7";
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                          background: net.bg, color: "white",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}
+                      >
+                        <ShareNetIcon network={net.key} />
+                      </span>
+                      {net.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Open in new tab */}
+          <PreviewActionBtn title="Open in new tab" href={fullUrl}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
             </svg>
@@ -543,7 +986,7 @@ export function DashboardPreviewPanel({
         ))}
       </div>
 
-      {/* Phone + content */}
+      {/* Preview shell — phone or browser */}
       <div
         style={{
           flex: 1,
@@ -555,13 +998,24 @@ export function DashboardPreviewPanel({
           minHeight: 0,
         }}
       >
-        <PhoneShell>
-          <PhoneScreenContent
-            displayName={displayName}
-            handle={handle}
-            links={links}
-          />
-        </PhoneShell>
+        {device === "desktop" ? (
+          <BrowserShell>
+            <PhoneScreenContent
+              displayName={displayName}
+              handle={handle}
+              links={links}
+              avatarSize={76}
+            />
+          </BrowserShell>
+        ) : (
+          <PhoneShell>
+            <PhoneScreenContent
+              displayName={displayName}
+              handle={handle}
+              links={links}
+            />
+          </PhoneShell>
+        )}
       </div>
 
       {/* Theme switch */}
@@ -579,7 +1033,6 @@ export function DashboardPreviewPanel({
           border: "1px solid rgba(255,255,255,0.9)",
         }}
       >
-        {/* Sun */}
         <button
           type="button"
           aria-label="Light mode"
@@ -604,7 +1057,6 @@ export function DashboardPreviewPanel({
           </svg>
         </button>
 
-        {/* Moon */}
         <button
           type="button"
           aria-label="Dark mode"
@@ -628,6 +1080,15 @@ export function DashboardPreviewPanel({
           </svg>
         </button>
       </div>
+
+      {/* Social share confirm dialog */}
+      {shareConfirm && (
+        <SocialConfirmDialog
+          network={shareConfirm}
+          shareUrl={buildShareUrl(shareConfirm.key, fullUrl)}
+          onClose={() => setShareConfirm(null)}
+        />
+      )}
     </div>
   );
 }

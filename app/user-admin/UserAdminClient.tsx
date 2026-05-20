@@ -4,7 +4,6 @@ import { useState } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { useSidebar } from "../components/SidebarContext";
 import { type AppearanceState } from "../components/MobilePreview";
-import { ShareProfileModal } from "../components/ShareProfileModal";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
@@ -19,7 +18,6 @@ import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
 
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
-  const [showShareModal, setShowShareModal] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimTimerFired, setClaimTimerFired] = useState(false);
   const [links, setLinks] = useState<ManagedLink[]>([]);
@@ -264,7 +262,6 @@ export default function UserAdminClient() {
                   displayName={appearance.profileTitle || "Your Name"}
                   handle={PROFILE_PUBLIC_URL.split("/").pop() ?? ""}
                   publicUrl={PROFILE_PUBLIC_URL}
-                  onShareClick={() => setShowShareModal(true)}
                 />
               </div>
             </div>
@@ -284,11 +281,6 @@ export default function UserAdminClient() {
             onClaim={handleClaimHandle}
           />
 
-          <ShareProfileModal
-            open={showShareModal}
-            onClose={() => setShowShareModal(false)}
-            profileUrl={PROFILE_PUBLIC_URL}
-          />
         </div>
       </CollapsibleSidebar>
     </div>
