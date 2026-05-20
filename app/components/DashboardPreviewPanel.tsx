@@ -1036,47 +1036,6 @@ export function DashboardPreviewPanel({
         </div>
       </div>
 
-      {/* Device tabs */}
-      <div
-        style={{
-          background: "rgba(255,255,255,0.7)",
-          border: "1px solid rgba(255,255,255,0.9)",
-          backdropFilter: "blur(8px)",
-          borderRadius: 99,
-          padding: 3,
-          marginBottom: 18,
-          display: "inline-flex",
-          alignSelf: "center",
-          position: "relative",
-          zIndex: 10,
-        }}
-      >
-        {(["mobile", "desktop"] as const).map((d) => (
-          <button
-            key={d}
-            type="button"
-            onClick={() => setDevice(d)}
-            style={{
-              padding: "6px 14px",
-              fontSize: 12,
-              fontWeight: 500,
-              color: device === d ? "#0b1020" : "#6b75a3",
-              background: device === d ? "white" : "transparent",
-              borderRadius: 99,
-              border: 0,
-              cursor: "pointer",
-              boxShadow: device === d
-                ? "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)"
-                : "none",
-              fontFamily: "inherit",
-              transition: "all 0.15s",
-            }}
-          >
-            {d === "mobile" ? "📱 Mobile" : "💻 Desktop"}
-          </button>
-        ))}
-      </div>
-
       {/* Preview shell — phone or browser */}
       <div
         style={{
@@ -1113,10 +1072,51 @@ export function DashboardPreviewPanel({
         )}
       </div>
 
+      {/* Device tabs */}
+      <div
+        style={{
+          background: "rgba(255,255,255,0.7)",
+          border: "1px solid rgba(255,255,255,0.9)",
+          backdropFilter: "blur(8px)",
+          borderRadius: 99,
+          padding: 3,
+          marginTop: 14,
+          display: "inline-flex",
+          alignSelf: "center",
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
+        {(["mobile", "desktop"] as const).map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => setDevice(d)}
+            style={{
+              padding: "6px 14px",
+              fontSize: 12,
+              fontWeight: 500,
+              color: device === d ? "#0b1020" : "#6b75a3",
+              background: device === d ? "white" : "transparent",
+              borderRadius: 99,
+              border: 0,
+              cursor: "pointer",
+              boxShadow: device === d
+                ? "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)"
+                : "none",
+              fontFamily: "inherit",
+              transition: "all 0.15s",
+            }}
+          >
+            {d === "mobile" ? "📱 Mobile" : "💻 Desktop"}
+          </button>
+        ))}
+      </div>
+
       {themeLabel ? (
         <div
           style={{
-            marginTop: 14,
+            marginTop: 10,
             background: "rgba(255,255,255,0.7)",
             backdropFilter: "blur(8px)",
             border: "1px solid rgba(255,255,255,0.9)",
