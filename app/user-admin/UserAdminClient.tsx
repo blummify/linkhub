@@ -34,7 +34,6 @@ export default function UserAdminClient() {
 
   const {
     state: branding,
-    theme,
     previewAppearance,
     publicUrl,
     patchState,
