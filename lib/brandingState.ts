@@ -3,6 +3,7 @@ import {
   DEFAULT_THEME,
   type BrandingTheme,
 } from "@/app/constants/brandingThemes";
+import { normalizeBrandingButtonShape } from "@/app/constants/brandingButtonShapes";
 import {
   brandingHeadingFontStack,
   brandingHeadlinePreviewStyle,
@@ -77,14 +78,6 @@ export function brandingStateToPreviewAppearance(
   };
 }
 
-const BRANDING_BUTTON_TO_PREVIEW: Record<string, AppearanceState["buttonStyle"]> = {
-  square: "flat",
-  rounded: "rounded",
-  pill: "shadow",
-  flat: "flat",
-  shadow: "shadow",
-};
-
 /** Maps shared branding state → `MobilePreview` appearance */
 export function brandingStateToMobileAppearance(
   state: BrandingAppearanceState
@@ -104,10 +97,9 @@ export function brandingStateToMobileAppearance(
     bgStyle: theme.screen.bgStyle,
     dark: theme.screen.dark,
     textColor: theme.preview.color,
-    buttonStyle:
-      BRANDING_BUTTON_TO_PREVIEW[state.buttonStyle] ?? state.buttonStyle,
+    buttonStyle: "flat",
     buttonShadow: "none",
-    buttonRoundness: "full",
+    buttonRoundness: normalizeBrandingButtonShape(state.buttonStyle),
     fontFamily: state.fontFamily,
     bodyFontFamily: "Geist",
     headlineStyle: brandingHeadlinePreviewStyle(state.fontFamily),

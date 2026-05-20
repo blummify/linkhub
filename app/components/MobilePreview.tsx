@@ -3,6 +3,10 @@
 import Image from "next/image";
 import React from "react";
 import {
+  normalizeBrandingButtonShape,
+  previewLinkBorderRadiusClass,
+} from "../constants/brandingButtonShapes";
+import {
   BRANDING_HEADING_FONT_OPTIONS,
   brandingHeadingFontStack,
   isBrandingHeadlineFont,
@@ -48,7 +52,7 @@ export const DEFAULT_APPEARANCE: AppearanceState = {
   textColor: "#0b1020",
   buttonStyle: "rounded",
   buttonShadow: "none",
-  buttonRoundness: "full",
+  buttonRoundness: "rounded",
   fontFamily: "Instrument Serif",
   bodyFontFamily: "Geist",
   headlineStyle: { fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.01em" },
@@ -69,12 +73,16 @@ export type PreviewLinkRow =
 
 const DEFAULT_LINK_ROWS: PreviewLinkRow[] = [];
 
-/** Maps editor values (`solid` legacy) to preview link-button variants */
+/** Maps editor values (`solid` legacy) to preview link-button variants (shadow, outline, etc.) */
 export function normalizePreviewButtonStyle(s: string): "flat" | "rounded" | "outline" | "shadow" {
-  if (s === "solid" || s === "square") return "flat";
-  if (s === "pill") return "shadow";
+  if (s === "solid") return "flat";
+  if (s === "square" || s === "pill") return "flat";
   if (s === "flat" || s === "rounded" || s === "outline" || s === "shadow") return s;
   return "flat";
+}
+
+function previewLinkShape(appearance: AppearanceState): ReturnType<typeof normalizeBrandingButtonShape> {
+  return normalizeBrandingButtonShape(appearance.buttonRoundness);
 }
 
 function isPreviewDark(appearance: AppearanceState): boolean {
@@ -371,7 +379,7 @@ export const MobilePreview: React.FC<MobilePreviewProps> = ({
   const slug = appearance.profileTitle.replace(/^@/, "") || "profile";
   const relaxed = linkDensity === "relaxed";
   const linkBtnStyle = normalizePreviewButtonStyle(appearance.buttonStyle);
-  const linkCardRadius = linkBtnStyle === "rounded" ? "rounded-[1.75rem]" : "rounded-2xl";
+  const linkCardRadius = previewLinkBorderRadiusClass(previewLinkShape(appearance));
   const linkCardShadow =
     linkBtnStyle === "outline"
       ? "shadow-none ring-0"
