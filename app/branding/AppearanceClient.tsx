@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { CommandPalette } from "../components/CommandPalette";
@@ -75,11 +75,10 @@ export default function AppearanceClient() {
 
   const [showPalette, setShowPalette] = useState(false);
 
-  const themeOptions = BRANDING_THEMES.map((t) => ({
-    id: t.id,
-    name: t.name,
-    tag: t.tag,
-  }));
+  const themeOptions = useMemo(
+    () => BRANDING_THEMES.map((t) => ({ id: t.id, name: t.name, tag: t.tag })),
+    []
+  );
 
   return (
     <>

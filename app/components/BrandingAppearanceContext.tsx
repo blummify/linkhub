@@ -73,9 +73,14 @@ export function BrandingAppearanceProvider({
     }
   }, [hydrated, state]);
 
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!hydrated) return;
-    saveBrandingState(state);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => saveBrandingState(state), 400);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
   }, [state, hydrated]);
 
   useEffect(() => {

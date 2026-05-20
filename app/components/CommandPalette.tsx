@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { ManagedLink } from "../user-admin/components/types";
@@ -132,7 +132,7 @@ export function CommandPalette({
     };
   }, [open]);
 
-  const buildItems = useCallback((): PaletteItem[] => {
+  const buildItems = useCallback(() => {
     const q = query.toLowerCase();
 
     const quickActions: PaletteItem[] =
@@ -293,7 +293,7 @@ export function CommandPalette({
     onExport,
   ]);
 
-  const items = buildItems();
+  const items = useMemo(() => buildItems(), [buildItems]);
   const [prevQuery, setPrevQuery] = useState(query);
 
   if (query !== prevQuery) {
@@ -336,15 +336,17 @@ export function CommandPalette({
       ? "Search metrics, date ranges, actions…"
       : "Search links, pages, actions…");
 
-  // Group items
-  const groups: { group: string; items: (PaletteItem & { flatIndex: number })[] }[] = [];
-  let flatIndex = 0;
-  for (const item of items) {
-    const g = groups.find(g => g.group === item.group);
-    const entry = { ...item, flatIndex: flatIndex++ };
-    if (g) g.items.push(entry);
-    else groups.push({ group: item.group, items: [entry] });
-  }
+  const groups = useMemo(() => {
+    const result: { group: string; items: (PaletteItem & { flatIndex: number })[] }[] = [];
+    let flatIndex = 0;
+    for (const item of items) {
+      const g = result.find(g => g.group === item.group);
+      const entry = { ...item, flatIndex: flatIndex++ };
+      if (g) g.items.push(entry);
+      else result.push({ group: item.group, items: [entry] });
+    }
+    return result;
+  }, [items]);
 
   return createPortal(
     <div

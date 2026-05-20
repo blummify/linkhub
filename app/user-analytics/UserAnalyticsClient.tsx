@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { useSidebar } from "../components/SidebarContext";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
@@ -85,7 +85,7 @@ function smoothPath(pts: { x: number; y: number }[]): string {
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-function Delta({ val, suffix = "%" }: { val: number; suffix?: string }) {
+const Delta = memo(function Delta({ val, suffix = "%" }: { val: number; suffix?: string }) {
   const up = val >= 0;
   return (
     <span
@@ -109,9 +109,9 @@ function Delta({ val, suffix = "%" }: { val: number; suffix?: string }) {
       {up ? "+" : ""}{val.toFixed(1)}{suffix}
     </span>
   );
-}
+});
 
-function PanelTitle({ children }: { children: React.ReactNode }) {
+const PanelTitle = memo(function PanelTitle({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
@@ -125,27 +125,29 @@ function PanelTitle({ children }: { children: React.ReactNode }) {
       {children}
     </div>
   );
-}
+});
 
-function Sparkline({ values }: { values: number[] }) {
+const Sparkline = memo(function Sparkline({ values }: { values: number[] }) {
   const W = 60, H = 22;
-  const max = Math.max(...values, 1);
-  const stepX = W / (values.length - 1);
-  const pts = values.map((v, i) => ({
-    x: i * stepX,
-    y: H - (v / max) * (H - 3) - 1.5,
-  }));
-  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
-  const area = `${line} L ${W} ${H} L 0 ${H} Z`;
+  const { line, area } = useMemo(() => {
+    const max = Math.max(...values, 1);
+    const stepX = W / (values.length - 1);
+    const pts = values.map((v, i) => ({
+      x: i * stepX,
+      y: H - (v / max) * (H - 3) - 1.5,
+    }));
+    const l = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+    return { line: l, area: `${l} L ${W} ${H} L 0 ${H} Z` };
+  }, [values]);
   return (
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width={W} height={H}>
       <path d={area} fill="#f1f3ff" opacity={0.7}/>
       <path d={line} fill="none" stroke="#6873ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
-}
+});
 
-function LinkIcon({ type }: { type: string }) {
+const LinkIcon = memo(function LinkIcon({ type }: { type: string }) {
   if (type === "behance") return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
       <path d="M6.94 4.5c.7 0 1.34.06 1.92.19.58.13 1.07.33 1.49.61.4.28.73.65.95 1.12.23.47.34 1.05.34 1.73 0 .74-.17 1.36-.5 1.86-.34.49-.84.9-1.5 1.22.9.26 1.57.72 2.02 1.37.44.66.66 1.45.66 2.36 0 .75-.13 1.39-.4 1.93-.28.55-.67 1-1.16 1.35-.49.35-1.05.6-1.7.76-.62.16-1.3.24-2 .24H0V4.5h6.94z"/>
@@ -157,9 +159,9 @@ function LinkIcon({ type }: { type: string }) {
       <path strokeLinecap="round" d="M2 12h20M12 2a15.3 15.3 0 010 20"/>
     </svg>
   );
-}
+});
 
-function SourceIcon({ name }: { name: string }) {
+const SourceIcon = memo(function SourceIcon({ name }: { name: string }) {
   if (name === "Instagram") return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="2" y="2" width="20" height="20" rx="5"/>
@@ -194,35 +196,32 @@ function SourceIcon({ name }: { name: string }) {
       <path strokeLinecap="round" d="M2 12h20M12 2a15.3 15.3 0 010 20"/>
     </svg>
   );
-}
+});
 
-function DonutChart() {
+const DonutChart = memo(function DonutChart() {
   const cx = 50, cy = 50, r = 36, sw = 14;
   const C = 2 * Math.PI * r;
-  const segments = DEVICES.reduce<{
-    nodes: React.ReactNode[];
-    offset: number;
-  }>(
-    (acc, d, i) => {
-      const dash = (d.pct / 100) * C;
-      acc.nodes.push(
-        <circle
-          key={i}
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="none"
-          stroke={d.color}
-          strokeWidth={sw}
-          strokeDasharray={`${dash} ${C - dash}`}
-          strokeDashoffset={-acc.offset}
-          transform={`rotate(-90 ${cx} ${cy})`}
-        />
-      );
-      return { nodes: acc.nodes, offset: acc.offset + dash };
-    },
-    { nodes: [], offset: 0 }
-  ).nodes;
+  const segments = useMemo(() =>
+    DEVICES.reduce<{ nodes: React.ReactNode[]; offset: number }>(
+      (acc, d, i) => {
+        const dash = (d.pct / 100) * C;
+        acc.nodes.push(
+          <circle
+            key={i}
+            cx={cx} cy={cy} r={r}
+            fill="none"
+            stroke={d.color}
+            strokeWidth={sw}
+            strokeDasharray={`${dash} ${C - dash}`}
+            strokeDashoffset={-acc.offset}
+            transform={`rotate(-90 ${cx} ${cy})`}
+          />
+        );
+        return { nodes: acc.nodes, offset: acc.offset + dash };
+      },
+      { nodes: [], offset: 0 }
+    ).nodes,
+  [C]);
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
@@ -266,29 +265,37 @@ function DonutChart() {
       </div>
     </div>
   );
-}
+});
 
 // ── Line chart ────────────────────────────────────────────────────────────────
-function LineChart({ range }: { range: RangeKey }) {
+const LineChart = memo(function LineChart({ range }: { range: RangeKey }) {
   const data = RANGE_DATA[range];
   const { clicks, visitors } = data;
   const W = 800, H = 280;
   const padL = 42, padR = 16, padT = 16, padB = 32;
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
-  const maxY = Math.max(...clicks, ...visitors) * 1.18;
-  const stepX = innerW / (clicks.length - 1);
-  const toPt = (val: number, i: number) => ({
-    x: padL + i * stepX,
-    y: padT + innerH - (val / maxY) * innerH,
-  });
-  const clickPts = clicks.map(toPt);
-  const visitorPts = visitors.map(toPt);
-  const clickPath = smoothPath(clickPts);
-  const areaPath = `${clickPath} L ${clickPts[clickPts.length - 1].x} ${padT + innerH} L ${clickPts[0].x} ${padT + innerH} Z`;
-  const visitorPath = smoothPath(visitorPts);
-
   const yTicks = 4;
+
+  const { clickPath, areaPath, visitorPath, stepX, maxY } = useMemo(() => {
+    const max = Math.max(...clicks, ...visitors) * 1.18;
+    const sX = innerW / (clicks.length - 1);
+    const toPt = (val: number, i: number) => ({
+      x: padL + i * sX,
+      y: padT + innerH - (val / max) * innerH,
+    });
+    const cPts = clicks.map(toPt);
+    const vPts = visitors.map(toPt);
+    const cp = smoothPath(cPts);
+    return {
+      clickPath: cp,
+      areaPath: `${cp} L ${cPts[cPts.length - 1].x} ${padT + innerH} L ${cPts[0].x} ${padT + innerH} Z`,
+      visitorPath: smoothPath(vPts),
+      stepX: sX,
+      maxY: max,
+    };
+  }, [clicks, visitors, innerW, innerH, padL, padT]);
+
   const today = new Date();
 
   return (
@@ -328,7 +335,7 @@ function LineChart({ range }: { range: RangeKey }) {
       <path d={clickPath} fill="none" stroke="#3b46e0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
-}
+});
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function UserAnalyticsClient() {
