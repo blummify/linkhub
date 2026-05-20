@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import {
   BRANDING_THEMES,
   DEFAULT_THEME,
@@ -57,20 +57,17 @@ const CATEGORIES: {
   },
 ];
 
+const TAG_STYLES: Record<string, React.CSSProperties> = {
+  popular: { background: "#f0f1ff", color: "#3b46e0" },
+  new:     { background: "#fffbeb", color: "#d97706" },
+  pro:     { background: "#2c1810", color: "#f5d77f" },
+};
+const TAG_STYLE_DEFAULT: React.CSSProperties = { background: "#eef0f7", color: "#6b75a3" };
 function tagStyles(tagType?: BrandingTheme["tagType"]): React.CSSProperties {
-  switch (tagType) {
-    case "popular":
-      return { background: "#f0f1ff", color: "#3b46e0" };
-    case "new":
-      return { background: "#fffbeb", color: "#d97706" };
-    case "pro":
-      return { background: "#2c1810", color: "#f5d77f" };
-    default:
-      return { background: "#eef0f7", color: "#6b75a3" };
-  }
+  return (tagType && TAG_STYLES[tagType]) ?? TAG_STYLE_DEFAULT;
 }
 
-function ThemePreviewCard({
+const ThemePreviewCard = memo(function ThemePreviewCard({
   theme,
   displayName,
   handle,
@@ -256,7 +253,7 @@ function ThemePreviewCard({
       </div>
     </button>
   );
-}
+});
 
 export function ThemesSection({
   selectedThemeId,
