@@ -9,8 +9,6 @@ import {
   LinksIcon,
   AppearanceIcon,
   AnalyticsIcon,
-  AudienceIcon,
-  SettingsIcon,
   ChevronDownIcon,
   HelpIcon,
   LogoutIcon,
@@ -20,11 +18,9 @@ import { useState, useEffect } from "react";
 import UpgradeCard from "./UpgradeCard";
 
 const NAV_ITEMS = [
-  { label: "Links",      href: "/user-dashboard", Icon: LinksIcon,     showBadge: true },
-  { label: "Appearance", href: "/appearance",      Icon: AppearanceIcon },
-  { label: "Analytics",  href: "/user-analytics",  Icon: AnalyticsIcon  },
-  { label: "Audience",   href: "/audience",         Icon: AudienceIcon   },
-  { label: "Settings",   href: "/settings",         Icon: SettingsIcon   },
+  { label: "Links",     href: "/user-dashboard", Icon: LinksIcon,      showBadge: true },
+  { label: "Branding",  href: "/appearance",     Icon: AppearanceIcon              },
+  { label: "Analytics", href: "/user-analytics", Icon: AnalyticsIcon               },
 ];
 
 export default function CollapsibleSidebar({

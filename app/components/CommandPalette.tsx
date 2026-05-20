@@ -5,11 +5,9 @@ import { useRouter } from "next/navigation";
 import type { ManagedLink } from "../user-admin/components/types";
 
 const NAV_ITEMS = [
-  { label: "Links",      href: "/user-dashboard", icon: "links"      },
-  { label: "Appearance", href: "/appearance",      icon: "appearance" },
-  { label: "Analytics",  href: "/user-analytics",  icon: "analytics"  },
-  { label: "Audience",   href: "/audience",         icon: "audience"   },
-  { label: "Settings",   href: "/settings",         icon: "settings"   },
+  { label: "Links",     href: "/user-dashboard", icon: "links"      },
+  { label: "Branding",  href: "/appearance",     icon: "appearance" },
+  { label: "Analytics", href: "/user-analytics", icon: "analytics"  },
 ];
 
 interface PaletteItem {
