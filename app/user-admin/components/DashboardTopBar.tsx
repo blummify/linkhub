@@ -396,7 +396,7 @@ export function DashboardTopBar({
                   iconColor="#d97706"
                   label="What's new"
                   sub="Latest features & updates"
-                  href="#"
+                  href="/features"
                 />
                 <HelpItem
                   icon={
