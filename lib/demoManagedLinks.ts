@@ -15,6 +15,7 @@ export const DEMO_MANAGED_LINKS: ManagedLink[] = [
     clicks: "1,240",
     draft: false,
     trendLabel: "+12% this week",
+    createdAt: "Apr 2",
   },
   {
     id: `${DEMO_ID_PREFIX}portfolio`,
@@ -22,6 +23,8 @@ export const DEMO_MANAGED_LINKS: ManagedLink[] = [
     url: "https://behance.net/johndoe/vibe-check",
     clicks: "856",
     draft: false,
+    trendLabel: "+5% this week",
+    createdAt: "Apr 8",
   },
   {
     id: `${DEMO_ID_PREFIX}instagram`,
@@ -29,5 +32,6 @@ export const DEMO_MANAGED_LINKS: ManagedLink[] = [
     url: "https://instagram.com/johndoe",
     clicks: "0",
     draft: true,
+    createdAt: "Apr 14",
   },
 ];

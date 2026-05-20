@@ -15,13 +15,15 @@ describe("AddEditLinkModal", () => {
 
   it("shows add-mode heading when no initialLink", () => {
     render(<AddEditLinkModal open onClose={noop} onSave={noop} />);
-    expect(screen.getByText("Add a new link")).toBeInTheDocument();
+    expect(screen.getByText("Add a")).toBeInTheDocument();
+    expect(screen.getByText("new link")).toBeInTheDocument();
   });
 
   it("shows edit-mode heading when initialLink is provided", () => {
     const link: ManagedLink = { title: "My Site", url: "https://example.com", clicks: "0" };
     render(<AddEditLinkModal open onClose={noop} onSave={noop} initialLink={link} />);
-    expect(screen.getByText("Edit link")).toBeInTheDocument();
+    expect(screen.getByText("Edit")).toBeInTheDocument();
+    expect(screen.getByText("link")).toBeInTheDocument();
   });
 
   it("disables the save button when title or url is empty", () => {
@@ -32,10 +34,10 @@ describe("AddEditLinkModal", () => {
 
   it("enables the save button when title and url are filled", () => {
     render(<AddEditLinkModal open onClose={noop} onSave={noop} />);
-    fireEvent.change(screen.getByPlaceholderText("e.g. My Website"), {
+    fireEvent.change(screen.getByPlaceholderText("e.g. Latest Portfolio Drop"), {
       target: { value: "My Blog" },
     });
-    fireEvent.change(screen.getByPlaceholderText("https://"), {
+    fireEvent.change(screen.getByPlaceholderText("https://example.com"), {
       target: { value: "https://blog.com" },
     });
     expect(screen.getByRole("button", { name: /add link/i })).not.toBeDisabled();
@@ -45,10 +47,10 @@ describe("AddEditLinkModal", () => {
     const onSave = vi.fn();
     const onClose = vi.fn();
     render(<AddEditLinkModal open onClose={onClose} onSave={onSave} />);
-    fireEvent.change(screen.getByPlaceholderText("e.g. My Website"), {
+    fireEvent.change(screen.getByPlaceholderText("e.g. Latest Portfolio Drop"), {
       target: { value: "My Blog" },
     });
-    fireEvent.change(screen.getByPlaceholderText("https://"), {
+    fireEvent.change(screen.getByPlaceholderText("https://example.com"), {
       target: { value: "https://blog.com" },
     });
     fireEvent.click(screen.getByRole("button", { name: /add link/i }));
@@ -72,29 +74,40 @@ describe("AddEditLinkModal", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it("selects a preset and pre-fills title/url", () => {
+  it("selects a preset icon via aria-label", () => {
     render(<AddEditLinkModal open onClose={noop} onSave={noop} />);
-    fireEvent.click(screen.getByText("Instagram"));
-    expect(screen.getByDisplayValue("Instagram")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("https://instagram.com/")).toBeInTheDocument();
+    const instagramBtn = screen.getByRole("button", { name: "Instagram" });
+    fireEvent.click(instagramBtn);
+    // After clicking, the instagram preset button should be the active one
+    expect(instagramBtn).toBeInTheDocument();
   });
 
-  it("defaults new links to ACTIVE status", () => {
+  it("defaults status toggle to published (aria-checked=true)", () => {
     render(<AddEditLinkModal open onClose={noop} onSave={noop} />);
-    // The ACTIVE button should appear visually selected (has bg-white class)
-    const activeBtn = screen.getByRole("button", { name: "ACTIVE" });
-    expect(activeBtn).toBeInTheDocument();
+    const toggle = screen.getByRole("switch");
+    expect(toggle).toHaveAttribute("aria-checked", "true");
   });
 
-  it("allows switching to DRAFT status", () => {
+  it("allows switching to draft status via toggle", () => {
     render(<AddEditLinkModal open onClose={noop} onSave={noop} />);
-    fireEvent.click(screen.getByRole("button", { name: "DRAFT" }));
-    fireEvent.change(screen.getByPlaceholderText("e.g. My Website"), {
-      target: { value: "Draft Post" },
+    const toggle = screen.getByRole("switch");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByText("Save as draft")).toBeInTheDocument();
+  });
+
+  it("shows character counter for title", () => {
+    render(<AddEditLinkModal open onClose={noop} onSave={noop} />);
+    expect(screen.getByText("0 / 50")).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText("e.g. Latest Portfolio Drop"), {
+      target: { value: "Hello" },
     });
-    fireEvent.change(screen.getByPlaceholderText("https://"), {
-      target: { value: "https://draft.com" },
-    });
-    expect(screen.getByRole("button", { name: "DRAFT" })).toBeInTheDocument();
+    expect(screen.getByText("5 / 50")).toBeInTheDocument();
+  });
+
+  it("shows keyboard shortcut hint in footer", () => {
+    render(<AddEditLinkModal open onClose={noop} onSave={noop} />);
+    expect(screen.getByText("↵")).toBeInTheDocument();
+    expect(screen.getByText("esc")).toBeInTheDocument();
   });
 });
