@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image"
 import { signOut, useSession } from "next-auth/react";
 import { useSidebar } from "./SidebarContext";
 import {
@@ -87,38 +88,18 @@ export default function CollapsibleSidebar({
         style={{ borderColor: "#eef0f7" }}
       >
         {/* Brand */}
-        <div
-          className={`flex items-center shrink-0 ${isCollapsed ? "justify-center pb-6" : "gap-1.5 pb-8 px-2.5"}`}
-        >
-          {/* "linkhub" text in Instrument Serif italic */}
-          {!isCollapsed && (
-            <span
-              style={{
-                fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                fontStyle: "italic",
-                fontSize: 30,
-                letterSpacing: "-0.02em",
-                color: "#1e2a8a",
-                lineHeight: 1,
-              }}
-            >
-              linkhub
-            </span>
-          )}
-          {/* Indigo dot */}
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "#3b46e0",
-              boxShadow: "0 0 0 4px #f1f3ff",
-              flexShrink: 0,
-              display: "inline-block",
-              marginLeft: isCollapsed ? 0 : 2,
-            }}
-          />
-        </div>
+
+      <div className={` flex items-center justify-center  ${isCollapsed ? 'mb-6 pt-1' : 'mb-8 pt-2'}`} >
+      <Image
+        src="/link_hub_logo.png"
+        alt="LinkHub Logo"
+        width={isCollapsed ? 32 : 128}
+        height={isCollapsed ? 32 : 128}
+        className={`object-contain transition-all duration-300 ${
+          isCollapsed ? "h-8 w-8" : "h-auto w-32"
+        }`}
+      />
+      </div>
 
         {/* WORKSPACE label */}
         {!isCollapsed && (
