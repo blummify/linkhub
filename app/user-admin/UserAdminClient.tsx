@@ -13,6 +13,8 @@ import { PROFILE_PUBLIC_URL } from "../constants/profile";
 
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim } from "../actions/links";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
+import { DeleteConfirmDialog } from "../components/DeleteConfirmDialog";
+import { CommandPalette } from "../components/CommandPalette";
 import { useEffect } from "react";
 import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
 
@@ -24,6 +26,8 @@ export default function UserAdminClient() {
   
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ link: ManagedLink; index: number } | null>(null);
+  const [showPalette, setShowPalette] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -223,66 +227,87 @@ export default function UserAdminClient() {
   };
 
   return (
-    <div className="bg-[#f7f8fc] text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
-      <CollapsibleSidebar isAdmin={true}>
-        <div className="flex-1 flex flex-col min-h-screen relative">
-          <main
-            id="mainContent"
-            className={`flex-1 transition-all duration-500 ease-in-out ${
-              isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
-            } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
-          >
-            <div className="flex flex-col lg:flex-row min-h-screen">
-              {/* Center section */}
-              <div
-                className="flex-1 animate-fade-in-up"
-                style={{ padding: "22px 32px 40px", minWidth: 0 }}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-64">
-                    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                  </div>
-                ) : (
-                  <ManageLinksSection
+    <>
+      <div className="bg-[#f7f8fc] text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
+        <CollapsibleSidebar isAdmin={true}>
+          <div className="flex-1 flex flex-col min-h-screen relative">
+            <main
+              id="mainContent"
+              className={`flex-1 transition-all duration-500 ease-in-out ${
+                isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
+              } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
+            >
+              <div className="flex flex-col lg:flex-row min-h-screen">
+                {/* Center section */}
+                <div
+                  className="flex-1 animate-fade-in-up"
+                  style={{ padding: "22px 32px 40px", minWidth: 0 }}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    <ManageLinksSection
+                      links={links}
+                      onAddLink={handleAddLink}
+                      onEditLink={handleEditLink}
+                      onRequestDelete={(link, index) => setPendingDelete({ link, index })}
+                      onDeleteLink={handleDeleteLink}
+                      onToggleLink={handleToggleLink}
+                      onUpdateLink={handleUpdateLink}
+                      onReorderLinks={setLinks}
+                      onSearchOpen={() => setShowPalette(true)}
+                    />
+                  )}
+                </div>
+
+                {/* Preview panel */}
+                <div className="hidden lg:block">
+                  <DashboardPreviewPanel
                     links={links}
-                    onAddLink={handleAddLink}
-                    onEditLink={handleEditLink}
-                    onDeleteLink={handleDeleteLink}
-                    onToggleLink={handleToggleLink}
-                    onUpdateLink={handleUpdateLink}
-                    onReorderLinks={setLinks}
+                    displayName={appearance.profileTitle || "Your Name"}
+                    handle={PROFILE_PUBLIC_URL.split("/").pop() ?? ""}
+                    publicUrl={PROFILE_PUBLIC_URL}
                   />
-                )}
+                </div>
               </div>
+            </main>
+          </div>
+        </CollapsibleSidebar>
+      </div>
 
-              {/* Preview panel */}
-              <div className="hidden lg:block">
-                <DashboardPreviewPanel
-                  links={links}
-                  displayName={appearance.profileTitle || "Your Name"}
-                  handle={PROFILE_PUBLIC_URL.split("/").pop() ?? ""}
-                  publicUrl={PROFILE_PUBLIC_URL}
-                />
-              </div>
-            </div>
-          </main>
+      {/* Modals rendered at root level — never inside a transformed ancestor */}
+      <AddEditLinkModal
+        key={`${editingLink?.link.id ?? "new"}-${showLinkModal}`}
+        open={showLinkModal}
+        onClose={() => setShowLinkModal(false)}
+        onSave={handleSaveLink}
+        initialLink={editingLink?.link}
+      />
 
-          <AddEditLinkModal
-            key={`${editingLink?.link.id ?? "new"}-${showLinkModal}`}
-            open={showLinkModal}
-            onClose={() => setShowLinkModal(false)}
-            onSave={handleSaveLink}
-            initialLink={editingLink?.link}
-          />
+      <ClaimHandleModal
+        open={showClaimModal}
+        onClose={handleDismissClaim}
+        onClaim={handleClaimHandle}
+      />
 
-          <ClaimHandleModal
-            open={showClaimModal}
-            onClose={handleDismissClaim}
-            onClaim={handleClaimHandle}
-          />
+      <DeleteConfirmDialog
+        open={pendingDelete !== null}
+        link={pendingDelete?.link}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) handleDeleteLink(pendingDelete.link, pendingDelete.index);
+          setPendingDelete(null);
+        }}
+      />
 
-        </div>
-      </CollapsibleSidebar>
-    </div>
+      <CommandPalette
+        open={showPalette}
+        onClose={() => setShowPalette(false)}
+        links={links}
+        onAddLink={handleAddLink}
+      />
+    </>
   );
 }
