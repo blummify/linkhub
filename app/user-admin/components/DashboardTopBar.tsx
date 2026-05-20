@@ -14,7 +14,11 @@ export function DashboardTopBar({
   const { toggleSidebar } = useSidebar();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { modifier } = useShortKey(() => {
-    onSearchClick ? onSearchClick() : searchInputRef.current?.focus();
+    if (onSearchClick) {
+      onSearchClick();
+    } else {
+      searchInputRef.current?.focus();
+    }
   });
 
   return (
