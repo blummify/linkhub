@@ -8,6 +8,7 @@ import AuthSessionProvider from "./components/AuthSessionProvider";
 import { MaterialSymbols } from "./components/MaterialSymbols";
 import { GoogleOneTap } from "./components/auth/GoogleOneTap";
 import { auth } from "@/auth";
+import { Instrument_Serif, Geist, Geist_Mono } from 'next/font/google';
 
 const manrope = Manrope({
   variable: "--next-font-manrope",
@@ -21,6 +22,23 @@ const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  style: ['normal', 'italic'],
+  weight: "400"
+});
+
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-sans',
+});
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
 });
 
 export const metadata: Metadata = {
@@ -52,7 +70,7 @@ export default async function RootLayout({
       lang="en"
       suppressHydrationWarning
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${inter.variable} antialiased scroll-smooth`}
+      className={`${manrope.variable} ${inter.variable} ${instrumentSerif.variable} ${geist.variable} ${geistMono.variable} antialiased scroll-smooth`}
     >
       <head>
         {/* fonts.gstatic.com hosts the Material Symbols woff2 — prefetch the DNS early */}
