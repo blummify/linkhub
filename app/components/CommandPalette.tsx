@@ -104,14 +104,21 @@ export function CommandPalette({
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [prevOpen, setPrevOpen] = useState(open);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setQuery("");
       setActiveIndex(0);
+    }
+  }
+
+  useEffect(() => {
+    if (open) {
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [open]);
@@ -287,10 +294,17 @@ export function CommandPalette({
   ]);
 
   const items = buildItems();
+  const [prevQuery, setPrevQuery] = useState(query);
 
-  useEffect(() => {
+  if (query !== prevQuery) {
+    setPrevQuery(query);
     setActiveIndex(0);
-  }, [query]);
+  }
+
+  const clampedActiveIndex = Math.min(
+    activeIndex,
+    Math.max(0, items.length - 1)
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") { onClose(); return; }
@@ -302,15 +316,15 @@ export function CommandPalette({
       e.preventDefault();
       setActiveIndex(i => Math.max(i - 1, 0));
     }
-    if (e.key === "Enter" && items[activeIndex]) {
-      items[activeIndex].action();
+    if (e.key === "Enter" && items[clampedActiveIndex]) {
+      items[clampedActiveIndex].action();
     }
   };
 
   useEffect(() => {
-    const el = listRef.current?.children[activeIndex] as HTMLElement | undefined;
+    const el = listRef.current?.children[clampedActiveIndex] as HTMLElement | undefined;
     el?.scrollIntoView({ block: "nearest" });
-  }, [activeIndex]);
+  }, [clampedActiveIndex]);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -432,7 +446,7 @@ export function CommandPalette({
                   {group}
                 </p>
                 {groupItems.map(item => {
-                  const isActive = item.flatIndex === activeIndex;
+                  const isActive = item.flatIndex === clampedActiveIndex;
                   return (
                     <button
                       key={item.id}

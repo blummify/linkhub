@@ -164,20 +164,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   const isEdit  = !!initialLink;
   const canSave = title.trim().length > 0 && isValidURL(url.trim());
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    if (!open) return;
-    function handler(e: KeyboardEvent) {
-      if (e.key === "Escape") { onClose(); return; }
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey || (document.activeElement as HTMLElement)?.tagName !== "TEXTAREA")) {
-        if (canSave) handleSave();
-      }
-    }
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, canSave]);
-
   const handleSave = useCallback(() => {
     if (!canSave) return;
     onSave({
@@ -190,6 +176,19 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
     });
     onClose();
   }, [canSave, title, url, selectedPreset, thumbImage, draft, initialLink, onSave, onClose]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!open) return;
+    function handler(e: KeyboardEvent) {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey || (document.activeElement as HTMLElement)?.tagName !== "TEXTAREA")) {
+        if (canSave) handleSave();
+      }
+    }
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [open, canSave, handleSave, onClose]);
 
   // Debounced URL validation
   function handleUrlChange(val: string) {
@@ -285,7 +284,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             <p style={{ fontSize: 13, color: "#6b75a3", marginTop: 4 }}>
               {isEdit
                 ? "Update the URL, title, or status."
-                : <>Paste a URL and we'll handle the rest. You can fine-tune the details<br />anytime.</>}
+                : <>Paste a URL and we&apos;ll handle the rest. You can fine-tune the details<br />anytime.</>}
             </p>
           </div>
 
