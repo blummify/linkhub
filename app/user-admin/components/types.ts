@@ -12,4 +12,6 @@ export interface ManagedLink {
   trendLabel?: string;
   /** Display date string e.g. "Apr 2" */
   createdAt?: string;
+  /** Data URL for uploaded thumbnail image */
+  thumbnail?: string;
 }
