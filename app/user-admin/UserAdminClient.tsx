@@ -1,60 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import AppHeader from "../components/AppHeader";
 import { useSidebar } from "../components/SidebarContext";
-import { MobilePreview, type AppearanceState } from "../components/MobilePreview";
-import { ShareProfileModal } from "../components/ShareProfileModal";
-import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
+import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
+import { useBrandingAppearance } from "../components/BrandingAppearanceContext";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
-import { EDITOR_MOBILE_PREVIEW_SHARED } from "../constants/editorMobilePreview";
-import { PROFILE_PUBLIC_URL } from "../constants/profile";
-
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim } from "../actions/links";
+import { getBrandingThemeById } from "@/lib/brandingState";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
+import { DeleteConfirmDialog } from "../components/DeleteConfirmDialog";
+import { CommandPalette } from "../components/CommandPalette";
 import { useEffect } from "react";
 import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
 
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
-  const [showShareModal, setShowShareModal] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimTimerFired, setClaimTimerFired] = useState(false);
   const [links, setLinks] = useState<ManagedLink[]>([]);
   
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ link: ManagedLink; index: number } | null>(null);
+  const [showPalette, setShowPalette] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
+  const profileMergedRef = useRef(false);
+  const pendingProfileRef = useRef<Awaited<ReturnType<typeof getProfile>>>(null);
 
-  const [appearance, setAppearance] = useState<AppearanceState>({
-    profileTitle: "",
-    profileBio: "Connecting with your community.",
-    profileLayout: "classic",
-    themeId: "custom",
-    wallpaperStyle: "fill",
-    bgColor: "#ffffff",
-    textColor: "#1a1a1a",
-    buttonStyle: "solid",
-    buttonShadow: "none",
-    buttonRoundness: "full",
-    fontFamily: "Inter",
-    bodyFontFamily: "Inter",
-    titleSize: "small",
-    titleColor: "#000000",
-    footerStyle: "minimal",
-  });
+  const {
+    state: branding,
+    previewAppearance,
+    publicUrl,
+    patchState,
+    randomTheme,
+    hydrated,
+  } = useBrandingAppearance();
 
   useEffect(() => {
     async function loadData() {
       try {
         const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
-        
-        console.log("Profile data:", dbProfile); // ← debugging line
 
         const fromDb = dbLinks.map((l: LinkRow) => ({
           id: l.id,
@@ -66,13 +56,7 @@ export default function UserAdminClient() {
         }));
         setLinks([...DEMO_MANAGED_LINKS, ...fromDb]);
         if (dbProfile) {
-          setAppearance(prev => ({
-            ...prev,
-            profileTitle: dbProfile.user?.name || dbProfile.user?.email || "My Profile",
-            profileBio: dbProfile.bio || prev.profileBio,
-            profileLayout: dbProfile.layout || prev.profileLayout,
-            themeId: dbProfile.themeId || prev.themeId,
-          }));
+          pendingProfileRef.current = dbProfile;
           if (!dbProfile.hasClaimedHandle) {
             setIsFirstTimeUser(true);
           }
@@ -86,6 +70,24 @@ export default function UserAdminClient() {
     }
     loadData();
   }, []);
+
+  useEffect(() => {
+    const dbProfile = pendingProfileRef.current;
+    if (!hydrated || profileMergedRef.current || !dbProfile) return;
+    profileMergedRef.current = true;
+    const patch: Partial<typeof branding> = {};
+    const name = dbProfile.user?.name || dbProfile.user?.email;
+    if (name) patch.displayName = name;
+    if (dbProfile.handle) patch.handle = dbProfile.handle;
+    if (dbProfile.bio) patch.bio = dbProfile.bio;
+    if (dbProfile.themeId && dbProfile.themeId !== "default") {
+      const theme = getBrandingThemeById(dbProfile.themeId);
+      patch.themeId = theme.id;
+      patch.accentColor = theme.screen.titleColor;
+      patch.userPickedTheme = true;
+    }
+    if (Object.keys(patch).length > 0) patchState(patch);
+  }, [hydrated, patchState]);
 
   useEffect(() => {
     const timer = setTimeout(() => setClaimTimerFired(true), 1000);
@@ -182,19 +184,21 @@ export default function UserAdminClient() {
   };
 
   const handleToggleLink = async (link: ManagedLink, index: number) => {
+    const currentStatus = link.status ?? (link.draft ? "unpublished" : "published");
+    const willBePublished = currentStatus !== "published";
+    const newStatus = willBePublished ? "published" : "unpublished";
+
     if (isDemoManagedLink(link)) {
-      const newDraftState = !link.draft;
       const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, draft: newDraftState };
+      updatedLinks[index] = { ...link, draft: !willBePublished, status: newStatus };
       setLinks(updatedLinks);
       return;
     }
     if (!link.id) return;
     try {
-      const newDraftState = !link.draft;
-      await updateLink(link.id, { draft: newDraftState });
+      await updateLink(link.id, { draft: !willBePublished });
       const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, draft: newDraftState };
+      updatedLinks[index] = { ...link, draft: !willBePublished, status: newStatus };
       setLinks(updatedLinks);
     } catch (error) {
       console.error("Failed to toggle link:", error);
@@ -225,82 +229,89 @@ export default function UserAdminClient() {
   };
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
-      <CollapsibleSidebar isAdmin={true}>
-        <div className="flex-1 flex flex-col min-h-screen relative">
-          <AppHeader isAdmin={true} />
-
-          <main
-            id="mainContent"
-            className={`flex-1 pt-16 transition-all duration-500 ease-in-out ${
-              isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
-            } ml-0 overflow-y-auto bg-surface`}
-          >
-            <div className="min-h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
-              <div className="flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-                <div className="max-w-2xl mx-auto lg:mx-0 animate-fade-in-up">
+    <>
+      <div className="bg-[#f7f8fc] text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
+        <CollapsibleSidebar isAdmin={true}>
+          <div className="flex-1 flex flex-col min-h-screen relative">
+            <main
+              id="mainContent"
+              className={`flex-1 transition-all duration-500 ease-in-out ${
+                isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
+              } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
+            >
+              <div className="flex flex-col lg:flex-row min-h-screen">
+                {/* Center section */}
+                <div
+                  className="flex-1 animate-fade-in-up min-w-0 px-4 pt-[22px] pb-10 sm:px-6 lg:px-8"
+                >
                   {isLoading ? (
                     <div className="flex items-center justify-center h-64">
                       <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                     </div>
                   ) : (
-                    <ManageLinksSection 
-                      links={links} 
+                    <ManageLinksSection
+                      links={links}
                       onAddLink={handleAddLink}
                       onEditLink={handleEditLink}
+                      onRequestDelete={(link, index) => setPendingDelete({ link, index })}
                       onDeleteLink={handleDeleteLink}
                       onToggleLink={handleToggleLink}
                       onUpdateLink={handleUpdateLink}
+                      onReorderLinks={setLinks}
+                      onSearchOpen={() => setShowPalette(true)}
                     />
                   )}
                 </div>
-              </div>
 
-              <div className="w-full lg:w-[460px] xl:w-[540px] bg-surface-container-low/50 border-t lg:border-t-0 lg:border-l border-outline-variant/30 relative py-12 lg:py-8 px-4 sm:px-6 flex flex-col items-center">
-                <div className="sticky top-24 lg:top-8 w-full flex flex-col items-center animate-fade-in-up delay-100">
-                  <LinksPreviewPanel>
-                    <MobilePreview
-                      {...EDITOR_MOBILE_PREVIEW_SHARED}
-                      appearance={appearance}
-                      linkRows={links
-                        .filter(l => !l.draft)
-                        .map(l => ({ kind: 'button', title: l.title, url: l.url, icon: l.icon, accent: true }))
-                      }
-                      linkDensity="relaxed"
-                      headerTitle=""
-                      headerSubtitle=""
-                      showHeaderTuneButton={false}
-                      syncLabel={null}
-                      showDeviceFooter={false}
-                      onShareBarClick={() => setShowShareModal(true)}
-                    />
-                  </LinksPreviewPanel>
+                {/* Preview panel */}
+                <div className="hidden lg:block">
+                  <DashboardPreviewPanel
+                    links={links}
+                    displayName={branding.displayName || "Your Name"}
+                    handle={branding.handle}
+                    bio={branding.bio}
+                    publicUrl={publicUrl}
+                    appearance={previewAppearance}
+                    onRandomTheme={randomTheme}
+                  />
                 </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
+        </CollapsibleSidebar>
+      </div>
 
-          <AddEditLinkModal
-            key={`${editingLink?.link.id ?? "new"}-${showLinkModal}`}
-            open={showLinkModal}
-            onClose={() => setShowLinkModal(false)}
-            onSave={handleSaveLink}
-            initialLink={editingLink?.link}
-          />
+      {/* Modals rendered at root level — never inside a transformed ancestor */}
+      <AddEditLinkModal
+        key={`${editingLink?.link.id ?? "new"}-${showLinkModal}`}
+        open={showLinkModal}
+        onClose={() => setShowLinkModal(false)}
+        onSave={handleSaveLink}
+        initialLink={editingLink?.link}
+      />
 
-          <ClaimHandleModal
-            open={showClaimModal}
-            onClose={handleDismissClaim}
-            onClaim={handleClaimHandle}
-          />
+      <ClaimHandleModal
+        open={showClaimModal}
+        onClose={handleDismissClaim}
+        onClaim={handleClaimHandle}
+      />
 
-          <ShareProfileModal
-            open={showShareModal}
-            onClose={() => setShowShareModal(false)}
-            profileUrl={PROFILE_PUBLIC_URL}
-          />
-        </div>
-      </CollapsibleSidebar>
-    </div>
+      <DeleteConfirmDialog
+        open={pendingDelete !== null}
+        link={pendingDelete?.link}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) handleDeleteLink(pendingDelete.link, pendingDelete.index);
+          setPendingDelete(null);
+        }}
+      />
+
+      <CommandPalette
+        open={showPalette}
+        onClose={() => setShowPalette(false)}
+        links={links}
+        onAddLink={handleAddLink}
+      />
+    </>
   );
 }

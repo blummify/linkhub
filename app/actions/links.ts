@@ -20,6 +20,21 @@ export async function getLinks(): Promise<LinkRow[]> {
   }
 }
 
+export async function getLinksCount() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    const count = await db.link.count({
+      where: { userId: session.user.id }
+    });
+    return { count };
+  } catch (error) {
+    console.error("Error counting links:", error);
+    return { count: 0 };
+  }
+}
+
 export async function addLink(data: { title: string; url: string; icon?: string }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");

@@ -73,7 +73,32 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Run tests
-        run: npm test -- --run
+        run: npm run test:run
+
+  component-tests:
+    name: component-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Check component tests for changed files
+        run: |
+          git fetch origin main --depth=1 2>/dev/null || true
+          node scripts/check-component-tests.mjs origin/main HEAD
 
   build:
     name: build

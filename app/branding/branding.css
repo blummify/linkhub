@@ -1,0 +1,13 @@
+/* Matches linkhub-branding.html font stack — font faces live in preview-branding-fonts.css */
+.branding-shell {
+  font-family: var(--branding-font-sans);
+  font-size: 14px;
+  color: #0b1020;
+  -webkit-font-smoothing: antialiased;
+}
+
+.branding-shell input,
+.branding-shell textarea,
+.branding-shell button {
+  font-family: inherit;
+}
