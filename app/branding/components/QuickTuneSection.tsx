@@ -55,13 +55,7 @@ export function QuickTuneSection({
         padding: "22px 24px",
       }}
     >
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 22,
-        }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div>
           <p style={qtLabel}>Accent color</p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

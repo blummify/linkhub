@@ -91,8 +91,7 @@ export default function AppearanceClient() {
         >
           <div className="flex flex-col lg:flex-row min-h-screen">
             <div
-              className="flex-1 animate-fade-in-up"
-              style={{ padding: "22px 32px 60px", minWidth: 0 }}
+              className="flex-1 animate-fade-in-up min-w-0 px-4 pt-[22px] pb-14 sm:px-6 lg:px-8"
             >
               <DashboardTopBar
                 searchPlaceholder="Search themes, fonts, colors…"
