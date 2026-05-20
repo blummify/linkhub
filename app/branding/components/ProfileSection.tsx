@@ -1,19 +1,26 @@
 "use client";
 
+import {
+  BRANDING_FONT_MONO,
+  BRANDING_FONT_SERIF,
+} from "@/app/constants/brandingFonts";
+
 interface ProfileSectionProps {
   displayName: string;
+  handle: string;
   bio: string;
   onDisplayNameChange: (v: string) => void;
+  onHandleChange: (v: string) => void;
   onBioChange: (v: string) => void;
 }
 
 const MAX_BIO = 140;
 
 const fieldLabel: React.CSSProperties = {
-  fontSize: 10.5,
-  fontWeight: 600,
+  fontSize: 12,
+  fontWeight: 500,
   color: "#6b75a3",
-  letterSpacing: "0.10em",
+  letterSpacing: "0.07em",
   textTransform: "uppercase",
 };
 
@@ -32,138 +39,224 @@ const baseInput: React.CSSProperties = {
 
 function focusStyle(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
   e.currentTarget.style.borderColor = "#3b46e0";
-  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(59,70,224,0.08)";
+  e.currentTarget.style.boxShadow = "0 0 0 4px rgba(59,70,224,0.12)";
+  e.currentTarget.style.background = "white";
 }
 
 function blurStyle(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
   e.currentTarget.style.borderColor = "#eef0f7";
   e.currentTarget.style.boxShadow = "none";
+  e.currentTarget.style.background = "#f7f8fc";
 }
 
 export function ProfileSection({
   displayName,
+  handle,
   bio,
   onDisplayNameChange,
+  onHandleChange,
   onBioChange,
 }: ProfileSectionProps) {
+  const initial = displayName.charAt(0).toUpperCase() || "?";
+  const publicSlug = handle.trim() || "yourhandle";
+
   return (
     <div
       style={{
         background: "white",
         border: "1px solid #eef0f7",
         borderRadius: 18,
-        padding: "22px 24px",
+        padding: "24px 26px",
+        display: "grid",
+        gridTemplateColumns: "auto 1fr",
+        gap: 28,
+        alignItems: "start",
       }}
     >
-      {/* Avatar row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 24 }}>
-        <div style={{ position: "relative", flexShrink: 0 }}>
+      {/* Avatar column */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <div style={{ position: "relative" }}>
           <div
             style={{
-              width: 68,
-              height: 68,
+              width: 110,
+              height: 110,
               borderRadius: "50%",
               background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "white",
-              fontSize: 26,
+              fontSize: 44,
               fontStyle: "italic",
-              fontFamily: "var(--font-instrument-serif), Georgia, serif",
-              border: "3px solid white",
-              boxShadow: "0 4px 16px -4px rgba(59,70,224,0.4)",
+              fontFamily: BRANDING_FONT_SERIF,
+              border: "4px solid white",
+              outline: "1px solid #eef0f7",
+              boxShadow: "0 12px 28px -8px rgba(59,70,224,0.4)",
             }}
           >
-            {displayName.charAt(0).toUpperCase() || "?"}
+            {initial}
           </div>
           <button
             type="button"
+            aria-label="Upload new photo"
             style={{
               position: "absolute",
-              bottom: 0,
-              right: 0,
-              width: 22,
-              height: 22,
+              bottom: 4,
+              right: 4,
+              width: 30,
+              height: 30,
               borderRadius: "50%",
               background: "#0b1020",
               color: "white",
-              border: "2px solid white",
+              border: "3px solid white",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
             }}
-            aria-label="Edit photo"
           >
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6.536-6.536a2 2 0 012.828 2.828L11.828 13.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
             </svg>
           </button>
         </div>
 
-        <div>
-          <p style={{ fontSize: 14, fontWeight: 600, color: "#0b1020", marginBottom: 3 }}>Profile photo</p>
-          <p style={{ fontSize: 12, color: "#6b75a3" }}>JPG, PNG or SVG. Max 2MB.</p>
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button
-              type="button"
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                padding: "5px 12px",
-                border: "1px solid #eef0f7",
-                borderRadius: 8,
-                background: "white",
-                color: "#0b1020",
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-            >
-              Upload
-            </button>
-            <button
-              type="button"
-              style={{
-                fontSize: 12,
-                fontWeight: 500,
-                padding: "5px 12px",
-                border: 0,
-                background: "transparent",
-                color: "#6b75a3",
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-            >
-              Remove
-            </button>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <button
+            type="button"
+            className="avatar-action"
+            style={{
+              fontSize: 11.5,
+              fontWeight: 500,
+              color: "#6b75a3",
+              background: "transparent",
+              border: 0,
+              padding: "4px 8px",
+              borderRadius: 6,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontFamily: "inherit",
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+            Upload
+          </button>
+          <div style={{ width: 1, height: 12, background: "#d6dae9" }} />
+          <button
+            type="button"
+            style={{
+              fontSize: 11.5,
+              fontWeight: 500,
+              color: "#6b75a3",
+              background: "transparent",
+              border: 0,
+              padding: "4px 8px",
+              borderRadius: 6,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontFamily: "inherit",
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+            Remove
+          </button>
         </div>
       </div>
 
-      {/* Fields */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={fieldLabel}>Display name</label>
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => onDisplayNameChange(e.target.value)}
-            placeholder="Your name"
-            style={baseInput}
-            onFocus={focusStyle}
-            onBlur={blurStyle}
-          />
+      {/* Fields column */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 14,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            <label style={fieldLabel}>Display name</label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => onDisplayNameChange(e.target.value)}
+              placeholder="Your name"
+              maxLength={40}
+              style={baseInput}
+              onFocus={focusStyle}
+              onBlur={blurStyle}
+            />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            <label style={fieldLabel}>Handle</label>
+            <div style={{ position: "relative" }}>
+              <span
+                style={{
+                  position: "absolute",
+                  left: 14,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontFamily: BRANDING_FONT_MONO,
+                  fontSize: 13,
+                  color: "#6b75a3",
+                  pointerEvents: "none",
+                }}
+              >
+                @
+              </span>
+              <input
+                type="text"
+                value={handle}
+                onChange={(e) =>
+                  onHandleChange(
+                    e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
+                  )
+                }
+                placeholder="yourhandle"
+                maxLength={24}
+                style={{ ...baseInput, paddingLeft: 30 }}
+                onFocus={focusStyle}
+                onBlur={blurStyle}
+              />
+            </div>
+            <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 1 }}>
+              Your public URL:{" "}
+              <span style={{ color: "#3b46e0", fontWeight: 500 }}>
+                linkhub.co/{publicSlug}
+              </span>
+            </p>
+          </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <label style={fieldLabel}>Short bio</label>
             <span
               style={{
+                fontFamily: BRANDING_FONT_MONO,
                 fontSize: 11,
-                color: bio.length > MAX_BIO * 0.85 ? "#ef4444" : "#a8aecb",
-                transition: "color 0.15s",
+                color: bio.length > MAX_BIO * 0.85 ? "#d97706" : "#6b75a3",
               }}
             >
               {bio.length}/{MAX_BIO}
@@ -172,12 +265,15 @@ export function ProfileSection({
           <textarea
             value={bio}
             onChange={(e) => onBioChange(e.target.value.slice(0, MAX_BIO))}
-            placeholder="Tell your story..."
+            placeholder="Tell visitors what you're about…"
             rows={3}
-            style={{ ...baseInput, resize: "none", lineHeight: 1.6 }}
+            style={{ ...baseInput, resize: "none", lineHeight: 1.5, fontSize: 13.5 }}
             onFocus={focusStyle}
             onBlur={blurStyle}
           />
+          <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 1 }}>
+            A single line works best. Emojis are welcome.
+          </p>
         </div>
       </div>
     </div>
