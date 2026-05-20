@@ -60,7 +60,7 @@ export default async function RootLayout({
       lang="en"
       suppressHydrationWarning
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${inter.variable} antialiased scroll-smooth`}
+      className={`${manrope.variable} ${inter.variable} ${instrumentSerif.variable} antialiased scroll-smooth`}
     >
       <head>
         {/* fonts.gstatic.com hosts the Material Symbols woff2 — prefetch the DNS early */}
