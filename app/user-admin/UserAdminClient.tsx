@@ -273,7 +273,6 @@ export default function UserAdminClient() {
                     bio={branding.bio}
                     publicUrl={publicUrl}
                     appearance={previewAppearance}
-                    themeLabel={theme.name}
                     onRandomTheme={randomTheme}
                   />
                 </div>
