@@ -91,6 +91,9 @@ export default function CollapsibleSidebar({ children }: { children: React.React
         </div>
         
         <nav className="flex-1 space-y-1">
+          <div className="text-xs font-semibold text-ink-400 tracking-wider uppercase px-3 pb-2.5">
+            Workspace
+          </div>
           <Link className={getLinkClasses(linksHubHref)} href={linksHubHref}>
             {isActiveLink(linksHubHref) && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
