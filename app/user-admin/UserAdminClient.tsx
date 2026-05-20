@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import AppHeader from "../components/AppHeader";
 import { useSidebar } from "../components/SidebarContext";
-import { MobilePreview, type AppearanceState } from "../components/MobilePreview";
+import { type AppearanceState } from "../components/MobilePreview";
 import { ShareProfileModal } from "../components/ShareProfileModal";
-import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
+import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
-import { EDITOR_MOBILE_PREVIEW_SHARED } from "../constants/editorMobilePreview";
 import { PROFILE_PUBLIC_URL } from "../constants/profile";
 
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim } from "../actions/links";
@@ -182,19 +180,21 @@ export default function UserAdminClient() {
   };
 
   const handleToggleLink = async (link: ManagedLink, index: number) => {
+    const currentStatus = link.status ?? (link.draft ? "unpublished" : "published");
+    const willBePublished = currentStatus !== "published";
+    const newStatus = willBePublished ? "published" : "unpublished";
+
     if (isDemoManagedLink(link)) {
-      const newDraftState = !link.draft;
       const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, draft: newDraftState };
+      updatedLinks[index] = { ...link, draft: !willBePublished, status: newStatus };
       setLinks(updatedLinks);
       return;
     }
     if (!link.id) return;
     try {
-      const newDraftState = !link.draft;
-      await updateLink(link.id, { draft: newDraftState });
+      await updateLink(link.id, { draft: !willBePublished });
       const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, draft: newDraftState };
+      updatedLinks[index] = { ...link, draft: !willBePublished, status: newStatus };
       setLinks(updatedLinks);
     } catch (error) {
       console.error("Failed to toggle link:", error);
@@ -225,58 +225,47 @@ export default function UserAdminClient() {
   };
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
+    <div className="bg-[#f7f8fc] text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
       <CollapsibleSidebar isAdmin={true}>
         <div className="flex-1 flex flex-col min-h-screen relative">
-          <AppHeader isAdmin={true} />
-
           <main
             id="mainContent"
-            className={`flex-1 pt-16 transition-all duration-500 ease-in-out ${
+            className={`flex-1 transition-all duration-500 ease-in-out ${
               isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
-            } ml-0 overflow-y-auto bg-surface`}
+            } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
           >
-            <div className="min-h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
-              <div className="flex-1 min-w-0 px-4 py-8 sm:px-8 lg:px-10 lg:py-10">
-                <div className="w-full animate-fade-in-up">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-64">
-                      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    </div>
-                  ) : (
-                    <ManageLinksSection
-                      links={links}
-                      onAddLink={handleAddLink}
-                      onEditLink={handleEditLink}
-                      onDeleteLink={handleDeleteLink}
-                      onToggleLink={handleToggleLink}
-                      onUpdateLink={handleUpdateLink}
-                      onReorderLinks={setLinks}
-                    />
-                  )}
-                </div>
+            <div className="flex flex-col lg:flex-row min-h-screen">
+              {/* Center section */}
+              <div
+                className="flex-1 animate-fade-in-up"
+                style={{ padding: "22px 32px 40px", minWidth: 0 }}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <ManageLinksSection
+                    links={links}
+                    onAddLink={handleAddLink}
+                    onEditLink={handleEditLink}
+                    onDeleteLink={handleDeleteLink}
+                    onToggleLink={handleToggleLink}
+                    onUpdateLink={handleUpdateLink}
+                    onReorderLinks={setLinks}
+                  />
+                )}
               </div>
 
-              <div className="w-full lg:w-[460px] xl:w-[540px] bg-surface-container-low/50 border-t lg:border-t-0 lg:border-l border-outline-variant/30 relative py-12 lg:py-8 px-4 sm:px-6 flex flex-col items-center">
-                <div className="sticky top-24 lg:top-8 w-full flex flex-col items-center animate-fade-in-up delay-100">
-                  <LinksPreviewPanel>
-                    <MobilePreview
-                      {...EDITOR_MOBILE_PREVIEW_SHARED}
-                      appearance={appearance}
-                      linkRows={links
-                        .filter(l => !l.draft)
-                        .map(l => ({ kind: 'button', title: l.title, url: l.url, icon: l.icon, accent: true }))
-                      }
-                      linkDensity="relaxed"
-                      headerTitle=""
-                      headerSubtitle=""
-                      showHeaderTuneButton={false}
-                      syncLabel={null}
-                      showDeviceFooter={false}
-                      onShareBarClick={() => setShowShareModal(true)}
-                    />
-                  </LinksPreviewPanel>
-                </div>
+              {/* Preview panel */}
+              <div className="hidden lg:block">
+                <DashboardPreviewPanel
+                  links={links}
+                  displayName={appearance.profileTitle || "Your Name"}
+                  handle={PROFILE_PUBLIC_URL.split("/").pop() ?? ""}
+                  publicUrl={PROFILE_PUBLIC_URL}
+                  onShareClick={() => setShowShareModal(true)}
+                />
               </div>
             </div>
           </main>

@@ -1,31 +1,49 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useSidebar } from "./SidebarContext";
-import { LinksIcon, BrandingIcon, AnalyticsIcon, ChevronDownIcon, HelpIcon, LogoutIcon} from "./icons/SidebarIcons";
+import {
+  LinksIcon,
+  AppearanceIcon,
+  AnalyticsIcon,
+  AudienceIcon,
+  SettingsIcon,
+  ChevronDownIcon,
+  HelpIcon,
+  LogoutIcon,
+} from "./icons/SidebarIcons";
 import { getLinksCount } from "@/app/actions/links";
 import { useState, useEffect } from "react";
 import UpgradeCard from "./UpgradeCard";
 
-export default function CollapsibleSidebar({ children }: { children: React.ReactNode; isAdmin?: boolean }) {
+const NAV_ITEMS = [
+  { label: "Links",      href: "/user-dashboard", Icon: LinksIcon,     showBadge: true },
+  { label: "Appearance", href: "/appearance",      Icon: AppearanceIcon },
+  { label: "Analytics",  href: "/user-analytics",  Icon: AnalyticsIcon  },
+  { label: "Audience",   href: "/audience",         Icon: AudienceIcon   },
+  { label: "Settings",   href: "/settings",         Icon: SettingsIcon   },
+];
+
+export default function CollapsibleSidebar({
+  children,
+}: {
+  children: React.ReactNode;
+  isAdmin?: boolean;
+}) {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const user = session?.user;
 
- const [linkCount, setLinkCount] = useState<number>(0);
-  const [isLoadingCount, setIsLoadingCount] = useState(true);
-  
+  const [linkCount, setLinkCount] = useState<number>(0);
+
   const displayName =
     user?.name?.trim() ||
     user?.email?.split("@")[0] ||
     (status === "loading" ? "…" : "Account");
   const displayEmail = user?.email ?? "";
-
-  const linksHubHref = "/user-dashboard";
 
   useEffect(() => {
     async function fetchLinkCount() {
@@ -33,156 +51,294 @@ export default function CollapsibleSidebar({ children }: { children: React.React
         try {
           const result = await getLinksCount();
           setLinkCount(result.count);
-        } catch (error) {
-          console.error("Failed to fetch link count:", error);
+        } catch {
           setLinkCount(0);
-        } finally {
-          setIsLoadingCount(false);
         }
       }
     }
-    
     fetchLinkCount();
   }, [status, user?.id]);
 
   const isActiveLink = (href: string) => {
-    if (href === linksHubHref) {
-      return pathname === linksHubHref || pathname === "/user-admin";
+    if (href === "/user-dashboard") {
+      return pathname === "/user-dashboard" || pathname === "/user-admin";
     }
     return pathname === href;
   };
 
-  const getLinkClasses = (href: string) => {
-    const baseClasses = `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-1' : 'px-4'} py-3 rounded-xl transition-all active:scale-95 duration-200 ease-in-out relative`;
-    if (isActiveLink(href)) {
-      return `${baseClasses} bg-gradient-to-r from-primary/10 to-primary-container/20 text-primary font-semibold shadow-sm border border-primary/20`;
-    }
-    return `${baseClasses} text-on-surface-variant hover:bg-surface-container-highest`;
-  };
-
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile overlay */}
       {!isCollapsed && (
-        <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
           onClick={toggleSidebar}
         />
       )}
 
-      {/* SideNavBar Component */}
-      <aside 
+      {/* Sidebar */}
+      <aside
         id="sidebar"
-        className={`h-screen bg-surface border-r border-outline-variant/50 z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 flex flex-col ${
-          isCollapsed 
-            ? 'w-20 p-3 -translate-x-full lg:translate-x-0' 
-            : 'w-64 p-4 translate-x-0'
+        className={`h-screen bg-white border-r z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 flex flex-col overflow-hidden ${
+          isCollapsed
+            ? "w-[76px] px-[10px] py-6 -translate-x-full lg:translate-x-0"
+            : "w-[264px] px-[18px] py-7 translate-x-0"
         }`}
+        style={{ borderColor: "#eef0f7" }}
       >
-        {/* Logo Section */}
-        <div className={`${isCollapsed ? 'mb-6' : 'mb-10'} flex justify-center ${isCollapsed ? 'pt-1' : 'pt-2'}`}>
-          <Image
-            src="/link_hub_logo.png"
-            alt="LinkHub Logo"
-            width={256}
-            height={256}
-            className={`object-contain ${isCollapsed ? "h-8 w-8" : "h-auto w-32"}`}
+        {/* Brand */}
+        <div
+          className={`flex items-center shrink-0 ${isCollapsed ? "justify-center pb-6" : "gap-1.5 pb-8 px-2.5"}`}
+        >
+          {/* "linkhub" text in Instrument Serif italic */}
+          {!isCollapsed && (
+            <span
+              style={{
+                fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                fontStyle: "italic",
+                fontSize: 30,
+                letterSpacing: "-0.02em",
+                color: "#1e2a8a",
+                lineHeight: 1,
+              }}
+            >
+              linkhub
+            </span>
+          )}
+          {/* Indigo dot */}
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "#3b46e0",
+              boxShadow: "0 0 0 4px #f1f3ff",
+              flexShrink: 0,
+              display: "inline-block",
+              marginLeft: isCollapsed ? 0 : 2,
+            }}
           />
         </div>
-        
-        <nav className="flex-1 space-y-1">
-          <div className="text-xs font-semibold text-ink-400 tracking-wider uppercase px-3 pb-2.5">
-            Workspace
-          </div>
-          <Link className={getLinkClasses(linksHubHref)} href={linksHubHref}>
-            {isActiveLink(linksHubHref) && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
-            )}
-            <LinksIcon className="w-5 h-5 text-gray-500"/>
-            {!isCollapsed && (
-              <>
-              <span className="text-[13px]">Links</span>
-              {isLoadingCount ? (
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full 
-                bg-primary/10 text-primary">
-                {linkCount}
-              </span>
-              ) : (
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full 
-                bg-primary/10 text-primary">
-                {linkCount}
-              </span>
-              )}
-              </>
-            )}
 
-          </Link>
-          <Link className={getLinkClasses('/branding')} href="/branding">
-            {isActiveLink('/branding') && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
-            )}
-            <BrandingIcon className="w-5 h-5 text-gray-500"/>
-            {!isCollapsed && <span className="text-[13px]">Branding</span>}
-          </Link>
-          
-          <Link className={getLinkClasses('/analytics')} href="/analytics">
-            {isActiveLink('/analytics') && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>
-            )}
-            <AnalyticsIcon className="w-5 h-5 text-gray-500"/>
-            {!isCollapsed && <span className="text-[13px]">Analytics</span>}
-          </Link>
+        {/* WORKSPACE label */}
+        {!isCollapsed && (
+          <p
+            className="px-3 mb-2.5"
+            style={{
+              fontSize: 10.5,
+              fontWeight: 600,
+              color: "#6b75a3",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+            }}
+          >
+            Workspace
+          </p>
+        )}
+
+        {/* Nav */}
+        <nav className="flex flex-col gap-0.5 flex-1">
+          {NAV_ITEMS.map(({ label, href, Icon, showBadge }) => {
+            const active = isActiveLink(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center relative transition-all duration-150 ${
+                  isCollapsed ? "justify-center px-2.5 py-2.5" : "gap-3 px-3 py-2.5"
+                }`}
+                style={{
+                  borderRadius: 12,
+                  background: active
+                    ? "linear-gradient(180deg, #f1f3ff, #eaeefb)"
+                    : "transparent",
+                  color: active ? "#1e2a8a" : "#3a4474",
+                  fontWeight: active ? 600 : 500,
+                  fontSize: 14,
+                  boxShadow: active
+                    ? "inset 0 0 0 1px rgba(59,70,224,0.08)"
+                    : "none",
+                  textDecoration: "none",
+                }}
+                onMouseEnter={e => {
+                  if (!active)
+                    (e.currentTarget as HTMLAnchorElement).style.background = "#eef0f7";
+                }}
+                onMouseLeave={e => {
+                  if (!active)
+                    (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+                }}
+              >
+                {/* Active left bar */}
+                {active && (
+                  <span
+                    className="absolute rounded-r-[3px]"
+                    style={{
+                      left: isCollapsed ? -10 : -18,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      width: 3,
+                      height: 22,
+                      background: "#3b46e0",
+                    }}
+                  />
+                )}
+
+                <Icon className="w-[18px] h-[18px] shrink-0" />
+
+                {!isCollapsed && (
+                  <>
+                    <span>{label}</span>
+                    {showBadge && (
+                      <span
+                        className="ml-auto"
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          padding: "2px 7px",
+                          background: "#3b46e0",
+                          color: "white",
+                          borderRadius: 99,
+                        }}
+                      >
+                        {linkCount}
+                      </span>
+                    )}
+                  </>
+                )}
+
+                {/* Collapsed badge */}
+                {isCollapsed && showBadge && linkCount > 0 && (
+                  <span
+                    className="absolute"
+                    style={{
+                      top: 4,
+                      right: 4,
+                      fontSize: 9,
+                      fontWeight: 600,
+                      padding: "1px 5px",
+                      background: "#3b46e0",
+                      color: "white",
+                      borderRadius: 99,
+                    }}
+                  >
+                    {linkCount}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
+        {/* Upgrade card */}
         <UpgradeCard isCollapsed={isCollapsed} />
 
-        {/* Bottom Section */}
-        <div className={`mt-auto ${isCollapsed ? 'p-1' : 'p-4'} space-y-2 pb-4`}>
-          {/* User Profile */}
-          <div className={`${isCollapsed ? 'p-1' : ''} cursor-pointer`}>
-            <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} 
-              p-2.5 rounded-xl border border-ink-100 bg-white hover:border-ink-200 
-              transition-all`}>
-    
-          {/* Avatar */}
-            <div className="w-8.5 h-8.5 rounded-full bg-gradient-to-br from-indigo-500 to-[#7a85ff] 
-              flex items-center justify-center text-white font-semibold text-sm shrink-0">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-    
-            {!isCollapsed && (
-              <>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-ink-900 truncate">{displayName}</p>
-                  <p className="text-[11.5px] text-ink-400 truncate">{displayEmail || " "}</p>
-                </div>
-                <ChevronDownIcon className="w-5 h-5 text-gray-500"/>
+        {/* User chip */}
+        <div
+          className={`flex items-center transition-all cursor-pointer ${
+            isCollapsed ? "justify-center p-1.5" : "gap-[11px] p-2.5"
+          }`}
+          style={{
+            borderRadius: 12,
+            border: "1px solid #eef0f7",
+            background: "white",
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLDivElement).style.borderColor = "#d6dae9";
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLDivElement).style.borderColor = "#eef0f7";
+          }}
+        >
+          <div
+            className="flex items-center justify-center text-white font-semibold shrink-0"
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
+              fontSize: 13,
+            }}
+          >
+            {displayName.charAt(0).toUpperCase()}
+          </div>
 
-              </>
-            )}
-          </div>
+          {!isCollapsed && (
+            <>
+              <div className="flex-1 min-w-0">
+                <p
+                  className="truncate"
+                  style={{ fontSize: 13, fontWeight: 600, color: "#0b1020" }}
+                >
+                  {displayName}
+                </p>
+                <p
+                  className="truncate"
+                  style={{ fontSize: 11.5, color: "#6b75a3" }}
+                >
+                  {displayEmail || " "}
+                </p>
+              </div>
+              <ChevronDownIcon className="w-3.5 h-3.5 shrink-0 text-[#6b75a3]" />
+            </>
+          )}
         </div>
-          
-          {/* Bottom Links */}
-          <div className={`flex gap-2 mt-2.5 ${isCollapsed ? 'flex-col' : ''}`}>
-            <Link href="/help" 
-              className={`flex-1 flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-2 p-2.5'} 
-                rounded-xl text-ink-500 hover:bg-ink-100 hover:text-ink-900 transition-all cursor-pointer`}>
-              <HelpIcon className="w-5 h-5 text-gray-500" />
-              {!isCollapsed && <span className="text-[12.5px]">Help</span>}
-            </Link>
-  
-              <button onClick={() => signOut()}
-              className={`flex-1 flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-2 p-2.5'} 
-                rounded-xl text-ink-500 hover:bg-ink-100 hover:text-ink-900 transition-all cursor-pointer`}>
-              <LogoutIcon className="w-5 h-5 text-gray-500" />
-              {!isCollapsed && <span className="text-[12.5px]">Log out</span>}
-            </button>
-          </div>
+
+        {/* Bottom links: Help + Logout */}
+        <div className={`flex gap-2 mt-2.5 ${isCollapsed ? "flex-col" : ""}`}>
+          <Link
+            href="/help"
+            className={`flex-1 flex items-center transition-all ${
+              isCollapsed ? "justify-center p-2" : "gap-2 p-2.5"
+            }`}
+            style={{
+              borderRadius: 12,
+              color: "#3a4474",
+              fontSize: 12.5,
+              textDecoration: "none",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLAnchorElement).style.background = "#eef0f7";
+              (e.currentTarget as HTMLAnchorElement).style.color = "#0b1020";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+              (e.currentTarget as HTMLAnchorElement).style.color = "#3a4474";
+            }}
+          >
+            <HelpIcon className="w-3.5 h-3.5 shrink-0" />
+            {!isCollapsed && <span>Help</span>}
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className={`flex-1 flex items-center transition-all cursor-pointer ${
+              isCollapsed ? "justify-center p-2" : "gap-2 p-2.5"
+            }`}
+            style={{
+              borderRadius: 12,
+              color: "#3a4474",
+              fontSize: 12.5,
+              border: 0,
+              background: "transparent",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7";
+              (e.currentTarget as HTMLButtonElement).style.color = "#0b1020";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.color = "#3a4474";
+            }}
+          >
+            <LogoutIcon className="w-3.5 h-3.5 shrink-0" />
+            {!isCollapsed && <span>Log out</span>}
+          </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main content */}
       <div className="flex-1 h-screen overflow-hidden relative flex flex-col">
         {children}
       </div>
