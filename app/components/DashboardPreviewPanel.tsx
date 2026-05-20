@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { ManagedLink } from "../user-admin/components/types";
+import { previewLinkBorderRadiusPx } from "@/app/constants/brandingButtonShapes";
 
 // ── Icon bg/fg per link type ──────────────────────────────────────────────────
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
@@ -181,6 +182,7 @@ function PhoneScreenContent({
   const linkCardBorder = dark ? "rgba(255,255,255,0.10)" : "#eef0f7";
   const linkTextColor = dark ? "rgba(255,255,255,0.88)" : "#0b1020";
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
+  const linkBorderRadius = previewLinkBorderRadiusPx(appearance?.buttonStyle ?? "rounded");
   const published = links.filter(
     (l) => (l.status ?? (l.draft ? "unpublished" : "published")) === "published"
   );
@@ -320,7 +322,7 @@ function PhoneScreenContent({
               style={{
                 background: linkCardBg,
                 border: `1px solid ${linkCardBorder}`,
-                borderRadius: 12,
+                borderRadius: linkBorderRadius,
                 padding: "11px 14px",
                 display: "flex",
                 alignItems: "center",

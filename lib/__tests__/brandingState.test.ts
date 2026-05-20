@@ -56,6 +56,20 @@ describe("brandingState", () => {
     expect(appearance.headlineStyle?.fontStyle).toBe("italic");
   });
 
+  it("brandingStateToMobileAppearance maps button shape to buttonRoundness", () => {
+    const pill = brandingStateToMobileAppearance({
+      ...getDefaultBrandingState(),
+      buttonStyle: "pill",
+    });
+    expect(pill.buttonRoundness).toBe("pill");
+
+    const square = brandingStateToMobileAppearance({
+      ...getDefaultBrandingState(),
+      buttonStyle: "square",
+    });
+    expect(square.buttonRoundness).toBe("square");
+  });
+
   it("brandingStateToPreviewAppearance includes headline font stack", () => {
     const preview = brandingStateToPreviewAppearance(getDefaultBrandingState());
     expect(preview.bgStyle).toBe("white");
