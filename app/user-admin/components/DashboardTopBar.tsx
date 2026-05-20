@@ -65,9 +65,12 @@ const NOTIF_ICON_STYLES: Record<string, { bg: string; color: string }> = {
 export function DashboardTopBar({
   onSearchClick,
   searchPlaceholder = "Search links, pages, analytics…",
+  sticky = true,
 }: {
   onSearchClick?: () => void;
   searchPlaceholder?: string;
+  /** Pin the bar to the top of the scroll area (default on dashboard pages) */
+  sticky?: boolean;
 }) {
   const { toggleSidebar } = useSidebar();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -111,16 +114,8 @@ export function DashboardTopBar({
     setShowHelp((p) => !p);
   };
 
-  return (
-    <>
-      <style>{`
-        @keyframes topbarPopIn {
-          from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
-
-      <div className="flex items-center" style={{ gap: 14, marginBottom: 28 }}>
+  const toolbar = (
+      <div className="flex items-center" style={{ gap: 14 }}>
         {/* Menu / sidebar toggle */}
         <button
           type="button"
@@ -420,6 +415,26 @@ export function DashboardTopBar({
           </div>
         </div>
       </div>
+  );
+
+  return (
+    <>
+      <style>{`
+        @keyframes topbarPopIn {
+          from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
+
+      {sticky ? (
+        <div
+          className="sticky top-0 z-40 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 -mt-[22px] pt-[22px] pb-3 mb-7 bg-[#f7f8fc]"
+        >
+          {toolbar}
+        </div>
+      ) : (
+        <div style={{ marginBottom: 28 }}>{toolbar}</div>
+      )}
     </>
   );
 }

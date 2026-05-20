@@ -66,7 +66,7 @@ function Sparkline({ values }: { values: number[] }) {
 
   useEffect(() => {
     const el = pathRef.current;
-    if (!el) return;
+    if (!el || typeof el.getTotalLength !== "function") return;
     const len = el.getTotalLength();
     el.style.strokeDasharray = `${len}`;
     el.style.strokeDashoffset = `${len}`;
