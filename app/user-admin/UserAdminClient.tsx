@@ -21,14 +21,14 @@ export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimTimerFired, setClaimTimerFired] = useState(false);
-  const [links, setLinks] = useState<ManagedLink[]>([]);
-  
+  const [links, setLinks] = useState<ManagedLink[]>([...DEMO_MANAGED_LINKS]);
+
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ link: ManagedLink; index: number } | null>(null);
   const [showPalette, setShowPalette] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [profileReady, setProfileReady] = useState(false);
   const profileMergedRef = useRef(false);
   const pendingProfileRef = useRef<Awaited<ReturnType<typeof getProfile>>>(null);
 
@@ -65,7 +65,7 @@ export default function UserAdminClient() {
         console.error("Failed to load data:", error);
         setLinks([...DEMO_MANAGED_LINKS]);
       } finally {
-        setIsLoading(false);
+        setProfileReady(true);
       }
     }
     loadData();
@@ -94,7 +94,7 @@ export default function UserAdminClient() {
     return () => clearTimeout(timer);
   }, []);
 
-  const showClaimModal = claimTimerFired && !isLoading && isFirstTimeUser;
+  const showClaimModal = claimTimerFired && profileReady && isFirstTimeUser;
 
   const handleClaimHandle = async (handle: string) => {
     const result = await claimHandle(handle);
@@ -120,7 +120,6 @@ export default function UserAdminClient() {
   };
 
   const handleSaveLink = async (newLink: ManagedLink) => {
-    setIsLoading(true);
     try {
       if (editingLink !== null && isDemoManagedLink(editingLink.link) && editingLink.link.id) {
         const updatedLinks = [...links];
@@ -164,8 +163,6 @@ export default function UserAdminClient() {
       setShowLinkModal(false);
     } catch (error) {
       console.error("Failed to save link:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -241,26 +238,18 @@ export default function UserAdminClient() {
             >
               <div className="flex flex-col lg:flex-row min-h-screen">
                 {/* Center section */}
-                <div
-                  className="flex-1 animate-fade-in-up min-w-0 px-4 pt-[22px] pb-10 sm:px-6 lg:px-8"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-64">
-                      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    </div>
-                  ) : (
-                    <ManageLinksSection
-                      links={links}
-                      onAddLink={handleAddLink}
-                      onEditLink={handleEditLink}
-                      onRequestDelete={(link, index) => setPendingDelete({ link, index })}
-                      onDeleteLink={handleDeleteLink}
-                      onToggleLink={handleToggleLink}
-                      onUpdateLink={handleUpdateLink}
-                      onReorderLinks={setLinks}
-                      onSearchOpen={() => setShowPalette(true)}
-                    />
-                  )}
+                <div className="flex-1 min-w-0 px-4 pt-[22px] pb-10 sm:px-6 lg:px-8">
+                  <ManageLinksSection
+                    links={links}
+                    onAddLink={handleAddLink}
+                    onEditLink={handleEditLink}
+                    onRequestDelete={(link, index) => setPendingDelete({ link, index })}
+                    onDeleteLink={handleDeleteLink}
+                    onToggleLink={handleToggleLink}
+                    onUpdateLink={handleUpdateLink}
+                    onReorderLinks={setLinks}
+                    onSearchOpen={() => setShowPalette(true)}
+                  />
                 </div>
 
                 {/* Preview panel */}

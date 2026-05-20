@@ -138,7 +138,7 @@ export function ManageLinksSection({
   };
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="space-y-6">
       {/* Inline topbar — search, menu toggle, notifications */}
       <DashboardTopBar onSearchClick={onSearchOpen} />
 
