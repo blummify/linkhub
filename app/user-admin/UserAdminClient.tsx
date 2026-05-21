@@ -139,6 +139,8 @@ export default function UserAdminClient() {
           title: newLink.title,
           url: newLink.url,
           icon: newLink.icon,
+          thumbnailUrl: newLink.thumbnailUrl ?? null,
+          thumbnailKey: newLink.thumbnailKey ?? null,
         });
         const updatedLinks = [...links];
         updatedLinks[editingLink.index] = { ...newLink, id: editingLink.link.id };
@@ -148,6 +150,8 @@ export default function UserAdminClient() {
           title: newLink.title,
           url: newLink.url,
           icon: newLink.icon,
+          thumbnailUrl: newLink.thumbnailUrl,
+          thumbnailKey: newLink.thumbnailKey,
         });
         if (result.success && result.link) {
           const entry: ManagedLink = {

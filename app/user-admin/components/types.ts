@@ -12,6 +12,8 @@ export interface ManagedLink {
   trendLabel?: string;
   /** Display date string e.g. "Apr 2" */
   createdAt?: string;
-  /** Data URL for uploaded thumbnail image */
-  thumbnail?: string;
+  /** R2 public CDN URL for uploaded thumbnail image */
+  thumbnailUrl?: string;
+  /** R2 object key used for deletion */
+  thumbnailKey?: string;
 }

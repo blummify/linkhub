@@ -70,16 +70,18 @@ model EmailVerification {
 }
 
 model Link {
-  id          String   @id @default(cuid())
-  title       String
-  url         String
-  icon        String?
-  clicks      Int      @default(0)
-  draft       Boolean  @default(false)
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  title        String
+  url          String
+  icon         String?
+  clicks       Int      @default(0)
+  draft        Boolean  @default(false)
+  thumbnailUrl String?
+  thumbnailKey String?
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Profile {
@@ -90,6 +92,8 @@ model Profile {
   bio              String?
   layout           String   @default("classic")
   themeId          String   @default("default")
+  avatarUrl        String?
+  avatarKey        String?
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
