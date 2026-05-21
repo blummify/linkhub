@@ -127,11 +127,25 @@ const DOMAIN_MAP: Record<string, { title: string; icon: PresetId }> = {
 function isValidURL(str: string) {
   try {
     const u = new URL(str);
+    if (u.protocol === "mailto:") return u.pathname.length > 0;
     return u.protocol === "http:" || u.protocol === "https:";
   } catch {
     return false;
   }
 }
+
+// ── Preset icon auto-fill defaults ───────────────────────────────────────────
+
+const PRESET_DEFAULTS: Record<PresetId, { url: string; title: string }> = {
+  globe:     { url: "",                             title: "My Website"        },
+  instagram: { url: "https://www.instagram.com/",  title: "Instagram Profile" },
+  twitter:   { url: "https://twitter.com/",         title: "Twitter Profile"   },
+  youtube:   { url: "https://www.youtube.com/",     title: "YouTube Channel"   },
+  spotify:   { url: "https://open.spotify.com/",    title: "Spotify"           },
+  behance:   { url: "https://www.behance.net/",     title: "Behance Portfolio" },
+  mail:      { url: "mailto:",                      title: "Email Me"          },
+  shop:      { url: "",                             title: "My Shop"           },
+};
 
 function detectFromURL(url: string): { title: string; icon: PresetId } | null {
   try {
@@ -218,6 +232,19 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
     setTitleLen(detectedInfo.title.length);
     setSelectedPreset(detectedInfo.icon);
     setDetectedInfo(null);
+  }
+
+  function handlePresetSelect(presetId: PresetId) {
+    const defaults = PRESET_DEFAULTS[presetId];
+    setSelectedPreset(presetId);
+    setThumbImage(null);
+    setUrl(defaults.url);
+    setTitle(defaults.title);
+    setTitleLen(defaults.title.length);
+    setDetectedInfo(null);
+    setUrlError(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setUrlValidState(defaults.url && isValidURL(defaults.url) ? "valid" : "none");
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -613,7 +640,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   type="button"
                   aria-label={p.label}
                   title={p.label}
-                  onClick={() => { setSelectedPreset(p.id); setThumbImage(null); }}
+                  onClick={() => handlePresetSelect(p.id as PresetId)}
                   className="flex items-center justify-center transition-all"
                   style={{
                     width: 32,
