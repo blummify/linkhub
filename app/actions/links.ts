@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import type { LinkRow } from "@/lib/linkRow";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { addLinkSchema } from "@/lib/validation/link.schema";
+import { LinkStatusValue } from "@/app/constants/linkStatus";
 
 export async function getLinks(): Promise<LinkRow[]> {
   const session = await auth();
@@ -35,9 +37,14 @@ export async function getLinksCount() {
   }
 }
 
-export async function addLink(data: { title: string; url: string; icon?: string }) {
+export async function addLink(data: { title: string; url: string; icon?: string; status?: LinkStatusValue }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const parsed = addLinkSchema.safeParse(data);
+  if(!parsed.success) {
+    return {error: parsed.error.issues[0].message};
+  }
 
   try {
     const link = await db.link.create({
@@ -54,7 +61,7 @@ export async function addLink(data: { title: string; url: string; icon?: string 
   }
 }
 
-export async function updateLink(id: string, data: { title?: string; url?: string; icon?: string; draft?: boolean }) {
+export async function updateLink(id: string, data: { title?: string; url?: string; icon?: string; status?: LinkStatusValue }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
