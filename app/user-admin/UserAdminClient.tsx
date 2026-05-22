@@ -27,6 +27,7 @@ export default function UserAdminClient() {
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ link: ManagedLink; index: number } | null>(null);
   const [showPalette, setShowPalette] = useState(false);
+  const [isSavingLink, setIsSavingLink] = useState(false);
 
   const [profileReady, setProfileReady] = useState(false);
   const profileMergedRef = useRef(false);
@@ -41,6 +42,11 @@ export default function UserAdminClient() {
     hydrated,
   } = useBrandingAppearance();
 
+const dateFormatter = new Intl.DateTimeFormat("en-GH", {
+  month: "short",
+  day: "numeric",
+  });
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -51,8 +57,9 @@ export default function UserAdminClient() {
           title: l.title,
           url: l.url,
           clicks: String(l.clicks),
-          draft: l.draft,
+          status: l.status,
           icon: l.icon || undefined,
+          createdAt: dateFormatter.format(new Date(l.createdAt)), 
         }));
         setLinks([...DEMO_MANAGED_LINKS, ...fromDb]);
         if (dbProfile) {
@@ -120,6 +127,8 @@ export default function UserAdminClient() {
   };
 
   const handleSaveLink = async (newLink: ManagedLink) => {
+    if(isSavingLink) return;
+    setIsSavingLink(true);
     try {
       if (editingLink !== null && isDemoManagedLink(editingLink.link) && editingLink.link.id) {
         const updatedLinks = [...links];
@@ -139,6 +148,7 @@ export default function UserAdminClient() {
           title: newLink.title,
           url: newLink.url,
           icon: newLink.icon,
+          status: newLink.status
         });
         const updatedLinks = [...links];
         updatedLinks[editingLink.index] = { ...newLink, id: editingLink.link.id };
@@ -148,12 +158,14 @@ export default function UserAdminClient() {
           title: newLink.title,
           url: newLink.url,
           icon: newLink.icon,
+          status: newLink.status
         });
         if (result.success && result.link) {
           const entry: ManagedLink = {
             ...newLink,
             id: result.link.id,
             clicks: String(result.link.clicks),
+            createdAt: dateFormatter.format(new Date(result.link.createdAt)),
           };
           const demos = links.filter(isDemoManagedLink);
           const real = links.filter((l) => !isDemoManagedLink(l));
@@ -163,6 +175,8 @@ export default function UserAdminClient() {
       setShowLinkModal(false);
     } catch (error) {
       console.error("Failed to save link:", error);
+    } finally{
+      setIsSavingLink(false);
     }
   };
 
@@ -181,21 +195,20 @@ export default function UserAdminClient() {
   };
 
   const handleToggleLink = async (link: ManagedLink, index: number) => {
-    const currentStatus = link.status ?? (link.draft ? "unpublished" : "published");
-    const willBePublished = currentStatus !== "published";
-    const newStatus = willBePublished ? "published" : "unpublished";
+    const currentStatus = link.status
+    const willBePublished = currentStatus !== 1;
 
     if (isDemoManagedLink(link)) {
       const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, draft: !willBePublished, status: newStatus };
+      updatedLinks[index] = { ...link, status: willBePublished? 1 : 2};
       setLinks(updatedLinks);
       return;
     }
     if (!link.id) return;
     try {
-      await updateLink(link.id, { draft: !willBePublished });
+      await updateLink(link.id, { status: willBePublished? 1 : 2 });
       const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, draft: !willBePublished, status: newStatus };
+      updatedLinks[index] = { ...link, status: willBePublished? 1 : 2};
       setLinks(updatedLinks);
     } catch (error) {
       console.error("Failed to toggle link:", error);
@@ -215,7 +228,7 @@ export default function UserAdminClient() {
         title: updates.title,
         url: updates.url,
         icon: updates.icon,
-        draft: updates.draft,
+        status: updates.status,
       });
       const updatedLinks = [...links];
       updatedLinks[index] = { ...link, ...updates };
