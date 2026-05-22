@@ -27,6 +27,16 @@ vi.mock("@/app/actions/links", () => ({
   dismissHandleClaim: vi.fn(),
 }));
 
+vi.mock("@/lib/hooks/useFileUpload", () => ({
+  useFileUpload: () => ({
+    upload: vi.fn().mockResolvedValue(null),
+    isUploading: false,
+    progress: 0,
+    error: null,
+    reset: vi.fn(),
+  }),
+}));
+
 describe("UserAdminClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
