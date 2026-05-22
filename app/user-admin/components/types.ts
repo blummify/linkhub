@@ -1,3 +1,5 @@
+import { type LinkStatusValue } from "@/app/constants/linkStatus";
+
 export interface ManagedLink {
   id?: string;
   title: string;
@@ -6,7 +8,7 @@ export interface ManagedLink {
   clicks: string;
   draft?: boolean;
   /** Visual status — takes precedence over draft for UI rendering */
-  status?: "published" | "unpublished" | "draft";
+  status?: LinkStatusValue
   icon?: string;
   /** Optional green trend line under stats (e.g. "+12% this week") */
   trendLabel?: string;

@@ -7,38 +7,37 @@ datasource db {
 }
 
 model User {
-  id                String             @id @default(cuid())
-  name              String?
-  email             String?            @unique
-  emailVerified     DateTime?
-  passwordHash      String?
-  image             String?
-  role              String             @default("USER") // USER, ADMIN, SUPERADMIN
-  accounts             Account[]
-  sessions             Session[]
-  links                Link[]
-  profile              Profile?
-  emailVerification    EmailVerification?
-  passwordResetTokens  PasswordResetToken[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id                  String               @id @default(cuid())
+  name                String?
+  email               String?              @unique
+  emailVerified       DateTime?
+  passwordHash        String?
+  image               String?
+  role                String               @default("USER")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  accounts            Account[]
+  emailVerification   EmailVerification?
+  links               Link[]
+  passwordResetTokens PasswordResetToken[]
+  profile             Profile?
+  sessions            Session[]
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -75,13 +74,13 @@ model Link {
   url          String
   icon         String?
   clicks       Int      @default(0)
-  draft        Boolean  @default(false)
+  status       Int      @default(0)
   thumbnailUrl String?
   thumbnailKey String?
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Profile {
@@ -94,9 +93,9 @@ model Profile {
   themeId          String   @default("default")
   avatarUrl        String?
   avatarKey        String?
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PasswordResetToken {
