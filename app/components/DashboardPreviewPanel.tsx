@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { ManagedLink } from "../user-admin/components/types";
 import { previewLinkBorderRadiusPx } from "@/app/constants/brandingButtonShapes";
+import { LinkStatus } from "@/app/constants/linkStatus";
+
 
 // ── Icon bg/fg per link type ──────────────────────────────────────────────────
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
@@ -183,9 +185,7 @@ function PhoneScreenContent({
   const linkTextColor = dark ? "rgba(255,255,255,0.88)" : "#0b1020";
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
   const linkBorderRadius = previewLinkBorderRadiusPx(appearance?.buttonStyle ?? "rounded");
-  const published = links.filter(
-    (l) => (l.status ?? (l.draft ? "unpublished" : "published")) === "published"
-  );
+  const published = links.filter((l) => l.status === LinkStatus.PUBLISHED);
 
   return (
     <div
