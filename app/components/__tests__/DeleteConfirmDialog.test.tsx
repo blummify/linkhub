@@ -23,7 +23,7 @@ describe("DeleteConfirmDialog", () => {
     render(
       <DeleteConfirmDialog
         open
-        link={{ ...link, draft: true }}
+        link={{ ...link, status: 0 }}
         onClose={vi.fn()}
         onConfirm={vi.fn()}
       />
