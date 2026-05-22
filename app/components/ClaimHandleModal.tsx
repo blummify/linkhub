@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export interface ClaimHandleModalProps {
   open: boolean;
@@ -82,22 +82,11 @@ export function ClaimHandleModal({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkIdRef = useRef(0);
 
-  const reset = useCallback(() => {
-    setHandle("");
-    setInputState("neutral");
-    setIsFocused(false);
-    setHelperMsg("3–24 characters · letters, numbers and underscores");
-    setHelperKind("default");
-    setContinueEnabled(false);
-    setIsSubmitting(false);
-  }, []);
-
   useEffect(() => {
-    if (open) reset();
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [open, reset]);
+  }, []);
 
   function processInput(value: string) {
     if (timerRef.current) clearTimeout(timerRef.current);

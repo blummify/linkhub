@@ -291,6 +291,7 @@ export default function UserAdminClient() {
       />
 
       <ClaimHandleModal
+        key={String(showClaimModal)}
         open={showClaimModal}
         onClose={handleDismissClaim}
         onClaim={handleClaimHandle}

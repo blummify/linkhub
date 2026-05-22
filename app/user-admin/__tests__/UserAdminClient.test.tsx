@@ -25,6 +25,7 @@ vi.mock("@/app/actions/links", () => ({
   deleteLink: vi.fn(),
   claimHandle: vi.fn(),
   dismissHandleClaim: vi.fn(),
+  checkHandleAvailability: vi.fn().mockResolvedValue({ available: true }),
 }));
 
 describe("UserAdminClient", () => {
