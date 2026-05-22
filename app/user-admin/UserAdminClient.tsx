@@ -17,6 +17,11 @@ import { CommandPalette } from "../components/CommandPalette";
 import { useEffect } from "react";
 import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
 
+const dateFormatter = new Intl.DateTimeFormat("en-GH", {
+  month: "short",
+  day: "numeric",
+  });
+
 export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
@@ -42,10 +47,7 @@ export default function UserAdminClient() {
     hydrated,
   } = useBrandingAppearance();
 
-const dateFormatter = new Intl.DateTimeFormat("en-GH", {
-  month: "short",
-  day: "numeric",
-  });
+
 
   useEffect(() => {
     async function loadData() {
