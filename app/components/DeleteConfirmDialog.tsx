@@ -1,6 +1,7 @@
 "use client";
 
 import type { ManagedLink } from "../user-admin/components/types";
+import { LinkStatus } from "@/app/constants/linkStatus";
 
 interface DeleteConfirmDialogProps {
   open: boolean;
@@ -12,7 +13,7 @@ interface DeleteConfirmDialogProps {
 export function DeleteConfirmDialog({ open, link, onClose, onConfirm }: DeleteConfirmDialogProps) {
   if (!open || !link) return null;
 
-  const isDraft = link.status === "draft" || (!link.status && link.draft);
+  const isDraft = link.status === LinkStatus.DRAFT;
   const hasClicks = Number(String(link.clicks).replace(/,/g, "")) > 0;
 
   const message = isDraft

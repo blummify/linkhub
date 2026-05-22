@@ -9,7 +9,7 @@ export type LinkRow = {
   url: string;
   icon: string | null;
   clicks: number;
-  draft: boolean;
+  status: number;
   userId: string;
   createdAt: Date;
   updatedAt: Date;
