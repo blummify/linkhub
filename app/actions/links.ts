@@ -140,6 +140,22 @@ export async function claimHandle(handle: string) {
   }
 }
 
+export async function checkHandleAvailability(handle: string): Promise<{ available: boolean }> {
+  const session = await auth();
+  if (!session?.user?.id) return { available: false };
+
+  if (!HANDLE_REGEX.test(handle)) return { available: false };
+
+  try {
+    const taken = await db.profile.findFirst({
+      where: { handle, NOT: { userId: session.user.id } },
+    });
+    return { available: !taken };
+  } catch {
+    return { available: false };
+  }
+}
+
 export async function dismissHandleClaim() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");

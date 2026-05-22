@@ -9,7 +9,7 @@ import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
-import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim } from "../actions/links";
+import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim, checkHandleAvailability } from "../actions/links";
 import { getBrandingThemeById } from "@/lib/brandingState";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { DeleteConfirmDialog } from "../components/DeleteConfirmDialog";
@@ -294,6 +294,7 @@ export default function UserAdminClient() {
         open={showClaimModal}
         onClose={handleDismissClaim}
         onClaim={handleClaimHandle}
+        onCheckAvailability={checkHandleAvailability}
       />
 
       <DeleteConfirmDialog
