@@ -30,7 +30,7 @@ describe("ManagedLinkCard", () => {
   });
 
   it("shows 'Published' badge for a published link", () => {
-    render(<ManagedLinkCard link={link} />);
+    render(<ManagedLinkCard link={{ ...link, status: 1 }} />);
     expect(screen.getByText("Published")).toBeInTheDocument();
   });
 
@@ -60,7 +60,7 @@ describe("ManagedLinkCard", () => {
 
   it("calls onToggle when the publish toggle is clicked", () => {
     const onToggle = vi.fn();
-    render(<ManagedLinkCard link={link} onToggle={onToggle} />);
+    render(<ManagedLinkCard link={{ ...link, status: 1 }} onToggle={onToggle} />);
     fireEvent.click(screen.getByTitle("Unpublish"));
     expect(onToggle).toHaveBeenCalledOnce();
   });
