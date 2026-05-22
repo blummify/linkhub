@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { ManagedLink } from "./types";
+import { LinkStatus, type LinkStatusValue } from "@/app/constants/linkStatus";
 
 interface AddEditLinkModalProps {
   open: boolean;
@@ -149,15 +150,13 @@ function detectFromURL(url: string): { title: string; icon: PresetId } | null {
 export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEditLinkModalProps) {
   const [title, setTitle]               = useState(() => initialLink?.title ?? "");
   const [url, setUrl]                   = useState(() => initialLink?.url ?? "");
-  const [draft, setDraft]               = useState(() => initialLink?.draft ?? false);
+  const [status, setStatus]             = useState<LinkStatusValue>( () => initialLink?.status ?? LinkStatus.PUBLISHED);
   const [titleLen, setTitleLen]         = useState(() => (initialLink?.title ?? "").length);
   const [urlValidState, setUrlValidState] = useState<"none" | "valid" | "invalid">("none");
   const [urlError, setUrlError]         = useState(false);
   const [detectedInfo, setDetectedInfo] = useState<{ title: string; icon: PresetId } | null>(null);
   const [thumbImage, setThumbImage]     = useState<string | null>(() => initialLink?.thumbnail ?? null);
-  const [selectedPreset, setSelectedPreset] = useState<PresetId>(
-    () => (initialLink?.icon as PresetId | undefined) ?? "globe"
-  );
+  const [selectedPreset, setSelectedPreset] = useState<PresetId>(() => (initialLink?.icon as PresetId | undefined) ?? "globe");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -172,10 +171,10 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
       icon: selectedPreset,
       thumbnail: thumbImage ?? undefined,
       clicks: initialLink?.clicks ?? "0",
-      draft,
+      status,
     });
     onClose();
-  }, [canSave, title, url, selectedPreset, thumbImage, draft, initialLink, onSave, onClose]);
+  }, [canSave, title, url, selectedPreset, thumbImage, status, initialLink, onSave, onClose]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -652,12 +651,12 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                 width: 38,
                 height: 38,
                 borderRadius: 10,
-                background: draft ? "#eef0f7" : "#e8f6ee",
-                color: draft ? "#a8aecb" : "#16a34a",
+                background: status === LinkStatus.DRAFT ? "#eef0f7" : "#e8f6ee",
+                color: status === LinkStatus.DRAFT ? "#a8aecb" : "#16a34a",
                 transition: "all 0.2s ease",
               }}
             >
-              {draft ? (
+              {status === LinkStatus.DRAFT ? (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14 2v6h6"/>
@@ -672,10 +671,10 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             {/* Status text */}
             <div className="flex-1 min-w-0">
               <p style={{ fontSize: 13.5, fontWeight: 600, color: "#0b1020" }}>
-                {draft ? "Save as draft" : "Publish immediately"}
+                {status === LinkStatus.DRAFT ? "Save as draft" : "Publish immediately"}
               </p>
               <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 1 }}>
-                {draft ? "Link stays hidden until you publish it" : "This link will be visible on your public page"}
+                {status === LinkStatus.DRAFT ? "Link stays hidden until you publish it" : "This link will be visible on your public page"}
               </p>
             </div>
 
@@ -683,14 +682,14 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             <button
               type="button"
               role="switch"
-              aria-checked={!draft}
-              onClick={() => setDraft(d => !d)}
+              aria-checked={status === LinkStatus.PUBLISHED}
+              onClick={() => setStatus(s => s === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT)}
               className="relative shrink-0 outline-none"
               style={{
                 width: 42,
                 height: 24,
                 borderRadius: 99,
-                background: draft ? "#d6dae9" : "#3b46e0",
+                background: status === LinkStatus.DRAFT ? "#d6dae9" : "#3b46e0",
                 border: 0,
                 cursor: "pointer",
                 transition: "background 0.2s ease",
@@ -705,7 +704,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   left: 2,
                   boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
                   transition: "transform 0.2s ease",
-                  transform: draft ? "translateX(0)" : "translateX(18px)",
+                  transform: status === LinkStatus.DRAFT ? "translateX(0)" : "translateX(18px)",
                 }}
               />
             </button>
