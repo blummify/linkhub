@@ -16,6 +16,7 @@ import { DeleteConfirmDialog } from "../components/DeleteConfirmDialog";
 import { CommandPalette } from "../components/CommandPalette";
 import { useEffect } from "react";
 import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
+import { LinkStatusValue } from "../constants/linkStatus";
 
 const dateFormatter = new Intl.DateTimeFormat("en-GH", {
   month: "short",
@@ -59,7 +60,7 @@ export default function UserAdminClient() {
           title: l.title,
           url: l.url,
           clicks: String(l.clicks),
-          status: l.status,
+          status: l.status as LinkStatusValue,
           icon: l.icon || undefined,
           createdAt: dateFormatter.format(new Date(l.createdAt)), 
         }));
