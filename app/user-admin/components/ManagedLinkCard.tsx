@@ -125,8 +125,10 @@ export function ManagedLinkCard({
   dragHandleAttributes,
   isOverlay = false,
 }: ManagedLinkCardProps) {
-  const { title, url, clicks, draft, trendLabel, createdAt } = link;
-  const visualStatus = link.status ?? (draft ? "unpublished" : "published");
+  const { title, url, clicks, trendLabel, createdAt } = link;
+  const visualStatus = link.status === 1 ? "published" 
+                      : link.status === 0 ? "draft" 
+                      : "unpublished";
   const [editingField, setEditingField] = useState<"title" | "url" | null>(null);
   const [tempTitle, setTempTitle] = useState(title);
   const [tempUrl, setTempUrl] = useState(url);
@@ -157,7 +159,7 @@ export function ManagedLinkCard({
     setEditingField(null);
   };
 
-  const showStats = visualStatus !== "draft" || Number(String(clicks).replace(/,/g, "")) > 0;
+  const showStats = link.status !== 0 || Number(String(clicks).replace(/,/g, "")) > 0;
   const iconKey = (link.icon && link.icon in ICON_MAP)
     ? (link.icon as IconKey)
     : detectIconKey(link.url);
