@@ -11,6 +11,29 @@ vi.mock("@/app/components/DashboardPreviewPanel", () => ({
   DashboardPreviewPanel: () => <div data-testid="preview-panel" />,
 }));
 
+vi.mock("@/app/actions/links", () => ({
+  getProfile: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/app/actions/profile", () => ({
+  updateAvatarUrl: vi.fn().mockResolvedValue({ success: true }),
+  removeAvatar: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+vi.mock("@/app/actions/upload", () => ({
+  deleteOrphanedUpload: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+vi.mock("@/lib/hooks/useFileUpload", () => ({
+  useFileUpload: () => ({
+    upload: vi.fn().mockResolvedValue(null),
+    isUploading: false,
+    progress: 0,
+    error: null,
+    reset: vi.fn(),
+  }),
+}));
+
 describe("AppearanceClient", () => {
   it("renders branding page heading and sections", () => {
     renderWithSidebarAndBranding(<AppearanceClient />);

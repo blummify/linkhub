@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { ManagedLink } from "./types";
 import { LinkStatus, type LinkStatusValue } from "@/app/constants/linkStatus";
+import { useFileUpload } from "@/lib/hooks/useFileUpload";
 
 interface AddEditLinkModalProps {
   open: boolean;
@@ -155,10 +156,20 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   const [urlValidState, setUrlValidState] = useState<"none" | "valid" | "invalid">("none");
   const [urlError, setUrlError]         = useState(false);
   const [detectedInfo, setDetectedInfo] = useState<{ title: string; icon: PresetId } | null>(null);
-  const [thumbImage, setThumbImage]     = useState<string | null>(() => initialLink?.thumbnail ?? null);
+  const [thumbImage, setThumbImage]     = useState<string | null>(() => initialLink?.thumbnailUrl ?? null);
+  const [thumbKey, setThumbKey]         = useState<string | null>(() => initialLink?.thumbnailKey ?? null);
   const [selectedPreset, setSelectedPreset] = useState<PresetId>(() => (initialLink?.icon as PresetId | undefined) ?? "globe");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { upload: uploadThumb, isUploading: isUploadingThumb } = useFileUpload({
+    folder: "link-thumbnails",
+    maxSizeMB: 2,
+    onSuccess: (publicUrl, key) => {
+      setThumbImage(publicUrl);
+      setThumbKey(key);
+    },
+  });
 
   const isEdit  = !!initialLink;
   const canSave = title.trim().length > 0 && isValidURL(url.trim());
@@ -169,12 +180,13 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
       title: title.trim(),
       url: url.trim(),
       icon: selectedPreset,
-      thumbnail: thumbImage ?? undefined,
+      thumbnailUrl: thumbImage ?? undefined,
+      thumbnailKey: thumbKey ?? undefined,
       clicks: initialLink?.clicks ?? "0",
       status,
     });
     onClose();
-  }, [canSave, title, url, selectedPreset, thumbImage, status, initialLink, onSave, onClose]);
+  }, [canSave, title, url, selectedPreset, thumbImage, thumbKey, status, initialLink, onSave, onClose]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -222,17 +234,13 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) return; // 2 MB guard
-    const reader = new FileReader();
-    reader.onload = ev => {
-      setThumbImage(ev.target?.result as string);
-    };
-    reader.readAsDataURL(file);
     e.target.value = "";
+    uploadThumb(file);
   }
 
   function handleRemoveThumb() {
     setThumbImage(null);
+    setThumbKey(null);
   }
 
   const activePreset = PRESET_ICONS.find(p => p.id === selectedPreset) ?? PRESET_ICONS[0];
@@ -517,7 +525,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             <div className="flex items-center" style={{ gap: 12 }}>
               {/* 64×64 preview */}
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => { if (!isUploadingThumb) fileInputRef.current?.click(); }}
                 style={{
                   width: 64,
                   height: 64,
@@ -531,10 +539,21 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   flexShrink: 0,
                   border: "1.5px solid #eef0f7",
                   overflow: "hidden",
-                  cursor: "pointer",
+                  cursor: isUploadingThumb ? "not-allowed" : "pointer",
+                  position: "relative",
                 }}
               >
-                {!thumbImage && activePreset.svg(24)}
+                {!thumbImage && !isUploadingThumb && activePreset.svg(24)}
+                {isUploadingThumb && (
+                  <svg
+                    width="22" height="22" viewBox="0 0 24 24" fill="none"
+                    stroke={thumbImage ? "white" : activePreset.color}
+                    strokeWidth="2.5"
+                    style={{ animation: "spin 0.8s linear infinite" }}
+                  >
+                    <path strokeLinecap="round" d="M12 2a10 10 0 010 20"/>
+                  </svg>
+                )}
               </div>
 
               {/* Upload / remove buttons */}
@@ -543,6 +562,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingThumb}
                     className="inline-flex items-center transition-all"
                     style={{
                       fontSize: 12,
@@ -552,11 +572,12 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                       border: "1px solid #eef0f7",
                       padding: "7px 11px",
                       borderRadius: 8,
-                      cursor: "pointer",
+                      cursor: isUploadingThumb ? "not-allowed" : "pointer",
                       fontFamily: "inherit",
                       gap: 6,
+                      opacity: isUploadingThumb ? 0.6 : 1,
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#d6dae9"; e.currentTarget.style.background = "#f7f8fc"; }}
+                    onMouseEnter={e => { if (!isUploadingThumb) { e.currentTarget.style.borderColor = "#d6dae9"; e.currentTarget.style.background = "#f7f8fc"; } }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = "#eef0f7"; e.currentTarget.style.background = "white"; }}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13">
@@ -599,7 +620,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               style={{ display: "none" }}
               onChange={handleFileChange}
             />

@@ -11,6 +11,8 @@ export type LinkRow = {
   clicks: number;
   status: number;
   userId: string;
+  thumbnailUrl: string | null;
+  thumbnailKey: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

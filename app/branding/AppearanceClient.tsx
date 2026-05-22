@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { CommandPalette } from "../components/CommandPalette";
@@ -15,6 +15,10 @@ import { DEMO_MANAGED_LINKS } from "@/lib/demoManagedLinks";
 import { ProfileSection } from "./components/ProfileSection";
 import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
+import { useFileUpload } from "@/lib/hooks/useFileUpload";
+import { updateAvatarUrl, removeAvatar } from "@/app/actions/profile";
+import { getProfile } from "@/app/actions/links";
+import { deleteOrphanedUpload } from "@/app/actions/upload";
 
 function SectionHead({
   title,
@@ -74,6 +78,37 @@ export default function AppearanceClient() {
   } = useBrandingAppearance();
 
   const [showPalette, setShowPalette] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarKey, setAvatarKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    getProfile().then((p) => {
+      if (p?.avatarUrl) setAvatarUrl(p.avatarUrl);
+      if (p?.avatarKey) setAvatarKey(p.avatarKey);
+    }).catch(() => {});
+  }, []);
+
+  const { upload, isUploading: isUploadingAvatar } = useFileUpload({
+    folder: "avatars",
+    maxSizeMB: 5,
+    onSuccess: async (publicUrl, key) => {
+      const result = await updateAvatarUrl(publicUrl, key);
+      if ("error" in result) {
+        // Scenario B: DB write failed after successful R2 upload — clean up the orphan
+        await deleteOrphanedUpload(key);
+        return;
+      }
+      setAvatarUrl(publicUrl);
+      setAvatarKey(key);
+    },
+  });
+
+  const handleRemoveAvatar = useCallback(async () => {
+    const result = await removeAvatar();
+    if ("error" in result) return;
+    setAvatarUrl(null);
+    setAvatarKey(null);
+  }, []);
 
   const themeOptions = useMemo(
     () => BRANDING_THEMES.map((t) => ({ id: t.id, name: t.name, tag: t.tag })),
@@ -231,6 +266,10 @@ export default function AppearanceClient() {
                     onDisplayNameChange={setDisplayName}
                     onHandleChange={setHandle}
                     onBioChange={setBio}
+                    avatarUrl={avatarUrl}
+                    isUploadingAvatar={isUploadingAvatar}
+                    onFileSelected={upload}
+                    onRemoveAvatar={handleRemoveAvatar}
                   />
                 </section>
 
