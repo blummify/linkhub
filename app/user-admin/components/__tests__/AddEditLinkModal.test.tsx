@@ -3,6 +3,16 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { AddEditLinkModal } from "../AddEditLinkModal";
 import type { ManagedLink } from "../types";
 
+vi.mock("@/lib/hooks/useFileUpload", () => ({
+  useFileUpload: () => ({
+    upload: vi.fn().mockResolvedValue(null),
+    isUploading: false,
+    progress: 0,
+    error: null,
+    reset: vi.fn(),
+  }),
+}));
+
 const noop = vi.fn();
 
 describe("AddEditLinkModal", () => {
