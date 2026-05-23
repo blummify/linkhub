@@ -167,7 +167,11 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
               <button
                 type="button"
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-bold text-error/80 hover:bg-error/5 hover:text-error transition-colors text-left group/item"
-                onClick={() => void signOut({ callbackUrl: "/login" })}
+                onClick={() => {
+                  localStorage.removeItem("linkhub-branding-v2");
+                  localStorage.removeItem("linkhub-branding-v1");
+                  void signOut({ callbackUrl: "/login" });
+                }}
               >
                 <span className="material-symbols-outlined text-[20px]">logout</span>
                 Logout

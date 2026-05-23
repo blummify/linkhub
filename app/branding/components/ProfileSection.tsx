@@ -108,6 +108,7 @@ export function ProfileSection({
         <div style={{ position: "relative" }}>
           {/* Avatar circle */}
           <div
+            suppressHydrationWarning
             style={{
               width: 110,
               height: 110,

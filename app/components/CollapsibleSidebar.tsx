@@ -291,7 +291,11 @@ export default function CollapsibleSidebar({
 
           <button
             type="button"
-            onClick={() => signOut()}
+            onClick={() => {
+              localStorage.removeItem("linkhub-branding-v2");
+              localStorage.removeItem("linkhub-branding-v1");
+              void signOut({ callbackUrl: "/login" });
+            }}
             className={`flex-1 flex items-center transition-all cursor-pointer ${
               isCollapsed ? "justify-center p-2" : "gap-2 p-2.5"
             }`}
