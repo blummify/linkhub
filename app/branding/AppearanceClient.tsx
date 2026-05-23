@@ -82,23 +82,18 @@ export default function AppearanceClient() {
   const theme = getBrandingThemeById(themeId);
 
   // Avatar — read from profileStore if already fetched, otherwise fetch once
-  const storedAvatarUrl = useProfileStore((s) => s.avatarUrl);
+  const avatarUrl = useProfileStore((s) => s.avatarUrl);
   const profileFetched = useProfileStore((s) => s.fetched);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(storedAvatarUrl);
 
   const [showPalette, setShowPalette] = useState(false);
 
   useEffect(() => {
-    if (profileFetched) {
-      setAvatarUrl(storedAvatarUrl);
-      return;
-    }
+    if (profileFetched) return;
     getProfile().then((p) => {
       const url = (p as { avatarUrl?: string | null } | null)?.avatarUrl ?? null;
       useProfileStore.getState().markFetched({ avatarUrl: url });
-      setAvatarUrl(url);
     }).catch(() => {});
-  }, [profileFetched, storedAvatarUrl]);
+  }, [profileFetched]);
 
   const { upload, isUploading: isUploadingAvatar } = useFileUpload({
     folder: "avatars",
@@ -110,7 +105,6 @@ export default function AppearanceClient() {
         return;
       }
       useProfileStore.getState().setAvatarUrl(publicUrl);
-      setAvatarUrl(publicUrl);
     },
   });
 
@@ -118,7 +112,6 @@ export default function AppearanceClient() {
     const result = await removeAvatar();
     if ("error" in result) return;
     useProfileStore.getState().setAvatarUrl(null);
-    setAvatarUrl(null);
   }, []);
 
   const themeOptions = useMemo(

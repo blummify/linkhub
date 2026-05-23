@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { persist, createJSONStorage, type StorageValue } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import {
   getDefaultBrandingState,
   type BrandingAppearanceState,

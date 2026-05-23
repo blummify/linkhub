@@ -177,7 +177,7 @@ export default function UserAdminClient() {
     }
   };
 
-  const handleDeleteLink = async (link: ManagedLink, _index: number) => {
+  const handleDeleteLink = async (link: ManagedLink) => {
     if (!link.id) return;
     try {
       await deleteLink(link.id);
@@ -187,7 +187,7 @@ export default function UserAdminClient() {
     }
   };
 
-  const handleToggleLink = async (link: ManagedLink, _index: number) => {
+  const handleToggleLink = async (link: ManagedLink) => {
     if (!link.id) return;
     const newStatus = link.status !== 1 ? 1 : 2;
     const previous = useLinksStore.getState().optimisticUpdate(link.id, { status: newStatus });
@@ -269,7 +269,7 @@ export default function UserAdminClient() {
         link={pendingDelete?.link}
         onClose={() => setPendingDelete(null)}
         onConfirm={() => {
-          if (pendingDelete) handleDeleteLink(pendingDelete.link, pendingDelete.index);
+          if (pendingDelete) handleDeleteLink(pendingDelete.link);
           setPendingDelete(null);
         }}
       />
