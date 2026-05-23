@@ -115,9 +115,9 @@ export default function ForgotPasswordPage() {
             </button>
 
             <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="font-medium text-primary hover:underline">
-                Sign up
+              Remember your password?{" "}
+              <Link href="/login" className="font-medium text-primary hover:underline">
+                Log in
               </Link>
             </p>
           </form>
