@@ -4,6 +4,14 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { ManagedLink } from "../user-admin/components/types";
 import { previewLinkBorderRadiusPx } from "@/app/constants/brandingButtonShapes";
+import { APP_DOMAIN } from "@/lib/appConfig";
+import { useLinksStore } from "@/store/linksStore";
+import { useBrandingStore } from "@/store/brandingStore";
+import {
+  brandingPublicUrl,
+  brandingStateToPreviewAppearance,
+  getBrandingThemeById,
+} from "@/lib/brandingState";
 
 // ── Icon bg/fg per link type ──────────────────────────────────────────────────
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
@@ -159,14 +167,12 @@ export interface AppearanceTheme {
 // ── Phone screen content ──────────────────────────────────────────────────────
 function PhoneScreenContent({
   displayName,
-  handle,
   bio,
   links,
   avatarSize = 70,
   appearance,
 }: {
   displayName: string;
-  handle: string;
   bio?: string;
   links: ManagedLink[];
   avatarSize?: number;
@@ -183,9 +189,7 @@ function PhoneScreenContent({
   const linkTextColor = dark ? "rgba(255,255,255,0.88)" : "#0b1020";
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
   const linkBorderRadius = previewLinkBorderRadiusPx(appearance?.buttonStyle ?? "rounded");
-  const published = links.filter(
-    (l) => (l.status ?? (l.draft ? "unpublished" : "published")) === "published"
-  );
+  const published = links.filter((l) => l.status === 1);
 
   return (
     <div
@@ -244,32 +248,20 @@ function PhoneScreenContent({
         {displayName || "Your Name"}
       </div>
 
-      {/* Handle */}
-      {handle && (
+      {/* Bio */}
+      {bio && (
         <div
           style={{
-            fontSize: 11.5,
-            fontFamily: 'var(--branding-font-mono, "Geist Mono", ui-monospace, monospace)',
-            color: dark ? "rgba(255,255,255,0.55)" : "#3b46e0",
-            marginTop: 3,
+            fontSize: 11,
+            color: subtitleColor,
+            margin: "8px 12px 16px",
+            textAlign: "center",
+            lineHeight: 1.5,
           }}
         >
-          @{handle}
+          {bio}
         </div>
       )}
-
-      {/* Bio */}
-      <div
-        style={{
-          fontSize: 11,
-          color: subtitleColor,
-          margin: "8px 12px 16px",
-          textAlign: "center",
-          lineHeight: 1.5,
-        }}
-      >
-        {bio || "Connecting with your community — one link at a time."}
-      </div>
 
       {/* Social icons row */}
       <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
@@ -331,6 +323,8 @@ function PhoneScreenContent({
                 fontWeight: 500,
                 color: linkTextColor,
                 boxShadow: dark ? "none" : "0 2px 6px rgba(15,23,42,0.04)",
+                animation: "scIn 0.22s cubic-bezier(0.16,1,0.3,1) both",
+                animationDelay: `${i * 35}ms`,
               }}
             >
               <PhoneLinkIcon iconKey={link.icon} />
@@ -544,7 +538,7 @@ function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyl
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}
         >
-          linkhub.co
+          {APP_DOMAIN}
         </div>
       </div>
 
@@ -633,13 +627,6 @@ function SocialConfirmDialog({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <style>{`
-          @keyframes scIn {
-            from { opacity: 0; transform: translateY(12px) scale(0.97); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-          }
-        `}</style>
-
         {/* Network icon */}
         <div
           style={{
@@ -741,33 +728,19 @@ function SocialConfirmDialog({
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export interface DashboardPreviewPanelProps {
-  links: ManagedLink[];
-  displayName: string;
-  /** URL slug after the last slash, e.g. "joelosei" */
-  handle?: string;
-  bio?: string;
-  /** Full public URL without protocol, e.g. "linkhub.co/joelosei" */
-  publicUrl: string;
   /** Panel width (default 420) */
   width?: number;
-  /** Optional theme applied to the phone/browser screen for the branding editor */
-  appearance?: AppearanceTheme;
-  /** When set, replaces the light/dark toggle with a theme footer bar */
-  themeLabel?: string;
-  onRandomTheme?: () => void;
 }
 
-export function DashboardPreviewPanel({
-  links,
-  displayName,
-  handle = "",
-  bio,
-  publicUrl,
-  width = 420,
-  appearance,
-  themeLabel,
-  onRandomTheme,
-}: DashboardPreviewPanelProps) {
+export function DashboardPreviewPanel({ width = 420 }: DashboardPreviewPanelProps) {
+  const links = useLinksStore((s) => s.links);
+  const displayName = useBrandingStore((s) => s.displayName);
+  const bio = useBrandingStore((s) => s.bio);
+  const publicUrl = useBrandingStore((s) => brandingPublicUrl(s.handle));
+  const appearance = useBrandingStore(brandingStateToPreviewAppearance) as AppearanceTheme;
+  const themeId = useBrandingStore((s) => s.themeId);
+  const themeLabel = getBrandingThemeById(themeId).name;
+  const onRandomTheme = useBrandingStore((s) => s.randomTheme);
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [showSharePop, setShowSharePop] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -866,9 +839,9 @@ export function DashboardPreviewPanel({
           >
             Live preview
           </div>
-          <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 2 }}>
+          <div suppressHydrationWarning style={{ fontSize: 12, color: "#6b75a3", marginTop: 2 }}>
             {domain}
-            <span style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
+            <span suppressHydrationWarning style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
           </div>
         </div>
 
@@ -901,13 +874,6 @@ export function DashboardPreviewPanel({
                   animation: "popIn 0.18s cubic-bezier(0.16,1,0.3,1)",
                 }}
               >
-                <style>{`
-                  @keyframes popIn {
-                    from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-                    to   { opacity: 1; transform: translateY(0) scale(1); }
-                  }
-                `}</style>
-
                 {/* Upward caret arrow */}
                 <div
                   style={{
@@ -1104,7 +1070,6 @@ export function DashboardPreviewPanel({
             <BrowserShell bgStyle={screenBg}>
               <PhoneScreenContent
                 displayName={displayName}
-                handle={handle}
                 bio={bio}
                 links={links}
                 avatarSize={76}
@@ -1115,7 +1080,6 @@ export function DashboardPreviewPanel({
             <PhoneShell bgStyle={screenBg} showGlow={screenDark}>
               <PhoneScreenContent
                 displayName={displayName}
-                handle={handle}
                 bio={bio}
                 links={links}
                 appearance={appearance}

@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { redis } from "@/lib/redis";
 import { postly } from "@/lib/postly";
 import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
@@ -137,8 +138,7 @@ export async function verifyEmailCode(
         return { error: "Too many incorrect attempts. Please request a new code." };
       }
       await db.emailVerification.update({ where: { userId: user.id }, data: { attempts: newAttempts } });
-      const left = 5 - newAttempts;
-      return { error: `Invalid code. ${left} attempt${left === 1 ? "" : "s"} remaining.` };
+      return { error: "Invalid code. Please try again." };
     }
 
     await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
@@ -157,12 +157,23 @@ export async function verifyEmailCode(
 
 export async function resendVerificationCode(email: string): Promise<{ success: true } | { error: string }> {
   try {
-    const user = await db.user.findUnique({ where: { email }, select: { id: true } });
-    if (user) {
-      const existing = await db.emailVerification.findUnique({ where: { userId: user.id } });
-      if (existing) {
-        const elapsed = (Date.now() - existing.createdAt.getTime()) / 1000;
-        if (elapsed < 60) return { error: `Please wait ${Math.ceil(60 - elapsed)}s before resending.` };
+    const rateLimitKey = `resend:${email}`;
+    try {
+      const alreadySent = await redis.get(rateLimitKey);
+      if (alreadySent) {
+        const ttl = await redis.ttl(rateLimitKey);
+        return { error: `Please wait ${ttl}s before resending.` };
+      }
+      await redis.set(rateLimitKey, "1", { ex: 60 });
+    } catch {
+      // Redis unavailable — fall through to DB-based check
+      const user = await db.user.findUnique({ where: { email }, select: { id: true } });
+      if (user) {
+        const existing = await db.emailVerification.findUnique({ where: { userId: user.id } });
+        if (existing) {
+          const elapsed = (Date.now() - existing.createdAt.getTime()) / 1000;
+          if (elapsed < 60) return { error: `Please wait ${Math.ceil(60 - elapsed)}s before resending.` };
+        }
       }
     }
     return await createAndSendCode(email);
@@ -265,7 +276,8 @@ export async function sendResetLink(email: string): Promise<{ success: true } | 
       await db.passwordResetToken.deleteMany({ where: { userId: user.id } });
       await db.passwordResetToken.create({ data: { userId: user.id, tokenHash, expiresAt } });
 
-      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+      const baseUrl = process.env.NEXTAUTH_URL
+        ?? (process.env.NEXT_PUBLIC_APP_DOMAIN ? `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}` : "http://localhost:3000");
       const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
       const name = user.name ?? "there";
 
