@@ -22,6 +22,17 @@ const PUBLIC_EXACT = new Set([
   "/reset-password"
 ]);
 
+const PROTECTED_PREFIXES = [
+  "/user-dashboard",
+  "/user-admin",
+  "/user-analytics",
+  "/admin",
+  "/super-admin",
+  "/links",
+  "/analytics",
+  "/appearance",
+];
+
 /** Files in /public — must not require auth or `/_next/image` fetches get HTML (e.g. /login) and fail with "received null". */
 const PUBLIC_STATIC_EXT = /\.(ico|png|jpg|jpeg|gif|webp|svg|txt|xml|webmanifest|woff2?)$/i;
 
@@ -33,8 +44,10 @@ export default auth((req) => {
   if (PUBLIC_STATIC_EXT.test(pathname)) return undefined;
 
   const isApiAuthRoute = pathname.startsWith("/api/auth");
-  const isPublicRoute = PUBLIC_EXACT.has(pathname);
   const isAuthRoute = pathname === "/login" || pathname === "/signup";
+  const isProtectedRoute = PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + "/")
+  );
 
   if (isApiAuthRoute) return undefined;
 
@@ -42,15 +55,15 @@ export default auth((req) => {
   // account, use incognito expectations, or sign out from the app and return here.
   if (isAuthRoute) return undefined;
 
-  // Authenticated users with unverified email can only access public routes.
-  if (isLoggedIn && !req.auth?.user.emailVerified && !isPublicRoute) {
+  // Authenticated users with unverified email can only access protected routes after verifying.
+  if (isLoggedIn && !req.auth?.user.emailVerified && isProtectedRoute) {
     const verifyUrl = new URL("/verify-email", nextUrl);
     if (req.auth?.user.email) verifyUrl.searchParams.set("email", req.auth.user.email);
     verifyUrl.searchParams.set("source", "login");
     return Response.redirect(verifyUrl);
   }
 
-  if (!isLoggedIn && !isPublicRoute) {
+  if (!isLoggedIn && isProtectedRoute) {
     return Response.redirect(new URL("/login", nextUrl));
   }
 
