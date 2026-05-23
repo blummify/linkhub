@@ -2,22 +2,31 @@
 
 import { after } from "next/server";
 import { db } from "@/lib/db";
+import { redis } from "@/lib/redis";
 import type { LinkRow } from "@/lib/linkRow";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
 import { addLinkSchema } from "@/lib/validation/link.schema";
 import { LinkStatusValue } from "@/app/constants/linkStatus";
 import { deleteFromR2 } from "@/lib/r2";
+
+const LINKS_TTL = 300;   // 5 minutes
+const PROFILE_TTL = 300; // 5 minutes
 
 export async function getLinks(): Promise<LinkRow[]> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
+  const cacheKey = `links:${session.user.id}`;
   try {
-    return await db.link.findMany({
+    const cached = await redis.get<LinkRow[]>(cacheKey);
+    if (cached) return cached;
+
+    const links = await db.link.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
     });
+    await redis.set(cacheKey, links, { ex: LINKS_TTL });
+    return links;
   } catch (error) {
     console.error("Error fetching links:", error);
     return [];
@@ -51,18 +60,15 @@ export async function addLink(data: {
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   const parsed = addLinkSchema.safeParse(data);
-  if(!parsed.success) {
-    return {error: parsed.error.issues[0].message};
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
   }
 
   try {
     const link = await db.link.create({
-      data: {
-        ...data,
-        userId: session.user.id,
-      },
+      data: { ...data, userId: session.user.id },
     });
-    revalidatePath("/user-dashboard");
+    await redis.del(`links:${session.user.id}`);
     return { success: true, link };
   } catch (error) {
     console.error("Error adding link:", error);
@@ -102,7 +108,7 @@ export async function updateLink(id: string, data: {
       });
     }
 
-    revalidatePath("/user-dashboard");
+    await redis.del(`links:${session.user.id}`);
     return { success: true, link };
   } catch (error) {
     console.error("Error updating link:", error);
@@ -131,7 +137,7 @@ export async function deleteLink(id: string) {
       });
     }
 
-    revalidatePath("/user-dashboard");
+    await redis.del(`links:${session.user.id}`);
     return { success: true };
   } catch (error) {
     console.error("Error deleting link:", error);
@@ -143,24 +149,33 @@ export async function getProfile() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
+  const cacheKey = `profile:${session.user.id}`;
   try {
-    let profile = await db.profile.findUnique({
-      where: { userId: session.user.id },
-      include: { user: true }, // ← pulls in name, email, image
-    });
+    const cached = await redis.get(cacheKey);
+    if (cached) return cached as Awaited<ReturnType<typeof fetchProfile>>;
 
-    if (!profile) {
-      profile = await db.profile.create({
-        data: { userId: session.user.id },
-        include: { user: true }, // ← same here
-      });
-    }
-
-    return profile;
+    return await fetchProfile(session.user.id, cacheKey);
   } catch (error) {
     console.error("Error fetching profile:", error);
     return null;
   }
+}
+
+async function fetchProfile(userId: string, cacheKey: string) {
+  let profile = await db.profile.findUnique({
+    where: { userId },
+    include: { user: true },
+  });
+
+  if (!profile) {
+    profile = await db.profile.create({
+      data: { userId },
+      include: { user: true },
+    });
+  }
+
+  await redis.set(cacheKey, profile, { ex: PROFILE_TTL });
+  return profile;
 }
 
 const HANDLE_REGEX = /^[a-zA-Z0-9_]{3,24}$/;
@@ -184,7 +199,7 @@ export async function claimHandle(handle: string) {
       data: { handle, hasClaimedHandle: true },
     });
 
-    revalidatePath("/user-dashboard");
+    await redis.del(`profile:${session.user.id}`);
     return { success: true };
   } catch (error) {
     console.error("Error claiming handle:", error);
@@ -201,6 +216,7 @@ export async function dismissHandleClaim() {
       where: { userId: session.user.id },
       data: { hasClaimedHandle: true },
     });
+    await redis.del(`profile:${session.user.id}`);
     return { success: true };
   } catch (error) {
     console.error("Error dismissing handle claim:", error);

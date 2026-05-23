@@ -253,14 +253,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
       style={{ background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)", animation: "fadeIn 0.25s ease" }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <style>{`
-        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-        @keyframes lhModalIn {
-          from { opacity:0; transform:translateY(16px) scale(0.97); }
-          to   { opacity:1; transform:translateY(0) scale(1); }
-        }
-      `}</style>
-
       <div
         className="relative w-full flex flex-col overflow-hidden"
         style={{

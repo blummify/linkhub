@@ -48,12 +48,14 @@ export const r2: S3Client = new Proxy({} as S3Client, {
 export async function getPresignedUploadUrl(
   key: string,
   contentType: string,
-  expiresIn = 120
+  expiresIn = 120,
+  cacheControl = "public, max-age=31536000, immutable"
 ): Promise<string> {
   const command = new PutObjectCommand({
     Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME!,
     Key: key,
     ContentType: contentType,
+    CacheControl: cacheControl,
   });
   return getSignedUrl(r2, command, { expiresIn });
 }
