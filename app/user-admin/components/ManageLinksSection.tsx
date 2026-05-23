@@ -193,10 +193,18 @@ function NoFilterResultsState({ tab, onClearFilter }: { tab: string; onClearFilt
   );
 }
 
+const LH_SHIMMER = [
+  "linear-gradient(100deg,",
+  "#edeeff 0%, #edeeff 35%,",
+  "#c8ccff 44%, rgba(255,255,255,0.92) 50%, #c8ccff 56%,",
+  "#edeeff 65%, #edeeff 100%",
+  ")",
+].join(" ");
+
 const shimmerBase: React.CSSProperties = {
-  background: "linear-gradient(90deg, #eef0f7 25%, #e2e4f0 50%, #eef0f7 75%)",
-  backgroundSize: "200% 100%",
-  animation: "shimmer 1.4s ease-in-out infinite",
+  background: LH_SHIMMER,
+  backgroundSize: "300% 100%",
+  animation: "lhShimmer 1.8s cubic-bezier(0.4,0,0.6,1) infinite",
   borderRadius: 6,
 };
 
@@ -205,13 +213,12 @@ function SkeletonLinkCard({ delay = 0 }: { delay?: number }) {
     <div
       style={{
         background: "white",
-        border: "1px solid #eef0f7",
+        border: "1px solid rgba(99,102,241,0.1)",
         borderRadius: 16,
         padding: "14px 16px",
         display: "flex",
         alignItems: "center",
         gap: 14,
-        animationDelay: `${delay}ms`,
       }}
     >
       <div style={{ ...shimmerBase, width: 40, height: 40, borderRadius: 10, flexShrink: 0, animationDelay: `${delay}ms` }} />
