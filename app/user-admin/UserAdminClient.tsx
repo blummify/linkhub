@@ -27,6 +27,7 @@ export default function UserAdminClient() {
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimTimerFired, setClaimTimerFired] = useState(false);
   const [links, setLinks] = useState<ManagedLink[]>([]);
+  const [isLoadingLinks, setIsLoadingLinks] = useState(true);
 
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
@@ -74,6 +75,7 @@ export default function UserAdminClient() {
         console.error("Failed to load data:", error);
         setLinks([]);
       } finally {
+        setIsLoadingLinks(false);
         setProfileReady(true);
       }
     }
@@ -250,6 +252,7 @@ export default function UserAdminClient() {
                 <div className="flex-1 min-w-0 px-4 pt-[22px] pb-10 sm:px-6 lg:px-8">
                   <ManageLinksSection
                     links={links}
+                    isLoadingLinks={isLoadingLinks}
                     onAddLink={handleAddLink}
                     onEditLink={handleEditLink}
                     onRequestDelete={(link, index) => setPendingDelete({ link, index })}

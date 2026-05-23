@@ -61,6 +61,7 @@ export function BrandingAppearanceProvider({
   const baselineInitialized = useRef(false);
   useEffect(() => {
     const loaded = loadBrandingState();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(loaded);
     setHydrated(true);
     if (!baselineInitialized.current) {

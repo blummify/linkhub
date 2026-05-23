@@ -193,8 +193,40 @@ function NoFilterResultsState({ tab, onClearFilter }: { tab: string; onClearFilt
   );
 }
 
+const shimmerBase: React.CSSProperties = {
+  background: "linear-gradient(90deg, #eef0f7 25%, #e2e4f0 50%, #eef0f7 75%)",
+  backgroundSize: "200% 100%",
+  animation: "shimmer 1.4s ease-in-out infinite",
+  borderRadius: 6,
+};
+
+function SkeletonLinkCard({ delay = 0 }: { delay?: number }) {
+  return (
+    <div
+      style={{
+        background: "white",
+        border: "1px solid #eef0f7",
+        borderRadius: 16,
+        padding: "14px 16px",
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        animationDelay: `${delay}ms`,
+      }}
+    >
+      <div style={{ ...shimmerBase, width: 40, height: 40, borderRadius: 10, flexShrink: 0, animationDelay: `${delay}ms` }} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ ...shimmerBase, height: 13, width: "52%", animationDelay: `${delay + 60}ms` }} />
+        <div style={{ ...shimmerBase, height: 11, width: "33%", animationDelay: `${delay + 120}ms` }} />
+      </div>
+      <div style={{ ...shimmerBase, width: 58, height: 22, borderRadius: 99, flexShrink: 0, animationDelay: `${delay + 30}ms` }} />
+    </div>
+  );
+}
+
 export interface ManageLinksSectionProps {
   links: ManagedLink[];
+  isLoadingLinks?: boolean;
   onAddLink?: () => void;
   onEditLink?: (link: ManagedLink, index: number) => void;
   onDeleteLink?: (link: ManagedLink, index: number) => void;
@@ -253,6 +285,7 @@ function SortableCardWrapper({
 
 export function ManageLinksSection({
   links,
+  isLoadingLinks = false,
   onAddLink,
   onEditLink,
   onDeleteLink,
@@ -399,7 +432,11 @@ export function ManageLinksSection({
       </div>}
 
       {/* Link list / empty states */}
-      {links.length === 0 ? (
+      {isLoadingLinks && links.length === 0 ? (
+        <div className="space-y-3">
+          {[0, 1, 2, 3].map((i) => <SkeletonLinkCard key={i} delay={i * 70} />)}
+        </div>
+      ) : links.length === 0 ? (
         <EmptyLinksState onAddLink={onAddLink} />
       ) : filteredLinks.length === 0 ? (
         <NoFilterResultsState tab={activeTab} onClearFilter={() => setActiveTab("all")} />

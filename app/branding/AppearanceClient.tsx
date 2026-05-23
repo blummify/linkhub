@@ -79,12 +79,10 @@ export default function AppearanceClient() {
 
   const [showPalette, setShowPalette] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [avatarKey, setAvatarKey] = useState<string | null>(null);
 
   useEffect(() => {
     getProfile().then((p) => {
       if (p?.avatarUrl) setAvatarUrl(p.avatarUrl);
-      if (p?.avatarKey) setAvatarKey(p.avatarKey);
     }).catch(() => {});
   }, []);
 
@@ -99,7 +97,6 @@ export default function AppearanceClient() {
         return;
       }
       setAvatarUrl(publicUrl);
-      setAvatarKey(key);
     },
   });
 
@@ -107,7 +104,6 @@ export default function AppearanceClient() {
     const result = await removeAvatar();
     if ("error" in result) return;
     setAvatarUrl(null);
-    setAvatarKey(null);
   }, []);
 
   const themeOptions = useMemo(

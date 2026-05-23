@@ -160,14 +160,12 @@ export interface AppearanceTheme {
 // ── Phone screen content ──────────────────────────────────────────────────────
 function PhoneScreenContent({
   displayName,
-  handle,
   bio,
   links,
   avatarSize = 70,
   appearance,
 }: {
   displayName: string;
-  handle: string;
   bio?: string;
   links: ManagedLink[];
   avatarSize?: number;
@@ -742,7 +740,6 @@ export interface DashboardPreviewPanelProps {
 export function DashboardPreviewPanel({
   links,
   displayName,
-  handle = "",
   bio,
   publicUrl,
   width = 420,
@@ -1079,7 +1076,6 @@ export function DashboardPreviewPanel({
             <BrowserShell bgStyle={screenBg}>
               <PhoneScreenContent
                 displayName={displayName}
-                handle={handle}
                 bio={bio}
                 links={links}
                 avatarSize={76}
@@ -1090,7 +1086,6 @@ export function DashboardPreviewPanel({
             <PhoneShell bgStyle={screenBg} showGlow={screenDark}>
               <PhoneScreenContent
                 displayName={displayName}
-                handle={handle}
                 bio={bio}
                 links={links}
                 appearance={appearance}
