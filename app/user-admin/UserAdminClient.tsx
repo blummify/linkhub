@@ -32,7 +32,7 @@ export default function UserAdminClient() {
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ link: ManagedLink; index: number } | null>(null);
   const [showPalette, setShowPalette] = useState(false);
-  const [isSavingLink, setIsSavingLink] = useState(false);
+  const isSavingRef = useRef(false);
 
   const [profileReady, setProfileReady] = useState(false);
   const profileMergedRef = useRef(false);
@@ -129,45 +129,66 @@ export default function UserAdminClient() {
   };
 
   const handleSaveLink = async (newLink: ManagedLink) => {
-    if(isSavingLink) return;
-    setIsSavingLink(true);
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
     try {
       if (editingLink !== null && editingLink.link.id) {
-        await updateLink(editingLink.link.id, {
-          title: newLink.title,
-          url: newLink.url,
-          icon: newLink.icon,
-          status: newLink.status,
-          thumbnailUrl: newLink.thumbnailUrl ?? null,
-          thumbnailKey: newLink.thumbnailKey ?? null,
-        });
+        const previousLinks = [...links];
         const updatedLinks = [...links];
         updatedLinks[editingLink.index] = { ...newLink, id: editingLink.link.id };
         setLinks(updatedLinks);
+        try {
+          await updateLink(editingLink.link.id, {
+            title: newLink.title,
+            url: newLink.url,
+            icon: newLink.icon,
+            status: newLink.status,
+            thumbnailUrl: newLink.thumbnailUrl ?? null,
+            thumbnailKey: newLink.thumbnailKey ?? null,
+          });
+        } catch {
+          setLinks(previousLinks);
+        }
       } else {
-        const result = await addLink({
-          title: newLink.title,
-          url: newLink.url,
-          icon: newLink.icon,
-          status: newLink.status,
-          thumbnailUrl: newLink.thumbnailUrl,
-          thumbnailKey: newLink.thumbnailKey,
-        });
-        if (result.success && result.link) {
-          const entry: ManagedLink = {
-            ...newLink,
-            id: result.link.id,
-            clicks: String(result.link.clicks),
-            createdAt: dateFormatter.format(new Date(result.link.createdAt)),
-          };
-          setLinks((prev) => [entry, ...prev]);
+        const tempId = `__temp_${Date.now()}`;
+        const tempEntry: ManagedLink = {
+          ...newLink,
+          id: tempId,
+          clicks: "0",
+          createdAt: dateFormatter.format(new Date()),
+        };
+        setLinks((prev) => [tempEntry, ...prev]);
+        try {
+          const result = await addLink({
+            title: newLink.title,
+            url: newLink.url,
+            icon: newLink.icon,
+            status: newLink.status,
+            thumbnailUrl: newLink.thumbnailUrl,
+            thumbnailKey: newLink.thumbnailKey,
+          });
+          if (result.success && result.link) {
+            setLinks((prev) =>
+              prev.map((l) =>
+                l.id === tempId
+                  ? {
+                      ...newLink,
+                      id: result.link!.id,
+                      clicks: String(result.link!.clicks),
+                      createdAt: dateFormatter.format(new Date(result.link!.createdAt)),
+                    }
+                  : l
+              )
+            );
+          } else {
+            setLinks((prev) => prev.filter((l) => l.id !== tempId));
+          }
+        } catch {
+          setLinks((prev) => prev.filter((l) => l.id !== tempId));
         }
       }
-      setShowLinkModal(false);
-    } catch (error) {
-      console.error("Failed to save link:", error);
-    } finally{
-      setIsSavingLink(false);
+    } finally {
+      isSavingRef.current = false;
     }
   };
 

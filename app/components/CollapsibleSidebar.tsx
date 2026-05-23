@@ -90,8 +90,8 @@ export default function CollapsibleSidebar({
           <Image
             src="/link_hub_logo.png"
             alt="LinkHub Logo"
-            width={isCollapsed ? 32 : 128}
-            height={isCollapsed ? 32 : 128}
+            width={128}
+            height={128}
             className={`object-contain transition-all duration-300 cursor-pointer hover:opacity-80 ${
               isCollapsed ? "h-8 w-8" : "h-auto w-32"
             }`}

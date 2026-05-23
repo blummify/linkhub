@@ -166,7 +166,6 @@ export function ProfileSection({
                 >
                   <path strokeLinecap="round" d="M12 2a10 10 0 010 20"/>
                 </svg>
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
               </div>
             )}
           </div>

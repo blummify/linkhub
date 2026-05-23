@@ -138,8 +138,7 @@ export async function verifyEmailCode(
         return { error: "Too many incorrect attempts. Please request a new code." };
       }
       await db.emailVerification.update({ where: { userId: user.id }, data: { attempts: newAttempts } });
-      const left = 5 - newAttempts;
-      return { error: `Invalid code. ${left} attempt${left === 1 ? "" : "s"} remaining.` };
+      return { error: "Invalid code. Please try again." };
     }
 
     await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
@@ -277,7 +276,8 @@ export async function sendResetLink(email: string): Promise<{ success: true } | 
       await db.passwordResetToken.deleteMany({ where: { userId: user.id } });
       await db.passwordResetToken.create({ data: { userId: user.id, tokenHash, expiresAt } });
 
-      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+      const baseUrl = process.env.NEXTAUTH_URL
+        ?? (process.env.NEXT_PUBLIC_APP_DOMAIN ? `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}` : "http://localhost:3000");
       const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
       const name = user.name ?? "there";
 
