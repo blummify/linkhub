@@ -1,5 +1,14 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+
+vi.mock("@upstash/redis", () => ({
+  Redis: vi.fn().mockImplementation(() => ({
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+    ttl: vi.fn().mockResolvedValue(60),
+  })),
+}));
 import { createElement } from "react";
 
 const localStorageMock = (() => {
@@ -19,6 +28,75 @@ const localStorageMock = (() => {
 })();
 
 Object.defineProperty(window, "localStorage", { value: localStorageMock, writable: true });
+
+const sessionStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value; },
+    removeItem: (key: string) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(window, "sessionStorage", { value: sessionStorageMock, writable: true });
+
+// Reset Zustand stores between tests so state doesn't leak
+vi.mock("@/store/linksStore", () => {
+  const state = {
+    links: [], isLoading: false,
+    setLinks: vi.fn(), setLoading: vi.fn(),
+    optimisticAdd: vi.fn(), confirmAdd: vi.fn(), revertAdd: vi.fn(),
+    optimisticUpdate: vi.fn(), revertUpdate: vi.fn(),
+    removeLink: vi.fn(), reorderLinks: vi.fn(),
+  };
+  const useLinksStore = vi.fn((selector?: (s: unknown) => unknown) =>
+    selector ? selector(state) : state
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (useLinksStore as any).getState = () => state;
+  return { useLinksStore };
+});
+vi.mock("@/store/brandingStore", () => ({
+  useBrandingStore: vi.fn((selector?: (s: unknown) => unknown) => {
+    const state = {
+      themeId: "default", displayName: "Your Name", handle: "yourhandle",
+      bio: "", accentColor: "#3b46e0", buttonStyle: "rounded",
+      fontFamily: "Instrument Serif", userPickedTheme: false,
+      isDirty: false, hydrated: true,
+      setDisplayName: vi.fn(), setHandle: vi.fn(), setBio: vi.fn(),
+      setAccentColor: vi.fn(), setButtonStyle: vi.fn(), setFontFamily: vi.fn(),
+      selectTheme: vi.fn(), randomTheme: vi.fn(),
+      patchState: vi.fn(), reset: vi.fn(), markSaved: vi.fn(), setHydrated: vi.fn(),
+    };
+    return selector ? selector(state) : state;
+  }),
+}));
+vi.mock("@/store/sidebarStore", () => ({
+  useSidebarStore: vi.fn((selector?: (s: unknown) => unknown) => {
+    const state = { isCollapsed: false, toggle: vi.fn(), setCollapsed: vi.fn() };
+    return selector ? selector(state) : state;
+  }),
+}));
+vi.mock("@/store/uiStore", () => ({
+  useUIStore: vi.fn((selector?: (s: unknown) => unknown) => {
+    const state = {
+      showLinkModal: false, editingLink: null, pendingDelete: null, showPalette: false,
+      openAddLink: vi.fn(), openEditLink: vi.fn(), closeLinkModal: vi.fn(),
+      setPendingDelete: vi.fn(), openPalette: vi.fn(), closePalette: vi.fn(),
+    };
+    return selector ? selector(state) : state;
+  }),
+}));
+vi.mock("@/store/profileStore", () => ({
+  useProfileStore: vi.fn((selector?: (s: unknown) => unknown) => {
+    const state = {
+      avatarUrl: null, hasClaimedHandle: true, fetched: false,
+      setAvatarUrl: vi.fn(), setHasClaimedHandle: vi.fn(), markFetched: vi.fn(),
+    };
+    return selector ? selector(state) : state;
+  }),
+}));
+
 Element.prototype.scrollIntoView = vi.fn();
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
