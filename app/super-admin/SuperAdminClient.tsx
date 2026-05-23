@@ -3,10 +3,10 @@
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import AppHeader from "../components/AppHeader";
 import { ThemeToggle } from "../ThemeToggle";
-import { useSidebar } from "../components/SidebarContext";
+import { useSidebarStore } from "@/store/sidebarStore";
 
 export default function SuperAdminClient() {
-  const { isCollapsed } = useSidebar();
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   
   return (
     <div className="bg-surface text-on-surface min-h-screen antialiased">

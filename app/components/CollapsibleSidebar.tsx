@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image"
 import { signOut, useSession } from "next-auth/react";
-import { useSidebar } from "./SidebarContext";
+import { useSidebarStore } from "@/store/sidebarStore";
+import { useLinksStore } from "@/store/linksStore";
 import {
   LinksIcon,
   AppearanceIcon,
@@ -13,8 +14,6 @@ import {
   HelpIcon,
   LogoutIcon,
 } from "./icons/SidebarIcons";
-import { getLinksCount } from "@/app/actions/links";
-import { useState, useEffect } from "react";
 import UpgradeCard from "./UpgradeCard";
 
 const NAV_ITEMS = [
@@ -29,32 +28,18 @@ export default function CollapsibleSidebar({
   children: React.ReactNode;
   isAdmin?: boolean;
 }) {
-  const { isCollapsed, toggleSidebar } = useSidebar();
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+  const toggleSidebar = useSidebarStore((s) => s.toggle);
+  const linkCount = useLinksStore((s) => s.links.length);
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const user = session?.user;
-
-  const [linkCount, setLinkCount] = useState<number>(0);
 
   const displayName =
     user?.name?.trim() ||
     user?.email?.split("@")[0] ||
     (status === "loading" ? "…" : "Account");
   const displayEmail = user?.email ?? "";
-
-  useEffect(() => {
-    async function fetchLinkCount() {
-      if (status === "authenticated" && user?.id) {
-        try {
-          const result = await getLinksCount();
-          setLinkCount(result.count);
-        } catch {
-          setLinkCount(0);
-        }
-      }
-    }
-    fetchLinkCount();
-  }, [status, user?.id]);
 
   const isActiveLink = (href: string) => {
     if (href === "/user-dashboard") {
@@ -90,8 +75,8 @@ export default function CollapsibleSidebar({
           <Image
             src="/link_hub_logo.png"
             alt="LinkHub Logo"
-            width={isCollapsed ? 32 : 128}
-            height={isCollapsed ? 32 : 128}
+            width={128}
+            height={128}
             className={`object-contain transition-all duration-300 cursor-pointer hover:opacity-80 ${
               isCollapsed ? "h-8 w-8" : "h-auto w-32"
             }`}
@@ -291,7 +276,11 @@ export default function CollapsibleSidebar({
 
           <button
             type="button"
-            onClick={() => signOut()}
+            onClick={() => {
+              localStorage.removeItem("linkhub-branding-v2");
+              localStorage.removeItem("linkhub-branding-v1");
+              void signOut({ callbackUrl: "/login" });
+            }}
             className={`flex-1 flex items-center transition-all cursor-pointer ${
               isCollapsed ? "justify-center p-2" : "gap-2 p-2.5"
             }`}
