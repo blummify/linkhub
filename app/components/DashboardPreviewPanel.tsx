@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { ManagedLink } from "../user-admin/components/types";
 import { previewLinkBorderRadiusPx } from "@/app/constants/brandingButtonShapes";
+import { APP_DOMAIN } from "@/lib/appConfig";
 
 // ── Icon bg/fg per link type ──────────────────────────────────────────────────
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
@@ -244,32 +245,20 @@ function PhoneScreenContent({
         {displayName || "Your Name"}
       </div>
 
-      {/* Handle */}
-      {handle && (
+      {/* Bio */}
+      {bio && (
         <div
           style={{
-            fontSize: 11.5,
-            fontFamily: 'var(--branding-font-mono, "Geist Mono", ui-monospace, monospace)',
-            color: dark ? "rgba(255,255,255,0.55)" : "#3b46e0",
-            marginTop: 3,
+            fontSize: 11,
+            color: subtitleColor,
+            margin: "8px 12px 16px",
+            textAlign: "center",
+            lineHeight: 1.5,
           }}
         >
-          @{handle}
+          {bio}
         </div>
       )}
-
-      {/* Bio */}
-      <div
-        style={{
-          fontSize: 11,
-          color: subtitleColor,
-          margin: "8px 12px 16px",
-          textAlign: "center",
-          lineHeight: 1.5,
-        }}
-      >
-        {bio || "Connecting with your community — one link at a time."}
-      </div>
 
       {/* Social icons row */}
       <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
@@ -544,7 +533,7 @@ function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyl
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}
         >
-          linkhub.co
+          {APP_DOMAIN}
         </div>
       </div>
 

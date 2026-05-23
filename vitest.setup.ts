@@ -1,5 +1,14 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+
+vi.mock("@upstash/redis", () => ({
+  Redis: vi.fn().mockImplementation(() => ({
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+    ttl: vi.fn().mockResolvedValue(60),
+  })),
+}));
 import { createElement } from "react";
 
 const localStorageMock = (() => {

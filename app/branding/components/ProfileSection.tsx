@@ -5,6 +5,7 @@ import {
   BRANDING_FONT_MONO,
   BRANDING_FONT_SERIF,
 } from "@/app/constants/brandingFonts";
+import { APP_DOMAIN } from "@/lib/appConfig";
 
 interface ProfileSectionProps {
   displayName: string;
@@ -322,7 +323,7 @@ export function ProfileSection({
             <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 1 }}>
               Your public URL:{" "}
               <span style={{ color: "#3b46e0", fontWeight: 500 }}>
-                linkhub.co/{publicSlug}
+                {APP_DOMAIN}/{publicSlug}
               </span>
             </p>
           </div>

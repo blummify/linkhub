@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { redis } from "@/lib/redis";
 import { postly } from "@/lib/postly";
 import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
@@ -157,12 +158,23 @@ export async function verifyEmailCode(
 
 export async function resendVerificationCode(email: string): Promise<{ success: true } | { error: string }> {
   try {
-    const user = await db.user.findUnique({ where: { email }, select: { id: true } });
-    if (user) {
-      const existing = await db.emailVerification.findUnique({ where: { userId: user.id } });
-      if (existing) {
-        const elapsed = (Date.now() - existing.createdAt.getTime()) / 1000;
-        if (elapsed < 60) return { error: `Please wait ${Math.ceil(60 - elapsed)}s before resending.` };
+    const rateLimitKey = `resend:${email}`;
+    try {
+      const alreadySent = await redis.get(rateLimitKey);
+      if (alreadySent) {
+        const ttl = await redis.ttl(rateLimitKey);
+        return { error: `Please wait ${ttl}s before resending.` };
+      }
+      await redis.set(rateLimitKey, "1", { ex: 60 });
+    } catch {
+      // Redis unavailable — fall through to DB-based check
+      const user = await db.user.findUnique({ where: { email }, select: { id: true } });
+      if (user) {
+        const existing = await db.emailVerification.findUnique({ where: { userId: user.id } });
+        if (existing) {
+          const elapsed = (Date.now() - existing.createdAt.getTime()) / 1000;
+          if (elapsed < 60) return { error: `Please wait ${Math.ceil(60 - elapsed)}s before resending.` };
+        }
       }
     }
     return await createAndSendCode(email);

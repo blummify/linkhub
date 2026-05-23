@@ -15,7 +15,6 @@ import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { DeleteConfirmDialog } from "../components/DeleteConfirmDialog";
 import { CommandPalette } from "../components/CommandPalette";
 import { useEffect } from "react";
-import { DEMO_MANAGED_LINKS, isDemoManagedLink } from "@/lib/demoManagedLinks";
 import { LinkStatusValue } from "../constants/linkStatus";
 
 const dateFormatter = new Intl.DateTimeFormat("en-GH", {
@@ -27,7 +26,7 @@ export default function UserAdminClient() {
   const { isCollapsed } = useSidebar();
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimTimerFired, setClaimTimerFired] = useState(false);
-  const [links, setLinks] = useState<ManagedLink[]>([...DEMO_MANAGED_LINKS]);
+  const [links, setLinks] = useState<ManagedLink[]>([]);
 
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
@@ -64,7 +63,7 @@ export default function UserAdminClient() {
           icon: l.icon || undefined,
           createdAt: dateFormatter.format(new Date(l.createdAt)), 
         }));
-        setLinks([...DEMO_MANAGED_LINKS, ...fromDb]);
+        setLinks(fromDb);
         if (dbProfile) {
           pendingProfileRef.current = dbProfile;
           if (!dbProfile.hasClaimedHandle) {
@@ -73,7 +72,7 @@ export default function UserAdminClient() {
         }
       } catch (error) {
         console.error("Failed to load data:", error);
-        setLinks([...DEMO_MANAGED_LINKS]);
+        setLinks([]);
       } finally {
         setProfileReady(true);
       }
@@ -133,19 +132,6 @@ export default function UserAdminClient() {
     if(isSavingLink) return;
     setIsSavingLink(true);
     try {
-      if (editingLink !== null && isDemoManagedLink(editingLink.link) && editingLink.link.id) {
-        const updatedLinks = [...links];
-        updatedLinks[editingLink.index] = {
-          ...editingLink.link,
-          ...newLink,
-          id: editingLink.link.id,
-          clicks: newLink.clicks || editingLink.link.clicks,
-          trendLabel: editingLink.link.trendLabel,
-        };
-        setLinks(updatedLinks);
-        setShowLinkModal(false);
-        return;
-      }
       if (editingLink !== null && editingLink.link.id) {
         await updateLink(editingLink.link.id, {
           title: newLink.title,
@@ -174,9 +160,7 @@ export default function UserAdminClient() {
             clicks: String(result.link.clicks),
             createdAt: dateFormatter.format(new Date(result.link.createdAt)),
           };
-          const demos = links.filter(isDemoManagedLink);
-          const real = links.filter((l) => !isDemoManagedLink(l));
-          setLinks([...demos, entry, ...real]);
+          setLinks((prev) => [entry, ...prev]);
         }
       }
       setShowLinkModal(false);
@@ -188,10 +172,6 @@ export default function UserAdminClient() {
   };
 
   const handleDeleteLink = async (link: ManagedLink, index: number) => {
-    if (isDemoManagedLink(link)) {
-      setLinks(links.filter((_, i) => i !== index));
-      return;
-    }
     if (!link.id) return;
     try {
       await deleteLink(link.id);
@@ -205,12 +185,6 @@ export default function UserAdminClient() {
     const currentStatus = link.status
     const willBePublished = currentStatus !== 1;
 
-    if (isDemoManagedLink(link)) {
-      const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, status: willBePublished? 1 : 2};
-      setLinks(updatedLinks);
-      return;
-    }
     if (!link.id) return;
     try {
       await updateLink(link.id, { status: willBePublished? 1 : 2 });
@@ -223,12 +197,6 @@ export default function UserAdminClient() {
   };
 
   const handleUpdateLink = async (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => {
-    if (isDemoManagedLink(link)) {
-      const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, ...updates };
-      setLinks(updatedLinks);
-      return;
-    }
     if (!link.id) return;
     try {
       await updateLink(link.id, {
