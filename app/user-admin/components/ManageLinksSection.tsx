@@ -25,19 +25,8 @@ import { DashboardTopBar } from "./DashboardTopBar";
 
 function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
   return (
-    <>
-      <style>{`
-        @keyframes floatIn {
-          0% { opacity: 0; transform: translateY(14px) rotate(var(--r)); }
-          100% { opacity: 1; transform: translateY(0) rotate(var(--r)); }
-        }
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.2; transform: scale(0.7); }
-          50% { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
-      <div
-        className="flex flex-col items-center justify-center text-center py-16 px-8 rounded-2xl"
+    <div
+      className="flex flex-col items-center justify-center text-center py-16 px-8 rounded-2xl"
         style={{
           border: "1.5px dashed #c5c9e8",
           background: "radial-gradient(ellipse at 50% 30%, rgba(99,102,241,0.07) 0%, transparent 70%), #f7f8fc",
@@ -176,7 +165,6 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
           to add a link, or use the button above
         </p>
       </div>
-    </>
   );
 }
 

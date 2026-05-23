@@ -855,9 +855,9 @@ export function DashboardPreviewPanel({
           >
             Live preview
           </div>
-          <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 2 }}>
+          <div suppressHydrationWarning style={{ fontSize: 12, color: "#6b75a3", marginTop: 2 }}>
             {domain}
-            <span style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
+            <span suppressHydrationWarning style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
           </div>
         </div>
 
