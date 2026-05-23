@@ -1,60 +1,59 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import { useSidebar } from "../components/SidebarContext";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
-import { useBrandingAppearance } from "../components/BrandingAppearanceContext";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim } from "../actions/links";
-import { getBrandingThemeById } from "@/lib/brandingState";
+import { getBrandingThemeById, type BrandingAppearanceState } from "@/lib/brandingState";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { DeleteConfirmDialog } from "../components/DeleteConfirmDialog";
 import { CommandPalette } from "../components/CommandPalette";
-import { useEffect } from "react";
 import { LinkStatusValue } from "../constants/linkStatus";
+import { useLinksStore } from "@/store/linksStore";
+import { useBrandingStore } from "@/store/brandingStore";
+import { useProfileStore } from "@/store/profileStore";
+import { useUIStore } from "@/store/uiStore";
+import { useSidebarStore } from "@/store/sidebarStore";
 
 const dateFormatter = new Intl.DateTimeFormat("en-GH", {
   month: "short",
   day: "numeric",
-  });
+});
 
 export default function UserAdminClient() {
-  const { isCollapsed } = useSidebar();
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+
+  const links = useLinksStore((s) => s.links);
+  const isLoadingLinks = useLinksStore((s) => s.isLoading);
+
+  const showLinkModal = useUIStore((s) => s.showLinkModal);
+  const editingLink = useUIStore((s) => s.editingLink);
+  const pendingDelete = useUIStore((s) => s.pendingDelete);
+  const showPalette = useUIStore((s) => s.showPalette);
+  const openAddLink = useUIStore((s) => s.openAddLink);
+  const openEditLink = useUIStore((s) => s.openEditLink);
+  const closeLinkModal = useUIStore((s) => s.closeLinkModal);
+  const setPendingDelete = useUIStore((s) => s.setPendingDelete);
+  const closePalette = useUIStore((s) => s.closePalette);
+
+  const hydrated = useBrandingStore((s) => s.hydrated);
+  const patchState = useBrandingStore((s) => s.patchState);
+
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimTimerFired, setClaimTimerFired] = useState(false);
-  const [links, setLinks] = useState<ManagedLink[]>([]);
-  const [isLoadingLinks, setIsLoadingLinks] = useState(true);
-
-  const [showLinkModal, setShowLinkModal] = useState(false);
-  const [editingLink, setEditingLink] = useState<{ link: ManagedLink; index: number } | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<{ link: ManagedLink; index: number } | null>(null);
-  const [showPalette, setShowPalette] = useState(false);
-  const isSavingRef = useRef(false);
-
   const [profileReady, setProfileReady] = useState(false);
+  const isSavingRef = useRef(false);
   const profileMergedRef = useRef(false);
   const pendingProfileRef = useRef<Awaited<ReturnType<typeof getProfile>>>(null);
-
-  const {
-    state: branding,
-    previewAppearance,
-    publicUrl,
-    patchState,
-    randomTheme,
-    hydrated,
-  } = useBrandingAppearance();
-
-
 
   useEffect(() => {
     async function loadData() {
       try {
         const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
-
         const fromDb = dbLinks.map((l: LinkRow) => ({
           id: l.id,
           title: l.title,
@@ -62,20 +61,22 @@ export default function UserAdminClient() {
           clicks: String(l.clicks),
           status: l.status as LinkStatusValue,
           icon: l.icon || undefined,
-          createdAt: dateFormatter.format(new Date(l.createdAt)), 
+          createdAt: dateFormatter.format(new Date(l.createdAt)),
         }));
-        setLinks(fromDb);
+        useLinksStore.getState().setLinks(fromDb);
         if (dbProfile) {
           pendingProfileRef.current = dbProfile;
+          useProfileStore.getState().markFetched({
+            hasClaimedHandle: dbProfile.hasClaimedHandle,
+          });
           if (!dbProfile.hasClaimedHandle) {
             setIsFirstTimeUser(true);
           }
         }
       } catch (error) {
         console.error("Failed to load data:", error);
-        setLinks([]);
       } finally {
-        setIsLoadingLinks(false);
+        useLinksStore.getState().setLoading(false);
         setProfileReady(true);
       }
     }
@@ -86,7 +87,7 @@ export default function UserAdminClient() {
     const dbProfile = pendingProfileRef.current;
     if (!hydrated || profileMergedRef.current || !dbProfile) return;
     profileMergedRef.current = true;
-    const patch: Partial<typeof branding> = {};
+    const patch: Partial<BrandingAppearanceState> = {};
     const name = dbProfile.user?.name || dbProfile.user?.email;
     if (name) patch.displayName = name;
     if (dbProfile.handle) patch.handle = dbProfile.handle;
@@ -109,9 +110,7 @@ export default function UserAdminClient() {
 
   const handleClaimHandle = async (handle: string) => {
     const result = await claimHandle(handle);
-    if (result.success) {
-      setIsFirstTimeUser(false);
-    }
+    if (result.success) setIsFirstTimeUser(false);
     return result;
   };
 
@@ -120,25 +119,15 @@ export default function UserAdminClient() {
     setIsFirstTimeUser(false);
   };
 
-  const handleAddLink = () => {
-    setEditingLink(null);
-    setShowLinkModal(true);
-  };
-
-  const handleEditLink = (link: ManagedLink, index: number) => {
-    setEditingLink({ link, index });
-    setShowLinkModal(true);
-  };
-
   const handleSaveLink = async (newLink: ManagedLink) => {
     if (isSavingRef.current) return;
     isSavingRef.current = true;
     try {
       if (editingLink !== null && editingLink.link.id) {
-        const previousLinks = [...links];
-        const updatedLinks = [...links];
-        updatedLinks[editingLink.index] = { ...newLink, id: editingLink.link.id };
-        setLinks(updatedLinks);
+        const previous = useLinksStore.getState().optimisticUpdate(
+          editingLink.link.id,
+          { ...newLink, id: editingLink.link.id },
+        );
         try {
           await updateLink(editingLink.link.id, {
             title: newLink.title,
@@ -149,7 +138,7 @@ export default function UserAdminClient() {
             thumbnailKey: newLink.thumbnailKey ?? null,
           });
         } catch {
-          setLinks(previousLinks);
+          if (previous) useLinksStore.getState().revertUpdate(editingLink.link.id, previous);
         }
       } else {
         const tempId = `__temp_${Date.now()}`;
@@ -159,7 +148,7 @@ export default function UserAdminClient() {
           clicks: "0",
           createdAt: dateFormatter.format(new Date()),
         };
-        setLinks((prev) => [tempEntry, ...prev]);
+        useLinksStore.getState().optimisticAdd(tempEntry);
         try {
           const result = await addLink({
             title: newLink.title,
@@ -170,23 +159,17 @@ export default function UserAdminClient() {
             thumbnailKey: newLink.thumbnailKey,
           });
           if (result.success && result.link) {
-            setLinks((prev) =>
-              prev.map((l) =>
-                l.id === tempId
-                  ? {
-                      ...newLink,
-                      id: result.link!.id,
-                      clicks: String(result.link!.clicks),
-                      createdAt: dateFormatter.format(new Date(result.link!.createdAt)),
-                    }
-                  : l
-              )
-            );
+            useLinksStore.getState().confirmAdd(tempId, {
+              ...newLink,
+              id: result.link.id,
+              clicks: String(result.link.clicks),
+              createdAt: dateFormatter.format(new Date(result.link.createdAt)),
+            });
           } else {
-            setLinks((prev) => prev.filter((l) => l.id !== tempId));
+            useLinksStore.getState().revertAdd(tempId);
           }
         } catch {
-          setLinks((prev) => prev.filter((l) => l.id !== tempId));
+          useLinksStore.getState().revertAdd(tempId);
         }
       }
     } finally {
@@ -194,33 +177,31 @@ export default function UserAdminClient() {
     }
   };
 
-  const handleDeleteLink = async (link: ManagedLink, index: number) => {
+  const handleDeleteLink = async (link: ManagedLink, _index: number) => {
     if (!link.id) return;
     try {
       await deleteLink(link.id);
-      setLinks(links.filter((_, i) => i !== index));
+      useLinksStore.getState().removeLink(link.id);
     } catch (error) {
       console.error("Failed to delete link:", error);
     }
   };
 
-  const handleToggleLink = async (link: ManagedLink, index: number) => {
-    const currentStatus = link.status
-    const willBePublished = currentStatus !== 1;
-
+  const handleToggleLink = async (link: ManagedLink, _index: number) => {
     if (!link.id) return;
+    const newStatus = link.status !== 1 ? 1 : 2;
+    const previous = useLinksStore.getState().optimisticUpdate(link.id, { status: newStatus });
     try {
-      await updateLink(link.id, { status: willBePublished? 1 : 2 });
-      const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, status: willBePublished? 1 : 2};
-      setLinks(updatedLinks);
+      await updateLink(link.id, { status: newStatus });
     } catch (error) {
       console.error("Failed to toggle link:", error);
+      if (previous) useLinksStore.getState().revertUpdate(link.id, previous);
     }
   };
 
-  const handleUpdateLink = async (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => {
+  const handleUpdateLink = async (link: ManagedLink, _index: number, updates: Partial<ManagedLink>) => {
     if (!link.id) return;
+    const previous = useLinksStore.getState().optimisticUpdate(link.id, updates);
     try {
       await updateLink(link.id, {
         title: updates.title,
@@ -228,11 +209,9 @@ export default function UserAdminClient() {
         icon: updates.icon,
         status: updates.status,
       });
-      const updatedLinks = [...links];
-      updatedLinks[index] = { ...link, ...updates };
-      setLinks(updatedLinks);
     } catch (error) {
       console.error("Failed to update link:", error);
+      if (previous) useLinksStore.getState().revertUpdate(link.id, previous);
     }
   };
 
@@ -248,33 +227,22 @@ export default function UserAdminClient() {
               } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
             >
               <div className="flex flex-col lg:flex-row min-h-screen">
-                {/* Center section */}
                 <div className="flex-1 min-w-0 px-4 pt-[22px] pb-10 sm:px-6 lg:px-8">
                   <ManageLinksSection
                     links={links}
                     isLoadingLinks={isLoadingLinks}
-                    onAddLink={handleAddLink}
-                    onEditLink={handleEditLink}
+                    onAddLink={openAddLink}
+                    onEditLink={openEditLink}
                     onRequestDelete={(link, index) => setPendingDelete({ link, index })}
                     onDeleteLink={handleDeleteLink}
                     onToggleLink={handleToggleLink}
                     onUpdateLink={handleUpdateLink}
-                    onReorderLinks={setLinks}
-                    onSearchOpen={() => setShowPalette(true)}
+                    onReorderLinks={useLinksStore.getState().reorderLinks}
                   />
                 </div>
 
-                {/* Preview panel */}
                 <div className="hidden lg:block">
-                  <DashboardPreviewPanel
-                    links={links}
-                    displayName={branding.displayName || "Your Name"}
-                    handle={branding.handle}
-                    bio={branding.bio}
-                    publicUrl={publicUrl}
-                    appearance={previewAppearance}
-                    onRandomTheme={randomTheme}
-                  />
+                  <DashboardPreviewPanel />
                 </div>
               </div>
             </main>
@@ -282,11 +250,10 @@ export default function UserAdminClient() {
         </CollapsibleSidebar>
       </div>
 
-      {/* Modals rendered at root level — never inside a transformed ancestor */}
       <AddEditLinkModal
         key={`${editingLink?.link.id ?? "new"}-${showLinkModal}`}
         open={showLinkModal}
-        onClose={() => setShowLinkModal(false)}
+        onClose={closeLinkModal}
         onSave={handleSaveLink}
         initialLink={editingLink?.link}
       />
@@ -309,9 +276,9 @@ export default function UserAdminClient() {
 
       <CommandPalette
         open={showPalette}
-        onClose={() => setShowPalette(false)}
+        onClose={closePalette}
         links={links}
-        onAddLink={handleAddLink}
+        onAddLink={openAddLink}
       />
     </>
   );

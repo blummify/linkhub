@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useUIStore } from "@/store/uiStore";
 import {
   DndContext,
   DragOverlay,
@@ -241,7 +242,6 @@ export interface ManageLinksSectionProps {
   onToggleLink?: (link: ManagedLink, index: number) => void;
   onUpdateLink?: (link: ManagedLink, index: number, updates: Partial<ManagedLink>) => void;
   onReorderLinks?: (newLinks: ManagedLink[]) => void;
-  onSearchOpen?: () => void;
 }
 
 type TabKey = "all" | "published" | "unpublished" | "draft";
@@ -300,8 +300,8 @@ export function ManageLinksSection({
   onToggleLink,
   onUpdateLink,
   onReorderLinks,
-  onSearchOpen,
 }: ManageLinksSectionProps) {
+  const openPalette = useUIStore((s) => s.openPalette);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -353,7 +353,7 @@ export function ManageLinksSection({
   return (
     <div className="space-y-6">
       {/* Inline topbar — search, menu toggle, notifications */}
-      <DashboardTopBar onSearchClick={onSearchOpen} />
+      <DashboardTopBar onSearchClick={openPalette} />
 
       {/* Header row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

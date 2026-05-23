@@ -4,14 +4,11 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { CommandPalette } from "../components/CommandPalette";
-import { useSidebar } from "../components/SidebarContext";
-import { useBrandingAppearance } from "../components/BrandingAppearanceContext";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { BRANDING_THEMES } from "../constants/brandingThemes";
 import { getBrandingThemeById } from "@/lib/brandingState";
 import { BRANDING_FONT_SERIF } from "../constants/brandingFonts";
-import { DEMO_MANAGED_LINKS } from "@/lib/demoManagedLinks";
 import { ProfileSection } from "./components/ProfileSection";
 import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
@@ -19,6 +16,9 @@ import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { updateAvatarUrl, removeAvatar } from "@/app/actions/profile";
 import { getProfile } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
+import { useBrandingStore } from "@/store/brandingStore";
+import { useProfileStore } from "@/store/profileStore";
+import { useSidebarStore } from "@/store/sidebarStore";
 
 function SectionHead({
   title,
@@ -58,33 +58,47 @@ function SectionHead({
 }
 
 export default function AppearanceClient() {
-  const { isCollapsed } = useSidebar();
-  const {
-    state,
-    theme,
-    previewAppearance,
-    publicUrl,
-    isDirty,
-    setDisplayName,
-    setHandle,
-    setBio,
-    setAccentColor,
-    setButtonStyle,
-    setFontFamily,
-    selectTheme,
-    randomTheme,
-    reset,
-    markSaved,
-  } = useBrandingAppearance();
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+
+  const displayName = useBrandingStore((s) => s.displayName);
+  const handle = useBrandingStore((s) => s.handle);
+  const bio = useBrandingStore((s) => s.bio);
+  const accentColor = useBrandingStore((s) => s.accentColor);
+  const buttonStyle = useBrandingStore((s) => s.buttonStyle);
+  const fontFamily = useBrandingStore((s) => s.fontFamily);
+  const themeId = useBrandingStore((s) => s.themeId);
+  const isDirty = useBrandingStore((s) => s.isDirty);
+  const setDisplayName = useBrandingStore((s) => s.setDisplayName);
+  const setHandle = useBrandingStore((s) => s.setHandle);
+  const setBio = useBrandingStore((s) => s.setBio);
+  const setAccentColor = useBrandingStore((s) => s.setAccentColor);
+  const setButtonStyle = useBrandingStore((s) => s.setButtonStyle);
+  const setFontFamily = useBrandingStore((s) => s.setFontFamily);
+  const selectTheme = useBrandingStore((s) => s.selectTheme);
+  const randomTheme = useBrandingStore((s) => s.randomTheme);
+  const reset = useBrandingStore((s) => s.reset);
+  const markSaved = useBrandingStore((s) => s.markSaved);
+
+  const theme = getBrandingThemeById(themeId);
+
+  // Avatar — read from profileStore if already fetched, otherwise fetch once
+  const storedAvatarUrl = useProfileStore((s) => s.avatarUrl);
+  const profileFetched = useProfileStore((s) => s.fetched);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(storedAvatarUrl);
 
   const [showPalette, setShowPalette] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    if (profileFetched) {
+      setAvatarUrl(storedAvatarUrl);
+      return;
+    }
     getProfile().then((p) => {
-      if (p?.avatarUrl) setAvatarUrl(p.avatarUrl);
+      const url = (p as { avatarUrl?: string | null } | null)?.avatarUrl ?? null;
+      useProfileStore.getState().markFetched({ avatarUrl: url });
+      setAvatarUrl(url);
     }).catch(() => {});
-  }, []);
+  }, [profileFetched, storedAvatarUrl]);
 
   const { upload, isUploading: isUploadingAvatar } = useFileUpload({
     folder: "avatars",
@@ -92,10 +106,10 @@ export default function AppearanceClient() {
     onSuccess: async (publicUrl, key) => {
       const result = await updateAvatarUrl(publicUrl, key);
       if ("error" in result) {
-        // Scenario B: DB write failed after successful R2 upload — clean up the orphan
         await deleteOrphanedUpload(key);
         return;
       }
+      useProfileStore.getState().setAvatarUrl(publicUrl);
       setAvatarUrl(publicUrl);
     },
   });
@@ -103,6 +117,7 @@ export default function AppearanceClient() {
   const handleRemoveAvatar = useCallback(async () => {
     const result = await removeAvatar();
     if ("error" in result) return;
+    useProfileStore.getState().setAvatarUrl(null);
     setAvatarUrl(null);
   }, []);
 
@@ -256,9 +271,9 @@ export default function AppearanceClient() {
                     sub="The first thing people see when they land on your page"
                   />
                   <ProfileSection
-                    displayName={state.displayName}
-                    handle={state.handle}
-                    bio={state.bio}
+                    displayName={displayName}
+                    handle={handle}
+                    bio={bio}
                     onDisplayNameChange={setDisplayName}
                     onHandleChange={setHandle}
                     onBioChange={setBio}
@@ -276,8 +291,8 @@ export default function AppearanceClient() {
                   />
                   <ThemesSection
                     selectedThemeId={theme.id}
-                    displayName={state.displayName}
-                    handle={state.handle}
+                    displayName={displayName}
+                    handle={handle}
                     onSelect={selectTheme}
                   />
                 </section>
@@ -288,9 +303,9 @@ export default function AppearanceClient() {
                     sub="Tweak the core elements without leaving this page"
                   />
                   <QuickTuneSection
-                    accentColor={state.accentColor}
-                    buttonStyle={state.buttonStyle}
-                    fontFamily={state.fontFamily}
+                    accentColor={accentColor}
+                    buttonStyle={buttonStyle}
+                    fontFamily={fontFamily}
                     onAccentColorChange={setAccentColor}
                     onButtonStyleChange={setButtonStyle}
                     onFontFamilyChange={setFontFamily}
@@ -300,16 +315,7 @@ export default function AppearanceClient() {
             </div>
 
             <div className="hidden lg:block">
-              <DashboardPreviewPanel
-                links={DEMO_MANAGED_LINKS}
-                displayName={state.displayName}
-                handle={state.handle}
-                bio={state.bio}
-                publicUrl={publicUrl}
-                appearance={previewAppearance}
-                themeLabel={theme.name}
-                onRandomTheme={randomTheme}
-              />
+              <DashboardPreviewPanel />
             </div>
           </div>
         </main>

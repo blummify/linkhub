@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { useSidebar } from "../../components/SidebarContext";
+import { useSidebarStore } from "@/store/sidebarStore";
 import { useShortKey } from "../../components/hooks/useShortKey";
 
 const DEMO_NOTIFICATIONS: {
@@ -72,7 +72,7 @@ export function DashboardTopBar({
   /** Pin the bar to the top of the scroll area (default on dashboard pages) */
   sticky?: boolean;
 }) {
-  const { toggleSidebar } = useSidebar();
+  const toggleSidebar = useSidebarStore((s) => s.toggle);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { modifier } = useShortKey(() => {
     if (onSearchClick) {

@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import { useSidebar } from "../components/SidebarContext";
+import { useSidebarStore } from "@/store/sidebarStore";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { BRANDING_FONT_SERIF } from "../constants/brandingFonts";
 import { HELP_CENTER_LINKS, HELP_FAQ } from "../constants/helpLinks";
 
 export default function HelpClient() {
-  const { isCollapsed } = useSidebar();
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed);
 
   return (
     <div className="bg-[#f7f8fc] min-h-screen antialiased flex overflow-hidden">

@@ -5,6 +5,13 @@ import { createPortal } from "react-dom";
 import type { ManagedLink } from "../user-admin/components/types";
 import { previewLinkBorderRadiusPx } from "@/app/constants/brandingButtonShapes";
 import { APP_DOMAIN } from "@/lib/appConfig";
+import { useLinksStore } from "@/store/linksStore";
+import { useBrandingStore } from "@/store/brandingStore";
+import {
+  brandingPublicUrl,
+  brandingStateToPreviewAppearance,
+  getBrandingThemeById,
+} from "@/lib/brandingState";
 
 // ── Icon bg/fg per link type ──────────────────────────────────────────────────
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
@@ -182,9 +189,7 @@ function PhoneScreenContent({
   const linkTextColor = dark ? "rgba(255,255,255,0.88)" : "#0b1020";
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
   const linkBorderRadius = previewLinkBorderRadiusPx(appearance?.buttonStyle ?? "rounded");
-  const published = links.filter(
-    (l) => (l.status ?? (l.draft ? "unpublished" : "published")) === "published"
-  );
+  const published = links.filter((l) => l.status === 1);
 
   return (
     <div
@@ -318,6 +323,8 @@ function PhoneScreenContent({
                 fontWeight: 500,
                 color: linkTextColor,
                 boxShadow: dark ? "none" : "0 2px 6px rgba(15,23,42,0.04)",
+                animation: "scIn 0.22s cubic-bezier(0.16,1,0.3,1) both",
+                animationDelay: `${i * 35}ms`,
               }}
             >
               <PhoneLinkIcon iconKey={link.icon} />
@@ -721,32 +728,19 @@ function SocialConfirmDialog({
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export interface DashboardPreviewPanelProps {
-  links: ManagedLink[];
-  displayName: string;
-  /** URL slug after the last slash, e.g. "joelosei" */
-  handle?: string;
-  bio?: string;
-  /** Full public URL without protocol, e.g. "linkhub.co/joelosei" */
-  publicUrl: string;
   /** Panel width (default 420) */
   width?: number;
-  /** Optional theme applied to the phone/browser screen for the branding editor */
-  appearance?: AppearanceTheme;
-  /** When set, replaces the light/dark toggle with a theme footer bar */
-  themeLabel?: string;
-  onRandomTheme?: () => void;
 }
 
-export function DashboardPreviewPanel({
-  links,
-  displayName,
-  bio,
-  publicUrl,
-  width = 420,
-  appearance,
-  themeLabel,
-  onRandomTheme,
-}: DashboardPreviewPanelProps) {
+export function DashboardPreviewPanel({ width = 420 }: DashboardPreviewPanelProps) {
+  const links = useLinksStore((s) => s.links);
+  const displayName = useBrandingStore((s) => s.displayName);
+  const bio = useBrandingStore((s) => s.bio);
+  const publicUrl = useBrandingStore((s) => brandingPublicUrl(s.handle));
+  const appearance = useBrandingStore(brandingStateToPreviewAppearance) as AppearanceTheme;
+  const themeId = useBrandingStore((s) => s.themeId);
+  const themeLabel = getBrandingThemeById(themeId).name;
+  const onRandomTheme = useBrandingStore((s) => s.randomTheme);
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [showSharePop, setShowSharePop] = useState(false);
   const [copied, setCopied] = useState(false);

@@ -2,12 +2,13 @@
 
 import { useRef } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { useSidebar } from "./SidebarContext";
+import { useSidebarStore } from "@/store/sidebarStore";
 import UserAvatar from "./UserAvatar";
 import { useShortKey } from "./hooks/useShortKey";
 
 export default function AppHeader({}: { isAdmin?: boolean }) {
-  const { isCollapsed, toggleSidebar } = useSidebar();
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+  const toggleSidebar = useSidebarStore((s) => s.toggle);
   const { data: session } = useSession();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
