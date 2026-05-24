@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import type { MobilePreviewProps } from "@/app/components/MobilePreview";
 import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
 import { brandingStateToMobileAppearance, brandingPublicUrl } from "@/lib/brandingState";
 
 /** Live mobile preview props driven by shared branding state */
@@ -10,7 +11,7 @@ export function useEditorMobilePreview(
   overrides?: Partial<MobilePreviewProps>
 ): Pick<MobilePreviewProps, "appearance" | "publicUrl" | "showHeaderChrome" | "syncLabel"> &
   Partial<MobilePreviewProps> {
-  const state = useBrandingStore((s) => ({
+  const state = useBrandingStore(useShallow((s) => ({
     themeId: s.themeId,
     displayName: s.displayName,
     handle: s.handle,
@@ -19,7 +20,7 @@ export function useEditorMobilePreview(
     buttonStyle: s.buttonStyle,
     fontFamily: s.fontFamily,
     userPickedTheme: s.userPickedTheme,
-  }));
+  })));
   const handle = useBrandingStore((s) => s.handle);
 
   const appearance = useMemo(
