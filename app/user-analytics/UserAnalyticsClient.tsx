@@ -2,7 +2,7 @@
 
 import { memo, useMemo, useState } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import { useSidebar } from "../components/SidebarContext";
+import { useSidebarStore } from "@/store/sidebarStore";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { CommandPalette } from "../components/CommandPalette";
 
@@ -339,7 +339,7 @@ const LineChart = memo(function LineChart({ range }: { range: RangeKey }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function UserAnalyticsClient() {
-  const { isCollapsed } = useSidebar();
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const [range, setRange] = useState<RangeKey>("30");
   const [showPalette, setShowPalette] = useState(false);
 
@@ -354,7 +354,7 @@ export default function UserAnalyticsClient() {
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
         >
-          <div className="flex-1 animate-fade-in-up min-w-0 px-4 pt-[22px] pb-14 sm:px-6 lg:px-8">
+          <div className="flex-1 min-w-0 px-4 pt-[22px] pb-14 sm:px-6 lg:px-8">
             <DashboardTopBar
               searchPlaceholder="Search metrics, date ranges, actions…"
               onSearchClick={() => setShowPalette(true)}

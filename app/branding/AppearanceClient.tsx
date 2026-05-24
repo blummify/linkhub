@@ -1,20 +1,24 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { CommandPalette } from "../components/CommandPalette";
-import { useSidebar } from "../components/SidebarContext";
-import { useBrandingAppearance } from "../components/BrandingAppearanceContext";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { BRANDING_THEMES } from "../constants/brandingThemes";
 import { getBrandingThemeById } from "@/lib/brandingState";
 import { BRANDING_FONT_SERIF } from "../constants/brandingFonts";
-import { DEMO_MANAGED_LINKS } from "@/lib/demoManagedLinks";
 import { ProfileSection } from "./components/ProfileSection";
 import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
+import { useFileUpload } from "@/lib/hooks/useFileUpload";
+import { updateAvatarUrl, removeAvatar } from "@/app/actions/profile";
+import { getProfile } from "@/app/actions/links";
+import { deleteOrphanedUpload } from "@/app/actions/upload";
+import { useBrandingStore } from "@/store/brandingStore";
+import { useProfileStore } from "@/store/profileStore";
+import { useSidebarStore } from "@/store/sidebarStore";
 
 function SectionHead({
   title,
@@ -54,26 +58,61 @@ function SectionHead({
 }
 
 export default function AppearanceClient() {
-  const { isCollapsed } = useSidebar();
-  const {
-    state,
-    theme,
-    previewAppearance,
-    publicUrl,
-    isDirty,
-    setDisplayName,
-    setHandle,
-    setBio,
-    setAccentColor,
-    setButtonStyle,
-    setFontFamily,
-    selectTheme,
-    randomTheme,
-    reset,
-    markSaved,
-  } = useBrandingAppearance();
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+
+  const displayName = useBrandingStore((s) => s.displayName);
+  const handle = useBrandingStore((s) => s.handle);
+  const bio = useBrandingStore((s) => s.bio);
+  const accentColor = useBrandingStore((s) => s.accentColor);
+  const buttonStyle = useBrandingStore((s) => s.buttonStyle);
+  const fontFamily = useBrandingStore((s) => s.fontFamily);
+  const themeId = useBrandingStore((s) => s.themeId);
+  const isDirty = useBrandingStore((s) => s.isDirty);
+  const setDisplayName = useBrandingStore((s) => s.setDisplayName);
+  const setHandle = useBrandingStore((s) => s.setHandle);
+  const setBio = useBrandingStore((s) => s.setBio);
+  const setAccentColor = useBrandingStore((s) => s.setAccentColor);
+  const setButtonStyle = useBrandingStore((s) => s.setButtonStyle);
+  const setFontFamily = useBrandingStore((s) => s.setFontFamily);
+  const selectTheme = useBrandingStore((s) => s.selectTheme);
+  const randomTheme = useBrandingStore((s) => s.randomTheme);
+  const reset = useBrandingStore((s) => s.reset);
+  const markSaved = useBrandingStore((s) => s.markSaved);
+
+  const theme = getBrandingThemeById(themeId);
+
+  // Avatar — read from profileStore if already fetched, otherwise fetch once
+  const avatarUrl = useProfileStore((s) => s.avatarUrl);
+  const profileFetched = useProfileStore((s) => s.fetched);
 
   const [showPalette, setShowPalette] = useState(false);
+
+  useEffect(() => {
+    if (profileFetched) return;
+    getProfile().then((p) => {
+      const url = (p as { avatarUrl?: string | null } | null)?.avatarUrl ?? null;
+      useProfileStore.getState().markFetched({ avatarUrl: url });
+    }).catch(() => {});
+  }, [profileFetched]);
+
+  const { upload, isUploading: isUploadingAvatar } = useFileUpload({
+    folder: "avatars",
+    maxSizeMB: 5,
+    onSuccess: async (publicUrl, key) => {
+      const result = await updateAvatarUrl(publicUrl, key);
+      if ("error" in result) {
+        await deleteOrphanedUpload(key);
+        return;
+      }
+      useProfileStore.getState().setAvatarUrl(publicUrl);
+    },
+  });
+
+  const handleRemoveAvatar = useCallback(async () => {
+    const result = await removeAvatar();
+    if ("error" in result) return;
+    useProfileStore.getState().setAvatarUrl(null);
+  }, []);
 
   const themeOptions = useMemo(
     () => BRANDING_THEMES.map((t) => ({ id: t.id, name: t.name, tag: t.tag })),
@@ -91,7 +130,7 @@ export default function AppearanceClient() {
         >
           <div className="flex flex-col lg:flex-row min-h-screen">
             <div
-              className="flex-1 animate-fade-in-up min-w-0 px-4 pt-[22px] pb-14 sm:px-6 lg:px-8"
+              className="flex-1 min-w-0 px-4 pt-[22px] pb-14 sm:px-6 lg:px-8"
             >
               <DashboardTopBar
                 searchPlaceholder="Search themes, fonts, colors…"
@@ -225,12 +264,16 @@ export default function AppearanceClient() {
                     sub="The first thing people see when they land on your page"
                   />
                   <ProfileSection
-                    displayName={state.displayName}
-                    handle={state.handle}
-                    bio={state.bio}
+                    displayName={displayName}
+                    handle={handle}
+                    bio={bio}
                     onDisplayNameChange={setDisplayName}
                     onHandleChange={setHandle}
                     onBioChange={setBio}
+                    avatarUrl={avatarUrl}
+                    isUploadingAvatar={isUploadingAvatar}
+                    onFileSelected={upload}
+                    onRemoveAvatar={handleRemoveAvatar}
                   />
                 </section>
 
@@ -241,8 +284,8 @@ export default function AppearanceClient() {
                   />
                   <ThemesSection
                     selectedThemeId={theme.id}
-                    displayName={state.displayName}
-                    handle={state.handle}
+                    displayName={displayName}
+                    handle={handle}
                     onSelect={selectTheme}
                   />
                 </section>
@@ -253,9 +296,9 @@ export default function AppearanceClient() {
                     sub="Tweak the core elements without leaving this page"
                   />
                   <QuickTuneSection
-                    accentColor={state.accentColor}
-                    buttonStyle={state.buttonStyle}
-                    fontFamily={state.fontFamily}
+                    accentColor={accentColor}
+                    buttonStyle={buttonStyle}
+                    fontFamily={fontFamily}
                     onAccentColorChange={setAccentColor}
                     onButtonStyleChange={setButtonStyle}
                     onFontFamilyChange={setFontFamily}
@@ -265,16 +308,7 @@ export default function AppearanceClient() {
             </div>
 
             <div className="hidden lg:block">
-              <DashboardPreviewPanel
-                links={DEMO_MANAGED_LINKS}
-                displayName={state.displayName}
-                handle={state.handle}
-                bio={state.bio}
-                publicUrl={publicUrl}
-                appearance={previewAppearance}
-                themeLabel={theme.name}
-                onRandomTheme={randomTheme}
-              />
+              <DashboardPreviewPanel />
             </div>
           </div>
         </main>
