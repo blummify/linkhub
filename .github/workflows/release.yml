@@ -12,12 +12,27 @@ on:
         default: patch
         options: [patch, minor, major]
 
+# Avoid duplicate releases for the same commit.
+concurrency:
+  group: release-${{ github.sha }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: Create release
     runs-on: ubuntu-latest
+    # main is protected — never push version/changelog commits directly to main.
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'push' &&
+        !startsWith(github.event.head_commit.message, 'chore: release') &&
+        !startsWith(github.event.head_commit.message, 'chore: sync v') &&
+        !startsWith(github.event.head_commit.message, 'docs: update CHANGELOG')
+      )
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,40 +52,81 @@ jobs:
           echo "version=v${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_OUTPUT
           echo "prev=${LATEST}" >> $GITHUB_OUTPUT
 
-      - name: Bump package.json
+      - name: Skip if tag already exists
+        id: tag_check
         run: |
-          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json
-          git commit -m "chore: release ${{ steps.version.outputs.version }}"
-          git push
+          if git rev-parse "${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Tag ${{ steps.version.outputs.version }} already exists."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create tag and GitHub Release
+        if: steps.tag_check.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git tag ${{ steps.version.outputs.version }}
+          git tag ${{ steps.version.outputs.version }} ${{ github.sha }}
           git push origin ${{ steps.version.outputs.version }}
           gh release create ${{ steps.version.outputs.version }} \
             --title "Release ${{ steps.version.outputs.version }}" \
             --generate-notes \
             --notes-start-tag ${{ steps.version.outputs.prev }}
 
-      - name: Update CHANGELOG.md
+      - name: Prepare release notes for changelog
+        if: steps.tag_check.outputs.skip != 'true'
+        id: notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NOTES=$(gh release view ${{ steps.version.outputs.version }} --json body -q .body)
           HEADER="## ${{ steps.version.outputs.version }} ($(date +%Y-%m-%d))"
-          ENTRY="${HEADER}\n\n${NOTES}\n\n"
+          {
+            printf '%s\n\n' "$HEADER"
+            printf '%s\n\n' "$NOTES"
+          } > /tmp/changelog_entry.md
+          echo "entry_path=/tmp/changelog_entry.md" >> $GITHUB_OUTPUT
+
+      - name: Open PR to sync package.json and CHANGELOG
+        if: steps.tag_check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          BRANCH="chore/sync-${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+
+          npm version "$VERSION" --no-git-tag-version
+          git add package.json
+
           if [ -f CHANGELOG.md ]; then
-            printf '%s' "${ENTRY}" > /tmp/new_entry.md
-            cat CHANGELOG.md >> /tmp/new_entry.md
-            mv /tmp/new_entry.md CHANGELOG.md
+            cat "${{ steps.notes.outputs.entry_path }}" CHANGELOG.md > /tmp/CHANGELOG.md
+            mv /tmp/CHANGELOG.md CHANGELOG.md
           else
-            printf '# Changelog\n\n%s' "${ENTRY}" > CHANGELOG.md
+            printf '# Changelog\n\n' > CHANGELOG.md
+            cat "${{ steps.notes.outputs.entry_path }}" >> CHANGELOG.md
           fi
           git add CHANGELOG.md
-          git commit -m "docs: update CHANGELOG for ${{ steps.version.outputs.version }}"
-          git push
+
+          git commit -m "chore: sync ${VERSION} in package.json and CHANGELOG"
+          git push origin "$BRANCH"
+
+          EXISTING=$(gh pr list --head "$BRANCH" --state open --json number -q '.[0].number' || true)
+          if [ -n "$EXISTING" ]; then
+            echo "PR already open: #$EXISTING"
+            exit 0
+          fi
+
+          gh pr create --base main --head "$BRANCH" \
+            --title "chore: sync ${VERSION} (package.json + CHANGELOG)" \
+            --body "$(cat <<EOF
+Automated follow-up from the [Release workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+
+- Git tag \`${VERSION}\` was created on the merged commit (main is protected, so the tag is the release artifact).
+- Merge this PR to align \`package.json\` and \`CHANGELOG.md\` with the release.
+
+EOF
+)"

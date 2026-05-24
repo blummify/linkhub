@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
-import { SiInstagram, SiSpotify, SiTiktok, SiYoutube } from "react-icons/si";
 
 export function HomeHeroSection() {
   const [reduceMotion, setReduceMotion] = useState(() => {
@@ -112,10 +111,18 @@ export function HomeHeroSection() {
                   ))}
                 </div>
                 <div className="mt-auto flex gap-3 text-on-surface-variant">
-                  <SiInstagram aria-label="Instagram" className="text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all" />
-                  <SiTiktok aria-label="TikTok" className="text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all" />
-                  <SiYoutube aria-label="YouTube" className="text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all" />
-                  <SiSpotify aria-label="Spotify" className="text-xl opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all" />
+                  <svg role="img" aria-label="Instagram" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all">
+                    <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5" fill="currentColor"/>
+                  </svg>
+                  <svg role="img" aria-label="TikTok" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all">
+                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.19a8.16 8.16 0 004.84 1.56V6.32a4.85 4.85 0 01-1.07-.37v.74z"/>
+                  </svg>
+                  <svg role="img" aria-label="YouTube" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all">
+                    <path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42 29 29 0 001 12a29 29 0 00.46 5.58 2.78 2.78 0 001.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.96A29 29 0 0023 12a29 29 0 00-.46-5.58zM9.75 15.02V8.98L15.5 12z"/>
+                  </svg>
+                  <svg role="img" aria-label="Spotify" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="opacity-60 hover:opacity-100 hover:scale-125 hover:text-primary cursor-pointer transition-all">
+                    <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                  </svg>
                 </div>
                 <div className="mt-6 opacity-50 dark:opacity-70">
                   <Image

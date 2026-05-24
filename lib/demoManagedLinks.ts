@@ -1,4 +1,5 @@
 import type { ManagedLink } from "@/app/user-admin/components/types";
+import { LinkStatus} from "@/app/constants/linkStatus";
 
 const DEMO_ID_PREFIX = "__demo__";
 
@@ -13,21 +14,25 @@ export const DEMO_MANAGED_LINKS: ManagedLink[] = [
     title: "Official Website",
     url: "https://johndoe.design",
     clicks: "1,240",
-    draft: false,
+    status: LinkStatus.DRAFT,
     trendLabel: "+12% this week",
+    createdAt: "Apr 2",
   },
   {
     id: `${DEMO_ID_PREFIX}portfolio`,
     title: "Latest Portfolio Drop",
     url: "https://behance.net/johndoe/vibe-check",
     clicks: "856",
-    draft: false,
+    status: LinkStatus.DRAFT,
+    trendLabel: "+5% this week",
+    createdAt: "Apr 8",
   },
   {
     id: `${DEMO_ID_PREFIX}instagram`,
     title: "Instagram Profile",
     url: "https://instagram.com/johndoe",
     clicks: "0",
-    draft: true,
+    status: LinkStatus.PUBLISHED,
+    createdAt: "Apr 14",
   },
 ];

@@ -1,4 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,500;1,500&family=Space+Grotesk:wght@500;700&family=DM+Serif+Display&display=swap");
+@import "./preview-branding-fonts.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
