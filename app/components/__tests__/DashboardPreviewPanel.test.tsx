@@ -11,8 +11,8 @@ describe("DashboardPreviewPanel", () => {
     expect(screen.getByText(/Desktop/)).toBeInTheDocument();
   });
 
-  it("renders theme footer with the resolved theme name", () => {
-    render(<DashboardPreviewPanel />);
+  it("renders theme footer with the resolved theme name when showThemeFooter is set", () => {
+    render(<DashboardPreviewPanel showThemeFooter />);
     // themeId "default" resolves to DEFAULT_THEME which is "monochrome" → "Monochrome"
     expect(screen.getByText(/Monochrome/)).toBeInTheDocument();
   });

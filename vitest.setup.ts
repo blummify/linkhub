@@ -87,15 +87,18 @@ vi.mock("@/store/uiStore", () => ({
     return selector ? selector(state) : state;
   }),
 }));
-vi.mock("@/store/profileStore", () => ({
-  useProfileStore: vi.fn((selector?: (s: unknown) => unknown) => {
-    const state = {
-      avatarUrl: null, hasClaimedHandle: true, fetched: false,
-      setAvatarUrl: vi.fn(), setHasClaimedHandle: vi.fn(), markFetched: vi.fn(),
-    };
-    return selector ? selector(state) : state;
-  }),
-}));
+vi.mock("@/store/profileStore", () => {
+  const state = {
+    avatarUrl: null, hasClaimedHandle: true, fetched: false,
+    setAvatarUrl: vi.fn(), setHasClaimedHandle: vi.fn(), markFetched: vi.fn(),
+  };
+  const useProfileStore = vi.fn((selector?: (s: unknown) => unknown) =>
+    selector ? selector(state) : state
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (useProfileStore as any).getState = () => state;
+  return { useProfileStore };
+});
 
 Element.prototype.scrollIntoView = vi.fn();
 
