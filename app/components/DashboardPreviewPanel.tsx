@@ -733,12 +733,15 @@ export interface DashboardPreviewPanelProps {
   width?: number;
   /** Show the "Current theme" footer with random-theme button (branding page only) */
   showThemeFooter?: boolean;
+  /** Called when user clicks "Pick a handle" — only shown when handle is unset */
+  onPickHandle?: () => void;
 }
 
-export function DashboardPreviewPanel({ width = 420, showThemeFooter = false }: DashboardPreviewPanelProps) {
+export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, onPickHandle }: DashboardPreviewPanelProps) {
   const links = useLinksStore((s) => s.links);
   const displayName = useBrandingStore((s) => s.displayName);
   const bio = useBrandingStore((s) => s.bio);
+  const handle = useBrandingStore((s) => s.handle);
   const publicUrl = useBrandingStore((s) => brandingPublicUrl(s.handle));
   const appearance = useBrandingStore(useShallow(brandingStateToPreviewAppearance)) as AppearanceTheme;
   const themeId = useBrandingStore((s) => s.themeId);
@@ -842,9 +845,35 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false }: 
           >
             Live preview
           </div>
-          <div suppressHydrationWarning style={{ fontSize: 12, color: "#6b75a3", marginTop: 2 }}>
-            {domain}
-            <span suppressHydrationWarning style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
+          <div suppressHydrationWarning style={{ fontSize: 12, color: "#6b75a3", marginTop: 2, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+            <span suppressHydrationWarning>{domain}</span>
+            {!handle && onPickHandle ? (
+              <button
+                type="button"
+                onClick={onPickHandle}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  padding: "2px 8px 2px 6px",
+                  borderRadius: 99,
+                  border: "1.5px dashed #a8aecb",
+                  background: "transparent",
+                  color: "#6b75a3",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4z"/>
+                </svg>
+                Pick a handle
+              </button>
+            ) : handle ? (
+              <span suppressHydrationWarning style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
+            ) : null}
           </div>
         </div>
 
