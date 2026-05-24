@@ -377,12 +377,14 @@ function PreviewActionBtn({
   onClick,
   href,
   active,
+  disabled,
 }: {
   children: React.ReactNode;
   title: string;
   onClick?: () => void;
   href?: string;
   active?: boolean;
+  disabled?: boolean;
 }) {
   const style: React.CSSProperties = {
     width: 32, height: 32,
@@ -392,13 +394,15 @@ function PreviewActionBtn({
     boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)",
     display: "flex", alignItems: "center", justifyContent: "center",
     border: 0,
-    cursor: "pointer",
+    cursor: disabled ? "not-allowed" : "pointer",
     textDecoration: "none",
     flexShrink: 0,
     transition: "background 0.15s, color 0.15s",
+    opacity: disabled ? 0.4 : 1,
+    pointerEvents: disabled ? "none" : undefined,
   };
 
-  const hoverHandlers = {
+  const hoverHandlers = disabled ? {} : {
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
       (e.currentTarget as HTMLElement).style.background = "#eef0f7";
       (e.currentTarget as HTMLElement).style.color = "#0b1020";
@@ -411,14 +415,14 @@ function PreviewActionBtn({
 
   if (href) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" title={title} style={style} {...hoverHandlers}>
+      <a href={disabled ? undefined : href} target="_blank" rel="noopener noreferrer" title={title} style={style} {...hoverHandlers}>
         {children}
       </a>
     );
   }
 
   return (
-    <button type="button" title={title} onClick={onClick} style={style} {...hoverHandlers}>
+    <button type="button" title={title} onClick={onClick} disabled={disabled} style={style} {...hoverHandlers}>
       {children}
     </button>
   );
@@ -733,12 +737,15 @@ export interface DashboardPreviewPanelProps {
   width?: number;
   /** Show the "Current theme" footer with random-theme button (branding page only) */
   showThemeFooter?: boolean;
+  /** Called when user clicks "Pick a handle" — only shown when handle is unset */
+  onPickHandle?: () => void;
 }
 
-export function DashboardPreviewPanel({ width = 420, showThemeFooter = false }: DashboardPreviewPanelProps) {
+export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, onPickHandle }: DashboardPreviewPanelProps) {
   const links = useLinksStore((s) => s.links);
   const displayName = useBrandingStore((s) => s.displayName);
   const bio = useBrandingStore((s) => s.bio);
+  const handle = useBrandingStore((s) => s.handle);
   const publicUrl = useBrandingStore((s) => brandingPublicUrl(s.handle));
   const appearance = useBrandingStore(useShallow(brandingStateToPreviewAppearance)) as AppearanceTheme;
   const themeId = useBrandingStore((s) => s.themeId);
@@ -842,9 +849,35 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false }: 
           >
             Live preview
           </div>
-          <div suppressHydrationWarning style={{ fontSize: 12, color: "#6b75a3", marginTop: 2 }}>
-            {domain}
-            <span suppressHydrationWarning style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
+          <div suppressHydrationWarning style={{ fontSize: 12, color: "#6b75a3", marginTop: 2, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+            <span suppressHydrationWarning>{domain}</span>
+            {!handle && onPickHandle ? (
+              <button
+                type="button"
+                onClick={onPickHandle}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  padding: "2px 8px 2px 6px",
+                  borderRadius: 99,
+                  border: "1.5px dashed #a8aecb",
+                  background: "transparent",
+                  color: "#6b75a3",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4z"/>
+                </svg>
+                Pick a handle
+              </button>
+            ) : handle ? (
+              <span suppressHydrationWarning style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
+            ) : null}
           </div>
         </div>
 
@@ -855,6 +888,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false }: 
               title="Share"
               onClick={() => setShowSharePop((p) => !p)}
               active={showSharePop}
+              disabled={!handle}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
@@ -999,7 +1033,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false }: 
           </div>
 
           {/* Open in new tab */}
-          <PreviewActionBtn title="Open in new tab" href={fullUrl}>
+          <PreviewActionBtn title="Open in new tab" href={fullUrl} disabled={!handle}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
             </svg>

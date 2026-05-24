@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { CommandPalette } from "../components/CommandPalette";
+import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { BRANDING_THEMES } from "../constants/brandingThemes";
@@ -14,7 +15,7 @@ import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { updateAvatarUrl, removeAvatar } from "@/app/actions/profile";
-import { getProfile } from "@/app/actions/links";
+import { getProfile, claimHandle } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
 import { useBrandingStore } from "@/store/brandingStore";
 import { useProfileStore } from "@/store/profileStore";
@@ -86,6 +87,7 @@ export default function AppearanceClient() {
   const profileFetched = useProfileStore((s) => s.fetched);
 
   const [showPalette, setShowPalette] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
 
   useEffect(() => {
     if (profileFetched) return;
@@ -308,12 +310,22 @@ export default function AppearanceClient() {
             </div>
 
             <div className="hidden lg:block">
-              <DashboardPreviewPanel showThemeFooter />
+              <DashboardPreviewPanel showThemeFooter onPickHandle={() => setShowClaimModal(true)} />
             </div>
           </div>
         </main>
       </CollapsibleSidebar>
     </div>
+
+    <ClaimHandleModal
+      open={showClaimModal}
+      onClose={() => setShowClaimModal(false)}
+      onClaim={async (h) => {
+        const result = await claimHandle(h);
+        if (result.success) setShowClaimModal(false);
+        return result;
+      }}
+    />
 
     <CommandPalette
       open={showPalette}
