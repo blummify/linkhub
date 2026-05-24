@@ -44,7 +44,7 @@ export default function UserAdminClient() {
   const patchState = useBrandingStore((s) => s.patchState);
 
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
-  const [claimTimerFired, setClaimTimerFired] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
   const [profileReady, setProfileReady] = useState(() => useProfileStore.getState().fetched);
   const isSavingRef = useRef(false);
   const profileMergedRef = useRef(false);
@@ -66,6 +66,8 @@ export default function UserAdminClient() {
           clicks: String(l.clicks),
           status: l.status as LinkStatusValue,
           icon: l.icon || undefined,
+          thumbnailUrl: l.thumbnailUrl || undefined,
+          thumbnailKey: l.thumbnailKey || undefined,
           createdAt: dateFormatter.format(new Date(l.createdAt)),
         }));
         useLinksStore.getState().setLinks(fromDb);
@@ -106,22 +108,29 @@ export default function UserAdminClient() {
     if (Object.keys(patch).length > 0) patchState(patch);
   }, [hydrated, patchState]);
 
+  // Auto-show the claim modal 1s after load for first-time users (no handle yet)
   useEffect(() => {
-    const timer = setTimeout(() => setClaimTimerFired(true), 1000);
+    if (!profileReady || !isFirstTimeUser) return;
+    const timer = setTimeout(() => setClaimOpen(true), 1000);
     return () => clearTimeout(timer);
-  }, []);
-
-  const showClaimModal = claimTimerFired && profileReady && isFirstTimeUser;
+  }, [profileReady, isFirstTimeUser]);
 
   const handleClaimHandle = async (handle: string) => {
     const result = await claimHandle(handle);
-    if (result.success) setIsFirstTimeUser(false);
+    if (result.success) {
+      setClaimOpen(false);
+      setIsFirstTimeUser(false);
+      useBrandingStore.getState().setHandle(handle);
+    }
     return result;
   };
 
   const handleDismissClaim = async () => {
-    await dismissHandleClaim();
-    setIsFirstTimeUser(false);
+    setClaimOpen(false);
+    if (isFirstTimeUser) {
+      await dismissHandleClaim();
+      setIsFirstTimeUser(false);
+    }
   };
 
   const handleSaveLink = async (newLink: ManagedLink) => {
@@ -247,7 +256,7 @@ export default function UserAdminClient() {
                 </div>
 
                 <div className="hidden lg:block">
-                  <DashboardPreviewPanel onPickHandle={() => setClaimTimerFired(true)} />
+                  <DashboardPreviewPanel onPickHandle={() => setClaimOpen(true)} />
                 </div>
               </div>
             </main>
@@ -264,8 +273,8 @@ export default function UserAdminClient() {
       />
 
       <ClaimHandleModal
-        key={String(showClaimModal)}
-        open={showClaimModal}
+        key={String(claimOpen)}
+        open={claimOpen}
         onClose={handleDismissClaim}
         onClaim={handleClaimHandle}
         onCheckAvailability={checkHandleAvailability}

@@ -50,6 +50,6 @@ export const HELP_FAQ: { question: string; answer: string }[] = [
   {
     question: "Where can I see my public URL?",
     answer:
-      `Your handle appears in the live preview on Branding and Links. Share ${APP_DOMAIN}/yourhandle once your profile is set up.`,
+      `Your handle appears in the live preview on Branding and Links. Once you claim a handle, share your unique ${APP_DOMAIN}/handle link.`,
   },
 ];
