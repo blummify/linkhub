@@ -45,12 +45,17 @@ export default function UserAdminClient() {
 
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimTimerFired, setClaimTimerFired] = useState(false);
-  const [profileReady, setProfileReady] = useState(false);
+  const [profileReady, setProfileReady] = useState(() => useProfileStore.getState().fetched);
   const isSavingRef = useRef(false);
   const profileMergedRef = useRef(false);
   const pendingProfileRef = useRef<Awaited<ReturnType<typeof getProfile>>>(null);
 
   useEffect(() => {
+    // If we already fetched during this session (e.g. navigated away and back),
+    // skip the round-trip and render immediately from the store.
+    // profileReady and isLoading are already correct from prior loadData() run.
+    if (useProfileStore.getState().fetched) return;
+
     async function loadData() {
       try {
         const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
@@ -242,7 +247,7 @@ export default function UserAdminClient() {
                 </div>
 
                 <div className="hidden lg:block">
-                  <DashboardPreviewPanel />
+                  <DashboardPreviewPanel onPickHandle={() => setClaimTimerFired(true)} />
                 </div>
               </div>
             </main>
