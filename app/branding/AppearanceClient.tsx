@@ -308,7 +308,7 @@ export default function AppearanceClient() {
             </div>
 
             <div className="hidden lg:block">
-              <DashboardPreviewPanel />
+              <DashboardPreviewPanel showThemeFooter />
             </div>
           </div>
         </main>

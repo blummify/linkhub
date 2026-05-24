@@ -731,9 +731,11 @@ function SocialConfirmDialog({
 export interface DashboardPreviewPanelProps {
   /** Panel width (default 420) */
   width?: number;
+  /** Show the "Current theme" footer with random-theme button (branding page only) */
+  showThemeFooter?: boolean;
 }
 
-export function DashboardPreviewPanel({ width = 420 }: DashboardPreviewPanelProps) {
+export function DashboardPreviewPanel({ width = 420, showThemeFooter = false }: DashboardPreviewPanelProps) {
   const links = useLinksStore((s) => s.links);
   const displayName = useBrandingStore((s) => s.displayName);
   const bio = useBrandingStore((s) => s.bio);
@@ -1090,7 +1092,7 @@ export function DashboardPreviewPanel({ width = 420 }: DashboardPreviewPanelProp
         </div>
       </div>
 
-      {themeLabel ? (
+      {showThemeFooter && themeLabel ? (
         <div
           style={{
             marginTop: 10,
