@@ -377,12 +377,14 @@ function PreviewActionBtn({
   onClick,
   href,
   active,
+  disabled,
 }: {
   children: React.ReactNode;
   title: string;
   onClick?: () => void;
   href?: string;
   active?: boolean;
+  disabled?: boolean;
 }) {
   const style: React.CSSProperties = {
     width: 32, height: 32,
@@ -392,13 +394,15 @@ function PreviewActionBtn({
     boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)",
     display: "flex", alignItems: "center", justifyContent: "center",
     border: 0,
-    cursor: "pointer",
+    cursor: disabled ? "not-allowed" : "pointer",
     textDecoration: "none",
     flexShrink: 0,
     transition: "background 0.15s, color 0.15s",
+    opacity: disabled ? 0.4 : 1,
+    pointerEvents: disabled ? "none" : undefined,
   };
 
-  const hoverHandlers = {
+  const hoverHandlers = disabled ? {} : {
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
       (e.currentTarget as HTMLElement).style.background = "#eef0f7";
       (e.currentTarget as HTMLElement).style.color = "#0b1020";
@@ -411,14 +415,14 @@ function PreviewActionBtn({
 
   if (href) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" title={title} style={style} {...hoverHandlers}>
+      <a href={disabled ? undefined : href} target="_blank" rel="noopener noreferrer" title={title} style={style} {...hoverHandlers}>
         {children}
       </a>
     );
   }
 
   return (
-    <button type="button" title={title} onClick={onClick} style={style} {...hoverHandlers}>
+    <button type="button" title={title} onClick={onClick} disabled={disabled} style={style} {...hoverHandlers}>
       {children}
     </button>
   );
@@ -884,6 +888,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
               title="Share"
               onClick={() => setShowSharePop((p) => !p)}
               active={showSharePop}
+              disabled={!handle}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
@@ -1028,7 +1033,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
           </div>
 
           {/* Open in new tab */}
-          <PreviewActionBtn title="Open in new tab" href={fullUrl}>
+          <PreviewActionBtn title="Open in new tab" href={fullUrl} disabled={!handle}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
             </svg>
