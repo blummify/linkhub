@@ -1,6 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+
+const DASHBOARD_PREFIXES = [
+  "/user-dashboard",
+  "/user-analytics",
+  "/branding",
+  "/admin",
+  "/super-admin",
+  "/analytics",
+];
 
 type ThemeMode = "light" | "dark";
 
@@ -12,8 +22,7 @@ function setThemeMode(mode: ThemeMode) {
 }
 
 export function ThemeToggle() {
-  // Match SSR (always "light" for the toggle UI) so hydration agrees with the server.
-  // The inline script in layout already applied the real theme class on <html> before paint.
+  const pathname = usePathname();
   const [mode, setMode] = useState<ThemeMode>(() => {
     if (typeof document === "undefined") return "light";
     return document.documentElement.classList.contains("dark") ? "dark" : "light";
@@ -24,6 +33,8 @@ export function ThemeToggle() {
       setThemeMode(mode);
     } catch {}
   }, [mode]);
+
+  if (DASHBOARD_PREFIXES.some((p) => pathname.startsWith(p))) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-[60]">

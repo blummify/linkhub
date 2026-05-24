@@ -1,9 +1,13 @@
 "use server";
 
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import type { LinkRow } from "@/lib/linkRow";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { addLinkSchema } from "@/lib/validation/link.schema";
+import { LinkStatusValue } from "@/app/constants/linkStatus";
+import { deleteFromR2 } from "@/lib/r2";
 
 export async function getLinks(): Promise<LinkRow[]> {
   const session = await auth();
@@ -20,9 +24,36 @@ export async function getLinks(): Promise<LinkRow[]> {
   }
 }
 
-export async function addLink(data: { title: string; url: string; icon?: string }) {
+export async function getLinksCount() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    const count = await db.link.count({
+      where: { userId: session.user.id }
+    });
+    return { count };
+  } catch (error) {
+    console.error("Error counting links:", error);
+    return { count: 0 };
+  }
+}
+
+export async function addLink(data: {
+  title: string;
+  url: string;
+  icon?: string;
+  status?: LinkStatusValue;
+  thumbnailUrl?: string;
+  thumbnailKey?: string;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const parsed = addLinkSchema.safeParse(data);
+  if(!parsed.success) {
+    return {error: parsed.error.issues[0].message};
+  }
 
   try {
     const link = await db.link.create({
@@ -39,15 +70,38 @@ export async function addLink(data: { title: string; url: string; icon?: string 
   }
 }
 
-export async function updateLink(id: string, data: { title?: string; url?: string; icon?: string; draft?: boolean }) {
+export async function updateLink(id: string, data: {
+  title?: string;
+  url?: string;
+  icon?: string;
+  status?: LinkStatusValue;
+  thumbnailUrl?: string | null;
+  thumbnailKey?: string | null;
+}) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   try {
+    let oldThumbnailKey: string | null = null;
+    if ("thumbnailKey" in data) {
+      const current = await db.link.findUnique({
+        where: { id, userId: session.user.id },
+        select: { thumbnailKey: true },
+      });
+      oldThumbnailKey = current?.thumbnailKey ?? null;
+    }
+
     const link = await db.link.update({
       where: { id, userId: session.user.id },
       data,
     });
+
+    if (oldThumbnailKey && oldThumbnailKey !== data.thumbnailKey) {
+      after(async () => {
+        try { await deleteFromR2(oldThumbnailKey!); } catch {}
+      });
+    }
+
     revalidatePath("/user-dashboard");
     return { success: true, link };
   } catch (error) {
@@ -61,9 +115,22 @@ export async function deleteLink(id: string) {
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   try {
+    const current = await db.link.findUnique({
+      where: { id, userId: session.user.id },
+      select: { thumbnailKey: true },
+    });
+
     await db.link.delete({
       where: { id, userId: session.user.id },
     });
+
+    if (current?.thumbnailKey) {
+      const key = current.thumbnailKey;
+      after(async () => {
+        try { await deleteFromR2(key); } catch {}
+      });
+    }
+
     revalidatePath("/user-dashboard");
     return { success: true };
   } catch (error) {

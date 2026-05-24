@@ -27,3 +27,14 @@ gh api --method PUT repos/blummify/linkhub/branches/main/protection \
 }
 JSON
 ```
+
+## Release workflow
+
+`main` is protected — GitHub Actions cannot push commits directly to it.
+
+The [Release workflow](.github/workflows/release.yml) instead:
+
+1. Creates a **git tag** and **GitHub Release** on the merged commit.
+2. Opens a **follow-up PR** to sync `package.json` and `CHANGELOG.md` (merge after each release).
+
+If Release fails with `GH006: Protected branch update failed`, merge a PR that updates the workflow to this tag + sync-PR flow.
