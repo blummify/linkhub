@@ -7,6 +7,7 @@ import { previewLinkBorderRadiusPx } from "@/app/constants/brandingButtonShapes"
 import { APP_DOMAIN } from "@/lib/appConfig";
 import { useLinksStore } from "@/store/linksStore";
 import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
 import {
   brandingPublicUrl,
   brandingStateToPreviewAppearance,
@@ -737,7 +738,7 @@ export function DashboardPreviewPanel({ width = 420 }: DashboardPreviewPanelProp
   const displayName = useBrandingStore((s) => s.displayName);
   const bio = useBrandingStore((s) => s.bio);
   const publicUrl = useBrandingStore((s) => brandingPublicUrl(s.handle));
-  const appearance = useBrandingStore(brandingStateToPreviewAppearance) as AppearanceTheme;
+  const appearance = useBrandingStore(useShallow(brandingStateToPreviewAppearance)) as AppearanceTheme;
   const themeId = useBrandingStore((s) => s.themeId);
   const themeLabel = getBrandingThemeById(themeId).name;
   const onRandomTheme = useBrandingStore((s) => s.randomTheme);
