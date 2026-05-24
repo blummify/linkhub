@@ -23,8 +23,21 @@ const ICON_CFG: Record<string, { bg: string; fg: string }> = {
   spotify:   { bg: "linear-gradient(135deg,#e9fff0,#d2f5e3)", fg: "#1db954" },
 };
 
-function PhoneLinkIcon({ iconKey }: { iconKey?: string }) {
+function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailUrl?: string }) {
   const cfg = ICON_CFG[iconKey ?? ""] ?? ICON_CFG.website;
+  if (thumbnailUrl) {
+    return (
+      <div
+        style={{
+          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+          overflow: "hidden",
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      </div>
+    );
+  }
   return (
     <div
       style={{
@@ -328,7 +341,7 @@ function PhoneScreenContent({
                 animationDelay: `${i * 35}ms`,
               }}
             >
-              <PhoneLinkIcon iconKey={link.icon} />
+              <PhoneLinkIcon iconKey={link.icon} thumbnailUrl={link.thumbnailUrl} />
               <span
                 style={{
                   flex: 1,
