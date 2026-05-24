@@ -146,6 +146,6 @@ export function saveBrandingState(state: BrandingAppearanceState): void {
 }
 
 export function brandingPublicUrl(handle: string): string {
-  const slug = handle.trim() || "yourhandle";
+  const slug = handle.trim();
   return `${process.env.NEXT_PUBLIC_APP_DOMAIN ?? "linkhub.co"}/${slug}`;
 }

@@ -343,7 +343,7 @@ export function ClaimHandleModal({
                   onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  placeholder="yourhandle"
+                  placeholder="e.g. alexsmith"
                   maxLength={24}
                   autoFocus
                   disabled={isSubmitting}
