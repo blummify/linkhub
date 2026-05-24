@@ -9,8 +9,10 @@ export type LinkRow = {
   url: string;
   icon: string | null;
   clicks: number;
-  draft: boolean;
+  status: number;
   userId: string;
+  thumbnailUrl: string | null;
+  thumbnailKey: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
