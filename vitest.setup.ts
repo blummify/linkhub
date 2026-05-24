@@ -59,7 +59,7 @@ vi.mock("@/store/linksStore", () => {
 vi.mock("@/store/brandingStore", () => ({
   useBrandingStore: vi.fn((selector?: (s: unknown) => unknown) => {
     const state = {
-      themeId: "default", displayName: "Your Name", handle: "yourhandle",
+      themeId: "default", displayName: "Your Name", handle: "",
       bio: "", accentColor: "#3b46e0", buttonStyle: "rounded",
       fontFamily: "Instrument Serif", userPickedTheme: false,
       isDirty: false, hydrated: true,
