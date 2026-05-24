@@ -12,12 +12,12 @@ describe("ClaimHandleModal", () => {
 
   it("renders the heading when open", () => {
     render(<ClaimHandleModal open onClose={vi.fn()} onClaim={vi.fn()} />);
-    expect(screen.getByText("Claim your link")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /claim your handle/i })).toBeInTheDocument();
   });
 
-  it("shows the linkhub.app/ prefix", () => {
+  it("shows the linkhub.co/ prefix", () => {
     render(<ClaimHandleModal open onClose={vi.fn()} onClaim={vi.fn()} />);
-    expect(screen.getByText("linkhub.app/")).toBeInTheDocument();
+    expect(screen.getByText("linkhub.co/")).toBeInTheDocument();
   });
 
   it("disables Continue button when handle is empty", () => {
