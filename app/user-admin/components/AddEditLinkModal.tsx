@@ -129,11 +129,25 @@ const DOMAIN_MAP: Record<string, { title: string; icon: PresetId }> = {
 function isValidURL(str: string) {
   try {
     const u = new URL(str);
+    if (u.protocol === "mailto:") return u.pathname.length > 0;
     return u.protocol === "http:" || u.protocol === "https:";
   } catch {
     return false;
   }
 }
+
+// ── Preset icon auto-fill defaults ───────────────────────────────────────────
+
+const PRESET_DEFAULTS: Record<PresetId, { url: string; title: string }> = {
+  globe:     { url: "",                             title: "My Website"        },
+  instagram: { url: "https://www.instagram.com/",  title: "Instagram Profile" },
+  twitter:   { url: "https://twitter.com/",         title: "Twitter Profile"   },
+  youtube:   { url: "https://www.youtube.com/",     title: "YouTube Channel"   },
+  spotify:   { url: "https://open.spotify.com/",    title: "Spotify"           },
+  behance:   { url: "https://www.behance.net/",     title: "Behance Portfolio" },
+  mail:      { url: "mailto:",                      title: "Email Me"          },
+  shop:      { url: "",                             title: "My Shop"           },
+};
 
 function detectFromURL(url: string): { title: string; icon: PresetId } | null {
   try {
@@ -231,6 +245,19 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
     setDetectedInfo(null);
   }
 
+  function handlePresetSelect(presetId: PresetId) {
+    const defaults = PRESET_DEFAULTS[presetId];
+    setSelectedPreset(presetId);
+    setThumbImage(null);
+    setUrl(defaults.url);
+    setTitle(defaults.title);
+    setTitleLen(defaults.title.length);
+    setDetectedInfo(null);
+    setUrlError(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setUrlValidState(defaults.url && isValidURL(defaults.url) ? "valid" : "none");
+  }
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -253,14 +280,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
       style={{ background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)", animation: "fadeIn 0.25s ease" }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <style>{`
-        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-        @keyframes lhModalIn {
-          from { opacity:0; transform:translateY(16px) scale(0.97); }
-          to   { opacity:1; transform:translateY(0) scale(1); }
-        }
-      `}</style>
-
       <div
         className="relative w-full flex flex-col overflow-hidden"
         style={{
@@ -633,7 +652,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   type="button"
                   aria-label={p.label}
                   title={p.label}
-                  onClick={() => { setSelectedPreset(p.id); setThumbImage(null); }}
+                  onClick={() => handlePresetSelect(p.id as PresetId)}
                   className="flex items-center justify-center transition-all"
                   style={{
                     width: 32,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { useSidebar } from "../../components/SidebarContext";
+import { useSidebarStore } from "@/store/sidebarStore";
 import { useShortKey } from "../../components/hooks/useShortKey";
 
 const DEMO_NOTIFICATIONS: {
@@ -72,7 +72,7 @@ export function DashboardTopBar({
   /** Pin the bar to the top of the scroll area (default on dashboard pages) */
   sticky?: boolean;
 }) {
-  const { toggleSidebar } = useSidebar();
+  const toggleSidebar = useSidebarStore((s) => s.toggle);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { modifier } = useShortKey(() => {
     if (onSearchClick) {
@@ -419,13 +419,6 @@ export function DashboardTopBar({
 
   return (
     <>
-      <style>{`
-        @keyframes topbarPopIn {
-          from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
-
       {sticky ? (
         <div
           className="sticky top-0 z-40 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 -mt-[22px] pt-[22px] pb-3 mb-7 bg-[#f7f8fc]"
