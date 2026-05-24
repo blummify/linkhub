@@ -4,6 +4,15 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { ManagedLink } from "../user-admin/components/types";
 import { previewLinkBorderRadiusPx } from "@/app/constants/brandingButtonShapes";
+import { APP_DOMAIN } from "@/lib/appConfig";
+import { useLinksStore } from "@/store/linksStore";
+import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
+import {
+  brandingPublicUrl,
+  brandingStateToPreviewAppearance,
+  getBrandingThemeById,
+} from "@/lib/brandingState";
 
 // ── Icon bg/fg per link type ──────────────────────────────────────────────────
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
@@ -159,14 +168,12 @@ export interface AppearanceTheme {
 // ── Phone screen content ──────────────────────────────────────────────────────
 function PhoneScreenContent({
   displayName,
-  handle,
   bio,
   links,
   avatarSize = 70,
   appearance,
 }: {
   displayName: string;
-  handle: string;
   bio?: string;
   links: ManagedLink[];
   avatarSize?: number;
@@ -183,9 +190,7 @@ function PhoneScreenContent({
   const linkTextColor = dark ? "rgba(255,255,255,0.88)" : "#0b1020";
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
   const linkBorderRadius = previewLinkBorderRadiusPx(appearance?.buttonStyle ?? "rounded");
-  const published = links.filter(
-    (l) => (l.status ?? (l.draft ? "unpublished" : "published")) === "published"
-  );
+  const published = links.filter((l) => l.status === 1);
 
   return (
     <div
@@ -244,32 +249,20 @@ function PhoneScreenContent({
         {displayName || "Your Name"}
       </div>
 
-      {/* Handle */}
-      {handle && (
+      {/* Bio */}
+      {bio && (
         <div
           style={{
-            fontSize: 11.5,
-            fontFamily: 'var(--branding-font-mono, "Geist Mono", ui-monospace, monospace)',
-            color: dark ? "rgba(255,255,255,0.55)" : "#3b46e0",
-            marginTop: 3,
+            fontSize: 11,
+            color: subtitleColor,
+            margin: "8px 12px 16px",
+            textAlign: "center",
+            lineHeight: 1.5,
           }}
         >
-          @{handle}
+          {bio}
         </div>
       )}
-
-      {/* Bio */}
-      <div
-        style={{
-          fontSize: 11,
-          color: subtitleColor,
-          margin: "8px 12px 16px",
-          textAlign: "center",
-          lineHeight: 1.5,
-        }}
-      >
-        {bio || "Connecting with your community — one link at a time."}
-      </div>
 
       {/* Social icons row */}
       <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
@@ -331,6 +324,8 @@ function PhoneScreenContent({
                 fontWeight: 500,
                 color: linkTextColor,
                 boxShadow: dark ? "none" : "0 2px 6px rgba(15,23,42,0.04)",
+                animation: "scIn 0.22s cubic-bezier(0.16,1,0.3,1) both",
+                animationDelay: `${i * 35}ms`,
               }}
             >
               <PhoneLinkIcon iconKey={link.icon} />
@@ -382,12 +377,14 @@ function PreviewActionBtn({
   onClick,
   href,
   active,
+  disabled,
 }: {
   children: React.ReactNode;
   title: string;
   onClick?: () => void;
   href?: string;
   active?: boolean;
+  disabled?: boolean;
 }) {
   const style: React.CSSProperties = {
     width: 32, height: 32,
@@ -397,13 +394,15 @@ function PreviewActionBtn({
     boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)",
     display: "flex", alignItems: "center", justifyContent: "center",
     border: 0,
-    cursor: "pointer",
+    cursor: disabled ? "not-allowed" : "pointer",
     textDecoration: "none",
     flexShrink: 0,
     transition: "background 0.15s, color 0.15s",
+    opacity: disabled ? 0.4 : 1,
+    pointerEvents: disabled ? "none" : undefined,
   };
 
-  const hoverHandlers = {
+  const hoverHandlers = disabled ? {} : {
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
       (e.currentTarget as HTMLElement).style.background = "#eef0f7";
       (e.currentTarget as HTMLElement).style.color = "#0b1020";
@@ -416,14 +415,14 @@ function PreviewActionBtn({
 
   if (href) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" title={title} style={style} {...hoverHandlers}>
+      <a href={disabled ? undefined : href} target="_blank" rel="noopener noreferrer" title={title} style={style} {...hoverHandlers}>
         {children}
       </a>
     );
   }
 
   return (
-    <button type="button" title={title} onClick={onClick} style={style} {...hoverHandlers}>
+    <button type="button" title={title} onClick={onClick} disabled={disabled} style={style} {...hoverHandlers}>
       {children}
     </button>
   );
@@ -544,7 +543,7 @@ function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyl
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}
         >
-          linkhub.co
+          {APP_DOMAIN}
         </div>
       </div>
 
@@ -633,13 +632,6 @@ function SocialConfirmDialog({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <style>{`
-          @keyframes scIn {
-            from { opacity: 0; transform: translateY(12px) scale(0.97); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-          }
-        `}</style>
-
         {/* Network icon */}
         <div
           style={{
@@ -741,33 +733,24 @@ function SocialConfirmDialog({
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export interface DashboardPreviewPanelProps {
-  links: ManagedLink[];
-  displayName: string;
-  /** URL slug after the last slash, e.g. "joelosei" */
-  handle?: string;
-  bio?: string;
-  /** Full public URL without protocol, e.g. "linkhub.co/joelosei" */
-  publicUrl: string;
   /** Panel width (default 420) */
   width?: number;
-  /** Optional theme applied to the phone/browser screen for the branding editor */
-  appearance?: AppearanceTheme;
-  /** When set, replaces the light/dark toggle with a theme footer bar */
-  themeLabel?: string;
-  onRandomTheme?: () => void;
+  /** Show the "Current theme" footer with random-theme button (branding page only) */
+  showThemeFooter?: boolean;
+  /** Called when user clicks "Pick a handle" — only shown when handle is unset */
+  onPickHandle?: () => void;
 }
 
-export function DashboardPreviewPanel({
-  links,
-  displayName,
-  handle = "",
-  bio,
-  publicUrl,
-  width = 420,
-  appearance,
-  themeLabel,
-  onRandomTheme,
-}: DashboardPreviewPanelProps) {
+export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, onPickHandle }: DashboardPreviewPanelProps) {
+  const links = useLinksStore((s) => s.links);
+  const displayName = useBrandingStore((s) => s.displayName);
+  const bio = useBrandingStore((s) => s.bio);
+  const handle = useBrandingStore((s) => s.handle);
+  const publicUrl = useBrandingStore((s) => brandingPublicUrl(s.handle));
+  const appearance = useBrandingStore(useShallow(brandingStateToPreviewAppearance)) as AppearanceTheme;
+  const themeId = useBrandingStore((s) => s.themeId);
+  const themeLabel = getBrandingThemeById(themeId).name;
+  const onRandomTheme = useBrandingStore((s) => s.randomTheme);
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [showSharePop, setShowSharePop] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -866,9 +849,35 @@ export function DashboardPreviewPanel({
           >
             Live preview
           </div>
-          <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 2 }}>
-            {domain}
-            <span style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
+          <div suppressHydrationWarning style={{ fontSize: 12, color: "#6b75a3", marginTop: 2, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+            <span suppressHydrationWarning>{domain}</span>
+            {!handle && onPickHandle ? (
+              <button
+                type="button"
+                onClick={onPickHandle}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  padding: "2px 8px 2px 6px",
+                  borderRadius: 99,
+                  border: "1.5px dashed #a8aecb",
+                  background: "transparent",
+                  color: "#6b75a3",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4z"/>
+                </svg>
+                Pick a handle
+              </button>
+            ) : handle ? (
+              <span suppressHydrationWarning style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
+            ) : null}
           </div>
         </div>
 
@@ -879,6 +888,7 @@ export function DashboardPreviewPanel({
               title="Share"
               onClick={() => setShowSharePop((p) => !p)}
               active={showSharePop}
+              disabled={!handle}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
@@ -901,13 +911,6 @@ export function DashboardPreviewPanel({
                   animation: "popIn 0.18s cubic-bezier(0.16,1,0.3,1)",
                 }}
               >
-                <style>{`
-                  @keyframes popIn {
-                    from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-                    to   { opacity: 1; transform: translateY(0) scale(1); }
-                  }
-                `}</style>
-
                 {/* Upward caret arrow */}
                 <div
                   style={{
@@ -1030,7 +1033,7 @@ export function DashboardPreviewPanel({
           </div>
 
           {/* Open in new tab */}
-          <PreviewActionBtn title="Open in new tab" href={fullUrl}>
+          <PreviewActionBtn title="Open in new tab" href={fullUrl} disabled={!handle}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
             </svg>
@@ -1104,7 +1107,6 @@ export function DashboardPreviewPanel({
             <BrowserShell bgStyle={screenBg}>
               <PhoneScreenContent
                 displayName={displayName}
-                handle={handle}
                 bio={bio}
                 links={links}
                 avatarSize={76}
@@ -1115,7 +1117,6 @@ export function DashboardPreviewPanel({
             <PhoneShell bgStyle={screenBg} showGlow={screenDark}>
               <PhoneScreenContent
                 displayName={displayName}
-                handle={handle}
                 bio={bio}
                 links={links}
                 appearance={appearance}
@@ -1125,7 +1126,7 @@ export function DashboardPreviewPanel({
         </div>
       </div>
 
-      {themeLabel ? (
+      {showThemeFooter && themeLabel ? (
         <div
           style={{
             marginTop: 10,

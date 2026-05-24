@@ -154,13 +154,6 @@ function DeltaBadge({ change }: { change: string }) {
 export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
   return (
     <>
-      <style>{`
-        @keyframes acCardUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-
       <div className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-4 gap-3" style={{ marginBottom: 24 }}>
         {cards.map((card, idx) => {
           const isTopRegion = !!card.countryCode;

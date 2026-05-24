@@ -1,9 +1,9 @@
 "use server";
 
 import { after } from "next/server";
-import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { redis } from "@/lib/redis";
 import { deleteFromR2 } from "@/lib/r2";
 
 /**
@@ -41,7 +41,7 @@ export async function updateAvatarUrl(
       });
     }
 
-    revalidatePath("/branding");
+    await redis.del(`profile:${session.user.id}`);
     return { success: true };
   } catch {
     return { error: "Failed to save avatar. Please try again." };
@@ -78,7 +78,7 @@ export async function removeAvatar(): Promise<{ success: true } | { error: strin
       });
     }
 
-    revalidatePath("/branding");
+    await redis.del(`profile:${session.user.id}`);
     return { success: true };
   } catch {
     return { error: "Failed to remove avatar. Please try again." };

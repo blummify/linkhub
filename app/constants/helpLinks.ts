@@ -1,3 +1,5 @@
+import { APP_DOMAIN } from "@/lib/appConfig";
+
 export type HelpLinkItem = {
   id: string;
   title: string;
@@ -48,6 +50,6 @@ export const HELP_FAQ: { question: string; answer: string }[] = [
   {
     question: "Where can I see my public URL?",
     answer:
-      "Your handle appears in the live preview on Branding and Links. Share linkhub.co/yourhandle once your profile is set up.",
+      `Your handle appears in the live preview on Branding and Links. Share ${APP_DOMAIN}/yourhandle once your profile is set up.`,
   },
 ];

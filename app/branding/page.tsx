@@ -1,5 +1,4 @@
 import AppearanceClient from "./AppearanceClient";
-import { BrandingAppearanceProvider } from "../components/BrandingAppearanceContext";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,9 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function BrandingPage() {
-  return (
-    <BrandingAppearanceProvider>
-      <AppearanceClient />
-    </BrandingAppearanceProvider>
-  );
+  return <AppearanceClient />;
 }
