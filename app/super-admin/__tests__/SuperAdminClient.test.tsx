@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import SuperAdminClient from "../SuperAdminClient";
-import { SidebarProvider } from "@/app/components/SidebarContext";
 
 vi.mock("@/app/components/CollapsibleSidebar", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -17,11 +16,7 @@ vi.mock("@/app/ThemeToggle", () => ({
 
 describe("SuperAdminClient", () => {
   it("renders super admin dashboard heading", () => {
-    render(
-      <SidebarProvider>
-        <SuperAdminClient />
-      </SidebarProvider>
-    );
+    render(<SuperAdminClient />);
     expect(screen.getByText("Super Admin Dashboard")).toBeInTheDocument();
     expect(screen.getByText(/SUPER ADMIN ACCESS/i)).toBeInTheDocument();
   });

@@ -3,9 +3,8 @@ import { Inter, Manrope, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { ThemeToggle } from "./ThemeToggle";
 import { Toaster } from "sonner";
-import { SidebarProvider } from "./components/SidebarContext";
-import { BrandingAppearanceProvider } from "./components/BrandingAppearanceContext";
 import AuthSessionProvider from "./components/AuthSessionProvider";
+import { BrandingHydrator } from "./components/BrandingHydrator";
 import { MaterialSymbols } from "./components/MaterialSymbols";
 import { GoogleOneTap } from "./components/auth/GoogleOneTap";
 import { auth } from "@/auth";
@@ -75,12 +74,9 @@ export default async function RootLayout({
       </head>
       <body className="bg-surface font-body text-on-surface antialiased">
         <MaterialSymbols />
+        <BrandingHydrator />
         <AuthSessionProvider>
-          <SidebarProvider>
-            <BrandingAppearanceProvider>
-              {children}
-            </BrandingAppearanceProvider>
-          </SidebarProvider>
+          {children}
         </AuthSessionProvider>
         {!session && process.env.GOOGLE_CLIENT_ID && (
           <GoogleOneTap clientId={process.env.GOOGLE_CLIENT_ID} />

@@ -2,20 +2,34 @@
 
 import { useMemo } from "react";
 import type { MobilePreviewProps } from "@/app/components/MobilePreview";
-import { useBrandingAppearance } from "@/app/components/BrandingAppearanceContext";
-import { brandingStateToMobileAppearance } from "@/lib/brandingState";
+import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
+import { brandingStateToMobileAppearance, brandingPublicUrl } from "@/lib/brandingState";
 
 /** Live mobile preview props driven by shared branding state */
 export function useEditorMobilePreview(
   overrides?: Partial<MobilePreviewProps>
 ): Pick<MobilePreviewProps, "appearance" | "publicUrl" | "showHeaderChrome" | "syncLabel"> &
   Partial<MobilePreviewProps> {
-  const { state, publicUrl } = useBrandingAppearance();
+  const state = useBrandingStore(useShallow((s) => ({
+    themeId: s.themeId,
+    displayName: s.displayName,
+    handle: s.handle,
+    bio: s.bio,
+    accentColor: s.accentColor,
+    buttonStyle: s.buttonStyle,
+    fontFamily: s.fontFamily,
+    userPickedTheme: s.userPickedTheme,
+  })));
+  const handle = useBrandingStore((s) => s.handle);
 
   const appearance = useMemo(
     () => brandingStateToMobileAppearance(state),
-    [state]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state.themeId, state.displayName, state.bio, state.accentColor, state.buttonStyle, state.fontFamily]
   );
+
+  const publicUrl = brandingPublicUrl(handle);
 
   return {
     appearance,

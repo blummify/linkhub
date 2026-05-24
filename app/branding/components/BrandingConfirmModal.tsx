@@ -109,13 +109,6 @@ export function BrandingConfirmModal({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <style>{`
-          @keyframes brandingModalIn {
-            from { opacity: 0; transform: translateY(12px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-          }
-        `}</style>
-
         <div
           style={{
             width: 48,
