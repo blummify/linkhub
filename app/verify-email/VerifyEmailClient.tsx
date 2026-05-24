@@ -36,7 +36,11 @@ export default function VerifyEmailClient() {
     (typeof window !== "undefined" && sessionStorage.getItem("lh_verify_resend") === "1");
   const email = emailFromParam ?? "";
   const fromSignup = !!emailFromParam && !fromLogin && !needsResend;
-  const backDestination = fromLogin ? "/login" : fromSignup ? "/signup" : "/";
+  const backDestination = fromLogin
+    ? "/login"
+    : email
+    ? `/login?email=${encodeURIComponent(email)}`
+    : "/login";
 
   const autoSentRef = useRef(false);
   const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -157,12 +161,31 @@ export default function VerifyEmailClient() {
     setError("");
     const result = await verifyEmailCode(email, code);
     if ("error" in result) {
+      if (result.error.includes("Too many incorrect attempts")) {
+        if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+        cooldownTimerRef.current = null;
+        sessionStorage.removeItem("lh_cooldown_until");
+        setCooldown(0);
+      }
       setError(result.error);
+      setDigits(Array(6).fill(""));
+      setTimeout(() => inputRefs.current[0]?.focus(), 0);
       setIsLoading(false);
       return;
     }
     guardActiveRef.current = false;
-    await signIn("credentials", { email, autoLoginToken: result.autoLoginToken, redirect: false, callbackUrl: "/user-dashboard" });
+    const signInResult = await signIn("credentials", {
+      email,
+      autoLoginToken: result.autoLoginToken,
+      redirect: false,
+      callbackUrl: "/user-dashboard",
+    });
+    if (signInResult?.error) {
+      setError("Your email is verified! Please log in to continue.");
+      guardActiveRef.current = true;
+      setIsLoading(false);
+      return;
+    }
     router.replace("/user-dashboard");
   };
 
@@ -190,6 +213,26 @@ export default function VerifyEmailClient() {
   const handleStayAndVerify = () => {
     setShowExitModal(false);
   };
+
+  if (!emailFromParam) {
+    return (
+      <AuthShell
+        heading="Something went wrong"
+        subheading="No email address was provided. Please return to login and try again."
+        panelTitle="Keep Your Account Secure"
+        panelDescription="Verifying your email keeps your account safe and protects your data."
+        panelFeatures={PANEL_FEATURES}
+      >
+        <a
+          href="/login"
+          className="w-full bg-primary text-white py-3.5 px-4 rounded-lg font-bold tracking-wide hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
+        >
+          Back to login
+          <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </a>
+      </AuthShell>
+    );
+  }
 
   return (
     <>
