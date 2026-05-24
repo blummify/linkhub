@@ -5,6 +5,7 @@ import {
   BRANDING_FONT_MONO,
   BRANDING_FONT_SERIF,
 } from "@/app/constants/brandingFonts";
+import { APP_DOMAIN } from "@/lib/appConfig";
 
 interface ProfileSectionProps {
   displayName: string;
@@ -107,6 +108,7 @@ export function ProfileSection({
         <div style={{ position: "relative" }}>
           {/* Avatar circle */}
           <div
+            suppressHydrationWarning
             style={{
               width: 110,
               height: 110,
@@ -164,7 +166,6 @@ export function ProfileSection({
                 >
                   <path strokeLinecap="round" d="M12 2a10 10 0 010 20"/>
                 </svg>
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
               </div>
             )}
           </div>
@@ -322,7 +323,7 @@ export function ProfileSection({
             <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 1 }}>
               Your public URL:{" "}
               <span style={{ color: "#3b46e0", fontWeight: 500 }}>
-                linkhub.co/{publicSlug}
+                {APP_DOMAIN}/{publicSlug}
               </span>
             </p>
           </div>

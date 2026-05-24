@@ -214,7 +214,13 @@ function SignupPageContent() {
             value={formData.password}
             onChange={(value) => {
               setFormData((prev) => ({ ...prev, password: value }));
-              if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: "" }));
+              setFieldErrors((prev) => ({
+                ...prev,
+                password: prev.password ? "" : prev.password,
+                confirmPassword: prev.confirmPassword
+                  ? (formData.confirmPassword === value ? "" : "Passwords do not match")
+                  : "",
+              }));
             }}
             onBlur={() => handleBlur("password")}
             show={showPassword}
