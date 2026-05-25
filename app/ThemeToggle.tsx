@@ -45,7 +45,7 @@ export function ThemeToggle() {
           const next: ThemeMode = mode === "dark" ? "light" : "dark";
           setMode(next);
         }}
-        className="glass-nav border border-surface-variant/30 shadow-xl shadow-black/10 rounded-full p-1 backdrop-blur-xl transition-transform hover:scale-105 active:scale-95"
+        className="glass-nav border border-surface-variant/30 shadow-xl shadow-black/10 rounded-full p-1 backdrop-blur-xl transition-transform hover:scale-105 active:scale-95 cursor-pointer"
       >
         <span className="sr-only">Theme</span>
         <span className="flex items-center gap-1 p-1 rounded-full bg-surface-container-lowest">
