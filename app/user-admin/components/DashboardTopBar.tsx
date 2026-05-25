@@ -15,7 +15,7 @@ const DEMO_NOTIFICATIONS: {
     id: 1,
     icon: "trend",
     title: "Your page hit 100 visits",
-    sub: "linkhub.io/yourhandle · 2h ago",
+    sub: "Your Linkhub page · 2h ago",
     unread: true,
   },
   {

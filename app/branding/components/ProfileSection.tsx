@@ -69,7 +69,7 @@ export function ProfileSection({
   onRemoveAvatar,
 }: ProfileSectionProps) {
   const initial = displayName.charAt(0).toUpperCase() || "?";
-  const publicSlug = handle.trim() || "yourhandle";
+  const publicSlug = handle.trim();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
@@ -313,7 +313,7 @@ export function ProfileSection({
                     e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
                   )
                 }
-                placeholder="yourhandle"
+                placeholder="e.g. alexsmith"
                 maxLength={24}
                 style={{ ...baseInput, paddingLeft: 30 }}
                 onFocus={focusStyle}
@@ -321,10 +321,16 @@ export function ProfileSection({
               />
             </div>
             <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 1 }}>
-              Your public URL:{" "}
-              <span style={{ color: "#3b46e0", fontWeight: 500 }}>
-                {APP_DOMAIN}/{publicSlug}
-              </span>
+              {publicSlug ? (
+                <>
+                  Your public URL:{" "}
+                  <span style={{ color: "#3b46e0", fontWeight: 500 }}>
+                    {APP_DOMAIN}/{publicSlug}
+                  </span>
+                </>
+              ) : (
+                "Set a handle to claim your public URL"
+              )}
             </p>
           </div>
         </div>
