@@ -30,14 +30,14 @@ export function AccountNotFoundModal({ email, onClose }: AccountNotFoundModalPro
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-2.5 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
+          className="flex-1 py-2.5 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
         >
           Try another email
         </button>
         <Link
           href={signupHref}
           onClick={onClose}
-          className="flex-1 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors text-center"
+          className="flex-1 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors text-center cursor-pointer"
         >
           Sign up
         </Link>
