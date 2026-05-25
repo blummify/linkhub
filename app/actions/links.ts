@@ -21,16 +21,12 @@ export async function getLinks(): Promise<LinkRow[]> {
   try {
     const cached = await redis.get<LinkRow[]>(cacheKey);
     if (cached) return cached;
-  } catch {
-    // Redis unavailable — fall through to DB
-  }
 
-  try {
     const links = await db.link.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
     });
-    try { await redis.set(cacheKey, links, { ex: LINKS_TTL }); } catch {}
+    await redis.set(cacheKey, links, { ex: LINKS_TTL });
     return links;
   } catch (error) {
     console.error("Error fetching links:", error);
@@ -44,7 +40,7 @@ export async function getLinksCount() {
 
   try {
     const count = await db.link.count({
-      where: { userId: session.user.id }
+      where: { userId: session.user.id },
     });
     return { count };
   } catch (error) {
@@ -73,7 +69,7 @@ export async function addLink(data: {
     const link = await db.link.create({
       data: { ...data, userId: session.user.id },
     });
-    try { await redis.del(`links:${session.user.id}`); } catch {}
+    await redis.del(`links:${session.user.id}`);
     return { success: true, link };
   } catch (error) {
     console.error("Error adding link:", error);
@@ -113,7 +109,7 @@ export async function updateLink(id: string, data: {
       });
     }
 
-    try { await redis.del(`links:${session.user.id}`); } catch {}
+    await redis.del(`links:${session.user.id}`);
     return { success: true, link };
   } catch (error) {
     console.error("Error updating link:", error);
@@ -142,7 +138,7 @@ export async function deleteLink(id: string) {
       });
     }
 
-    try { await redis.del(`links:${session.user.id}`); } catch {}
+    await redis.del(`links:${session.user.id}`);
     return { success: true };
   } catch (error) {
     console.error("Error deleting link:", error);
@@ -159,11 +155,6 @@ export async function getProfile() {
   try {
     const cached = await redis.get(cacheKey);
     if (cached) return cached as Awaited<ReturnType<typeof fetchProfile>>;
-  } catch {
-    // Redis unavailable — fall through to DB
-  }
-
-  try {
     return await fetchProfile(session.user.id, cacheKey);
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -184,7 +175,7 @@ async function fetchProfile(userId: string, cacheKey: string) {
     });
   }
 
-  try { await redis.set(cacheKey, profile, { ex: PROFILE_TTL }); } catch {}
+  await redis.set(cacheKey, profile, { ex: PROFILE_TTL });
   return profile;
 }
 
@@ -209,7 +200,7 @@ export async function claimHandle(handle: string) {
       data: { handle, hasClaimedHandle: true },
     });
 
-    try { await redis.del(`profile:${session.user.id}`); } catch {}
+    await redis.del(`profile:${session.user.id}`);
     return { success: true };
   } catch (error) {
     console.error("Error claiming handle:", error);
@@ -225,7 +216,10 @@ export async function checkHandleAvailability(handle: string): Promise<{ availab
 
   try {
     const taken = await db.profile.findFirst({
-      where: { handle, NOT: { userId: session.user.id } },
+      where: {
+        handle,
+        userId: { not: session.user.id },
+      },
     });
     return { available: !taken };
   } catch {
@@ -242,7 +236,7 @@ export async function dismissHandleClaim() {
       where: { userId: session.user.id },
       data: { hasClaimedHandle: true },
     });
-    try { await redis.del(`profile:${session.user.id}`); } catch {}
+    await redis.del(`profile:${session.user.id}`);
     return { success: true };
   } catch (error) {
     console.error("Error dismissing handle claim:", error);
