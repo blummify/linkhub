@@ -79,6 +79,26 @@ const WarnSvg = () => (
   </svg>
 );
 
+interface ModalState {
+  handle: string;
+  inputState: InputState;
+  helperMsg: string;
+  helperKind: HelperKind;
+  continueEnabled: boolean;
+  isSubmitting: boolean;
+  suggestions: string[];
+}
+
+const INITIAL_STATE: ModalState = {
+  handle: "",
+  inputState: "neutral",
+  helperMsg: "3–24 characters · letters, numbers and underscores",
+  helperKind: "default",
+  continueEnabled: false,
+  isSubmitting: false,
+  suggestions: [],
+};
+
 export function ClaimHandleModal({
   open,
   onClose,
@@ -87,19 +107,33 @@ export function ClaimHandleModal({
   currentHandle,
   submitLabel = "Continue to dashboard",
 }: ClaimHandleModalProps) {
-  const [handle, setHandle] = useState("");
-  const [inputState, setInputState] = useState<InputState>("neutral");
+  const [state, setState] = useState<ModalState>(INITIAL_STATE);
+  const { handle, inputState, helperMsg, helperKind, continueEnabled, isSubmitting, suggestions } = state;
   const [isFocused, setIsFocused] = useState(false);
-  const [helperMsg, setHelperMsg] = useState(
-    "3–24 characters · letters, numbers and underscores"
-  );
-  const [helperKind, setHelperKind] = useState<HelperKind>("default");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [continueEnabled, setContinueEnabled] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [prevOpen, setPrevOpen] = useState(open);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkIdRef = useRef(0);
+
+  // Reset on close / pre-fill on open — done during render (not in an effect) per the
+  // React "storing information from previous renders" pattern. This avoids the
+  // react-hooks/set-state-in-effect lint error while keeping correct behaviour.
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (!open) {
+      setState(INITIAL_STATE);
+    } else if (currentHandle) {
+      setState({
+        handle: currentHandle,
+        inputState: "valid",
+        helperMsg: "This is your current handle",
+        helperKind: "valid",
+        continueEnabled: true,
+        isSubmitting: false,
+        suggestions: [],
+      });
+    }
+  }
 
   useEffect(() => {
     return () => {
@@ -107,102 +141,108 @@ export function ClaimHandleModal({
     };
   }, []);
 
-  // Pre-fill with existing handle when modal opens; reset everything when it closes.
-  useEffect(() => {
-    if (!open) {
-      setHandle("");
-      setInputState("neutral");
-      setHelperMsg("3–24 characters · letters, numbers and underscores");
-      setHelperKind("default");
-      setContinueEnabled(false);
-      setIsSubmitting(false);
-      setSuggestions([]);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      return;
-    }
-    if (currentHandle) {
-      setHandle(currentHandle);
-      setInputState("valid");
-      setHelperMsg("This is your current handle");
-      setHelperKind("valid");
-      setContinueEnabled(true);
-      setSuggestions([]);
-    }
-  // We intentionally read `currentHandle` only when `open` transitions — not on every
-  // currentHandle change — so the exhaustive-deps warning is suppressed here.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  function processInput(value: string, delayMs = 600) {
+  function processInput(value: string, delayMs = 600): void {
     if (timerRef.current) clearTimeout(timerRef.current);
     checkIdRef.current++;
-    setContinueEnabled(false);
-    setSuggestions([]);
 
     if (value.length === 0) {
-      setInputState("neutral");
-      setHelperMsg("3–24 characters · letters, numbers and underscores");
-      setHelperKind("default");
+      setState((prev) => ({
+        ...prev,
+        handle: value,
+        inputState: "neutral",
+        helperMsg: "3–24 characters · letters, numbers and underscores",
+        helperKind: "default",
+        continueEnabled: false,
+        suggestions: [],
+      }));
       return;
     }
 
     const fmt = validateFormat(value);
     if (!fmt.ok) {
-      setInputState("invalid");
-      setHelperMsg(fmt.reason!);
-      setHelperKind("invalid");
+      setState((prev) => ({
+        ...prev,
+        handle: value,
+        inputState: "invalid",
+        helperMsg: fmt.reason!,
+        helperKind: "invalid",
+        continueEnabled: false,
+        suggestions: [],
+      }));
       return;
     }
 
     if (!onCheckAvailability) {
-      setInputState("valid");
-      setHelperMsg(`"${value}" looks good`);
-      setHelperKind("valid");
-      setContinueEnabled(true);
+      setState((prev) => ({
+        ...prev,
+        handle: value,
+        inputState: "valid",
+        helperMsg: `"${value}" looks good`,
+        helperKind: "valid",
+        continueEnabled: true,
+        suggestions: [],
+      }));
       return;
     }
 
-    setInputState("checking");
-    setHelperMsg("Checking availability…");
-    setHelperKind("default");
+    setState((prev) => ({
+      ...prev,
+      handle: value,
+      inputState: "checking",
+      helperMsg: "Checking availability…",
+      helperKind: "default",
+      continueEnabled: false,
+      suggestions: [],
+    }));
+
     const myId = checkIdRef.current;
     timerRef.current = setTimeout(async () => {
       const result = await onCheckAvailability(value);
       if (myId !== checkIdRef.current) return;
       if (result.available) {
-        setInputState("valid");
-        setHelperMsg(`Great pick — "${value}" is available`);
-        setHelperKind("valid");
-        setContinueEnabled(true);
+        setState((prev) => ({
+          ...prev,
+          inputState: "valid",
+          helperMsg: `Great pick — "${value}" is available`,
+          helperKind: "valid",
+          continueEnabled: true,
+          suggestions: [],
+        }));
       } else {
-        setInputState("invalid");
-        setHelperMsg(`"${value}" is already taken — try another`);
-        setHelperKind("invalid");
-        setSuggestions(generateSuggestions(value));
+        setState((prev) => ({
+          ...prev,
+          inputState: "invalid",
+          helperMsg: `"${value}" is already taken — try another`,
+          helperKind: "invalid",
+          continueEnabled: false,
+          suggestions: generateSuggestions(value),
+        }));
       }
     }, delayMs);
   }
 
   /** Clicking a suggestion auto-fills the input and triggers an immediate availability check. */
-  const handleSuggestionClick = (s: string) => {
-    setHandle(s);
+  const handleSuggestionClick = (s: string): void => {
     processInput(s, 0);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     if (!continueEnabled || isSubmitting) return;
-    setIsSubmitting(true);
+    setState((prev) => ({ ...prev, isSubmitting: true }));
     const result = await onClaim(handle);
     if (result.error) {
-      setInputState("invalid");
-      setHelperMsg(result.error);
-      setHelperKind("invalid");
-      setContinueEnabled(false);
-      setIsSubmitting(false);
+      setState((prev) => ({
+        ...prev,
+        inputState: "invalid",
+        helperMsg: result.error!,
+        helperKind: "invalid",
+        continueEnabled: false,
+        isSubmitting: false,
+      }));
     }
   };
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     if (isSubmitting) return;
     onClose();
   };
@@ -395,7 +435,6 @@ export function ClaimHandleModal({
                   type="text"
                   value={handle}
                   onChange={(e) => {
-                    setHandle(e.target.value);
                     processInput(e.target.value);
                   }}
                   onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
