@@ -124,6 +124,8 @@ export const useBrandingStore = create<BrandingStore>()(
       onRehydrateStorage: () => (state) => {
         // After loading from localStorage, set baseline = loaded state so reset() works correctly
         if (state) {
+          // Clean up legacy dummy handle persisted from old default
+          if (state.handle === "joelosei") state.handle = "";
           const baseline: BrandingAppearanceState = {
             themeId: state.themeId,
             displayName: state.displayName,
