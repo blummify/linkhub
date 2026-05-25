@@ -37,7 +37,7 @@ export function getDefaultBrandingState(): BrandingAppearanceState {
   return {
     themeId: DEFAULT_THEME.id,
     displayName: "Your Name",
-    handle: "joelosei",
+    handle: "",
     bio: "Connecting with your community.",
     accentColor: DEFAULT_THEME.screen.titleColor,
     buttonStyle: "rounded",
@@ -146,6 +146,6 @@ export function saveBrandingState(state: BrandingAppearanceState): void {
 }
 
 export function brandingPublicUrl(handle: string): string {
-  const slug = handle.trim() || "yourhandle";
+  const slug = handle.trim();
   return `${process.env.NEXT_PUBLIC_APP_DOMAIN ?? "linkhub.co"}/${slug}`;
 }
