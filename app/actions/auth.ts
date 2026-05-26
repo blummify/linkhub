@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { redis } from "@/lib/redis";
 import { postly } from "@/lib/postly";
 import bcrypt from "bcryptjs";
-import { signIn, auth } from "@/auth";
+import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { createHash, randomBytes } from "crypto";
 import { after } from "next/server";
@@ -346,50 +346,3 @@ export async function resetPassword(
   }
 }
 
-export async function updateUserName(
-  name: string
-): Promise<{ success: true } | { error: string }> {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-
-  const trimmed = name.trim();
-  if (!trimmed || trimmed.length > 60)
-    return { error: "Name must be between 1 and 60 characters." };
-
-  try {
-    await db.user.update({ where: { id: session.user.id }, data: { name: trimmed } });
-    return { success: true };
-  } catch {
-    return { error: "Failed to update name. Please try again." };
-  }
-}
-
-export async function changePassword(
-  currentPassword: string,
-  newPassword: string
-): Promise<{ success: true } | { error: string }> {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-
-  if (newPassword.length < 8)
-    return { error: "New password must be at least 8 characters." };
-
-  try {
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { passwordHash: true },
-    });
-
-    if (!user?.passwordHash)
-      return { error: "Password change is not available for social accounts." };
-
-    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!valid) return { error: "Current password is incorrect." };
-
-    const hash = await bcrypt.hash(newPassword, 10);
-    await db.user.update({ where: { id: session.user.id }, data: { passwordHash: hash } });
-    return { success: true };
-  } catch {
-    return { error: "Failed to update password. Please try again." };
-  }
-}
