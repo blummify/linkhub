@@ -8,6 +8,7 @@ import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim, checkHandleAvailability } from "../actions/links";
+import { toast } from "sonner";
 import { getBrandingThemeById, type BrandingAppearanceState } from "@/lib/brandingState";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { DeleteConfirmDialog } from "../components/DeleteConfirmDialog";
@@ -193,11 +194,19 @@ export default function UserAdminClient() {
 
   const handleDeleteLink = async (link: ManagedLink) => {
     if (!link.id) return;
+    const snapshot = useLinksStore.getState().links;
+    setPendingDelete(null);
+    useLinksStore.getState().removeLink(link.id);
     try {
-      await deleteLink(link.id);
-      useLinksStore.getState().removeLink(link.id);
-    } catch (error) {
-      console.error("Failed to delete link:", error);
+      const result = await deleteLink(link.id);
+      if (result.error) {
+        useLinksStore.getState().setLinks(snapshot);
+        toast.error("Failed to delete link. Please try again.");
+      }
+    } catch (err) {
+      console.error("Failed to delete link:", err);
+      useLinksStore.getState().setLinks(snapshot);
+      toast.error("Failed to delete link. Please try again.");
     }
   };
 
@@ -286,7 +295,6 @@ export default function UserAdminClient() {
         onClose={() => setPendingDelete(null)}
         onConfirm={() => {
           if (pendingDelete) handleDeleteLink(pendingDelete.link);
-          setPendingDelete(null);
         }}
       />
 
