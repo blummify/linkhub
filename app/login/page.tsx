@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AccountNotFoundModal } from "@/app/components/auth/AccountNotFoundModal";
 import { UnverifiedEmailModal } from "@/app/components/auth/UnverifiedEmailModal";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
   checkUserExists,
@@ -23,6 +23,7 @@ type SignupErrors = { name: string; password: string; confirmPassword: string };
 
 export default function LoginPage() {
   const router = useRouter();
+  const { update: updateSession } = useSession();
   const [email, setEmail] = useState("");
   const [signupName, setSignupName] = useState("");
   const [password, setPassword] = useState("");
@@ -88,6 +89,7 @@ export default function LoginPage() {
       if (result?.error) {
         setPasswordError("Incorrect password. Please try again.");
       } else {
+        await updateSession();
         router.push("/user-dashboard");
       }
     } catch (error: unknown) {
