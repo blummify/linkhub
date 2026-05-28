@@ -17,15 +17,20 @@ export async function getLinks(): Promise<LinkRow[]> {
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   const cacheKey = `links:${session.user.id}`;
+
+  // Redis read — falls through silently when credentials are missing
   try {
     const cached = await redis.get<LinkRow[]>(cacheKey);
     if (cached) return cached;
+  } catch {}
 
+  // DB query always runs whether Redis is available or not
+  try {
     const links = await db.link.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
     });
-    await redis.set(cacheKey, links, { ex: LINKS_TTL });
+    try { await redis.set(cacheKey, links, { ex: LINKS_TTL }); } catch {}
     return links;
   } catch (error) {
     console.error("Error fetching links:", error);
@@ -66,9 +71,10 @@ export async function addLink(data: {
 
   try {
     const link = await db.link.create({
-      data: { ...data, userId: session.user.id },
+      data: { ...parsed.data, userId: session.user.id },
     });
-    await redis.del(`links:${session.user.id}`);
+    // Cache invalidation is best-effort — a Redis failure must not mask a successful write
+    try { await redis.del(`links:${session.user.id}`); } catch {}
     return { success: true, link };
   } catch (error) {
     console.error("Error adding link:", error);
@@ -108,7 +114,7 @@ export async function updateLink(id: string, data: {
       });
     }
 
-    await redis.del(`links:${session.user.id}`);
+    try { await redis.del(`links:${session.user.id}`); } catch {}
     return { success: true, link };
   } catch (error) {
     console.error("Error updating link:", error);
@@ -137,7 +143,7 @@ export async function deleteLink(id: string) {
       });
     }
 
-    await redis.del(`links:${session.user.id}`);
+    try { await redis.del(`links:${session.user.id}`); } catch {}
     return { success: true };
   } catch (error) {
     console.error("Error deleting link:", error);
@@ -150,10 +156,15 @@ export async function getProfile() {
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   const cacheKey = `profile:${session.user.id}`;
+
+  // Redis read — falls through silently when credentials are missing
   try {
     const cached = await redis.get(cacheKey);
     if (cached) return cached as Awaited<ReturnType<typeof fetchProfile>>;
+  } catch {}
 
+  // DB query always runs whether Redis is available or not
+  try {
     return await fetchProfile(session.user.id, cacheKey);
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -174,7 +185,8 @@ async function fetchProfile(userId: string, cacheKey: string) {
     });
   }
 
-  await redis.set(cacheKey, profile, { ex: PROFILE_TTL });
+  // Best-effort cache write — never let a Redis failure mask a successful DB read
+  try { await redis.set(cacheKey, profile, { ex: PROFILE_TTL }); } catch {}
   return profile;
 }
 
@@ -199,7 +211,7 @@ export async function claimHandle(handle: string) {
       data: { handle, hasClaimedHandle: true },
     });
 
-    await redis.del(`profile:${session.user.id}`);
+    try { await redis.del(`profile:${session.user.id}`); } catch {}
     return { success: true };
   } catch (error) {
     console.error("Error claiming handle:", error);
@@ -214,8 +226,14 @@ export async function checkHandleAvailability(handle: string): Promise<{ availab
   if (!HANDLE_REGEX.test(handle)) return { available: false };
 
   try {
+    // Use field-level `not` filter instead of top-level `NOT` operator — the top-level
+    // `NOT: { userId }` form can generate malformed SQL with Prisma 7 + @prisma/adapter-pg,
+    // causing every query to throw and the catch to return { available: false }.
     const taken = await db.profile.findFirst({
-      where: { handle, NOT: { userId: session.user.id } },
+      where: {
+        handle,
+        userId: { not: session.user.id },
+      },
     });
     return { available: !taken };
   } catch {
@@ -232,7 +250,7 @@ export async function dismissHandleClaim() {
       where: { userId: session.user.id },
       data: { hasClaimedHandle: true },
     });
-    await redis.del(`profile:${session.user.id}`);
+    try { await redis.del(`profile:${session.user.id}`); } catch {}
     return { success: true };
   } catch (error) {
     console.error("Error dismissing handle claim:", error);
