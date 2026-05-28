@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { sendVerificationCode, verifyEmailCode, resendVerificationCode } from "@/app/actions/auth";
 
@@ -28,9 +28,7 @@ const PANEL_FEATURES = [
 export default function VerifyEmailClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { update: updateSession } = useSession();
-
-  const emailFromParam = searchParams.get("email");
+const emailFromParam = searchParams.get("email");
   const fromLogin = searchParams.get("source") === "login";
   const needsResend =
     searchParams.get("resend") === "true" ||
