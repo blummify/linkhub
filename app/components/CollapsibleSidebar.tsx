@@ -13,6 +13,8 @@ import {
   ChevronDownIcon,
   HelpIcon,
   LogoutIcon,
+  MyAccountIcon,
+  BillingIcon,
 } from "./icons/SidebarIcons";
 import UpgradeCard from "./UpgradeCard";
 
@@ -20,6 +22,11 @@ const NAV_ITEMS = [
   { label: "Links",     href: "/user-dashboard", Icon: LinksIcon,      showBadge: true },
   { label: "Branding",  href: "/branding",       Icon: AppearanceIcon              },
   { label: "Analytics", href: "/user-analytics", Icon: AnalyticsIcon               },
+];
+
+const ACCOUNT_ITEMS = [
+  { label: "My account", href: "/my-account", Icon: MyAccountIcon },
+  { label: "Billing",    href: "/billing",    Icon: BillingIcon   },
 ];
 
 export default function CollapsibleSidebar({
@@ -100,8 +107,8 @@ export default function CollapsibleSidebar({
           </p>
         )}
 
-        {/* Nav */}
-        <nav className="flex flex-col gap-0.5 flex-1">
+        {/* Workspace Nav */}
+        <nav className="flex flex-col gap-0.5">
           {NAV_ITEMS.map(({ label, href, Icon, showBadge }) => {
             const active = isActiveLink(href);
             return (
@@ -133,7 +140,6 @@ export default function CollapsibleSidebar({
                     (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
                 }}
               >
-                {/* Active left bar */}
                 {active && (
                   <span
                     className="absolute rounded-r-[3px]"
@@ -171,7 +177,6 @@ export default function CollapsibleSidebar({
                   </>
                 )}
 
-                {/* Collapsed badge */}
                 {isCollapsed && showBadge && linkCount > 0 && (
                   <span
                     className="absolute"
@@ -193,6 +198,78 @@ export default function CollapsibleSidebar({
             );
           })}
         </nav>
+
+        {/* ACCOUNT section */}
+        <div className="mt-5">
+          {!isCollapsed && (
+            <p
+              className="px-3 mb-2.5"
+              style={{
+                fontSize: 10.5,
+                fontWeight: 600,
+                color: "#6b75a3",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              Account
+            </p>
+          )}
+          <nav className="flex flex-col gap-0.5">
+            {ACCOUNT_ITEMS.map(({ label, href, Icon }) => {
+              const active = isActiveLink(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`flex items-center relative transition-all duration-150 ${
+                    isCollapsed ? "justify-center px-2.5 py-2.5" : "gap-3 px-3 py-2.5"
+                  }`}
+                  style={{
+                    borderRadius: 12,
+                    background: active
+                      ? "linear-gradient(180deg, #f1f3ff, #eaeefb)"
+                      : "transparent",
+                    color: active ? "#1e2a8a" : "#3a4474",
+                    fontWeight: active ? 600 : 500,
+                    fontSize: 14,
+                    boxShadow: active
+                      ? "inset 0 0 0 1px rgba(59,70,224,0.08)"
+                      : "none",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={e => {
+                    if (!active)
+                      (e.currentTarget as HTMLAnchorElement).style.background = "#eef0f7";
+                  }}
+                  onMouseLeave={e => {
+                    if (!active)
+                      (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+                  }}
+                >
+                  {active && (
+                    <span
+                      className="absolute rounded-r-[3px]"
+                      style={{
+                        left: isCollapsed ? -10 : -18,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        width: 3,
+                        height: 22,
+                        background: "#3b46e0",
+                      }}
+                    />
+                  )}
+                  <Icon className="w-[18px] h-[18px] shrink-0" />
+                  {!isCollapsed && <span>{label}</span>}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
 
         {/* Upgrade card */}
         <UpgradeCard isCollapsed={isCollapsed} />
