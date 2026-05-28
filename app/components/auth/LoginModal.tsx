@@ -21,7 +21,7 @@ export function LoginModal({ onClose, children }: LoginModalProps) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant"
+          className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant cursor-pointer"
           aria-label="Close"
         >
           <span className="material-symbols-outlined text-[18px]">close</span>
