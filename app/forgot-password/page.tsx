@@ -104,7 +104,7 @@ export default function ForgotPasswordPage() {
 
             <button
               disabled={isLoading}
-              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               type="submit"
             >
               {isLoading ? (
@@ -115,9 +115,9 @@ export default function ForgotPasswordPage() {
             </button>
 
             <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="font-medium text-primary hover:underline">
-                Sign up
+              Remember your password?{" "}
+              <Link href="/login" className="font-medium text-primary hover:underline">
+                Log in
               </Link>
             </p>
           </form>

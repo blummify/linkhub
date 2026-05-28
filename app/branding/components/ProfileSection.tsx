@@ -1,9 +1,11 @@
 "use client";
 
+import { useRef } from "react";
 import {
   BRANDING_FONT_MONO,
   BRANDING_FONT_SERIF,
 } from "@/app/constants/brandingFonts";
+import { APP_DOMAIN } from "@/lib/appConfig";
 
 interface ProfileSectionProps {
   displayName: string;
@@ -12,6 +14,11 @@ interface ProfileSectionProps {
   onDisplayNameChange: (v: string) => void;
   onHandleChange: (v: string) => void;
   onBioChange: (v: string) => void;
+  // Avatar upload — all optional so existing tests remain unchanged
+  avatarUrl?: string | null;
+  isUploadingAvatar?: boolean;
+  onFileSelected?: (file: File) => void;
+  onRemoveAvatar?: () => void;
 }
 
 const MAX_BIO = 140;
@@ -56,9 +63,25 @@ export function ProfileSection({
   onDisplayNameChange,
   onHandleChange,
   onBioChange,
+  avatarUrl,
+  isUploadingAvatar = false,
+  onFileSelected,
+  onRemoveAvatar,
 }: ProfileSectionProps) {
   const initial = displayName.charAt(0).toUpperCase() || "?";
-  const publicSlug = handle.trim() || "yourhandle";
+  const publicSlug = handle.trim();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ""; // reset so re-selecting same file triggers onChange
+    onFileSelected?.(file);
+  }
+
+  function openFilePicker() {
+    fileInputRef.current?.click();
+  }
 
   return (
     <div
@@ -83,12 +106,16 @@ export function ProfileSection({
         }}
       >
         <div style={{ position: "relative" }}>
+          {/* Avatar circle */}
           <div
+            suppressHydrationWarning
             style={{
               width: 110,
               height: 110,
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
+              background: avatarUrl
+                ? "transparent"
+                : "linear-gradient(135deg, #3b46e0, #7a85ff)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -99,13 +126,56 @@ export function ProfileSection({
               border: "4px solid white",
               outline: "1px solid #eef0f7",
               boxShadow: "0 12px 28px -8px rgba(59,70,224,0.4)",
+              overflow: "hidden",
+              position: "relative",
             }}
           >
-            {initial}
+            {avatarUrl ? (
+              // Plain <img> — avoids next/image remotePatterns requirement here
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt="Profile photo"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              initial
+            )}
+
+            {/* Upload progress overlay */}
+            {isUploadingAvatar && (
+              <div
+                aria-label="Uploading…"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(11,16,32,0.55)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="2.5"
+                  style={{ animation: "spin 0.8s linear infinite" }}
+                >
+                  <path strokeLinecap="round" d="M12 2a10 10 0 010 20"/>
+                </svg>
+              </div>
+            )}
           </div>
+
+          {/* Camera button */}
           <button
             type="button"
             aria-label="Upload new photo"
+            onClick={openFilePicker}
+            disabled={isUploadingAvatar}
             style={{
               position: "absolute",
               bottom: 4,
@@ -119,7 +189,8 @@ export function ProfileSection({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              cursor: "pointer",
+              cursor: isUploadingAvatar ? "not-allowed" : "pointer",
+              opacity: isUploadingAvatar ? 0.5 : 1,
             }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -129,10 +200,12 @@ export function ProfileSection({
           </button>
         </div>
 
+        {/* Upload / Remove buttons */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <button
             type="button"
-            className="avatar-action"
+            onClick={openFilePicker}
+            disabled={isUploadingAvatar}
             style={{
               fontSize: 11.5,
               fontWeight: 500,
@@ -141,11 +214,12 @@ export function ProfileSection({
               border: 0,
               padding: "4px 8px",
               borderRadius: 6,
-              cursor: "pointer",
+              cursor: isUploadingAvatar ? "not-allowed" : "pointer",
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
               fontFamily: "inherit",
+              opacity: isUploadingAvatar ? 0.5 : 1,
             }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -156,6 +230,8 @@ export function ProfileSection({
           <div style={{ width: 1, height: 12, background: "#d6dae9" }} />
           <button
             type="button"
+            onClick={onRemoveAvatar}
+            disabled={isUploadingAvatar || !avatarUrl}
             style={{
               fontSize: 11.5,
               fontWeight: 500,
@@ -164,11 +240,12 @@ export function ProfileSection({
               border: 0,
               padding: "4px 8px",
               borderRadius: 6,
-              cursor: "pointer",
+              cursor: isUploadingAvatar || !avatarUrl ? "not-allowed" : "pointer",
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
               fontFamily: "inherit",
+              opacity: isUploadingAvatar || !avatarUrl ? 0.4 : 1,
             }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -177,6 +254,15 @@ export function ProfileSection({
             Remove
           </button>
         </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          style={{ display: "none" }}
+          onChange={handleFileInput}
+        />
       </div>
 
       {/* Fields column */}
@@ -227,7 +313,7 @@ export function ProfileSection({
                     e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
                   )
                 }
-                placeholder="yourhandle"
+                placeholder="e.g. alexsmith"
                 maxLength={24}
                 style={{ ...baseInput, paddingLeft: 30 }}
                 onFocus={focusStyle}
@@ -235,10 +321,16 @@ export function ProfileSection({
               />
             </div>
             <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 1 }}>
-              Your public URL:{" "}
-              <span style={{ color: "#3b46e0", fontWeight: 500 }}>
-                linkhub.co/{publicSlug}
-              </span>
+              {publicSlug ? (
+                <>
+                  Your public URL:{" "}
+                  <span style={{ color: "#3b46e0", fontWeight: 500 }}>
+                    {APP_DOMAIN}/{publicSlug}
+                  </span>
+                </>
+              ) : (
+                "Set a handle to claim your public URL"
+              )}
             </p>
           </div>
         </div>

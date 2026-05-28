@@ -1,29 +1,23 @@
 import { render, type RenderOptions } from "@testing-library/react";
-import { BrandingAppearanceProvider } from "@/app/components/BrandingAppearanceContext";
-import { SidebarProvider } from "@/app/components/SidebarContext";
 
+/** No-op wrappers kept for backward compat with existing test imports. */
 export function renderWithBranding(
   ui: React.ReactElement,
   options?: Omit<RenderOptions, "wrapper">
 ) {
-  return render(<BrandingAppearanceProvider>{ui}</BrandingAppearanceProvider>, options);
+  return render(ui, options);
 }
 
 export function renderWithSidebar(
   ui: React.ReactElement,
   options?: Omit<RenderOptions, "wrapper">
 ) {
-  return render(<SidebarProvider>{ui}</SidebarProvider>, options);
+  return render(ui, options);
 }
 
 export function renderWithSidebarAndBranding(
   ui: React.ReactElement,
   options?: Omit<RenderOptions, "wrapper">
 ) {
-  return render(
-    <SidebarProvider>
-      <BrandingAppearanceProvider>{ui}</BrandingAppearanceProvider>
-    </SidebarProvider>,
-    options
-  );
+  return render(ui, options);
 }

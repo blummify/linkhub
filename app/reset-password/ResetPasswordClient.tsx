@@ -146,6 +146,9 @@ export function ResetPasswordClient({ token, initialState, tokenError }: Props) 
         onChange={(value) => {
           setNewPassword(value);
           if (newPasswordError) setNewPasswordError("");
+          if (confirmPasswordError) {
+            setConfirmPasswordError(confirmPassword === value ? "" : "Passwords do not match");
+          }
         }}
         onBlur={handleNewPasswordBlur}
         show={showNewPassword}

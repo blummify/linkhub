@@ -8,9 +8,10 @@ interface DeleteConfirmDialogProps {
   link?: ManagedLink;
   onClose: () => void;
   onConfirm: () => void;
+  isLoading?: boolean;
 }
 
-export function DeleteConfirmDialog({ open, link, onClose, onConfirm }: DeleteConfirmDialogProps) {
+export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading = false }: DeleteConfirmDialogProps) {
   if (!open || !link) return null;
 
   const isDraft = link.status === LinkStatus.DRAFT;
@@ -26,7 +27,7 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm }: DeleteCo
     <div
       className="fixed inset-0 z-[150] flex items-center justify-center p-6"
       style={{ background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)" }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={e => { if (e.target === e.currentTarget && !isLoading) onClose(); }}
     >
       <div
         className="relative w-full flex flex-col"
@@ -39,13 +40,6 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm }: DeleteCo
           padding: "28px 28px 24px",
         }}
       >
-        <style>{`
-          @keyframes dlgIn {
-            from { opacity: 0; transform: translateY(12px) scale(0.97); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-          }
-        `}</style>
-
         {/* Icon */}
         <div
           className="flex items-center justify-center mb-5 shrink-0"
@@ -73,6 +67,7 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm }: DeleteCo
           <button
             type="button"
             onClick={onClose}
+            disabled={isLoading}
             className="flex-1 transition-all"
             style={{
               padding: "10px 0",
@@ -82,10 +77,11 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm }: DeleteCo
               color: "#1a2244",
               fontSize: 13.5,
               fontWeight: 600,
-              cursor: "pointer",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              opacity: isLoading ? 0.5 : 1,
               fontFamily: "inherit",
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#d6dae9"; }}
+            onMouseEnter={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = "#d6dae9"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7"; }}
           >
             Cancel
@@ -93,6 +89,7 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm }: DeleteCo
           <button
             type="button"
             onClick={onConfirm}
+            disabled={isLoading}
             className="flex-1 transition-all"
             style={{
               padding: "10px 0",
@@ -102,14 +99,23 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm }: DeleteCo
               color: "white",
               fontSize: 13.5,
               fontWeight: 600,
-              cursor: "pointer",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              opacity: isLoading ? 0.8 : 1,
               boxShadow: "0 4px 14px -4px rgba(225,29,72,0.5)",
               fontFamily: "inherit",
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)"; }}
+            onMouseEnter={e => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; }}
           >
-            Delete
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                Deleting…
+              </span>
+            ) : "Delete"}
           </button>
         </div>
       </div>

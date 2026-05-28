@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { ManagedLink } from "./types";
 import { LinkStatus, type LinkStatusValue } from "@/app/constants/linkStatus";
+import { useFileUpload } from "@/lib/hooks/useFileUpload";
 
 interface AddEditLinkModalProps {
   open: boolean;
@@ -128,11 +129,25 @@ const DOMAIN_MAP: Record<string, { title: string; icon: PresetId }> = {
 function isValidURL(str: string) {
   try {
     const u = new URL(str);
+    if (u.protocol === "mailto:") return u.pathname.length > 0;
     return u.protocol === "http:" || u.protocol === "https:";
   } catch {
     return false;
   }
 }
+
+// ── Preset icon auto-fill defaults ───────────────────────────────────────────
+
+const PRESET_DEFAULTS: Record<PresetId, { url: string; title: string }> = {
+  globe:     { url: "",                             title: "My Website"        },
+  instagram: { url: "https://www.instagram.com/",  title: "Instagram Profile" },
+  twitter:   { url: "https://twitter.com/",         title: "Twitter Profile"   },
+  youtube:   { url: "https://www.youtube.com/",     title: "YouTube Channel"   },
+  spotify:   { url: "https://open.spotify.com/",    title: "Spotify"           },
+  behance:   { url: "https://www.behance.net/",     title: "Behance Portfolio" },
+  mail:      { url: "mailto:",                      title: "Email Me"          },
+  shop:      { url: "",                             title: "My Shop"           },
+};
 
 function detectFromURL(url: string): { title: string; icon: PresetId } | null {
   try {
@@ -155,26 +170,57 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   const [urlValidState, setUrlValidState] = useState<"none" | "valid" | "invalid">("none");
   const [urlError, setUrlError]         = useState(false);
   const [detectedInfo, setDetectedInfo] = useState<{ title: string; icon: PresetId } | null>(null);
-  const [thumbImage, setThumbImage]     = useState<string | null>(() => initialLink?.thumbnail ?? null);
+  // thumbImage: blob URL (local preview) or R2 URL (existing link)
+  const [thumbImage, setThumbImage]     = useState<string | null>(() => initialLink?.thumbnailUrl ?? null);
+  const [thumbKey, setThumbKey]         = useState<string | null>(() => initialLink?.thumbnailKey ?? null);
+  const [pendingFile, setPendingFile]   = useState<File | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<PresetId>(() => (initialLink?.icon as PresetId | undefined) ?? "globe");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const debounceRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
+  const blobUrlRef    = useRef<string | null>(null);
+  const uploadKeyRef  = useRef<string | null>(null);
+
+  const [uploadError, setUploadError]   = useState<string | null>(null);
+  const [isSaving, setIsSaving]         = useState(false);
+
+  // Revoke any blob URL when the modal unmounts
+  useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
+
+  const { upload: uploadThumb, isUploading: isUploadingThumb } = useFileUpload({
+    folder: "link-thumbnails",
+    maxSizeMB: 2,
+    onSuccess: (_, key) => { uploadKeyRef.current = key; },
+    onError: (msg) => setUploadError(msg),
+  });
 
   const isEdit  = !!initialLink;
-  const canSave = title.trim().length > 0 && isValidURL(url.trim());
+  const canSave = title.trim().length > 0 && isValidURL(url.trim()) && !isSaving && !isUploadingThumb;
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!canSave) return;
+    setIsSaving(true);
+
+    let finalThumbnailUrl: string | undefined = thumbImage ?? undefined;
+    let finalThumbnailKey: string | undefined = thumbKey ?? undefined;
+
+    if (pendingFile) {
+      const publicUrl = await uploadThumb(pendingFile);
+      if (!publicUrl) { setIsSaving(false); return; } // upload failed — error shown
+      finalThumbnailUrl = publicUrl;
+      finalThumbnailKey = uploadKeyRef.current ?? undefined;
+    }
+
     onSave({
       title: title.trim(),
       url: url.trim(),
       icon: selectedPreset,
-      thumbnail: thumbImage ?? undefined,
+      thumbnailUrl: finalThumbnailUrl,
+      thumbnailKey: finalThumbnailKey,
       clicks: initialLink?.clicks ?? "0",
       status,
     });
     onClose();
-  }, [canSave, title, url, selectedPreset, thumbImage, status, initialLink, onSave, onClose]);
+  }, [canSave, pendingFile, thumbImage, thumbKey, title, url, selectedPreset, status, initialLink, onSave, onClose, uploadThumb]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -219,20 +265,40 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
     setDetectedInfo(null);
   }
 
+  function handlePresetSelect(presetId: PresetId) {
+    const defaults = PRESET_DEFAULTS[presetId];
+    setSelectedPreset(presetId);
+    if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
+    setPendingFile(null);
+    setThumbImage(null);
+    setUrl(defaults.url);
+    setTitle(defaults.title);
+    setTitleLen(defaults.title.length);
+    setDetectedInfo(null);
+    setUrlError(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setUrlValidState(defaults.url && isValidURL(defaults.url) ? "valid" : "none");
+  }
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) return; // 2 MB guard
-    const reader = new FileReader();
-    reader.onload = ev => {
-      setThumbImage(ev.target?.result as string);
-    };
-    reader.readAsDataURL(file);
     e.target.value = "";
+    if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+    const blobUrl = URL.createObjectURL(file);
+    blobUrlRef.current = blobUrl;
+    setPendingFile(file);
+    setThumbImage(blobUrl);
+    setThumbKey(null);
+    setUploadError(null);
   }
 
   function handleRemoveThumb() {
+    if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
+    setPendingFile(null);
     setThumbImage(null);
+    setThumbKey(null);
+    setUploadError(null);
   }
 
   const activePreset = PRESET_ICONS.find(p => p.id === selectedPreset) ?? PRESET_ICONS[0];
@@ -245,14 +311,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
       style={{ background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)", animation: "fadeIn 0.25s ease" }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <style>{`
-        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-        @keyframes lhModalIn {
-          from { opacity:0; transform:translateY(16px) scale(0.97); }
-          to   { opacity:1; transform:translateY(0) scale(1); }
-        }
-      `}</style>
-
       <div
         className="relative w-full flex flex-col overflow-hidden"
         style={{
@@ -517,7 +575,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             <div className="flex items-center" style={{ gap: 12 }}>
               {/* 64×64 preview */}
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => { if (!isUploadingThumb) fileInputRef.current?.click(); }}
                 style={{
                   width: 64,
                   height: 64,
@@ -531,10 +589,21 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   flexShrink: 0,
                   border: "1.5px solid #eef0f7",
                   overflow: "hidden",
-                  cursor: "pointer",
+                  cursor: isUploadingThumb ? "not-allowed" : "pointer",
+                  position: "relative",
                 }}
               >
-                {!thumbImage && activePreset.svg(24)}
+                {!thumbImage && !isUploadingThumb && activePreset.svg(24)}
+                {isUploadingThumb && (
+                  <svg
+                    width="22" height="22" viewBox="0 0 24 24" fill="none"
+                    stroke={thumbImage ? "white" : activePreset.color}
+                    strokeWidth="2.5"
+                    style={{ animation: "spin 0.8s linear infinite" }}
+                  >
+                    <path strokeLinecap="round" d="M12 2a10 10 0 010 20"/>
+                  </svg>
+                )}
               </div>
 
               {/* Upload / remove buttons */}
@@ -543,6 +612,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingThumb}
                     className="inline-flex items-center transition-all"
                     style={{
                       fontSize: 12,
@@ -552,11 +622,12 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                       border: "1px solid #eef0f7",
                       padding: "7px 11px",
                       borderRadius: 8,
-                      cursor: "pointer",
+                      cursor: isUploadingThumb ? "not-allowed" : "pointer",
                       fontFamily: "inherit",
                       gap: 6,
+                      opacity: isUploadingThumb ? 0.6 : 1,
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#d6dae9"; e.currentTarget.style.background = "#f7f8fc"; }}
+                    onMouseEnter={e => { if (!isUploadingThumb) { e.currentTarget.style.borderColor = "#d6dae9"; e.currentTarget.style.background = "#f7f8fc"; } }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = "#eef0f7"; e.currentTarget.style.background = "white"; }}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13">
@@ -591,7 +662,11 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                     </button>
                   )}
                 </div>
-                <span style={{ fontSize: 11, color: "#6b75a3" }}>PNG, JPG up to 2MB · or pick a preset icon below</span>
+                {uploadError ? (
+                  <span style={{ fontSize: 11, color: "#e11d48" }}>{uploadError}</span>
+                ) : (
+                  <span style={{ fontSize: 11, color: "#6b75a3" }}>PNG, JPG up to 2MB · or pick a preset icon below</span>
+                )}
               </div>
             </div>
 
@@ -599,7 +674,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               style={{ display: "none" }}
               onChange={handleFileChange}
             />
@@ -612,7 +687,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   type="button"
                   aria-label={p.label}
                   title={p.label}
-                  onClick={() => { setSelectedPreset(p.id); setThumbImage(null); }}
+                  onClick={() => handlePresetSelect(p.id as PresetId)}
                   className="flex items-center justify-center transition-all"
                   style={{
                     width: 32,
@@ -651,8 +726,12 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                 width: 38,
                 height: 38,
                 borderRadius: 10,
-                background: status === LinkStatus.DRAFT ? "#eef0f7" : "#e8f6ee",
-                color: status === LinkStatus.DRAFT ? "#a8aecb" : "#16a34a",
+                background: status === LinkStatus.DRAFT ? "#eef0f7"
+                          : status === LinkStatus.PUBLISHED ? "#e8f6ee"
+                          : "#fff4dc",
+                color:      status === LinkStatus.DRAFT ? "#a8aecb"
+                          : status === LinkStatus.PUBLISHED ? "#16a34a"
+                          : "#d97706",
                 transition: "all 0.2s ease",
               }}
             >
@@ -671,10 +750,14 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             {/* Status text */}
             <div className="flex-1 min-w-0">
               <p style={{ fontSize: 13.5, fontWeight: 600, color: "#0b1020" }}>
-                {status === LinkStatus.DRAFT ? "Save as draft" : "Publish immediately"}
+                {status === LinkStatus.DRAFT ? "Save as draft"
+                : status === LinkStatus.PUBLISHED ? "Publish immediately"
+                : "Unpublished"}
               </p>
               <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 1 }}>
-                {status === LinkStatus.DRAFT ? "Link stays hidden until you publish it" : "This link will be visible on your public page"}
+                {status === LinkStatus.DRAFT ? "Link stays hidden until you publish it"
+                : status === LinkStatus.PUBLISHED ? "This link will be visible on your public page"
+                : "This link is hidden from your public page"}
               </p>
             </div>
 
@@ -683,13 +766,23 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               type="button"
               role="switch"
               aria-checked={status === LinkStatus.PUBLISHED}
-              onClick={() => setStatus(s => s === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT)}
+              onClick={() => setStatus(s => {
+                      if (!isEdit) {
+                        // add mode
+                        return s === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
+                      }
+                      // edit mode 
+                      if (s === LinkStatus.PUBLISHED) {
+                          return LinkStatus.UNPUBLISHED
+                      };
+                          return LinkStatus.PUBLISHED;
+                    })}
               className="relative shrink-0 outline-none"
               style={{
                 width: 42,
                 height: 24,
                 borderRadius: 99,
-                background: status === LinkStatus.DRAFT ? "#d6dae9" : "#3b46e0",
+                background: status === LinkStatus.PUBLISHED ? "#3b46e0" : "#d6dae9",
                 border: 0,
                 cursor: "pointer",
                 transition: "background 0.2s ease",
@@ -704,7 +797,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   left: 2,
                   boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
                   transition: "transform 0.2s ease",
-                  transform: status === LinkStatus.DRAFT ? "translateX(0)" : "translateX(18px)",
+                  transform: status === LinkStatus.PUBLISHED ? "translateX(18px)" : "translateX(0)",
                 }}
               />
             </button>
@@ -792,10 +885,16 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               onMouseEnter={e => { if (canSave) e.currentTarget.style.transform = "translateY(-1px)"; }}
               onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/>
-              </svg>
-              {isEdit ? "Save changes" : "Add link"}
+              {isSaving || isUploadingThumb ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 0.8s linear infinite" }}>
+                  <path strokeLinecap="round" d="M12 2a10 10 0 010 20"/>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/>
+                </svg>
+              )}
+              {isSaving || isUploadingThumb ? "Uploading…" : isEdit ? "Save changes" : "Add link"}
             </button>
           </div>
         </div>
