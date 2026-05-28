@@ -71,7 +71,7 @@ export async function addLink(data: {
 
   try {
     const link = await db.link.create({
-      data: { ...data, userId: session.user.id },
+      data: { ...parsed.data, userId: session.user.id },
     });
     // Cache invalidation is best-effort — a Redis failure must not mask a successful write
     try { await redis.del(`links:${session.user.id}`); } catch {}

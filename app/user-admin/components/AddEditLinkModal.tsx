@@ -726,8 +726,12 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                 width: 38,
                 height: 38,
                 borderRadius: 10,
-                background: status === LinkStatus.DRAFT ? "#eef0f7" : "#e8f6ee",
-                color: status === LinkStatus.DRAFT ? "#a8aecb" : "#16a34a",
+                background: status === LinkStatus.DRAFT ? "#eef0f7"
+                          : status === LinkStatus.PUBLISHED ? "#e8f6ee"
+                          : "#fff4dc",
+                color:      status === LinkStatus.DRAFT ? "#a8aecb"
+                          : status === LinkStatus.PUBLISHED ? "#16a34a"
+                          : "#d97706",
                 transition: "all 0.2s ease",
               }}
             >
@@ -746,10 +750,14 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             {/* Status text */}
             <div className="flex-1 min-w-0">
               <p style={{ fontSize: 13.5, fontWeight: 600, color: "#0b1020" }}>
-                {status === LinkStatus.DRAFT ? "Save as draft" : "Publish immediately"}
+                {status === LinkStatus.DRAFT ? "Save as draft"
+                : status === LinkStatus.PUBLISHED ? "Publish immediately"
+                : "Unpublished"}
               </p>
               <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 1 }}>
-                {status === LinkStatus.DRAFT ? "Link stays hidden until you publish it" : "This link will be visible on your public page"}
+                {status === LinkStatus.DRAFT ? "Link stays hidden until you publish it"
+                : status === LinkStatus.PUBLISHED ? "This link will be visible on your public page"
+                : "This link is hidden from your public page"}
               </p>
             </div>
 
@@ -758,13 +766,23 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               type="button"
               role="switch"
               aria-checked={status === LinkStatus.PUBLISHED}
-              onClick={() => setStatus(s => s === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT)}
+              onClick={() => setStatus(s => {
+                      if (!isEdit) {
+                        // add mode
+                        return s === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
+                      }
+                      // edit mode 
+                      if (s === LinkStatus.PUBLISHED) {
+                          return LinkStatus.UNPUBLISHED
+                      };
+                          return LinkStatus.PUBLISHED;
+                    })}
               className="relative shrink-0 outline-none"
               style={{
                 width: 42,
                 height: 24,
                 borderRadius: 99,
-                background: status === LinkStatus.DRAFT ? "#d6dae9" : "#3b46e0",
+                background: status === LinkStatus.PUBLISHED ? "#3b46e0" : "#d6dae9",
                 border: 0,
                 cursor: "pointer",
                 transition: "background 0.2s ease",
@@ -779,7 +797,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   left: 2,
                   boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
                   transition: "transform 0.2s ease",
-                  transform: status === LinkStatus.DRAFT ? "translateX(0)" : "translateX(18px)",
+                  transform: status === LinkStatus.PUBLISHED ? "translateX(18px)" : "translateX(0)",
                 }}
               />
             </button>
