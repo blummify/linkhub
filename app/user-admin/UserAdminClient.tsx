@@ -7,7 +7,7 @@ import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
-import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim, checkHandleAvailability } from "../actions/links";
+import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim, checkHandleAvailability, reorderLinks } from "../actions/links";
 import { toast } from "sonner";
 import { getBrandingThemeById, type BrandingAppearanceState } from "@/lib/brandingState";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
@@ -260,7 +260,11 @@ export default function UserAdminClient() {
                     onDeleteLink={handleDeleteLink}
                     onToggleLink={handleToggleLink}
                     onUpdateLink={handleUpdateLink}
-                    onReorderLinks={useLinksStore.getState().reorderLinks}
+                    onReorderLinks={(newLinks) => {
+                      useLinksStore.getState().reorderLinks(newLinks);
+                      const ids = newLinks.map((l) => l.id).filter((id): id is string => !!id);
+                      void reorderLinks(ids);
+                    }}
                   />
                 </div>
 

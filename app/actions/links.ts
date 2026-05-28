@@ -28,7 +28,7 @@ export async function getLinks(): Promise<LinkRow[]> {
   try {
     const links = await db.link.findMany({
       where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
     });
     try { await redis.set(cacheKey, links, { ex: LINKS_TTL }); } catch {}
     return links;
@@ -148,6 +148,27 @@ export async function deleteLink(id: string) {
   } catch (error) {
     console.error("Error deleting link:", error);
     return { error: "Failed to delete link" };
+  }
+}
+
+export async function reorderLinks(orderedIds: string[]) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    await db.$transaction(
+      orderedIds.map((id, index) =>
+        db.link.update({
+          where: { id, userId: session.user.id },
+          data: { order: index },
+        })
+      )
+    );
+    try { await redis.del(`links:${session.user.id}`); } catch {}
+    return { success: true };
+  } catch (error) {
+    console.error("Error reordering links:", error);
+    return { error: "Failed to save order" };
   }
 }
 
