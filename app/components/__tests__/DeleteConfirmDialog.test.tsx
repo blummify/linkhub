@@ -45,4 +45,23 @@ describe("DeleteConfirmDialog", () => {
     fireEvent.click(screen.getByText("Delete"));
     expect(onConfirm).toHaveBeenCalledOnce();
   });
+
+  it("disables both buttons and shows spinner when isLoading is true", () => {
+    render(
+      <DeleteConfirmDialog open link={link} onClose={vi.fn()} onConfirm={vi.fn()} isLoading />
+    );
+    expect(screen.getByText(/Deleting/i)).toBeInTheDocument();
+    screen.getAllByRole("button").forEach((btn) => {
+      expect(btn).toBeDisabled();
+    });
+  });
+
+  it("does not call onClose when backdrop is clicked while loading", () => {
+    const onClose = vi.fn();
+    const { container } = render(
+      <DeleteConfirmDialog open link={link} onClose={onClose} onConfirm={vi.fn()} isLoading />
+    );
+    fireEvent.click(container.firstChild as HTMLElement);
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
