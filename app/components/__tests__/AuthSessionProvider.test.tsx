@@ -9,7 +9,7 @@ vi.mock("next-auth/react", () => ({
 describe("AuthSessionProvider", () => {
   it("renders its children", () => {
     render(
-      <AuthSessionProvider>
+      <AuthSessionProvider session={null}>
         <div>Child content</div>
       </AuthSessionProvider>
     );
@@ -18,7 +18,7 @@ describe("AuthSessionProvider", () => {
 
   it("renders multiple children", () => {
     render(
-      <AuthSessionProvider>
+      <AuthSessionProvider session={null}>
         <span>A</span>
         <span>B</span>
       </AuthSessionProvider>
