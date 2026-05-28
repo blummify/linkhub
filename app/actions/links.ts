@@ -66,7 +66,7 @@ export async function addLink(data: {
 
   try {
     const link = await db.link.create({
-      data: { ...data, userId: session.user.id },
+      data: { ...parsed.data, userId: session.user.id },
     });
     await redis.del(`links:${session.user.id}`);
     return { success: true, link };
