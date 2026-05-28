@@ -8,6 +8,7 @@ const { mockUseSession } = vi.hoisted(() => ({
 
 vi.mock("next-auth/react", () => ({
   useSession: mockUseSession,
+  signOut: vi.fn(),
 }));
 
 describe("PublicNav", () => {
@@ -41,9 +42,8 @@ describe("PublicNav", () => {
   });
 
   it("shows profile avatar instead of auth buttons when authenticated", () => {
-    mockUseSession.mockReturnValueOnce({
-      data: { user: { name: "Joel", email: "joel@test.com", image: null } },
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseSession.mockReturnValueOnce({ data: { user: { name: "Joel", email: "joel@test.com", image: null } } } as any);
     render(<PublicNav />);
     expect(screen.queryByRole("link", { name: "Login" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Sign Up" })).not.toBeInTheDocument();
