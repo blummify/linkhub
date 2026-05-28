@@ -6,6 +6,7 @@ vi.mock("next-auth/react", () => ({
   useSession: () => ({
     data: { user: { id: "u1", name: "Alex", email: "alex@example.com" } },
     status: "authenticated",
+    update: vi.fn(),
   }),
   signOut: vi.fn(),
 }));
