@@ -15,7 +15,7 @@ import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { updateAvatarUrl, removeAvatar } from "@/app/actions/profile";
-import { getProfile, claimHandle } from "@/app/actions/links";
+import { getProfile, claimHandle, checkHandleAvailability } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
 import { useBrandingStore } from "@/store/brandingStore";
 import { useProfileStore } from "@/store/profileStore";
@@ -92,8 +92,17 @@ export default function AppearanceClient() {
   useEffect(() => {
     if (profileFetched) return;
     getProfile().then((p) => {
-      const url = (p as { avatarUrl?: string | null } | null)?.avatarUrl ?? null;
-      useProfileStore.getState().markFetched({ avatarUrl: url });
+      if (!p) {
+        useProfileStore.getState().markFetched({ avatarUrl: null });
+        return;
+      }
+      const profile = p as { avatarUrl?: string | null; handle?: string | null };
+      useProfileStore.getState().markFetched({ avatarUrl: profile.avatarUrl ?? null });
+      // Sync handle from DB without marking dirty — keeps the store correct after a
+      // hard refresh when localStorage may be stale or empty.
+      if (profile.handle) {
+        useBrandingStore.setState({ handle: profile.handle });
+      }
     }).catch(() => {});
   }, [profileFetched]);
 
@@ -320,9 +329,15 @@ export default function AppearanceClient() {
     <ClaimHandleModal
       open={showClaimModal}
       onClose={() => setShowClaimModal(false)}
+      currentHandle={handle}
+      onCheckAvailability={checkHandleAvailability}
+      submitLabel="Claim handle"
       onClaim={async (h) => {
         const result = await claimHandle(h);
-        if (result.success) setShowClaimModal(false);
+        if (result.success) {
+          setShowClaimModal(false);
+          setHandle(h);
+        }
         return result;
       }}
     />
