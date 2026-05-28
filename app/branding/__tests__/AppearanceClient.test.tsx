@@ -13,6 +13,8 @@ vi.mock("@/app/components/DashboardPreviewPanel", () => ({
 
 vi.mock("@/app/actions/links", () => ({
   getProfile: vi.fn().mockResolvedValue(null),
+  claimHandle: vi.fn().mockResolvedValue({ success: true }),
+  checkHandleAvailability: vi.fn().mockResolvedValue({ available: true }),
 }));
 
 vi.mock("@/app/actions/profile", () => ({
