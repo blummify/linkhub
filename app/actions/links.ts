@@ -44,7 +44,7 @@ export async function getLinksCount() {
 
   try {
     const count = await db.link.count({
-      where: { userId: session.user.id }
+      where: { userId: session.user.id },
     });
     return { count };
   } catch (error) {

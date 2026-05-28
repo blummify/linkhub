@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image"
@@ -39,8 +40,12 @@ export default function CollapsibleSidebar({
   const toggleSidebar = useSidebarStore((s) => s.toggle);
   const linkCount = useLinksStore((s) => s.links.length);
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const user = session?.user;
+
+  // Ensure the session is always fresh when the dashboard first mounts.
+  // Covers every sign-in path (credentials redirect, verify-email, OAuth).
+  useEffect(() => { void update(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const displayName =
     user?.name?.trim() ||
