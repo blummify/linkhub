@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { CommandPalette } from "../components/CommandPalette";
@@ -15,7 +17,7 @@ import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
 import { AvatarCropModal } from "./components/AvatarCropModal";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
-import { updateAvatarUrl, removeAvatar } from "@/app/actions/profile";
+import { updateAvatarUrl, removeAvatar, updateBranding } from "@/app/actions/profile";
 import { getProfile, claimHandle, checkHandleAvailability } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
 import { useBrandingStore } from "@/store/brandingStore";
@@ -87,7 +89,12 @@ export default function AppearanceClient() {
   const avatarUrl = useProfileStore((s) => s.avatarUrl);
   const profileFetched = useProfileStore((s) => s.fetched);
 
+  const router = useRouter();
+
   const [showPalette, setShowPalette] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
 
   // Deferred avatar upload state
@@ -96,21 +103,65 @@ export default function AppearanceClient() {
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
+    queueMicrotask(() => setMounted(true));
+  }, []);
+
+  useEffect(() => {
     if (profileFetched) return;
     getProfile().then((p) => {
       if (!p) {
         useProfileStore.getState().markFetched({ avatarUrl: null });
         return;
       }
-      const profile = p as { avatarUrl?: string | null; handle?: string | null };
+      const profile = p as { avatarUrl?: string | null; handle?: string | null; displayName?: string | null; bio?: string | null };
       useProfileStore.getState().markFetched({ avatarUrl: profile.avatarUrl ?? null });
-      // Sync handle from DB without marking dirty — keeps the store correct after a
-      // hard refresh when localStorage may be stale or empty.
-      if (profile.handle) {
-        useBrandingStore.setState({ handle: profile.handle });
-      }
+      // Sync profile fields from DB without marking dirty
+      const patch: Record<string, string> = {};
+      if (profile.displayName) patch.displayName = profile.displayName;
+      if (profile.handle) patch.handle = profile.handle;
+      if (profile.bio) patch.bio = profile.bio;
+      if (Object.keys(patch).length) useBrandingStore.setState(patch);
     }).catch(() => {});
   }, [profileFetched]);
+
+  const isDirtyOrPending = isDirty || !!pendingAvatarBlob;
+
+  // Guard 1 — browser refresh / tab close
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => { if (isDirtyOrPending) e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirtyOrPending]);
+
+  // Guard 2 — browser back / forward buttons
+  useEffect(() => {
+    history.pushState(null, "", location.href);
+    const handler = () => {
+      if (!isDirtyOrPending) return;
+      history.pushState(null, "", location.href);
+      setPendingNavUrl(null);
+      setShowLeaveModal(true);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, [isDirtyOrPending]);
+
+  // Guard 3 — in-app <Link> clicks (sidebar, breadcrumbs, etc.)
+  useEffect(() => {
+    if (!isDirtyOrPending) return;
+    const handler = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("mailto:")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavUrl(href);
+      setShowLeaveModal(true);
+    };
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, [isDirtyOrPending]);
 
   // Revoke the preview object URL when it changes or on unmount
   useEffect(() => {
@@ -142,12 +193,22 @@ export default function AppearanceClient() {
   const handleSave = useCallback(async () => {
     if (pendingAvatarBlob) {
       const file = new File([pendingAvatarBlob], "avatar.jpg", { type: "image/jpeg" });
-      await upload(file); // onSuccess writes to DB and updates profileStore
+      await upload(file);
       setPendingAvatarBlob(null);
       setPendingAvatarPreview(null);
     }
+    await updateBranding({ displayName, bio });
     markSaved();
-  }, [pendingAvatarBlob, upload, markSaved]);
+  }, [pendingAvatarBlob, upload, displayName, bio, markSaved]);
+
+  const handleLeaveAnyway = useCallback(() => {
+    setShowLeaveModal(false);
+    useBrandingStore.getState().reset();
+    setPendingAvatarBlob(null);
+    setPendingAvatarPreview(null);
+    if (pendingNavUrl) router.push(pendingNavUrl);
+    else history.go(-1);
+  }, [pendingNavUrl, router]);
 
   const themeOptions = useMemo(
     () => BRANDING_THEMES.map((t) => ({ id: t.id, name: t.name, tag: t.tag })),
@@ -389,6 +450,41 @@ export default function AppearanceClient() {
       onRandomTheme={randomTheme}
       searchPlaceholder="Search themes, fonts, colors…"
     />
+
+    {mounted && showLeaveModal && createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowLeaveModal(false)}
+        />
+        <div className="relative bg-white dark:bg-surface-container rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center space-y-5">
+          <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto">
+            <span className="material-symbols-outlined text-3xl text-amber-600 dark:text-amber-400">warning</span>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-on-surface mb-2">Unsaved changes</h3>
+            <p className="text-sm text-gray-500 dark:text-on-surface-variant leading-relaxed">
+              You have unsaved changes. If you leave now your edits will be lost.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <button
+              onClick={() => setShowLeaveModal(false)}
+              className="w-full bg-primary text-white py-3 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
+            >
+              Stay and save
+            </button>
+            <button
+              onClick={handleLeaveAnyway}
+              className="w-full border border-gray-300 dark:border-outline-variant text-gray-700 dark:text-on-surface py-3 px-4 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-surface-container-high transition-colors cursor-pointer"
+            >
+              Leave anyway
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
     </>
   );
 }

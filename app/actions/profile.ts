@@ -6,6 +6,28 @@ import { db } from "@/lib/db";
 import { redis } from "@/lib/redis";
 import { deleteFromR2 } from "@/lib/r2";
 
+export async function updateBranding(data: {
+  displayName?: string;
+  bio?: string;
+}): Promise<{ success: true } | { error: string }> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    await db.profile.update({
+      where: { userId: session.user.id },
+      data: {
+        ...(data.displayName !== undefined && { displayName: data.displayName }),
+        ...(data.bio !== undefined && { bio: data.bio }),
+      },
+    });
+    try { await redis.del(`profile:${session.user.id}`); } catch {}
+    return { success: true };
+  } catch {
+    return { error: "Failed to save changes. Please try again." };
+  }
+}
+
 /**
  * Persists a new avatar URL + key to the user's profile.
  * Automatically cleans up the previous R2 object (if any) after the DB write,
