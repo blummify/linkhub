@@ -70,6 +70,15 @@ export async function addLink(data: {
   }
 
   try {
+
+    const checkExistingLink = await db.link.findFirst({
+      where: {url: parsed.data.url, userId: session.user.id},
+      select: {id: true},
+    });
+    if (checkExistingLink) {
+      return {error: "You already have a link with this URL."};
+    }
+
     const link = await db.link.create({
       data: { ...parsed.data, userId: session.user.id },
     });
