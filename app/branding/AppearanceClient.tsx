@@ -353,6 +353,7 @@ export default function AppearanceClient() {
     {cropFile && (
       <AvatarCropModal
         file={cropFile}
+        name={displayName || undefined}
         onConfirm={(blob) => {
           setCropFile(null);
           setPendingAvatarBlob(blob);

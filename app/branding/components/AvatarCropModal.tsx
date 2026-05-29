@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
 
 interface AvatarCropModalProps {
   file: File;
+  name?: string;
   onConfirm: (blob: Blob) => void;
   onCancel: () => void;
 }
@@ -19,7 +20,7 @@ const RECT_ASPECTS: { label: RectRatio; value: number }[] = [
   { label: "3:2",  value: 3 / 2  },
 ];
 
-async function getCroppedBlob(src: string, crop: Area): Promise<Blob> {
+async function cropToBlob(src: string, crop: Area, maxDim = 800): Promise<Blob> {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const i = new Image();
     i.crossOrigin = "anonymous";
@@ -27,52 +28,27 @@ async function getCroppedBlob(src: string, crop: Area): Promise<Blob> {
     i.onerror = reject;
     i.src = src;
   });
-  const maxDim = 800;
   const scale = Math.min(maxDim / crop.width, maxDim / crop.height, 1);
   const w = Math.round(crop.width * scale);
   const h = Math.round(crop.height * scale);
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, w, h);
-  return new Promise((resolve) => canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.92));
+  canvas.getContext("2d")!.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, w, h);
+  return new Promise((res) => canvas.toBlob((b) => res(b!), "image/jpeg", 0.92));
 }
 
-function ShapeBtn({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex flex-col items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none ${
-        active
-          ? "bg-primary text-white shadow-md shadow-primary/30"
-          : "bg-gray-100 dark:bg-surface-container-high text-gray-500 dark:text-on-surface-variant hover:bg-gray-200 dark:hover:bg-surface-container"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-export function AvatarCropModal({ file, onConfirm, onCancel }: AvatarCropModalProps) {
-  const [objectUrl, setObjectUrl] = useState("");
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropModalProps) {
+  const [objectUrl, setObjectUrl]           = useState("");
+  const [previewUrl, setPreviewUrl]         = useState("");
+  const [crop, setCrop]                     = useState({ x: 0, y: 0 });
+  const [zoom, setZoom]                     = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const [shape, setShape] = useState<Shape>("circle");
-  const [rectRatio, setRectRatio] = useState<RectRatio>("16:9");
-  const [cropSize, setCropSize] = useState(220);
+  const [isProcessing, setIsProcessing]     = useState(false);
+  const [shape, setShape]                   = useState<Shape>("circle");
+  const [rectRatio, setRectRatio]           = useState<RectRatio>("16:9");
+  const [cropSize, setCropSize]             = useState(240);
+  const previewTimer                        = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -80,15 +56,38 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: AvatarCropModalPr
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  // Debounced live preview
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
+    if (previewTimer.current) clearTimeout(previewTimer.current);
+    previewTimer.current = setTimeout(async () => {
+      if (!pixels) return;
+      try {
+        const blob = await cropToBlob(pixels ? /* objectUrl will be closed over */ "" : "", pixels, 96);
+        void blob; // placeholder — we'll use the objectUrl from closure below
+      } catch { /* ignore */ }
+    }, 120);
   }, []);
+
+  // Simpler live preview using the closure correctly
+  useEffect(() => {
+    if (!objectUrl || !croppedAreaPixels) return;
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const blob = await cropToBlob(objectUrl, croppedAreaPixels, 96);
+        if (!cancelled) {
+          const url = URL.createObjectURL(blob);
+          setPreviewUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return url; });
+        }
+      } catch { /* ignore preview errors */ }
+    }, 120);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [objectUrl, croppedAreaPixels]);
 
   const aspect = shape === "rect"
     ? RECT_ASPECTS.find((r) => r.label === rectRatio)!.value
     : 1;
-
-  const cropShapeProp = shape === "circle" ? "round" : "rect";
 
   const computedCropSize = shape === "rect"
     ? { width: Math.round(cropSize * aspect), height: cropSize }
@@ -98,7 +97,7 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: AvatarCropModalPr
     if (!croppedAreaPixels) return;
     setIsProcessing(true);
     try {
-      const blob = await getCroppedBlob(objectUrl, croppedAreaPixels);
+      const blob = await cropToBlob(objectUrl, croppedAreaPixels);
       onConfirm(blob);
     } finally {
       setIsProcessing(false);
@@ -108,92 +107,110 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: AvatarCropModalPr
   if (!objectUrl) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onCancel} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
 
-      {/* Card */}
-      <div className="relative bg-white dark:bg-[#1a1f2e] rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
-
+      {/* Modal */}
+      <div
+        className="relative bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+        style={{ width: "100%", maxWidth: 680 }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4">
-          <div>
-            <h3 className="text-base font-bold text-gray-900 dark:text-white tracking-tight">Edit photo</h3>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Drag · scroll to zoom · choose shape</p>
-          </div>
+        <div className="flex items-center justify-between px-7 pt-6 pb-5">
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+            {name ? `Edit: ${name}` : "Edit photo"}
+          </h2>
           <button
             type="button"
             onClick={onCancel}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer"
+            className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Crop canvas */}
-        <div className="relative bg-gray-950" style={{ height: 320 }}>
+        <div className="relative bg-gray-200" style={{ height: 420 }}>
           <Cropper
             image={objectUrl}
             crop={crop}
             zoom={zoom}
             aspect={aspect}
-            cropShape={cropShapeProp}
+            cropShape={shape === "circle" ? "round" : "rect"}
             cropSize={computedCropSize}
-            showGrid={false}
+            showGrid
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={onCropComplete}
             style={{
               containerStyle: { borderRadius: 0 },
+              mediaStyle: { borderRadius: 0 },
               cropAreaStyle: {
-                border: "2.5px solid rgba(255,255,255,0.9)",
-                boxShadow: "0 0 0 9999px rgba(0,0,0,0.62)",
+                border: "2px solid white",
+                boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
               },
             }}
           />
+
+          {/* Live preview card — bottom-left */}
+          <div
+            className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3"
+            style={{ minWidth: 180 }}
+          >
+            {/* Circular preview */}
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 shrink-0 ring-2 ring-white shadow-sm">
+              {previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewUrl} alt="preview" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                  {name?.charAt(0)?.toUpperCase() ?? "?"}
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{name ?? "Your photo"}</p>
+              <p className="text-xs text-gray-400">Preview</p>
+            </div>
+          </div>
         </div>
 
-        {/* Controls */}
-        <div className="px-5 py-4 space-y-4 bg-white dark:bg-[#1a1f2e]">
-
-          {/* Shape picker */}
-          <div>
-            <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Shape</p>
-            <div className="flex gap-2">
-              <ShapeBtn active={shape === "circle"} onClick={() => setShape("circle")}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" opacity={0.85}>
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
-                Circle
-              </ShapeBtn>
-              <ShapeBtn active={shape === "square"} onClick={() => setShape("square")}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" opacity={0.85}>
-                  <rect x="2" y="2" width="20" height="20" rx="3" />
-                </svg>
-                Square
-              </ShapeBtn>
-              <ShapeBtn active={shape === "rect"} onClick={() => setShape("rect")}>
-                <svg width="22" height="16" viewBox="0 0 28 18" fill="currentColor" opacity={0.85}>
-                  <rect x="0" y="0" width="28" height="18" rx="3" />
-                </svg>
-                Rectangle
-              </ShapeBtn>
+        {/* Controls row */}
+        <div className="px-7 pt-4 pb-2 border-b border-gray-100">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Shape toggle */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+              {(["circle", "square", "rect"] as Shape[]).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setShape(s)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer capitalize ${
+                    shape === s
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {s === "circle" ? "⬤ Circle" : s === "square" ? "■ Square" : "▬ Rect"}
+                </button>
+              ))}
             </div>
 
-            {/* Rect aspect ratio sub-toggle */}
+            {/* Rect aspect ratios */}
             {shape === "rect" && (
-              <div className="flex gap-1.5 mt-2.5">
+              <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
                 {RECT_ASPECTS.map((r) => (
                   <button
                     key={r.label}
                     type="button"
                     onClick={() => setRectRatio(r.label)}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       rectRatio === r.label
-                        ? "bg-primary/15 text-primary"
-                        : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10"
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
                     {r.label}
@@ -201,77 +218,60 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: AvatarCropModalPr
                 ))}
               </div>
             )}
-          </div>
 
-          {/* Zoom + Size sliders */}
-          <div className="space-y-3">
-            {/* Zoom */}
-            <div className="flex items-center gap-3">
-              <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 w-8 shrink-0">Zoom</span>
+            {/* Zoom slider */}
+            <div className="flex items-center gap-2 flex-1 min-w-[140px]">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400 shrink-0">
+                <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="M21 21l-4.35-4.35M11 8v6M8 11h6"/>
+              </svg>
               <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.01}
-                value={zoom}
+                type="range" min={1} max={3} step={0.01} value={zoom}
                 onChange={(e) => setZoom(Number(e.target.value))}
                 className="flex-1 accent-primary cursor-pointer h-1"
                 aria-label="Zoom"
               />
-              <span className="text-[11px] tabular-nums text-gray-400 dark:text-gray-500 w-8 text-right shrink-0">
-                {zoom.toFixed(1)}×
-              </span>
+              <span className="text-xs tabular-nums text-gray-400 w-8 shrink-0">{zoom.toFixed(1)}×</span>
             </div>
 
-            {/* Crop size */}
-            <div className="flex items-center gap-3">
-              <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 w-8 shrink-0">Size</span>
+            {/* Size slider */}
+            <div className="flex items-center gap-2 min-w-[120px]">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400 shrink-0">
+                <path strokeLinecap="round" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+              </svg>
               <input
-                type="range"
-                min={120}
-                max={290}
-                step={1}
-                value={cropSize}
+                type="range" min={120} max={300} step={1} value={cropSize}
                 onChange={(e) => setCropSize(Number(e.target.value))}
                 className="flex-1 accent-primary cursor-pointer h-1"
                 aria-label="Crop size"
               />
-              <span className="text-[11px] tabular-nums text-gray-400 dark:text-gray-500 w-8 text-right shrink-0">
-                {Math.round((cropSize / 290) * 100)}%
-              </span>
             </div>
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/8 hover:bg-gray-200 dark:hover:bg-white/12 transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={isProcessing}
-              className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/25"
-            >
-              {isProcessing ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing…
-                </>
-              ) : (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Crop & Apply
-                </>
-              )}
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-7 py-5">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-6 py-2.5 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={isProcessing}
+            className="px-6 py-2.5 rounded-full text-sm font-bold bg-[#1e2d6b] text-white hover:bg-[#162259] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 cursor-pointer shadow-lg"
+          >
+            {isProcessing ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving…
+              </>
+            ) : (
+              "Save image"
+            )}
+          </button>
         </div>
       </div>
     </div>
