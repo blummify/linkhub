@@ -147,7 +147,7 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
         </div>
 
         {/* Crop area */}
-        <div className="relative bg-gray-100 flex items-center justify-center overflow-hidden" style={{ minHeight: 360, maxHeight: 420 }}>
+        <div className="relative bg-gray-100 overflow-hidden">
           <ReactCrop
             crop={crop}
             onChange={onCropChange}
@@ -158,7 +158,7 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
             keepSelection
             minWidth={60}
             minHeight={60}
-            className="max-h-[420px]"
+            style={{ display: "block", width: "100%" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -166,8 +166,7 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
               src={objectUrl}
               alt="Crop source"
               onLoad={onImageLoad}
-              className="block max-h-[420px] w-auto mx-auto"
-              style={{ objectFit: "contain" }}
+              style={{ display: "block", width: "100%", maxHeight: 500, objectFit: "contain" }}
             />
           </ReactCrop>
 
