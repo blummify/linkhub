@@ -63,6 +63,7 @@ vi.mock("@/store/brandingStore", () => ({
       bio: "", accentColor: "#3b46e0", buttonStyle: "rounded",
       fontFamily: "Instrument Serif", userPickedTheme: false,
       isDirty: false, hydrated: true,
+      _baseline: { themeId: "default", displayName: "Your Name", handle: "", bio: "", accentColor: "#3b46e0", buttonStyle: "rounded", fontFamily: "Instrument Serif", userPickedTheme: false },
       setDisplayName: vi.fn(), setHandle: vi.fn(), setBio: vi.fn(),
       setAccentColor: vi.fn(), setButtonStyle: vi.fn(), setFontFamily: vi.fn(),
       selectTheme: vi.fn(), randomTheme: vi.fn(),

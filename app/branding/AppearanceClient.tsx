@@ -71,7 +71,20 @@ export default function AppearanceClient() {
   const buttonStyle = useBrandingStore((s) => s.buttonStyle);
   const fontFamily = useBrandingStore((s) => s.fontFamily);
   const themeId = useBrandingStore((s) => s.themeId);
-  const isDirty = useBrandingStore((s) => s.isDirty);
+  // Compute dirty by comparing live state to the last-saved baseline — this way
+  // reverting a change (e.g. typing "s" then deleting it) correctly clears the flag.
+  const isDirty = useBrandingStore((s) => {
+    const b = s._baseline;
+    return (
+      s.displayName !== b.displayName ||
+      s.bio         !== b.bio         ||
+      s.handle      !== b.handle      ||
+      s.themeId     !== b.themeId     ||
+      s.accentColor !== b.accentColor ||
+      s.buttonStyle !== b.buttonStyle ||
+      s.fontFamily  !== b.fontFamily
+    );
+  });
   const setDisplayName = useBrandingStore((s) => s.setDisplayName);
   const setHandle = useBrandingStore((s) => s.setHandle);
   const setBio = useBrandingStore((s) => s.setBio);
