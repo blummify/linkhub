@@ -134,11 +134,12 @@ export default function AppearanceClient() {
   }, [isDirtyOrPending]);
 
   // Guard 2 — browser back / forward buttons
+  // Push one extra history entry on mount so pressing back triggers popstate here.
+  useEffect(() => { history.pushState(null, "", location.href); }, []);
   useEffect(() => {
-    history.pushState(null, "", location.href);
     const handler = () => {
       if (!isDirtyOrPending) return;
-      history.pushState(null, "", location.href);
+      history.pushState(null, "", location.href); // keep URL stable
       setPendingNavUrl(null);
       setShowLeaveModal(true);
     };
@@ -206,8 +207,10 @@ export default function AppearanceClient() {
     useBrandingStore.getState().reset();
     setPendingAvatarBlob(null);
     setPendingAvatarPreview(null);
-    if (pendingNavUrl) router.push(pendingNavUrl);
-    else history.go(-1);
+    const target = pendingNavUrl;
+    setPendingNavUrl(null);
+    if (target) router.push(target);
+    else router.back();
   }, [pendingNavUrl, router]);
 
   const themeOptions = useMemo(
@@ -339,17 +342,18 @@ export default function AppearanceClient() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
                     </svg>
                     Save changes
-                    <span
-                      style={{
-                        width: 8,
-                        height: 8,
-                        background: "#f59e0b",
-                        borderRadius: "50%",
-                        opacity: isDirty || pendingAvatarBlob ? 1 : 0,
-                        transition: "opacity 0.2s ease",
-                        animation: isDirty || pendingAvatarBlob ? "dot-blink 1.2s ease-in-out infinite" : "none",
-                      }}
-                    />
+                    {isDirtyOrPending && (
+                      <span
+                        style={{
+                          width: 8,
+                          height: 8,
+                          background: "#f59e0b",
+                          borderRadius: "50%",
+                          flexShrink: 0,
+                          animation: "dot-blink 1.2s ease-in-out infinite",
+                        }}
+                      />
+                    )}
                   </button>
                 </div>
               </div>
