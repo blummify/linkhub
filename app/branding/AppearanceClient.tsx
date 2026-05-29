@@ -341,12 +341,13 @@ export default function AppearanceClient() {
                     Save changes
                     <span
                       style={{
-                        width: 6,
-                        height: 6,
+                        width: 8,
+                        height: 8,
                         background: "#f59e0b",
                         borderRadius: "50%",
                         opacity: isDirty || pendingAvatarBlob ? 1 : 0,
                         transition: "opacity 0.2s ease",
+                        animation: isDirty || pendingAvatarBlob ? "dot-blink 1.2s ease-in-out infinite" : "none",
                       }}
                     />
                   </button>
