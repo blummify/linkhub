@@ -13,6 +13,7 @@ import { BRANDING_FONT_SERIF } from "../constants/brandingFonts";
 import { ProfileSection } from "./components/ProfileSection";
 import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
+import { AvatarCropModal } from "./components/AvatarCropModal";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { updateAvatarUrl, removeAvatar } from "@/app/actions/profile";
 import { getProfile, claimHandle, checkHandleAvailability } from "@/app/actions/links";
@@ -89,6 +90,11 @@ export default function AppearanceClient() {
   const [showPalette, setShowPalette] = useState(false);
   const [showClaimModal, setShowClaimModal] = useState(false);
 
+  // Deferred avatar upload state
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [pendingAvatarBlob, setPendingAvatarBlob] = useState<Blob | null>(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
+
   useEffect(() => {
     if (profileFetched) return;
     getProfile().then((p) => {
@@ -106,6 +112,11 @@ export default function AppearanceClient() {
     }).catch(() => {});
   }, [profileFetched]);
 
+  // Revoke the preview object URL when it changes or on unmount
+  useEffect(() => {
+    return () => { if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview); };
+  }, [pendingAvatarPreview]);
+
   const { upload, isUploading: isUploadingAvatar } = useFileUpload({
     folder: "avatars",
     maxSizeMB: 5,
@@ -120,10 +131,23 @@ export default function AppearanceClient() {
   });
 
   const handleRemoveAvatar = useCallback(async () => {
+    // Also discard any pending crop that hasn't been saved yet
+    setPendingAvatarBlob(null);
+    setPendingAvatarPreview(null);
     const result = await removeAvatar();
     if ("error" in result) return;
     useProfileStore.getState().setAvatarUrl(null);
   }, []);
+
+  const handleSave = useCallback(async () => {
+    if (pendingAvatarBlob) {
+      const file = new File([pendingAvatarBlob], "avatar.jpg", { type: "image/jpeg" });
+      await upload(file); // onSuccess writes to DB and updates profileStore
+      setPendingAvatarBlob(null);
+      setPendingAvatarPreview(null);
+    }
+    markSaved();
+  }, [pendingAvatarBlob, upload, markSaved]);
 
   const themeOptions = useMemo(
     () => BRANDING_THEMES.map((t) => ({ id: t.id, name: t.name, tag: t.tag })),
@@ -232,7 +256,7 @@ export default function AppearanceClient() {
                   </button>
                   <button
                     type="button"
-                    onClick={markSaved}
+                    onClick={handleSave}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -260,7 +284,7 @@ export default function AppearanceClient() {
                         height: 6,
                         background: "#f59e0b",
                         borderRadius: "50%",
-                        opacity: isDirty ? 1 : 0,
+                        opacity: isDirty || pendingAvatarBlob ? 1 : 0,
                         transition: "opacity 0.2s ease",
                       }}
                     />
@@ -281,9 +305,9 @@ export default function AppearanceClient() {
                     onDisplayNameChange={setDisplayName}
                     onHandleChange={setHandle}
                     onBioChange={setBio}
-                    avatarUrl={avatarUrl}
+                    avatarUrl={pendingAvatarPreview ?? avatarUrl}
                     isUploadingAvatar={isUploadingAvatar}
-                    onFileSelected={upload}
+                    onFileSelected={(file) => setCropFile(file)}
                     onRemoveAvatar={handleRemoveAvatar}
                   />
                 </section>
@@ -325,6 +349,19 @@ export default function AppearanceClient() {
         </main>
       </CollapsibleSidebar>
     </div>
+
+    {cropFile && (
+      <AvatarCropModal
+        file={cropFile}
+        onConfirm={(blob) => {
+          setCropFile(null);
+          setPendingAvatarBlob(blob);
+          if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
+          setPendingAvatarPreview(URL.createObjectURL(blob));
+        }}
+        onCancel={() => setCropFile(null)}
+      />
+    )}
 
     <ClaimHandleModal
       open={showClaimModal}
