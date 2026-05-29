@@ -13,14 +13,7 @@ interface AvatarCropModalProps {
 
 type Shape = "circle" | "square" | "rect";
 type RectRatio = "16:9" | "4:3" | "3:2";
-type BgStyle = "gray" | "white" | "checker" | "blur";
-
-const BG_OPTIONS: { id: BgStyle; title: string; style: React.CSSProperties }[] = [
-  { id: "gray",    title: "Gray",       style: { background: "#e5e7eb" } },
-  { id: "white",   title: "White",      style: { background: "#ffffff" } },
-  { id: "checker", title: "Checkered",  style: { background: "repeating-conic-gradient(#d1d5db 0% 25%, #f9fafb 0% 50%) 0 0 / 20px 20px" } },
-  { id: "blur",    title: "Blur",       style: { background: "#1f2937" } },
-];
+const CHECKER_BG = "repeating-conic-gradient(#d1d5db 0% 25%, #f9fafb 0% 50%) 0 0 / 20px 20px";
 
 const RECT_ASPECTS: { label: RectRatio; value: number }[] = [
   { label: "16:9", value: 16 / 9 },
@@ -62,7 +55,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
   const [isProcessing, setIsProcessing]     = useState(false);
   const [shape, setShape]                   = useState<Shape>("circle");
   const [rectRatio, setRectRatio]           = useState<RectRatio>("16:9");
-  const [bg, setBg]                         = useState<BgStyle>("gray");
 
   const imgRef      = useRef<HTMLImageElement>(null);
   const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -158,24 +150,9 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
         {/* Crop area */}
         <div
           className="relative overflow-hidden flex items-center justify-center"
-          style={{ height: 420, ...BG_OPTIONS.find((o) => o.id === bg)!.style }}
+          style={{ height: 420, background: CHECKER_BG }}
         >
-          {/* Blurred image layer (only when bg = blur) */}
-          {bg === "blur" && objectUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={objectUrl}
-              alt=""
-              aria-hidden
-              style={{
-                position: "absolute", inset: 0, width: "100%", height: "100%",
-                objectFit: "cover", filter: "blur(24px) brightness(0.45)",
-                transform: "scale(1.08)", pointerEvents: "none",
-              }}
-            />
-          )}
-
-          <ReactCrop
+<ReactCrop
             crop={crop}
             onChange={onCropChange}
             onComplete={onCropComplete}
@@ -195,28 +172,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
               style={{ display: "block", maxWidth: "100%", maxHeight: "420px", width: "auto", height: "auto" }}
             />
           </ReactCrop>
-
-          {/* Background picker — top left */}
-          <div className="absolute top-3 left-3 z-10 flex gap-1.5 bg-black/40 backdrop-blur-sm rounded-full p-1.5">
-            {BG_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                title={opt.title}
-                onClick={() => setBg(opt.id)}
-                className={`w-5 h-5 rounded-full transition-all cursor-pointer border-2 ${
-                  bg === opt.id ? "border-white scale-110" : "border-transparent opacity-70 hover:opacity-100"
-                }`}
-                style={
-                  opt.id === "checker"
-                    ? { background: "repeating-conic-gradient(#9ca3af 0% 25%, #f3f4f6 0% 50%) 0 0 / 8px 8px" }
-                    : opt.id === "blur"
-                    ? { background: "linear-gradient(135deg, #1f2937 50%, #4b5563 50%)" }
-                    : opt.style
-                }
-              />
-            ))}
-          </div>
 
           {/* Shape picker — top right */}
           <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
