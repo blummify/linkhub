@@ -6,8 +6,8 @@ const passwordSchema = z
   .string()
   .min(6, "Minimum 6 characters")
   .regex(/[A-Z]/, "Must include an uppercase letter")
-  .regex(/[0-9]/, "Must include a number");
-
+  .regex(/[0-9]/, "Must include a number")
+  .regex(/[!@#$%^&*]/, "Must include at least one special character");
 export const signupSchema = z
   .object({
     name: z.string().min(1, "Name is required"),
