@@ -128,7 +128,21 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
         className="relative bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
         style={{ width: "100%", maxWidth: 680 }}
       >
-{/* Crop area */}
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-bold text-gray-900 tracking-tight">Crop photo</h2>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Crop area */}
         <div
           className="relative overflow-hidden flex items-center justify-center"
           style={{ height: 420, background: CHECKER_BG }}
@@ -154,24 +168,9 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
             />
           </ReactCrop>
 
-          {/* Shape picker + close — top right */}
+          {/* Shape picker — top right */}
           <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
             <div className="flex gap-1 bg-black/50 backdrop-blur-sm rounded-full p-1">
-              {/* Close */}
-              <button
-                type="button"
-                onClick={onCancel}
-                title="Close"
-                className="w-7 h-7 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/20 transition-all cursor-pointer"
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
-
-              {/* Divider */}
-              <div className="w-px bg-white/20 my-1" />
-
               {(["circle", "square", "rect"] as Shape[]).map((s) => (
                 <button
                   key={s}
@@ -236,13 +235,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-7 py-5">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-2.5 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
           <button
             type="button"
             onClick={handleConfirm}
