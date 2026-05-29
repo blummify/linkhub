@@ -28,8 +28,7 @@ const PANEL_FEATURES = [
 export default function VerifyEmailClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const emailFromParam = searchParams.get("email");
+const emailFromParam = searchParams.get("email");
   const fromLogin = searchParams.get("source") === "login";
   const needsResend =
     searchParams.get("resend") === "true" ||

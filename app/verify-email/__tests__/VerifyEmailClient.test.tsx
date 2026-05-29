@@ -16,6 +16,11 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next-auth/react", () => ({
   signIn: vi.fn(),
+  useSession: () => ({
+    data: { user: { id: "u1", name: "Test User", email: "test@example.com" } },
+    status: "authenticated",
+    update: vi.fn(),
+  }),
 }));
 
 vi.mock("@/app/actions/auth", () => ({

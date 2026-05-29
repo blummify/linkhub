@@ -75,7 +75,7 @@ export default async function RootLayout({
       <body className="bg-surface font-body text-on-surface antialiased">
         <MaterialSymbols />
         <BrandingHydrator />
-        <AuthSessionProvider>
+        <AuthSessionProvider session={session}>
           {children}
         </AuthSessionProvider>
         {!session && process.env.GOOGLE_CLIENT_ID && (

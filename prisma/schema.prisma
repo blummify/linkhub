@@ -75,6 +75,7 @@ model Link {
   icon         String?
   clicks       Int      @default(0)
   status       Int      @default(0)
+  order        Int      @default(0)
   thumbnailUrl String?
   thumbnailKey String?
   userId       String
