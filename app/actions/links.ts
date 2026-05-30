@@ -227,13 +227,16 @@ export async function claimHandle(handle: string) {
       return { error: "That handle is already taken. Try another." };
     }
 
-    await db.profile.update({
+    // Fetch the updated profile to return to client for immediate sync
+    const profile = await db.profile.update({
       where: { userId: session.user.id },
       data: { handle, hasClaimedHandle: true },
+      include: { user: true },
     });
 
     try { await redis.del(`profile:${session.user.id}`); } catch {}
-    return { success: true };
+    // Return profile for client-side state sync
+    return { success: true, profile };
   } catch (error) {
     console.error("Error claiming handle:", error);
     return { error: "Something went wrong. Please try again." };

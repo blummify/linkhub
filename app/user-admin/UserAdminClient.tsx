@@ -121,7 +121,15 @@ export default function UserAdminClient() {
     if (result.success) {
       setClaimOpen(false);
       setIsFirstTimeUser(false);
-      useBrandingStore.getState().setHandle(handle);
+      // Use returned profile for immediate client sync
+      if (result.profile) {
+        useBrandingStore.getState().patchState({
+          handle: result.profile.handle,
+        });
+      } else {
+        // Fallback if profile not returned (for backwards compatibility)
+        useBrandingStore.getState().setHandle(handle);
+      }
     }
     return result;
   };

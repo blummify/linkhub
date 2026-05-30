@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 export interface ClaimHandleModalProps {
   open: boolean;
   onClose: () => void;
-  onClaim: (handle: string) => Promise<{ error?: string; success?: boolean }>;
+  onClaim: (handle: string) => Promise<{ error?: string; success?: boolean; profile?: unknown }>;
   onCheckAvailability?: (handle: string) => Promise<{ available: boolean }>;
   /** Pre-fills the input when the user already has a handle and reopens the modal. */
   currentHandle?: string;
