@@ -215,7 +215,11 @@ export default function AppearanceClient() {
       setPendingAvatarBlob(null);
       setPendingAvatarPreview(null);
     }
-    await updateBranding({ displayName, bio, themeId, accentColor, buttonStyle, fontFamily });
+    const result = await updateBranding({ displayName, bio, themeId, accentColor, buttonStyle, fontFamily });
+    if ("error" in result) {
+      console.error("[handleSave] updateBranding error:", result.error);
+      return;
+    }
     markSaved();
   }, [pendingAvatarBlob, upload, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
 

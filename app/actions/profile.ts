@@ -31,7 +31,8 @@ export async function updateBranding(data: {
     });
     try { await redis.del(`profile:${session.user.id}`); } catch {}
     return { success: true };
-  } catch {
+  } catch (err) {
+    console.error("[updateBranding] failed:", err);
     return { error: "Failed to save changes. Please try again." };
   }
 }
