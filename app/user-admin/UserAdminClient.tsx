@@ -183,6 +183,7 @@ export default function UserAdminClient() {
             });
           } else {
             useLinksStore.getState().revertAdd(tempId);
+            toast.error(result.error ?? "Failed to add link. Please try again.");
           }
         } catch {
           useLinksStore.getState().revertAdd(tempId);

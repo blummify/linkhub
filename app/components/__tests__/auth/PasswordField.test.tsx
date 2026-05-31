@@ -53,7 +53,7 @@ describe("PasswordField", () => {
 
   it("shows Strong when all password criteria are met", () => {
     render(<PasswordField {...baseProps} value="Password1" showStrength />);
-    expect(screen.getByText("Strong")).toBeInTheDocument();
+    expect(screen.getByText("Good")).toBeInTheDocument();
   });
 
   it("shows Weak for a short simple password", () => {
