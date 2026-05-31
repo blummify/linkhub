@@ -48,7 +48,7 @@ function centeredCrop(width: number, height: number, aspect?: number): Crop {
 }
 
 export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropModalProps) {
-  const [objectUrl, setObjectUrl]           = useState("");
+  const [objectUrl] = useState(() => URL.createObjectURL(file));
   const [previewUrl, setPreviewUrl]         = useState("");
   const [crop, setCrop]                     = useState<Crop>();
   const [completedCrop, setCompletedCrop]   = useState<PixelCrop>();
@@ -59,11 +59,7 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
   const imgRef      = useRef<HTMLImageElement>(null);
   const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    const url = URL.createObjectURL(file);
-    setObjectUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+  useEffect(() => () => URL.revokeObjectURL(objectUrl), [objectUrl]);
 
   // Rebuild initial crop whenever shape / aspect ratio changes
   useEffect(() => {
@@ -117,8 +113,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
   const aspect = shape === "rect"
     ? RECT_ASPECTS.find((r) => r.label === rectRatio)!.value
     : undefined; // free for circle/square — user drags to any size
-
-  if (!objectUrl) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
