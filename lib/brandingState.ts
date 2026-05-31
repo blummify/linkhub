@@ -38,7 +38,7 @@ export function getDefaultBrandingState(): BrandingAppearanceState {
     themeId: DEFAULT_THEME.id,
     displayName: "Your Name",
     handle: "",
-    bio: "Connecting with your community.",
+    bio: "Bio goes here.",
     accentColor: DEFAULT_THEME.screen.titleColor,
     buttonStyle: "rounded",
     fontFamily: "Instrument Serif",
