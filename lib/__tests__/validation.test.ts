@@ -21,7 +21,7 @@ describe("validateEmail", () => {
 
 describe("validatePassword", () => {
   it("returns empty string for a valid password", () => {
-    expect(validatePassword("Password1")).toBe("");
+    expect(validatePassword("Password1!")).toBe("");
   });
 
   it("returns an error when shorter than 6 characters", () => {
@@ -29,7 +29,7 @@ describe("validatePassword", () => {
   });
 
   it("returns an error when no uppercase letter", () => {
-    expect(validatePassword("password1")).not.toBe("");
+    expect(validatePassword("password1!")).not.toBe("");
   });
 
   it("returns an error when no number", () => {
@@ -45,8 +45,8 @@ describe("signupSchema", () => {
   const valid = {
     name: "Joel",
     email: "joel@example.com",
-    password: "Password1",
-    confirmPassword: "Password1",
+    password: "Password1!",
+    confirmPassword: "Password1!",
   };
 
   it("passes for valid signup data", () => {
