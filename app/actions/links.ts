@@ -264,8 +264,11 @@ export async function checkHandleAvailability(handle: string): Promise<{ availab
 
   const cacheKey = `handlecheck:${handle.toLowerCase()}`;
   try {
-    const cached = await redis.get<string>(cacheKey);
-    if (cached !== null) return { available: cached === "0" };
+    const cached = await redis.get(cacheKey);
+    // Use unambiguous string values — Upstash REST can return "0"/"1" as numbers,
+    // so numeric-like strings break strict equality. "free"/"taken" are unambiguous.
+    if (cached === "free") return { available: true };
+    if (cached === "taken") return { available: false };
   } catch {}
 
   try {
@@ -279,7 +282,7 @@ export async function checkHandleAvailability(handle: string): Promise<{ availab
       },
     });
     const available = !taken;
-    try { await redis.set(cacheKey, available ? "0" : "1", { ex: HANDLE_CHECK_TTL }); } catch {}
+    try { await redis.set(cacheKey, available ? "free" : "taken", { ex: HANDLE_CHECK_TTL }); } catch {}
     return { available };
   } catch {
     return { available: false };
