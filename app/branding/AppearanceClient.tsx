@@ -452,6 +452,7 @@ export default function AppearanceClient() {
     )}
 
     <ClaimHandleModal
+      key={String(showClaimModal)}
       open={showClaimModal}
       onClose={() => setShowClaimModal(false)}
       currentHandle={handle}
