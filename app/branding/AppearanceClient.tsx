@@ -126,13 +126,17 @@ export default function AppearanceClient() {
         useProfileStore.getState().markFetched({ avatarUrl: null });
         return;
       }
-      const profile = p as { avatarUrl?: string | null; handle?: string | null; displayName?: string | null; bio?: string | null };
+      const profile = p as { avatarUrl?: string | null; handle?: string | null; displayName?: string | null; bio?: string | null; themeId?: string | null; accentColor?: string | null; buttonStyle?: string | null; fontFamily?: string | null };
       useProfileStore.getState().markFetched({ avatarUrl: profile.avatarUrl ?? null });
       // Sync profile fields from DB — updates both state and _baseline so isDirty stays false
       const patch: Partial<import("@/lib/brandingState").BrandingAppearanceState> = {};
       if (profile.displayName) patch.displayName = profile.displayName;
       if (profile.handle)      patch.handle      = profile.handle;
       if (profile.bio)         patch.bio         = profile.bio;
+      if (profile.themeId && profile.themeId !== "default") patch.themeId = profile.themeId;
+      if (profile.accentColor) patch.accentColor = profile.accentColor;
+      if (profile.buttonStyle) patch.buttonStyle = profile.buttonStyle;
+      if (profile.fontFamily)  patch.fontFamily  = profile.fontFamily;
       if (Object.keys(patch).length) useBrandingStore.getState().syncFromDb(patch);
     }).catch(() => {});
   }, [profileFetched]);
@@ -211,9 +215,9 @@ export default function AppearanceClient() {
       setPendingAvatarBlob(null);
       setPendingAvatarPreview(null);
     }
-    await updateBranding({ displayName, bio });
+    await updateBranding({ displayName, bio, themeId, accentColor, buttonStyle, fontFamily });
     markSaved();
-  }, [pendingAvatarBlob, upload, displayName, bio, markSaved]);
+  }, [pendingAvatarBlob, upload, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
 
   const handleLeaveAnyway = useCallback(() => {
     setShowLeaveModal(false);

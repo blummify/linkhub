@@ -105,9 +105,13 @@ export default function UserAdminClient() {
     if (dbProfile.themeId && dbProfile.themeId !== "default") {
       const theme = getBrandingThemeById(dbProfile.themeId);
       patch.themeId = theme.id;
-      patch.accentColor = theme.screen.titleColor;
+      patch.accentColor = (dbProfile.accentColor as string | null) ?? theme.screen.titleColor;
       patch.userPickedTheme = true;
+    } else if (dbProfile.accentColor) {
+      patch.accentColor = dbProfile.accentColor as string;
     }
+    if (dbProfile.buttonStyle) patch.buttonStyle = dbProfile.buttonStyle as string;
+    if (dbProfile.fontFamily)  patch.fontFamily  = dbProfile.fontFamily  as string;
     // Use syncFromDb so baseline is updated too — keeps isDirty false after load
     if (Object.keys(patch).length > 0) useBrandingStore.getState().syncFromDb(patch);
   }, [hydrated, profileDataReady, patchState]);
