@@ -75,7 +75,7 @@ async function createAndSendCode(email: string): Promise<{ success: true } | { e
 
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const hashed = createHash("sha256").update(code).digest("hex");
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
   await db.emailVerification.deleteMany({ where: { userId: user.id } });
   await db.emailVerification.create({ data: { userId: user.id, code: hashed, expiresAt } });
@@ -94,7 +94,7 @@ async function createAndSendCode(email: string): Promise<{ success: true } | { e
       data: {
         name: user?.name ?? "there",
         code,
-        expiresInHours: 24,
+        expiresInHours: 1,
       },
     });
     console.log("[postly] send success", result);
