@@ -93,6 +93,9 @@ model Profile {
   bio              String?
   layout           String   @default("classic")
   themeId          String   @default("default")
+  accentColor      String?
+  buttonStyle      String?
+  fontFamily       String?
   avatarUrl        String?
   avatarKey        String?
   createdAt        DateTime @default(now())

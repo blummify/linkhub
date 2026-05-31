@@ -24,7 +24,6 @@ vi.mock("@/app/actions/links", () => ({
   updateLink: vi.fn(),
   deleteLink: vi.fn(),
   claimHandle: vi.fn(),
-  dismissHandleClaim: vi.fn(),
   checkHandleAvailability: vi.fn().mockResolvedValue({ available: true }),
 }));
 

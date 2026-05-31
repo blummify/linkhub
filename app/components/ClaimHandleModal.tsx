@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { APP_DOMAIN } from "@/lib/appConfig";
 
 export interface ClaimHandleModalProps {
   open: boolean;
@@ -114,6 +115,7 @@ export function ClaimHandleModal({
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkIdRef = useRef(0);
+  const seenRef = useRef<Map<string, boolean>>(new Map());
 
   // Reset on close / pre-fill on open — done during render (not in an effect) per the
   // React "storing information from previous renders" pattern. This avoids the
@@ -141,7 +143,7 @@ export function ClaimHandleModal({
     };
   }, []);
 
-  function processInput(value: string, delayMs = 600): void {
+  function processInput(value: string, delayMs = 400): void {
     if (timerRef.current) clearTimeout(timerRef.current);
     checkIdRef.current++;
 
@@ -185,6 +187,23 @@ export function ClaimHandleModal({
       return;
     }
 
+    // Client-side cache hit — skip spinner and server round-trip entirely
+    const cached = seenRef.current.get(value);
+    if (cached !== undefined) {
+      setState((prev) => ({
+        ...prev,
+        handle: value,
+        inputState: cached ? "valid" : "invalid",
+        helperMsg: cached
+          ? `Great pick — "${value}" is available`
+          : `"${value}" is already taken — try another`,
+        helperKind: cached ? "valid" : "invalid",
+        continueEnabled: cached,
+        suggestions: cached ? [] : generateSuggestions(value),
+      }));
+      return;
+    }
+
     setState((prev) => ({
       ...prev,
       handle: value,
@@ -199,6 +218,7 @@ export function ClaimHandleModal({
     timerRef.current = setTimeout(async () => {
       const result = await onCheckAvailability(value);
       if (myId !== checkIdRef.current) return;
+      seenRef.current.set(value, result.available);
       if (result.available) {
         setState((prev) => ({
           ...prev,
@@ -428,7 +448,7 @@ export function ClaimHandleModal({
                     padding: "13px 14px",
                   }}
                 >
-                  linkhub.co/
+                  {APP_DOMAIN}/
                 </span>
                 <input
                   id="handle"

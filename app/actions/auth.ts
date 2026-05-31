@@ -80,15 +80,8 @@ async function createAndSendCode(email: string): Promise<{ success: true } | { e
   await db.emailVerification.deleteMany({ where: { userId: user.id } });
   await db.emailVerification.create({ data: { userId: user.id, code: hashed, expiresAt } });
 
-  console.log("[postly] sending verification email", {
-    to: email,
-    name: user.name ?? "there",
-    baseUrl: process.env.POSTLY_BASE_URL,
-    hasApiKey: !!process.env.POSTLY_API_KEY,
-  });
-
   try {
-    const result = await postly.send({
+    await postly.send({
       template: process.env.POSTLY_TEMPLATE_VERIFICATION!,
       to: [email],
       data: {
@@ -97,7 +90,6 @@ async function createAndSendCode(email: string): Promise<{ success: true } | { e
         expiresInHours: 1,
       },
     });
-    console.log("[postly] send success", result);
   } catch (err) {
     console.error("[postly] send failed", err);
     return { error: "We couldn't send your verification email. You can request a new one from the next page." };
@@ -108,6 +100,15 @@ async function createAndSendCode(email: string): Promise<{ success: true } | { e
 
 export async function sendVerificationCode(email: string): Promise<{ success: true } | { error: string }> {
   try {
+    const rateLimitKey = `verifycode:${email.toLowerCase()}`;
+    try {
+      const alreadySent = await redis.get(rateLimitKey);
+      if (alreadySent) {
+        const ttl = await redis.ttl(rateLimitKey);
+        return { error: `Please wait ${ttl}s before requesting another code.` };
+      }
+      await redis.set(rateLimitKey, "1", { ex: 60 });
+    } catch {} // Redis unavailable — allow through
     return await createAndSendCode(email);
   } catch (err) {
     console.error("[postly] unexpected error in sendVerificationCode", err);
@@ -144,12 +145,14 @@ export async function verifyEmailCode(
     await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
     await db.emailVerification.delete({ where: { userId: user.id } });
 
-    const autoLoginToken = randomBytes(32).toString("hex");
+    const rawToken = randomBytes(32).toString("hex");
+    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+    await db.verificationToken.deleteMany({ where: { identifier: `auto:${email}` } });
     await db.verificationToken.create({
-      data: { identifier: `auto:${email}`, token: autoLoginToken, expires: new Date(Date.now() + 2 * 60 * 1000) },
+      data: { identifier: `auto:${email}`, token: tokenHash, expires: new Date(Date.now() + 2 * 60 * 1000) },
     });
 
-    return { success: true, autoLoginToken };
+    return { success: true, autoLoginToken: rawToken };
   } catch {
     return { error: "Verification failed. Please request a new code and try again." };
   }
@@ -185,6 +188,14 @@ export async function resendVerificationCode(email: string): Promise<{ success: 
 export async function loginWithCredentials(formData: CredentialsFormData) {
   const { email, password } = formData;
 
+  const rateLimitKey = `login:${email.toLowerCase()}`;
+  try {
+    const attempts = await redis.get<number>(rateLimitKey);
+    if (attempts !== null && attempts >= 10) {
+      return { error: "Too many login attempts. Try again in 15 minutes." };
+    }
+  } catch {} // Redis unavailable — allow through
+
   try {
     await signIn("credentials", {
       email,
@@ -206,6 +217,10 @@ export async function loginWithCredentials(formData: CredentialsFormData) {
     }
 
     if (error instanceof AuthError) {
+      try {
+        const count = await redis.incr(rateLimitKey);
+        if (count === 1) await redis.expire(rateLimitKey, 900); // 15-min window
+      } catch {}
       switch (error.type) {
         case "CredentialsSignin":
           return { error: "Invalid credentials" };
@@ -251,13 +266,14 @@ export async function signInWithGoogleOneTap(
       update: {},
     });
 
-    const autoLoginToken = randomBytes(32).toString("hex");
+    const rawToken = randomBytes(32).toString("hex");
+    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
     await db.verificationToken.deleteMany({ where: { identifier: `auto:${email}` } });
     await db.verificationToken.create({
-      data: { identifier: `auto:${email}`, token: autoLoginToken, expires: new Date(Date.now() + 2 * 60 * 1000) },
+      data: { identifier: `auto:${email}`, token: tokenHash, expires: new Date(Date.now() + 2 * 60 * 1000) },
     });
 
-    return { autoLoginToken, email };
+    return { autoLoginToken: rawToken, email };
   } catch (err) {
     console.error("[signInWithGoogleOneTap] error", err);
     return { error: "Google sign-in failed. Please try again." };
@@ -269,6 +285,13 @@ export async function sendResetLink(email: string): Promise<{ success: true } | 
     const user = await db.user.findUnique({ where: { email }, select: { id: true, name: true } });
 
     if (user) {
+      const resetRateKey = `pwreset:${email.toLowerCase()}`;
+      try {
+        const count = await redis.incr(resetRateKey);
+        if (count === 1) await redis.expire(resetRateKey, 3600);
+        if (count > 3) return { success: true }; // Silent — don't reveal limiting
+      } catch {} // Redis unavailable — allow through
+
       const rawToken = randomBytes(32).toString("hex");
       const tokenHash = createHash("sha256").update(rawToken).digest("hex");
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour

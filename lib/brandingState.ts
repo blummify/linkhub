@@ -36,9 +36,9 @@ export interface PreviewAppearance {
 export function getDefaultBrandingState(): BrandingAppearanceState {
   return {
     themeId: DEFAULT_THEME.id,
-    displayName: "Your Name",
+    displayName: "",
     handle: "",
-    bio: "Connecting with your community.",
+    bio: "",
     accentColor: DEFAULT_THEME.screen.titleColor,
     buttonStyle: "rounded",
     fontFamily: "Instrument Serif",

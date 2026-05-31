@@ -7,7 +7,7 @@ import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
-import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, dismissHandleClaim, checkHandleAvailability, reorderLinks } from "../actions/links";
+import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, checkHandleAvailability, reorderLinks } from "../actions/links";
 import { toast } from "sonner";
 import { getBrandingThemeById, type BrandingAppearanceState } from "@/lib/brandingState";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
@@ -47,6 +47,7 @@ export default function UserAdminClient() {
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [profileReady, setProfileReady] = useState(() => useProfileStore.getState().fetched);
+  const [profileDataReady, setProfileDataReady] = useState(false);
   const isSavingRef = useRef(false);
   const profileMergedRef = useRef(false);
   const pendingProfileRef = useRef<Awaited<ReturnType<typeof getProfile>>>(null);
@@ -74,10 +75,11 @@ export default function UserAdminClient() {
         useLinksStore.getState().setLinks(fromDb);
         if (dbProfile) {
           pendingProfileRef.current = dbProfile;
+          setProfileDataReady(true);
           useProfileStore.getState().markFetched({
             hasClaimedHandle: dbProfile.hasClaimedHandle,
           });
-          if (!dbProfile.hasClaimedHandle) {
+          if (!dbProfile.handle && !sessionStorage.getItem('handlePromptSnoozed')) {
             setIsFirstTimeUser(true);
           }
         }
@@ -103,12 +105,16 @@ export default function UserAdminClient() {
     if (dbProfile.themeId && dbProfile.themeId !== "default") {
       const theme = getBrandingThemeById(dbProfile.themeId);
       patch.themeId = theme.id;
-      patch.accentColor = theme.screen.titleColor;
+      patch.accentColor = (dbProfile.accentColor as string | null) ?? theme.screen.titleColor;
       patch.userPickedTheme = true;
+    } else if (dbProfile.accentColor) {
+      patch.accentColor = dbProfile.accentColor as string;
     }
+    if (dbProfile.buttonStyle) patch.buttonStyle = dbProfile.buttonStyle as string;
+    if (dbProfile.fontFamily)  patch.fontFamily  = dbProfile.fontFamily  as string;
     // Use syncFromDb so baseline is updated too — keeps isDirty false after load
     if (Object.keys(patch).length > 0) useBrandingStore.getState().syncFromDb(patch);
-  }, [hydrated, patchState]);
+  }, [hydrated, profileDataReady, patchState]);
 
   // Auto-show the claim modal 1s after load for first-time users (no handle yet)
   useEffect(() => {
@@ -122,15 +128,15 @@ export default function UserAdminClient() {
     if (result.success) {
       setClaimOpen(false);
       setIsFirstTimeUser(false);
-      useBrandingStore.getState().setHandle(handle);
+      useBrandingStore.getState().syncFromDb({ handle });
     }
     return result;
   };
 
-  const handleDismissClaim = async () => {
+  const handleDismissClaim = () => {
     setClaimOpen(false);
     if (isFirstTimeUser) {
-      await dismissHandleClaim();
+      sessionStorage.setItem('handlePromptSnoozed', '1');
       setIsFirstTimeUser(false);
     }
   };
