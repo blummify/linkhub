@@ -453,7 +453,7 @@ export default function AppearanceClient() {
         const result = await claimHandle(h);
         if (result.success) {
           setShowClaimModal(false);
-          setHandle(h);
+          useBrandingStore.getState().syncFromDb({ handle: h });
         }
         return result;
       }}

@@ -47,6 +47,7 @@ export default function UserAdminClient() {
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [profileReady, setProfileReady] = useState(() => useProfileStore.getState().fetched);
+  const [profileDataReady, setProfileDataReady] = useState(false);
   const isSavingRef = useRef(false);
   const profileMergedRef = useRef(false);
   const pendingProfileRef = useRef<Awaited<ReturnType<typeof getProfile>>>(null);
@@ -74,6 +75,7 @@ export default function UserAdminClient() {
         useLinksStore.getState().setLinks(fromDb);
         if (dbProfile) {
           pendingProfileRef.current = dbProfile;
+          setProfileDataReady(true);
           useProfileStore.getState().markFetched({
             hasClaimedHandle: dbProfile.hasClaimedHandle,
           });
@@ -108,7 +110,7 @@ export default function UserAdminClient() {
     }
     // Use syncFromDb so baseline is updated too — keeps isDirty false after load
     if (Object.keys(patch).length > 0) useBrandingStore.getState().syncFromDb(patch);
-  }, [hydrated, patchState]);
+  }, [hydrated, profileDataReady, patchState]);
 
   // Auto-show the claim modal 1s after load for first-time users (no handle yet)
   useEffect(() => {
@@ -122,7 +124,7 @@ export default function UserAdminClient() {
     if (result.success) {
       setClaimOpen(false);
       setIsFirstTimeUser(false);
-      useBrandingStore.getState().setHandle(handle);
+      useBrandingStore.getState().syncFromDb({ handle });
     }
     return result;
   };
