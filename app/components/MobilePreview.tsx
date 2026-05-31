@@ -42,7 +42,7 @@ export interface AppearanceState {
 /** Demo defaults aligned with the Appearance / Links editor mock data */
 export const DEFAULT_APPEARANCE: AppearanceState = {
   profileTitle: "Your Name",
-  profileBio: "Connecting with your community.",
+  profileBio: "Bio goes here.",
   profileLayout: "classic",
   themeId: "monochrome",
   wallpaperStyle: "fill",
