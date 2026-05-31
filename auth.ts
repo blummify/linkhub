@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
 import authConfig from "./auth.config";
 import { db } from "@/lib/db";
 
@@ -38,11 +39,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = credentials.email as string;
 
         if (credentials.autoLoginToken) {
-          const record = await db.verificationToken.findFirst({
-            where: { identifier: `auto:${email}` },
+          const tokenHash = createHash("sha256").update(credentials.autoLoginToken as string).digest("hex");
+          const record = await db.verificationToken.findUnique({
+            where: { token: tokenHash },
           });
-          if (!record || record.expires < new Date()) return null;
-          if (record.token !== (credentials.autoLoginToken as string)) return null;
+          if (!record || record.identifier !== `auto:${email}` || record.expires < new Date()) return null;
           await db.verificationToken.deleteMany({ where: { identifier: `auto:${email}` } });
           const verified = await db.user.findUnique({ where: { email } });
           if (!verified) return null;
