@@ -128,12 +128,12 @@ export default function AppearanceClient() {
       }
       const profile = p as { avatarUrl?: string | null; handle?: string | null; displayName?: string | null; bio?: string | null };
       useProfileStore.getState().markFetched({ avatarUrl: profile.avatarUrl ?? null });
-      // Sync profile fields from DB without marking dirty
-      const patch: Record<string, string> = {};
+      // Sync profile fields from DB — updates both state and _baseline so isDirty stays false
+      const patch: Partial<import("@/lib/brandingState").BrandingAppearanceState> = {};
       if (profile.displayName) patch.displayName = profile.displayName;
-      if (profile.handle) patch.handle = profile.handle;
-      if (profile.bio) patch.bio = profile.bio;
-      if (Object.keys(patch).length) useBrandingStore.setState(patch);
+      if (profile.handle)      patch.handle      = profile.handle;
+      if (profile.bio)         patch.bio         = profile.bio;
+      if (Object.keys(patch).length) useBrandingStore.getState().syncFromDb(patch);
     }).catch(() => {});
   }, [profileFetched]);
 

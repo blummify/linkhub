@@ -24,6 +24,7 @@ export interface BrandingStore extends BrandingAppearanceState {
   selectTheme: (theme: ReturnType<typeof getBrandingThemeById>) => void;
   randomTheme: () => void;
   patchState: (patch: Partial<BrandingAppearanceState>) => void;
+  syncFromDb: (data: Partial<BrandingAppearanceState>) => void;
   reset: () => void;
   markSaved: () => void;
   setHydrated: (v: boolean) => void;
@@ -89,6 +90,13 @@ export const useBrandingStore = create<BrandingStore>()(
       },
 
       patchState: (patch) => set({ ...patch, isDirty: true }),
+
+      // Syncs values loaded from the DB into both state and _baseline so the
+      // computed isDirty stays false after a fresh load (no false dirty state).
+      syncFromDb: (data) => set((s) => ({
+        ...data,
+        _baseline: { ...s._baseline, ...data },
+      })),
 
       reset: () => {
         const { _baseline } = get();

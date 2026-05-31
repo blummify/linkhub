@@ -56,22 +56,25 @@ vi.mock("@/store/linksStore", () => {
   (useLinksStore as any).getState = () => state;
   return { useLinksStore };
 });
-vi.mock("@/store/brandingStore", () => ({
-  useBrandingStore: vi.fn((selector?: (s: unknown) => unknown) => {
-    const state = {
-      themeId: "default", displayName: "Your Name", handle: "",
-      bio: "", accentColor: "#3b46e0", buttonStyle: "rounded",
-      fontFamily: "Instrument Serif", userPickedTheme: false,
-      isDirty: false, hydrated: true,
-      _baseline: { themeId: "default", displayName: "Your Name", handle: "", bio: "", accentColor: "#3b46e0", buttonStyle: "rounded", fontFamily: "Instrument Serif", userPickedTheme: false },
-      setDisplayName: vi.fn(), setHandle: vi.fn(), setBio: vi.fn(),
-      setAccentColor: vi.fn(), setButtonStyle: vi.fn(), setFontFamily: vi.fn(),
-      selectTheme: vi.fn(), randomTheme: vi.fn(),
-      patchState: vi.fn(), reset: vi.fn(), markSaved: vi.fn(), setHydrated: vi.fn(),
-    };
-    return selector ? selector(state) : state;
-  }),
-}));
+vi.mock("@/store/brandingStore", () => {
+  const state = {
+    themeId: "default", displayName: "Your Name", handle: "",
+    bio: "", accentColor: "#3b46e0", buttonStyle: "rounded",
+    fontFamily: "Instrument Serif", userPickedTheme: false,
+    isDirty: false, hydrated: true,
+    _baseline: { themeId: "default", displayName: "Your Name", handle: "", bio: "", accentColor: "#3b46e0", buttonStyle: "rounded", fontFamily: "Instrument Serif", userPickedTheme: false },
+    setDisplayName: vi.fn(), setHandle: vi.fn(), setBio: vi.fn(),
+    setAccentColor: vi.fn(), setButtonStyle: vi.fn(), setFontFamily: vi.fn(),
+    selectTheme: vi.fn(), randomTheme: vi.fn(),
+    patchState: vi.fn(), syncFromDb: vi.fn(), reset: vi.fn(), markSaved: vi.fn(), setHydrated: vi.fn(),
+  };
+  const useBrandingStore = vi.fn((selector?: (s: unknown) => unknown) =>
+    selector ? selector(state) : state
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (useBrandingStore as any).getState = () => state;
+  return { useBrandingStore };
+});
 vi.mock("@/store/sidebarStore", () => ({
   useSidebarStore: vi.fn((selector?: (s: unknown) => unknown) => {
     const state = { isCollapsed: false, toggle: vi.fn(), setCollapsed: vi.fn() };
