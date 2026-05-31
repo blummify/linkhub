@@ -96,7 +96,7 @@ export default function UserAdminClient() {
     if (!hydrated || profileMergedRef.current || !dbProfile) return;
     profileMergedRef.current = true;
     const patch: Partial<BrandingAppearanceState> = {};
-    const name = dbProfile.user?.name || dbProfile.user?.email;
+    const name = dbProfile.displayName || dbProfile.user?.name || dbProfile.user?.email;
     if (name) patch.displayName = name;
     if (dbProfile.handle) patch.handle = dbProfile.handle;
     if (dbProfile.bio) patch.bio = dbProfile.bio;
@@ -106,7 +106,8 @@ export default function UserAdminClient() {
       patch.accentColor = theme.screen.titleColor;
       patch.userPickedTheme = true;
     }
-    if (Object.keys(patch).length > 0) patchState(patch);
+    // Use syncFromDb so baseline is updated too — keeps isDirty false after load
+    if (Object.keys(patch).length > 0) useBrandingStore.getState().syncFromDb(patch);
   }, [hydrated, patchState]);
 
   // Auto-show the claim modal 1s after load for first-time users (no handle yet)
