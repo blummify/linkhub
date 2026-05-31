@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import "./vitest.d.ts";
 import { vi } from "vitest";
 
 vi.mock("@upstash/redis", () => ({

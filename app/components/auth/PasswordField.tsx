@@ -21,8 +21,10 @@ function getStrength(password: string) {
   if (password.length >= 6) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
-  if (score === 3) return { score, label: "Strong", barColor: "bg-green-500" };
-  if (score === 2) return { score, label: "Fair", barColor: "bg-yellow-500" };
+  if (/[!@#$%^&*]/.test(password)) score++;
+  if (score === 4) return { score, label: "Strong", barColor: "bg-green-500" };
+  if (score === 3) return {  score, label: "Good", barColor: "bg-yellow-500" };
+  if (score === 2) return { score, label: "Fair", barColor: "bg-orange-500" };
   return { score, label: "Weak", barColor: "bg-red-500" };
 }
 
@@ -47,7 +49,7 @@ export function PasswordField({
 
   useEffect(() => {
     if (!showStrength) return;
-    const allMet = strength?.score === 3;
+    const allMet = strength?.score === 4;
 
     if (allMet && criteriaVisible && !animatingOut) {
       queueMicrotask(() => setAnimatingOut(true));
@@ -99,7 +101,7 @@ export function PasswordField({
       {showStrength && value && strength && (
         <div className="mt-2">
           <div className="flex gap-1 mb-1">
-            {[1, 2, 3].map((i) => (
+            {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
                 className={`h-1 flex-1 rounded-full transition-colors ${
@@ -115,6 +117,7 @@ export function PasswordField({
                 { met: value.length >= 6, label: "At least 6 characters" },
                 { met: /[A-Z]/.test(value), label: "One uppercase letter" },
                 { met: /[0-9]/.test(value), label: "One number" },
+                { met: /[!@#$%^&*]/.test(value), label: "At least one symbol" },
               ].map((req) => (
                 <li
                   key={req.label}
