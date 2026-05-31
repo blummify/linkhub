@@ -1,0 +1,11 @@
+# NPM Configuration Template
+# Copy this to .npmrc and replace ${NPM_TOKEN} with your actual GitHub Personal Access Token
+# 
+# To use GitHub Packages:
+# 1. Create a GitHub Personal Access Token (Settings > Developer settings > Personal access tokens)
+# 2. Copy this file to .npmrc
+# 3. Replace ${NPM_TOKEN} with your token (or use environment variable NPM_TOKEN)
+# 4. Never commit the .npmrc file with your token - it's in .gitignore
+
+@blummify:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
