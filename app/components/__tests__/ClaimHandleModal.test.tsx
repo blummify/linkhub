@@ -15,9 +15,9 @@ describe("ClaimHandleModal", () => {
     expect(screen.getByRole("heading", { name: /claim your handle/i })).toBeInTheDocument();
   });
 
-  it("shows the linkhub.co/ prefix", () => {
+  it("shows the domain prefix", () => {
     render(<ClaimHandleModal open onClose={vi.fn()} onClaim={vi.fn()} />);
-    expect(screen.getByText("linkhub.co/")).toBeInTheDocument();
+    expect(screen.getByText(/linkhub\.co\//)).toBeInTheDocument();
   });
 
   it("disables Continue button when handle is empty", () => {

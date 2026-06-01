@@ -88,10 +88,14 @@ model Profile {
   id               String   @id @default(cuid())
   userId           String   @unique
   handle           String?  @unique
+  displayName      String?
   hasClaimedHandle Boolean  @default(false)
   bio              String?
   layout           String   @default("classic")
   themeId          String   @default("default")
+  accentColor      String?
+  buttonStyle      String?
+  fontFamily       String?
   avatarUrl        String?
   avatarKey        String?
   createdAt        DateTime @default(now())
