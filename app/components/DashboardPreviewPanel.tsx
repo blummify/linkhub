@@ -744,6 +744,64 @@ function SocialConfirmDialog({
   );
 }
 
+// ── Skeleton shown before the branding store hydrates from localStorage ────────
+function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number }) {
+  const shimmer: React.CSSProperties = {
+    background: "linear-gradient(100deg, #e4e8f7 0%, #f0f3fc 50%, #e4e8f7 100%)",
+    backgroundSize: "200% 100%",
+    animation: "lhShimmer 1.8s cubic-bezier(0.4,0,0.6,1) infinite",
+    borderRadius: 8,
+  };
+  return (
+    <div
+      style={{
+        width,
+        background: "linear-gradient(180deg, #f0f2fb 0%, #e9ecf8 100%)",
+        borderLeft: "1px solid #eef0f7",
+        padding: "28px 24px",
+        position: "sticky",
+        top: 0,
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        flexShrink: 0,
+      }}
+    >
+      {/* Phone frame placeholder */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            width: 220,
+            height: 440,
+            borderRadius: 32,
+            background: "#fff",
+            border: "2px solid #e4e8f7",
+            padding: "28px 18px 20px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          {/* Avatar */}
+          <div style={{ ...shimmer, width: 52, height: 52, borderRadius: "50%", flexShrink: 0 }} />
+          {/* Name */}
+          <div style={{ ...shimmer, width: 110, height: 13 }} />
+          {/* Bio */}
+          <div style={{ ...shimmer, width: 80, height: 10 }} />
+          {/* Links */}
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{ ...shimmer, width: "100%", height: 36, borderRadius: 10 }} />
+          ))}
+          {/* Handle slug */}
+          <div style={{ ...shimmer, width: 90, height: 10, marginTop: 8 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 export interface DashboardPreviewPanelProps {
   /** Panel width (default 420) */
@@ -755,6 +813,7 @@ export interface DashboardPreviewPanelProps {
 }
 
 export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, onPickHandle }: DashboardPreviewPanelProps) {
+  const hydrated = useBrandingStore((s) => s.hydrated);
   const links = useLinksStore((s) => s.links);
   const displayName = useBrandingStore((s) => s.displayName);
   const bio = useBrandingStore((s) => s.bio);
@@ -809,6 +868,8 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
   const screenDark =
     appearance?.dark ??
     (appearance?.bgColor ? isDarkBg(appearance.bgColor) : false);
+
+  if (!hydrated) return <DashboardPreviewPanelSkeleton width={width} />;
 
   return (
     <div

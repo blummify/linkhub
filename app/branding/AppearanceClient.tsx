@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { CommandPalette } from "../components/CommandPalette";
@@ -13,8 +15,9 @@ import { BRANDING_FONT_SERIF } from "../constants/brandingFonts";
 import { ProfileSection } from "./components/ProfileSection";
 import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
+import { AvatarCropModal } from "./components/AvatarCropModal";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
-import { updateAvatarUrl, removeAvatar } from "@/app/actions/profile";
+import { updateAvatarUrl, removeAvatar, updateBranding } from "@/app/actions/profile";
 import { getProfile, claimHandle, checkHandleAvailability } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
 import { useBrandingStore } from "@/store/brandingStore";
@@ -68,7 +71,20 @@ export default function AppearanceClient() {
   const buttonStyle = useBrandingStore((s) => s.buttonStyle);
   const fontFamily = useBrandingStore((s) => s.fontFamily);
   const themeId = useBrandingStore((s) => s.themeId);
-  const isDirty = useBrandingStore((s) => s.isDirty);
+  // Compute dirty by comparing live state to the last-saved baseline — this way
+  // reverting a change (e.g. typing "s" then deleting it) correctly clears the flag.
+  const isDirty = useBrandingStore((s) => {
+    const b = s._baseline;
+    return (
+      s.displayName !== b.displayName ||
+      s.bio         !== b.bio         ||
+      s.handle      !== b.handle      ||
+      s.themeId     !== b.themeId     ||
+      s.accentColor !== b.accentColor ||
+      s.buttonStyle !== b.buttonStyle ||
+      s.fontFamily  !== b.fontFamily
+    );
+  });
   const setDisplayName = useBrandingStore((s) => s.setDisplayName);
   const setHandle = useBrandingStore((s) => s.setHandle);
   const setBio = useBrandingStore((s) => s.setBio);
@@ -86,8 +102,22 @@ export default function AppearanceClient() {
   const avatarUrl = useProfileStore((s) => s.avatarUrl);
   const profileFetched = useProfileStore((s) => s.fetched);
 
+  const router = useRouter();
+
   const [showPalette, setShowPalette] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
+
+  // Deferred avatar upload state
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [pendingAvatarBlob, setPendingAvatarBlob] = useState<Blob | null>(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    queueMicrotask(() => setMounted(true));
+  }, []);
 
   useEffect(() => {
     if (profileFetched) return;
@@ -96,15 +126,65 @@ export default function AppearanceClient() {
         useProfileStore.getState().markFetched({ avatarUrl: null });
         return;
       }
-      const profile = p as { avatarUrl?: string | null; handle?: string | null };
+      const profile = p as { avatarUrl?: string | null; handle?: string | null; displayName?: string | null; bio?: string | null; themeId?: string | null; accentColor?: string | null; buttonStyle?: string | null; fontFamily?: string | null };
       useProfileStore.getState().markFetched({ avatarUrl: profile.avatarUrl ?? null });
-      // Sync handle from DB without marking dirty — keeps the store correct after a
-      // hard refresh when localStorage may be stale or empty.
-      if (profile.handle) {
-        useBrandingStore.setState({ handle: profile.handle });
-      }
+      // Sync profile fields from DB — updates both state and _baseline so isDirty stays false
+      const patch: Partial<import("@/lib/brandingState").BrandingAppearanceState> = {};
+      if (profile.displayName) patch.displayName = profile.displayName;
+      if (profile.handle)      patch.handle      = profile.handle;
+      if (profile.bio)         patch.bio         = profile.bio;
+      if (profile.themeId && profile.themeId !== "default") patch.themeId = profile.themeId;
+      if (profile.accentColor) patch.accentColor = profile.accentColor;
+      if (profile.buttonStyle) patch.buttonStyle = profile.buttonStyle;
+      if (profile.fontFamily)  patch.fontFamily  = profile.fontFamily;
+      if (Object.keys(patch).length) useBrandingStore.getState().syncFromDb(patch);
     }).catch(() => {});
   }, [profileFetched]);
+
+  const isDirtyOrPending = isDirty || !!pendingAvatarBlob;
+
+  // Guard 1 — browser refresh / tab close
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => { if (isDirtyOrPending) e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirtyOrPending]);
+
+  // Guard 2 — browser back / forward buttons
+  // Push one extra history entry on mount so pressing back triggers popstate here.
+  useEffect(() => { history.pushState(null, "", location.href); }, []);
+  useEffect(() => {
+    const handler = () => {
+      if (!isDirtyOrPending) return;
+      history.pushState(null, "", location.href); // keep URL stable
+      setPendingNavUrl(null);
+      setShowLeaveModal(true);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, [isDirtyOrPending]);
+
+  // Guard 3 — in-app <Link> clicks (sidebar, breadcrumbs, etc.)
+  useEffect(() => {
+    if (!isDirtyOrPending) return;
+    const handler = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("mailto:")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavUrl(href);
+      setShowLeaveModal(true);
+    };
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, [isDirtyOrPending]);
+
+  // Revoke the preview object URL when it changes or on unmount
+  useEffect(() => {
+    return () => { if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview); };
+  }, [pendingAvatarPreview]);
 
   const { upload, isUploading: isUploadingAvatar } = useFileUpload({
     folder: "avatars",
@@ -120,10 +200,39 @@ export default function AppearanceClient() {
   });
 
   const handleRemoveAvatar = useCallback(async () => {
+    // Also discard any pending crop that hasn't been saved yet
+    setPendingAvatarBlob(null);
+    setPendingAvatarPreview(null);
     const result = await removeAvatar();
     if ("error" in result) return;
     useProfileStore.getState().setAvatarUrl(null);
   }, []);
+
+  const handleSave = useCallback(async () => {
+    if (pendingAvatarBlob) {
+      const file = new File([pendingAvatarBlob], "avatar.jpg", { type: "image/jpeg" });
+      await upload(file);
+      setPendingAvatarBlob(null);
+      setPendingAvatarPreview(null);
+    }
+    const result = await updateBranding({ displayName, bio, themeId, accentColor, buttonStyle, fontFamily });
+    if ("error" in result) {
+      console.error("[handleSave] updateBranding error:", result.error);
+      return;
+    }
+    markSaved();
+  }, [pendingAvatarBlob, upload, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
+
+  const handleLeaveAnyway = useCallback(() => {
+    setShowLeaveModal(false);
+    useBrandingStore.getState().reset();
+    setPendingAvatarBlob(null);
+    setPendingAvatarPreview(null);
+    const target = pendingNavUrl;
+    setPendingNavUrl(null);
+    if (target) router.push(target);
+    else router.back();
+  }, [pendingNavUrl, router]);
 
   const themeOptions = useMemo(
     () => BRANDING_THEMES.map((t) => ({ id: t.id, name: t.name, tag: t.tag })),
@@ -232,7 +341,7 @@ export default function AppearanceClient() {
                   </button>
                   <button
                     type="button"
-                    onClick={markSaved}
+                    onClick={handleSave}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -254,16 +363,18 @@ export default function AppearanceClient() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
                     </svg>
                     Save changes
-                    <span
-                      style={{
-                        width: 6,
-                        height: 6,
-                        background: "#f59e0b",
-                        borderRadius: "50%",
-                        opacity: isDirty ? 1 : 0,
-                        transition: "opacity 0.2s ease",
-                      }}
-                    />
+                    {isDirtyOrPending && (
+                      <span
+                        style={{
+                          width: 8,
+                          height: 8,
+                          background: "#f59e0b",
+                          borderRadius: "50%",
+                          flexShrink: 0,
+                          animation: "dot-blink 1.2s ease-in-out infinite",
+                        }}
+                      />
+                    )}
                   </button>
                 </div>
               </div>
@@ -281,9 +392,9 @@ export default function AppearanceClient() {
                     onDisplayNameChange={setDisplayName}
                     onHandleChange={setHandle}
                     onBioChange={setBio}
-                    avatarUrl={avatarUrl}
+                    avatarUrl={pendingAvatarPreview ?? avatarUrl}
                     isUploadingAvatar={isUploadingAvatar}
-                    onFileSelected={upload}
+                    onFileSelected={(file) => setCropFile(file)}
                     onRemoveAvatar={handleRemoveAvatar}
                   />
                 </section>
@@ -326,7 +437,22 @@ export default function AppearanceClient() {
       </CollapsibleSidebar>
     </div>
 
+    {cropFile && (
+      <AvatarCropModal
+        file={cropFile}
+        name={displayName || undefined}
+        onConfirm={(blob) => {
+          setCropFile(null);
+          setPendingAvatarBlob(blob);
+          if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
+          setPendingAvatarPreview(URL.createObjectURL(blob));
+        }}
+        onCancel={() => setCropFile(null)}
+      />
+    )}
+
     <ClaimHandleModal
+      key={String(showClaimModal)}
       open={showClaimModal}
       onClose={() => setShowClaimModal(false)}
       currentHandle={handle}
@@ -336,7 +462,7 @@ export default function AppearanceClient() {
         const result = await claimHandle(h);
         if (result.success) {
           setShowClaimModal(false);
-          setHandle(h);
+          useBrandingStore.getState().syncFromDb({ handle: h });
         }
         return result;
       }}
@@ -351,6 +477,41 @@ export default function AppearanceClient() {
       onRandomTheme={randomTheme}
       searchPlaceholder="Search themes, fonts, colors…"
     />
+
+    {mounted && showLeaveModal && createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowLeaveModal(false)}
+        />
+        <div className="relative bg-white dark:bg-surface-container rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center space-y-5">
+          <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto">
+            <span className="material-symbols-outlined text-3xl text-amber-600 dark:text-amber-400">warning</span>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-on-surface mb-2">Unsaved changes</h3>
+            <p className="text-sm text-gray-500 dark:text-on-surface-variant leading-relaxed">
+              You have unsaved changes. If you leave now your edits will be lost.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <button
+              onClick={() => setShowLeaveModal(false)}
+              className="w-full bg-primary text-white py-3 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
+            >
+              Stay and save
+            </button>
+            <button
+              onClick={handleLeaveAnyway}
+              className="w-full border border-gray-300 dark:border-outline-variant text-gray-700 dark:text-on-surface py-3 px-4 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-surface-container-high transition-colors cursor-pointer"
+            >
+              Leave anyway
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
     </>
   );
 }

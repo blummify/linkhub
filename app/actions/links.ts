@@ -241,7 +241,12 @@ export async function claimHandle(handle: string) {
       data: { handle, hasClaimedHandle: true },
     });
 
-    try { await redis.del(`profile:${session.user.id}`); } catch {}
+    try {
+      await Promise.all([
+        redis.del(`profile:${session.user.id}`),
+        redis.del(`handlecheck:${handle.toLowerCase()}`),
+      ]);
+    } catch {}
     return { success: true };
   } catch (error) {
     console.error("Error claiming handle:", error);
@@ -249,11 +254,22 @@ export async function claimHandle(handle: string) {
   }
 }
 
+const HANDLE_CHECK_TTL = 30; // seconds
+
 export async function checkHandleAvailability(handle: string): Promise<{ available: boolean }> {
   const session = await auth();
   if (!session?.user?.id) return { available: false };
 
   if (!HANDLE_REGEX.test(handle)) return { available: false };
+
+  const cacheKey = `handlecheck:${handle.toLowerCase()}`;
+  try {
+    const cached = await redis.get(cacheKey);
+    // Use unambiguous string values — Upstash REST can return "0"/"1" as numbers,
+    // so numeric-like strings break strict equality. "free"/"taken" are unambiguous.
+    if (cached === "free") return { available: true };
+    if (cached === "taken") return { available: false };
+  } catch {}
 
   try {
     // Use field-level `not` filter instead of top-level `NOT` operator — the top-level
@@ -265,25 +281,11 @@ export async function checkHandleAvailability(handle: string): Promise<{ availab
         userId: { not: session.user.id },
       },
     });
-    return { available: !taken };
+    const available = !taken;
+    try { await redis.set(cacheKey, available ? "free" : "taken", { ex: HANDLE_CHECK_TTL }); } catch {}
+    return { available };
   } catch {
     return { available: false };
   }
 }
 
-export async function dismissHandleClaim() {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-
-  try {
-    await db.profile.update({
-      where: { userId: session.user.id },
-      data: { hasClaimedHandle: true },
-    });
-    try { await redis.del(`profile:${session.user.id}`); } catch {}
-    return { success: true };
-  } catch (error) {
-    console.error("Error dismissing handle claim:", error);
-    return { error: "Something went wrong." };
-  }
-}
