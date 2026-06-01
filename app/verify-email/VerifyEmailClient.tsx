@@ -142,6 +142,11 @@ const emailFromParam = searchParams.get("email");
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !digits[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!isLoading && digits.join("").length === 6) handleSubmit();
     }
   };
 
