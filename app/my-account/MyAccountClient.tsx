@@ -1,19 +1,7 @@
 "use client";
 
-/**
- * My account — settings page (Profile, Change password, Security/2FA, Danger zone).
- *
- * Styling convention for this page:
- *  - Layout, spacing and palette colors are Tailwind utilities, using the
- *    ink / indigo / paper theme tokens registered in app/globals.css (@theme).
- *  - The few reusable, stateful widgets (input, button, badge, strength meter)
- *    are component "skins" in my-account.css — those read better as named
- *    classes than as long, repeated utility strings.
- *
- * Scope note: Profile name save is wired to the `updateBranding` action; the
- * password and 2FA sections are UI-only for now (no backend yet) and are
- * flagged inline where that matters.
- */
+// My account settings page. Layout/colors use Tailwind + theme tokens;
+// reusable widget skins live in my-account.css. Password/2FA are UI-only.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -26,9 +14,7 @@ import { CommandPalette } from "../components/CommandPalette";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { updateBranding } from "@/app/actions/profile";
 import { useSidebarStore } from "@/store/sidebarStore";
-// Reusable component skins (input / button / badge / strength colors). Layout
-// and palette colors are Tailwind utilities; the palette lives in globals.css.
-import "./my-account.css";
+import "./my-account.css"; // input / button / badge / strength skins
 
 /* ───────────────── Section card primitives ───────────────── */
 function Section({ children, danger }: { children: ReactNode; danger?: boolean }) {
@@ -97,8 +83,7 @@ function Field({
 }
 
 /* ───────────────── Button ───────────────── */
-// Variant names match the .acc-btn--* modifiers in my-account.css, so the
-// class derives directly — no lookup table to keep in sync.
+// Variant names match the .acc-btn--* modifiers in my-account.css.
 type BtnVariant = "primary" | "ghost" | "secondary" | "danger";
 
 function Button({
@@ -120,10 +105,7 @@ function Button({
 }
 
 /* ───────────────── Password strength (ported from the design) ───────────────── */
-// Returns a 0–4 score: +1 each for length ≥ 8, length ≥ 12, mixed case, and a
-// digit + symbol. This score is the contract with the CSS — it's rendered as the
-// `data-score` attribute that drives the bar fill and label colors in
-// my-account.css (and feeds the `score >= 2` gate in `pwValid`).
+// 0–4 score; also rendered as `data-score` to drive the bar/label colors in CSS.
 function scorePassword(pw: string): number {
   if (!pw) return 0;
   let s = 0;
@@ -217,8 +199,7 @@ function Badge({ kind, children }: { kind: "on" | "off" | "recommended"; childre
 }
 
 function SecRow({ factor }: { factor: SecFactor }) {
-  // Demo-only: enrollment state is local React state, not persisted. Wiring this
-  // up means replacing `enabled`/`toggle` with the real 2FA enroll/remove calls.
+  // Demo-only: enrollment state is local, not persisted.
   const [enabled, setEnabled] = useState(false);
   const toggle = () => {
     setEnabled((prev) => {
@@ -290,8 +271,7 @@ export default function MyAccountClient() {
   const [savingProfile, setSavingProfile] = useState(false);
   // Last-saved baseline — dirty is computed against it so reverting clears the flag.
   const [baseline, setBaseline] = useState({ name: "", email: "" });
-  // Hydrate form fields from the session exactly once; guards against clobbering
-  // the user's edits on later session refreshes.
+  // Hydrate from session once, so refreshes don't clobber edits.
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -310,9 +290,7 @@ export default function MyAccountClient() {
   const handleProfileSave = async () => {
     setSavingProfile(true);
     try {
-      // Only the display name is persisted today — email change needs a
-      // verification flow (see the field hint) that isn't built yet. The email
-      // input stays editable so the UI is ready, but its value is not sent.
+      // Only the name is persisted; email change needs a verify flow (not built).
       const result = await updateBranding({ displayName: name });
       if ("error" in result) {
         toast.error(result.error);
@@ -343,9 +321,6 @@ export default function MyAccountClient() {
     return { cls: "text-[#b9405a]", text: "Passwords don't match yet." };
   }, [newPw, confirmPw]);
 
-  // Enable "Update password" only when: a current password is present, the new
-  // one meets the length + strength floor, both copies match, and it's actually
-  // a change. Mirrors the rules the backend should enforce when it's wired up.
   const pwValid =
     currentPw.length >= 1 &&
     newPw.length >= 8 &&

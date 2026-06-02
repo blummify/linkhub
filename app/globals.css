@@ -175,9 +175,8 @@
   --radius-full: 9999px;
 }
 
-/* Dashboard / account palette — ink (neutrals), indigo (primary), paper (page bg).
-   Registered as theme colors so they're first-class utilities (bg-paper,
-   text-ink-900, bg-indigo-500) and exposed as --color-* vars for component CSS. */
+/* Dashboard/account palette — ink (neutrals), indigo (primary), paper (bg).
+   Registered as theme colors → usable as bg-paper, text-ink-900, etc. */
 @theme {
   --color-paper: #f7f8fc;
 

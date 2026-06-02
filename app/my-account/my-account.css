@@ -1,12 +1,6 @@
-/* ───────────────────────────────────────────────────────────────────────────
-   My account page — component skins only.
-
-   Layout, spacing and simple token colors live as Tailwind utilities in the
-   JSX. This file holds just the reusable styled widgets (with hover/disabled
-   variants) and the password-strength score colors — the parts utilities
-   express poorly. Palette tokens (ink / indigo / paper) are defined in
-   app/globals.css @theme and consumed here as var(--color-*).
-   ─────────────────────────────────────────────────────────────────────────── */
+/* My account — reusable widget skins (input / button / badge / strength).
+   Layout + colors are Tailwind utilities in the JSX; palette tokens come from
+   app/globals.css @theme, consumed here as var(--color-*). */
 
 /* ── Input ───────────────────────────────────────────────────────────────── */
 .acc-input {
@@ -125,9 +119,7 @@
   background: #16a34a;
 }
 
-/* ── Password strength: per-score bar fill + label color ─────────────────────
-   Driven by data-score on .acc-strength so the score → color mapping stays out
-   of the component. Segment base + label default fall back to ink tones. */
+/* ── Password strength: per-score bar fill + label color (keyed off data-score) ── */
 .acc-strength-seg {
   background: var(--color-ink-100);
 }
