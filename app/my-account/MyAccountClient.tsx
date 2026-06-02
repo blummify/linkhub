@@ -1,5 +1,20 @@
 "use client";
 
+/**
+ * My account — settings page (Profile, Change password, Security/2FA, Danger zone).
+ *
+ * Styling convention for this page:
+ *  - Layout, spacing and palette colors are Tailwind utilities, using the
+ *    ink / indigo / paper theme tokens registered in app/globals.css (@theme).
+ *  - The few reusable, stateful widgets (input, button, badge, strength meter)
+ *    are component "skins" in my-account.css — those read better as named
+ *    classes than as long, repeated utility strings.
+ *
+ * Scope note: Profile name save is wired to the `updateBranding` action; the
+ * password and 2FA sections are UI-only for now (no backend yet) and are
+ * flagged inline where that matters.
+ */
+
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ReactNode } from "react";
@@ -82,14 +97,9 @@ function Field({
 }
 
 /* ───────────────── Button ───────────────── */
-type BtnVariant = "primary" | "ghost" | "secondary" | "dangerGhost";
-
-const BTN_VARIANT_CLASS: Record<BtnVariant, string> = {
-  primary: "acc-btn--primary",
-  ghost: "acc-btn--ghost",
-  secondary: "acc-btn--secondary",
-  dangerGhost: "acc-btn--danger",
-};
+// Variant names match the .acc-btn--* modifiers in my-account.css, so the
+// class derives directly — no lookup table to keep in sync.
+type BtnVariant = "primary" | "ghost" | "secondary" | "danger";
 
 function Button({
   variant,
@@ -103,13 +113,17 @@ function Button({
   disabled?: boolean;
 }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={`acc-btn ${BTN_VARIANT_CLASS[variant]}`}>
+    <button type="button" onClick={onClick} disabled={disabled} className={`acc-btn acc-btn--${variant}`}>
       {children}
     </button>
   );
 }
 
 /* ───────────────── Password strength (ported from the design) ───────────────── */
+// Returns a 0–4 score: +1 each for length ≥ 8, length ≥ 12, mixed case, and a
+// digit + symbol. This score is the contract with the CSS — it's rendered as the
+// `data-score` attribute that drives the bar fill and label colors in
+// my-account.css (and feeds the `score >= 2` gate in `pwValid`).
 function scorePassword(pw: string): number {
   if (!pw) return 0;
   let s = 0;
@@ -203,6 +217,8 @@ function Badge({ kind, children }: { kind: "on" | "off" | "recommended"; childre
 }
 
 function SecRow({ factor }: { factor: SecFactor }) {
+  // Demo-only: enrollment state is local React state, not persisted. Wiring this
+  // up means replacing `enabled`/`toggle` with the real 2FA enroll/remove calls.
   const [enabled, setEnabled] = useState(false);
   const toggle = () => {
     setEnabled((prev) => {
@@ -274,6 +290,8 @@ export default function MyAccountClient() {
   const [savingProfile, setSavingProfile] = useState(false);
   // Last-saved baseline — dirty is computed against it so reverting clears the flag.
   const [baseline, setBaseline] = useState({ name: "", email: "" });
+  // Hydrate form fields from the session exactly once; guards against clobbering
+  // the user's edits on later session refreshes.
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -292,6 +310,9 @@ export default function MyAccountClient() {
   const handleProfileSave = async () => {
     setSavingProfile(true);
     try {
+      // Only the display name is persisted today — email change needs a
+      // verification flow (see the field hint) that isn't built yet. The email
+      // input stays editable so the UI is ready, but its value is not sent.
       const result = await updateBranding({ displayName: name });
       if ("error" in result) {
         toast.error(result.error);
@@ -322,6 +343,9 @@ export default function MyAccountClient() {
     return { cls: "text-[#b9405a]", text: "Passwords don't match yet." };
   }, [newPw, confirmPw]);
 
+  // Enable "Update password" only when: a current password is present, the new
+  // one meets the length + strength floor, both copies match, and it's actually
+  // a change. Mirrors the rules the backend should enforce when it's wired up.
   const pwValid =
     currentPw.length >= 1 &&
     newPw.length >= 8 &&
@@ -461,7 +485,7 @@ export default function MyAccountClient() {
                         Permanently delete your linkhub, all your links, and your account data.
                       </div>
                     </div>
-                    <Button variant="dangerGhost" onClick={() => toast.error("Delete account is not enabled yet")}>
+                    <Button variant="danger" onClick={() => toast.error("Delete account is not enabled yet")}>
                       Delete account
                     </Button>
                   </div>
