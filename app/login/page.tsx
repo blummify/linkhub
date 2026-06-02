@@ -6,6 +6,7 @@ import { UnverifiedEmailModal } from "@/app/components/auth/UnverifiedEmailModal
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { executeRecaptcha } from "@/lib/recaptcha.client";
 import {
   checkUserExists,
   loginWithCredentials,
@@ -79,7 +80,8 @@ export default function LoginPage() {
     setIsValidating(true);
 
     try {
-      const result = await loginWithCredentials({ email, password });
+      const recaptchaToken = await executeRecaptcha("login");
+      const result = await loginWithCredentials({ email, password, recaptchaToken });
 
       if (result?.error === "email_not_verified") {
         setShowUnverifiedModal(true);
@@ -110,7 +112,8 @@ export default function LoginPage() {
   const handleResendVerification = async () => {
     setIsResending(true);
     try {
-      const result = await resendVerificationCode(email);
+      const recaptchaToken = await executeRecaptcha("resend_verification");
+      const result = await resendVerificationCode(email, recaptchaToken);
       if ("error" in result) {
         toast.error(result.error);
       } else {
@@ -163,7 +166,13 @@ export default function LoginPage() {
 
     setIsValidating(true);
     try {
-      const result = await registerUser({ name: signupName, email, password });
+      const recaptchaToken = await executeRecaptcha("signup");
+      const result = await registerUser({
+        name: signupName,
+        email,
+        password,
+        recaptchaToken,
+      });
       if (result?.error) {
         toast.error(result.error);
         return;

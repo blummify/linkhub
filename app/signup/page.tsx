@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { registerUser, checkUserExists, sendVerificationCode } from "@/app/actions/auth";
+import { executeRecaptcha } from "@/lib/recaptcha.client";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
@@ -106,10 +107,12 @@ function SignupPageContent() {
     setIsLoading(true);
 
     try {
+      const recaptchaToken = await executeRecaptcha("signup");
       const result = await registerUser({
         name: formData.name,
         email: formData.email,
         password: formData.password,
+        recaptchaToken,
       });
 
       if (result?.error) {
