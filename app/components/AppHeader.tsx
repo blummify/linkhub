@@ -33,7 +33,6 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
       style={{ borderBottomColor: '#eef0f7' }}
     >
       <div className="flex items-center gap-4 sm:gap-6 flex-1 min-w-0">
-        {/* Toggle Sidebar Button */}
         <button
           onClick={toggleSidebar}
           className="shrink-0 flex items-center justify-center transition-all active:scale-90"
@@ -52,7 +51,6 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
           </span>
         </button>
 
-        {/* Search Bar */}
         <div className="relative w-full group">
           <div className="absolute left-[14px] top-1/2 -translate-y-1/2 pointer-events-none">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b75a3" strokeWidth="2">
@@ -100,7 +98,6 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
       </div>
 
       <div className="flex items-center gap-3 shrink-0 ml-4">
-        {/* Action Icons */}
         <div className="hidden md:flex items-center gap-1.5">
           <button
             className="relative flex items-center justify-center transition-all active:scale-90"
@@ -121,7 +118,6 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
           </button>
         </div>
 
-        {/* User Profile with Dropdown */}
         <div className="relative group">
           <button type="button" className="relative flex items-center gap-2 active:scale-95 transition-all duration-300">
             <div className="absolute -inset-1.5 bg-gradient-to-tr from-primary/20 to-primary/0 rounded-full opacity-0 group-hover:opacity-100 blur-md transition-opacity" />
@@ -134,7 +130,6 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
             <span className="material-symbols-outlined text-on-surface-variant text-[18px] group-hover:text-primary transition-colors hidden sm:block">keyboard_arrow_down</span>
           </button>
 
-          {/* Premium Dropdown Menu with Hover Bridge */}
           <div className="absolute top-full right-0 pt-3 w-56 opacity-0 translate-y-4 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
             <div className="bg-white/80 dark:bg-surface/80 backdrop-blur-xl border border-outline-variant/30 rounded-[1.5rem] shadow-2xl p-2 overflow-hidden">
               <div className="px-4 py-3 border-b border-outline-variant/20 mb-1">

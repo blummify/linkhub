@@ -379,7 +379,6 @@ export function CommandPalette({
         }}
         onKeyDown={handleKeyDown}
       >
-        {/* Search header */}
         <div
           className="flex items-center gap-3"
           style={{ padding: "14px 16px", borderBottom: "1px solid #eef0f7" }}
@@ -415,7 +414,6 @@ export function CommandPalette({
           </kbd>
         </div>
 
-        {/* Results */}
         <div className="overflow-y-auto" style={{ maxHeight: 380 }} ref={listRef}>
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12" style={{ color: "#6b75a3" }}>
@@ -510,7 +508,6 @@ export function CommandPalette({
           )}
         </div>
 
-        {/* Footer hint */}
         <div
           className="flex items-center gap-4"
           style={{

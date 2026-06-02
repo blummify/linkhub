@@ -31,8 +31,11 @@ model Subscription {
   paystackCustomerId     String    @unique
   paystackSubscriptionId String?   @unique
   paystackPlanCode       String?
+  authorizationCode      String?
+  cardLast4              String?
+  cardBrand              String?
+  cardExpiry             String?
   planId                 String    @default("free")
-  // status: 'active' | 'non-renewing' | 'past_due' | 'canceled'
   status                 String    @default("active")
   currentPeriodEnd       DateTime?
   cancelAtPeriodEnd      Boolean   @default(false)

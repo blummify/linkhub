@@ -1,9 +1,3 @@
-/**
- * SERVER-ONLY — never import from a "use client" file.
- * All Paystack API calls and the webhook signature verifier live here.
- * The secret key is read once at module load; any client-side import will throw at build time.
- */
-
 import { createHmac, timingSafeEqual } from "crypto";
 
 const BASE_URL = "https://api.paystack.co";
@@ -20,10 +14,8 @@ function getWebhookSecret(): string {
   return key;
 }
 
-/* ── Signature verification ──────────────────────────────────────────────────
-   Uses timingSafeEqual to prevent timing-attack leaks.
-   Call this with the RAW request body string (before JSON.parse).
-*/
+// timingSafeEqual prevents timing-attack leaks when comparing signatures.
+// Must be called with the RAW request body (before JSON.parse).
 export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
   if (!signature) return false;
   try {
@@ -38,10 +30,6 @@ export function verifyWebhookSignature(rawBody: string, signature: string): bool
   }
 }
 
-/* ── Internal fetch helper ───────────────────────────────────────────────────
-   Attaches the Bearer token. Throws a typed error on non-2xx responses.
-   Never called from client code.
-*/
 async function paystackFetch<T>(
   path: string,
   options: RequestInit = {}
@@ -65,13 +53,9 @@ async function paystackFetch<T>(
   return res.json() as Promise<T>;
 }
 
-/* ── Transaction initialization ─────────────────────────────────────────────
-   Creates a checkout session. Returns only the URL and reference — callers
-   must NOT forward the full Paystack response to the client.
-*/
 export async function initializeTransaction(params: {
   email: string;
-  amount: number;   // in kobo (GHS pesewas) — integer
+  amount: number;   // kobo / pesewas — must be an integer
   planCode: string;
   callbackUrl: string;
   metadata?: Record<string, string>;
@@ -96,7 +80,6 @@ export async function initializeTransaction(params: {
   };
 }
 
-/* ── Subscription management ─────────────────────────────────────────────── */
 export async function disableSubscription(params: {
   code: string;
   token: string;
@@ -107,7 +90,6 @@ export async function disableSubscription(params: {
   });
 }
 
-/* ── Transaction history (for invoices) ─────────────────────────────────── */
 export interface PaystackTransaction {
   reference: string;
   amount: number;

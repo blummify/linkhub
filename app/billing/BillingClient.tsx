@@ -22,6 +22,7 @@ import {
   cancelSubscription,
   type SubscriptionDTO,
   type InvoiceDTO,
+  type CardDTO,
 } from "@/app/actions/billing";
 
 /* ── Plan selector data (UI only — no secrets) ──────────────────────────── */
@@ -34,11 +35,17 @@ const PLANS = [
 type PlanId = (typeof PLANS)[number]["id"];
 type ModalType = "changePlan" | "cancelSub" | "addCard" | "editCard" | "removeCard";
 
-/* ── Payment card state (local until Paystack card management API is wired) */
-const INITIAL_CARDS: PaymentCard[] = [
-  { id: 1, brand: "visa", last4: "4242", expiry: "08/2028", isDefault: true },
-  { id: 2, brand: "mc",   last4: "8881", expiry: "03/2027", isDefault: false },
-];
+/* ── Convert a CardDTO from the server into the local PaymentCard shape ── */
+function cardDtoToPaymentCard(card: CardDTO): PaymentCard {
+  const b = card.brand.toLowerCase();
+  return {
+    id: 1,
+    brand: b === "mastercard" ? "mc" : b === "amex" ? "amex" : "visa",
+    last4: card.last4,
+    expiry: card.expiry,
+    isDefault: true,
+  };
+}
 
 interface CardFormState { name: string; number: string; expiry: string; cvc: string; error: string }
 
@@ -66,9 +73,9 @@ export default function BillingClient() {
   const [isLoadingSub, setIsLoadingSub] = useState(true);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
 
-  /* ── Local card state (until Paystack card management is fully wired) ── */
-  const [cards, setCards]           = useState<PaymentCard[]>(INITIAL_CARDS);
-  const [nextCardId, setNextCardId] = useState(3);
+  /* ── Card state — seeded from the subscription's stored card on load ── */
+  const [cards, setCards]           = useState<PaymentCard[]>([]);
+  const [nextCardId, setNextCardId] = useState(2);
 
   /* ── Modal state ── */
   const [modal, setModal]               = useState<ModalType | null>(null);
@@ -81,13 +88,20 @@ export default function BillingClient() {
   /* ── Load subscription + invoices on mount ── */
   useEffect(() => {
     getSubscription()
-      .then((sub) => setSubscription(sub))
+      .then((sub) => {
+        setSubscription(sub);
+        // Seed the card list from the stored card on the subscription.
+        // Free users (null sub) or subscribers with no card on file get an empty list.
+        if (sub?.card) {
+          setCards([cardDtoToPaymentCard(sub.card)]);
+        }
+      })
       .catch(() => toast.error("Could not load subscription info."))
       .finally(() => setIsLoadingSub(false));
 
     getInvoices()
       .then((inv) => setInvoices(inv))
-      .catch(() => {}) // Non-critical — invoices just stay empty
+      .catch(() => {})
       .finally(() => setIsLoadingInvoices(false));
   }, []);
 

@@ -33,7 +33,6 @@ function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailU
           overflow: "hidden",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       </div>
     );
@@ -215,7 +214,6 @@ function PhoneScreenContent({
         minHeight: 0,
       }}
     >
-      {/* Avatar */}
       <div style={{ position: "relative", marginBottom: 12 }}>
         <div
           style={{
@@ -245,7 +243,6 @@ function PhoneScreenContent({
         />
       </div>
 
-      {/* Name */}
       <div
         style={{
           fontFamily:
@@ -262,7 +259,6 @@ function PhoneScreenContent({
         {displayName || "Your Name"}
       </div>
 
-      {/* Bio */}
       {bio && (
         <div
           style={{
@@ -277,7 +273,6 @@ function PhoneScreenContent({
         </div>
       )}
 
-      {/* Social icons row */}
       <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
         {SOCIAL_ICONS.map(({ label, svg }) => (
           <div
@@ -297,7 +292,6 @@ function PhoneScreenContent({
         ))}
       </div>
 
-      {/* Published links (scrollable) */}
       <div
         style={{
           width: "100%",
@@ -363,7 +357,6 @@ function PhoneScreenContent({
         )}
       </div>
 
-      {/* Footer */}
       <div
         style={{
           marginTop: "auto",
@@ -463,7 +456,6 @@ function PhoneShell({
         boxShadow: "0 40px 80px -20px rgba(30,42,138,0.25), 0 16px 32px -16px rgba(15,23,42,0.12)",
       }}
     >
-      {/* Notch */}
       <div
         aria-hidden
         style={{
@@ -476,7 +468,6 @@ function PhoneShell({
           zIndex: 20,
         }}
       />
-      {/* Screen */}
       <div
         style={{
           width: "100%", height: "100%",
@@ -526,7 +517,6 @@ function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyl
         transition: "all 0.35s cubic-bezier(0.16,1,0.3,1)",
       }}
     >
-      {/* Chrome bar */}
       <div
         style={{
           position: "absolute", top: 0, left: 0, right: 0,
@@ -538,13 +528,11 @@ function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyl
           paddingLeft: 12,
         }}
       >
-        {/* Traffic lights */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff5f56" }} />
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffbd2e" }} />
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#27c93f" }} />
         </div>
-        {/* URL bar */}
         <div
           style={{
             flex: 1, margin: "0 12px", height: 18,
@@ -560,7 +548,6 @@ function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyl
         </div>
       </div>
 
-      {/* Screen area */}
       <div
         style={{
           position: "absolute", top: 32, left: 0, right: 0, bottom: 0,
@@ -645,7 +632,6 @@ function SocialConfirmDialog({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Network icon */}
         <div
           style={{
             width: 44, height: 44, borderRadius: "50%",
@@ -664,7 +650,6 @@ function SocialConfirmDialog({
           Preview the link before opening it in a new tab.
         </p>
 
-        {/* Share URL row */}
         <div
           style={{
             display: "flex", alignItems: "center", gap: 8,
@@ -707,7 +692,6 @@ function SocialConfirmDialog({
           </button>
         </div>
 
-        {/* Actions */}
         <div style={{ display: "flex", gap: 10 }}>
           <button
             type="button"
@@ -768,7 +752,6 @@ function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number }) {
         flexShrink: 0,
       }}
     >
-      {/* Phone frame placeholder */}
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div
           style={{
@@ -784,17 +767,12 @@ function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number }) {
             gap: 12,
           }}
         >
-          {/* Avatar */}
           <div style={{ ...shimmer, width: 52, height: 52, borderRadius: "50%", flexShrink: 0 }} />
-          {/* Name */}
           <div style={{ ...shimmer, width: 110, height: 13 }} />
-          {/* Bio */}
           <div style={{ ...shimmer, width: 80, height: 10 }} />
-          {/* Links */}
           {[0, 1, 2].map((i) => (
             <div key={i} style={{ ...shimmer, width: "100%", height: 36, borderRadius: 10 }} />
           ))}
-          {/* Handle slug */}
           <div style={{ ...shimmer, width: 90, height: 10, marginTop: 8 }} />
         </div>
       </div>
@@ -887,7 +865,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
         flexShrink: 0,
       }}
     >
-      {/* Radial glow overlays */}
       <div
         aria-hidden
         style={{
@@ -899,7 +876,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
         }}
       />
 
-      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -956,7 +932,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
         </div>
 
         <div style={{ display: "flex", gap: 6 }}>
-          {/* Share button + popover */}
           <div ref={shareRef} style={{ position: "relative" }}>
             <PreviewActionBtn
               title="Share"
@@ -969,7 +944,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
               </svg>
             </PreviewActionBtn>
 
-            {/* Share popover */}
             {showSharePop && (
               <div
                 style={{
@@ -985,7 +959,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
                   animation: "popIn 0.18s cubic-bezier(0.16,1,0.3,1)",
                 }}
               >
-                {/* Upward caret arrow */}
                 <div
                   style={{
                     position: "absolute", top: -6, right: 10,
@@ -997,7 +970,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
                   }}
                 />
 
-                {/* Popover header */}
                 <div
                   style={{
                     padding: "14px 16px 12px",
@@ -1008,7 +980,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
                   Share your linkhub
                 </div>
 
-                {/* URL copy row */}
                 <div
                   style={{
                     display: "flex", alignItems: "center", gap: 8,
@@ -1054,10 +1025,8 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
                   </button>
                 </div>
 
-                {/* Divider */}
                 <div style={{ height: 1, background: "#f2f4fb", margin: "0 14px" }} />
 
-                {/* 2×2 social grid */}
                 <div
                   style={{
                     display: "grid",
@@ -1106,7 +1075,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
             )}
           </div>
 
-          {/* Open in new tab */}
           <PreviewActionBtn title="Open in new tab" href={fullUrl} disabled={!handle}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
@@ -1115,7 +1083,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
         </div>
       </div>
 
-      {/* Preview column — device toggle above phone/browser */}
       <div
         style={{
           flex: 1,
@@ -1276,7 +1243,6 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
         </div>
       ) : null}
 
-      {/* Social share confirm dialog */}
       {shareConfirm && (
         <SocialConfirmDialog
           network={shareConfirm}

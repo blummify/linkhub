@@ -17,7 +17,6 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
           "0 40px 80px -20px rgba(30,42,138,0.25), 0 16px 32px -16px rgba(15,23,42,0.12)",
       }}
     >
-      {/* Notch */}
       <div
         aria-hidden
         style={{
@@ -32,7 +31,6 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
           zIndex: 20,
         }}
       />
-      {/* Screen */}
       <div
         style={{
           width: "100%",
@@ -47,7 +45,6 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
           padding: "44px 22px 22px",
         }}
       >
-        {/* Radial glow overlay */}
         <div
           aria-hidden
           style={{
