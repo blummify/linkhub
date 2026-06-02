@@ -117,7 +117,7 @@ export function PasswordField({
                 { met: value.length >= 6, label: "At least 6 characters" },
                 { met: /[A-Z]/.test(value), label: "One uppercase letter" },
                 { met: /[0-9]/.test(value), label: "One number" },
-                { met: /[!@#$%^&*]/.test(value), label: "At least one symbol" },
+                { met: /[!@#$%^&*]/.test(value), label: "At least one special character" },
               ].map((req) => (
                 <li
                   key={req.label}
