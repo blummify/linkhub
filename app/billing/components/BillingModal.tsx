@@ -107,11 +107,12 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
 
 /* ── Reusable styled button helpers for modal footers ── */
 export function ModalBtn({
-  children, onClick, variant = "secondary",
+  children, onClick, variant = "secondary", disabled = false,
 }: {
   children: ReactNode;
   onClick?: () => void;
   variant?: "primary" | "secondary" | "danger";
+  disabled?: boolean;
 }) {
   const styles: Record<string, React.CSSProperties> = {
     primary:   { background: "#3b46e0", color: "white", border: "none", boxShadow: "0 4px 12px -4px rgba(59,70,224,0.4)" },
@@ -121,10 +122,13 @@ export function ModalBtn({
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       style={{
         display: "inline-flex", alignItems: "center", gap: 7,
         borderRadius: 8, padding: "8px 14px",
-        fontSize: 13, fontWeight: 500, cursor: "pointer",
+        fontSize: 13, fontWeight: 500,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.55 : 1,
         ...styles[variant],
       }}
     >

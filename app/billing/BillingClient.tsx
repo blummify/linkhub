@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useId } from "react";
+import { useState, useCallback, useEffect, useId } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
@@ -14,30 +15,34 @@ import { BillingAddressSection } from "./components/BillingAddressSection";
 import { InvoiceHistorySection } from "./components/InvoiceHistorySection";
 import { BillingModal, ModalBtn } from "./components/BillingModal";
 import { useSidebarStore } from "@/store/sidebarStore";
+import {
+  getSubscription,
+  getInvoices,
+  createCheckoutSession,
+  cancelSubscription,
+  type SubscriptionDTO,
+  type InvoiceDTO,
+} from "@/app/actions/billing";
 
-/* ── Constants ─────────────────────────────────────────────────────────────── */
+/* ── Plan selector data (UI only — no secrets) ──────────────────────────── */
 const PLANS = [
   { id: "free",     name: "Free",     price: "$0",  per: "forever",                  desc: "5 links · 1k views · no custom domain" },
   { id: "pro",      name: "Pro",      price: "$12", per: "/ month · billed annually", desc: "100 links · 50k views · 3 domains · 1 GB" },
   { id: "business", name: "Business", price: "$32", per: "/ month · billed annually", desc: "Unlimited links · 500k views · 10 domains · 10 GB" },
 ] as const;
 
+type PlanId = (typeof PLANS)[number]["id"];
+type ModalType = "changePlan" | "cancelSub" | "addCard" | "editCard" | "removeCard";
+
+/* ── Payment card state (local until Paystack card management API is wired) */
 const INITIAL_CARDS: PaymentCard[] = [
   { id: 1, brand: "visa", last4: "4242", expiry: "08/2028", isDefault: true },
   { id: 2, brand: "mc",   last4: "8881", expiry: "03/2027", isDefault: false },
 ];
 
-type PlanId = (typeof PLANS)[number]["id"];
-type ModalType = "changePlan" | "cancelSub" | "addCard" | "editCard" | "removeCard";
 interface CardFormState { name: string; number: string; expiry: string; cvc: string; error: string }
 
-/* ── Utilities ──────────────────────────────────────────────────────────────── */
-const BRAND_NAMES: Record<PaymentCard["brand"], string> = {
-  visa: "Visa",
-  mc: "Mastercard",
-  amex: "Amex",
-};
-
+const BRAND_NAMES: Record<PaymentCard["brand"], string> = { visa: "Visa", mc: "Mastercard", amex: "Amex" };
 function brandName(b: PaymentCard["brand"]) { return BRAND_NAMES[b]; }
 
 function detectBrand(num: string): PaymentCard["brand"] {
@@ -46,39 +51,57 @@ function detectBrand(num: string): PaymentCard["brand"] {
   if (n[0] === "5" || n[0] === "2") return "mc";
   return "amex";
 }
+function formatCardNumber(v: string) { return v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim(); }
+function formatExpiry(v: string) { const d = v.replace(/\D/g, "").slice(0, 4); return d.length >= 3 ? d.slice(0, 2) + "/" + d.slice(2) : d; }
 
-function formatCardNumber(v: string) {
-  return v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
-}
-
-function formatExpiry(v: string) {
-  const d = v.replace(/\D/g, "").slice(0, 4);
-  return d.length >= 3 ? d.slice(0, 2) + "/" + d.slice(2) : d;
-}
-
-/* ── Component ──────────────────────────────────────────────────────────────── */
+/* ── Component ──────────────────────────────────────────────────────────── */
 export default function BillingClient() {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+  const router = useRouter();
   const formId = useId();
 
-  /* ── Billing state ── */
-  const [planId, setPlanId]         = useState<PlanId>("pro");
-  const [canceled, setCanceled]     = useState(false);
+  /* ── Live subscription state ── */
+  const [subscription, setSubscription] = useState<SubscriptionDTO | null>(null);
+  const [invoices, setInvoices] = useState<InvoiceDTO[]>([]);
+  const [isLoadingSub, setIsLoadingSub] = useState(true);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+
+  /* ── Local card state (until Paystack card management is fully wired) ── */
   const [cards, setCards]           = useState<PaymentCard[]>(INITIAL_CARDS);
   const [nextCardId, setNextCardId] = useState(3);
 
   /* ── Modal state ── */
-  const [modal, setModal]             = useState<ModalType | null>(null);
-  const [editingCard, setEditingCard] = useState<PaymentCard | null>(null);
+  const [modal, setModal]               = useState<ModalType | null>(null);
+  const [editingCard, setEditingCard]   = useState<PaymentCard | null>(null);
   const [removingCard, setRemovingCard] = useState<PaymentCard | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>(planId);
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>("pro");
   const [cardForm, setCardForm] = useState<CardFormState>({ name: "", number: "", expiry: "", cvc: "", error: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /* ── Stable modal close ── */
+  /* ── Load subscription + invoices on mount ── */
+  useEffect(() => {
+    getSubscription()
+      .then((sub) => setSubscription(sub))
+      .catch(() => toast.error("Could not load subscription info."))
+      .finally(() => setIsLoadingSub(false));
+
+    getInvoices()
+      .then((inv) => setInvoices(inv))
+      .catch(() => {}) // Non-critical — invoices just stay empty
+      .finally(() => setIsLoadingInvoices(false));
+  }, []);
+
+  /* ── Derived plan state ── */
+  const planId = (subscription?.planId ?? "free") as PlanId;
+  const canceled = subscription?.cancelAtPeriodEnd ?? false;
+  const isPastDue = subscription?.status === "past_due";
+
+  /* ── Modal helpers ── */
   const closeModal = useCallback(() => {
     setModal(null);
     setEditingCard(null);
     setRemovingCard(null);
+    setIsSubmitting(false);
   }, []);
 
   /* ── Plan handlers ── */
@@ -87,29 +110,43 @@ export default function BillingClient() {
     setModal("changePlan");
   }, [planId]);
 
-  const confirmChangePlan = useCallback(() => {
+  const confirmChangePlan = useCallback(async () => {
+    if (selectedPlan === planId) { closeModal(); return; }
     const plan = PLANS.find((p) => p.id === selectedPlan);
     if (!plan) return;
-    setPlanId(plan.id);
-    setCanceled(false);
-    closeModal();
-    toast(`Switched to ${plan.name}`);
-  }, [selectedPlan, closeModal]);
 
-  const openCancelSub = useCallback(() => setModal("cancelSub"), []);
+    setIsSubmitting(true);
+    try {
+      const planCode = selectedPlan === "pro"
+        ? (process.env.NEXT_PUBLIC_PAYSTACK_PRO_MONTHLY_PLAN_CODE ?? "")
+        : (process.env.NEXT_PUBLIC_PAYSTACK_PRO_ANNUAL_PLAN_CODE ?? "");
 
-  const confirmCancelSub = useCallback(() => {
-    setCanceled(true);
-    closeModal();
-    toast("Subscription canceled");
+      const { url } = await createCheckoutSession(planCode);
+      closeModal();
+      router.push(url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not start checkout.");
+      setIsSubmitting(false);
+    }
+  }, [selectedPlan, planId, closeModal, router]);
+
+  const openCancelSub   = useCallback(() => setModal("cancelSub"), []);
+  const handleResume    = useCallback(() => toast("To resume, please contact support."), []);
+
+  const confirmCancelSub = useCallback(async () => {
+    setIsSubmitting(true);
+    try {
+      await cancelSubscription();
+      setSubscription((prev) => prev ? { ...prev, cancelAtPeriodEnd: true, status: "non-renewing" } : prev);
+      closeModal();
+      toast("Subscription will cancel at the end of the billing period.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not cancel subscription.");
+      setIsSubmitting(false);
+    }
   }, [closeModal]);
 
-  const handleResume = useCallback(() => {
-    setCanceled(false);
-    toast("Subscription resumed");
-  }, []);
-
-  /* ── Card handlers ── */
+  /* ── Card handlers (local state) ── */
   const openAddCard = useCallback(() => {
     setCardForm({ name: "", number: "", expiry: "", cvc: "", error: "" });
     setEditingCard(null);
@@ -117,14 +154,7 @@ export default function BillingClient() {
   }, []);
 
   const openEditCard = useCallback((card: PaymentCard) => {
-    // Prefill with the existing card's expiry; name is not stored on cards so left blank
-    setCardForm({
-      name: "",
-      number: "",
-      expiry: card.expiry.replace(/(\d\d)\/20(\d\d)/, "$1/$2"),
-      cvc: "",
-      error: "",
-    });
+    setCardForm({ name: "", number: "", expiry: card.expiry.replace(/(\d\d)\/20(\d\d)/, "$1/$2"), cvc: "", error: "" });
     setEditingCard(card);
     setModal("editCard");
   }, []);
@@ -136,11 +166,10 @@ export default function BillingClient() {
 
   const handleMakeDefault = useCallback((id: number) => {
     setCards((prev) => prev.map((c) => ({ ...c, isDefault: c.id === id })));
-    // Read the card from the current closure — exists in prev
     setCards((prev) => {
       const card = prev.find((c) => c.id === id);
       if (card) toast(`${brandName(card.brand)} ••• ${card.last4} is now default`);
-      return prev; // no structural change needed here; map above already ran
+      return prev;
     });
   }, []);
 
@@ -153,23 +182,15 @@ export default function BillingClient() {
     const expFull = expiry.replace(/(\d\d)\/(\d\d)/, "$1/20$2");
     if (editingCard) {
       setCards((prev) => prev.map((c) => c.id === editingCard.id ? { ...c, expiry: expFull } : c));
-      closeModal();
-      toast("Card updated");
+      closeModal(); toast("Card updated");
     } else {
       const raw = number.replace(/\s/g, "");
       if (raw.length < 12) return fail("Enter a valid card number.");
       const brand = detectBrand(raw);
-      const newCard: PaymentCard = {
-        id: nextCardId,
-        brand,
-        last4: raw.slice(-4),
-        expiry: expFull,
-        isDefault: cards.length === 0,
-      };
+      const newCard: PaymentCard = { id: nextCardId, brand, last4: raw.slice(-4), expiry: expFull, isDefault: cards.length === 0 };
       setNextCardId((n) => n + 1);
       setCards((prev) => [...prev, newCard]);
-      closeModal();
-      toast(`${brandName(brand)} ••• ${newCard.last4} added`);
+      closeModal(); toast(`${brandName(brand)} ••• ${newCard.last4} added`);
     }
   }, [cardForm, editingCard, cards.length, nextCardId, closeModal]);
 
@@ -177,17 +198,13 @@ export default function BillingClient() {
     if (!removingCard) return;
     setCards((prev) => {
       const next = prev.filter((c) => c.id !== removingCard.id);
-      const wasDefault = removingCard.isDefault;
-      // Spread to avoid mutating the shared object reference
-      return wasDefault && next.length > 0
+      return removingCard.isDefault && next.length > 0
         ? [{ ...next[0], isDefault: true }, ...next.slice(1)]
         : next;
     });
-    closeModal();
-    toast("Card removed");
+    closeModal(); toast("Card removed");
   }, [removingCard, closeModal]);
 
-  /* ── Card form field handler ── */
   const setField = useCallback((field: keyof CardFormState) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       let v = e.target.value;
@@ -225,21 +242,42 @@ export default function BillingClient() {
                 </p>
               </div>
 
-              {/* Bento grid — responsive rules live in globals.css (.billing-bento) */}
+              {/* Past-due payment failed banner */}
+              {isPastDue && (
+                <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 mb-4 text-[13px] text-rose-700">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-0.5">
+                    <circle cx="12" cy="12" r="9" /><path d="M12 8v4m0 4h.01" />
+                  </svg>
+                  Payment failed — please update your payment method to keep Pro access.
+                </div>
+              )}
+
+              {/* Bento grid — responsive rules in globals.css */}
               <div
                 className="billing-bento"
                 style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}
               >
                 <div style={{ gridColumn: "span 2" }}>
-                  <PlanCard
-                    plan={planId === "free" ? "free" : "pro"}
-                    canceled={canceled}
-                    onChangePlan={() => openChangePlan()}
-                    onCancelSubscription={openCancelSub}
-                    onResumeSubscription={handleResume}
+                  {isLoadingSub ? (
+                    <div className="h-[160px] bg-[#eef0f7] rounded-2xl animate-pulse" />
+                  ) : (
+                    <PlanCard
+                      plan={planId === "free" ? "free" : "pro"}
+                      canceled={canceled}
+                      onChangePlan={() => openChangePlan()}
+                      onCancelSubscription={openCancelSub}
+                      onResumeSubscription={handleResume}
+                    />
+                  )}
+                </div>
+                <div>
+                  <NextPaymentCard
+                    amount={planId === "pro" ? "$144.00" : null}
+                    dueDate={subscription?.currentPeriodEnd ?? null}
+                    cardBrand={cards.find((c) => c.isDefault)?.brand}
+                    cardLast4={cards.find((c) => c.isDefault)?.last4}
                   />
                 </div>
-                <div><NextPaymentCard /></div>
 
                 <div style={{ gridColumn: "span 2" }}>
                   <UsageSection onUpgrade={() => openChangePlan("business")} />
@@ -255,7 +293,12 @@ export default function BillingClient() {
                   />
                 </div>
                 <div style={{ gridColumn: "span 3" }}><BillingAddressSection /></div>
-                <div style={{ gridColumn: "span 3" }}><InvoiceHistorySection /></div>
+                <div style={{ gridColumn: "span 3" }}>
+                  <InvoiceHistorySection
+                    invoices={invoices}
+                    isLoading={isLoadingInvoices}
+                  />
+                </div>
               </div>
 
             </div>
@@ -272,7 +315,9 @@ export default function BillingClient() {
           footer={
             <>
               <ModalBtn onClick={closeModal}>Keep current</ModalBtn>
-              <ModalBtn variant="primary" onClick={confirmChangePlan}>Confirm change</ModalBtn>
+              <ModalBtn variant="primary" onClick={confirmChangePlan} disabled={isSubmitting}>
+                {isSubmitting ? "Redirecting…" : "Confirm change"}
+              </ModalBtn>
             </>
           }
         >
@@ -281,14 +326,7 @@ export default function BillingClient() {
               <button
                 key={p.id}
                 onClick={() => setSelectedPlan(p.id)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 14,
-                  width: "100%", textAlign: "left",
-                  padding: "14px 16px", borderRadius: 12, marginBottom: 10,
-                  border: selectedPlan === p.id ? "1.5px solid #3b46e0" : "1.5px solid #d6dae9",
-                  background: selectedPlan === p.id ? "#f1f3ff" : "white",
-                  cursor: "pointer", transition: "border-color 0.15s, background 0.15s",
-                }}
+                style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 12, marginBottom: 10, border: selectedPlan === p.id ? "1.5px solid #3b46e0" : "1.5px solid #d6dae9", background: selectedPlan === p.id ? "#f1f3ff" : "white", cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}
               >
                 <span style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${selectedPlan === p.id ? "#3b46e0" : "#a8aecb"}`, flexShrink: 0, display: "grid", placeItems: "center" }}>
                   {selectedPlan === p.id && <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#3b46e0", display: "block" }} />}
@@ -315,18 +353,18 @@ export default function BillingClient() {
           footer={
             <>
               <ModalBtn onClick={closeModal}>Keep subscription</ModalBtn>
-              <ModalBtn variant="danger" onClick={confirmCancelSub}>Cancel subscription</ModalBtn>
+              <ModalBtn variant="danger" onClick={confirmCancelSub} disabled={isSubmitting}>
+                {isSubmitting ? "Canceling…" : "Cancel subscription"}
+              </ModalBtn>
             </>
           }
         >
           <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
             <span style={{ width: 44, height: 44, borderRadius: "50%", flexShrink: 0, background: "#fdebef", color: "#e11d48", display: "grid", placeItems: "center" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              </svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /></svg>
             </span>
             <p style={{ fontSize: 13, color: "#3a4474", lineHeight: 1.55 }}>
-              You'll keep Pro features until <strong style={{ color: "#0b1020" }}>December 14, 2026</strong>. After that your account drops to the Free plan — links over the limit will be paused, not deleted.
+              You'll keep Pro features until the end of the current billing period. After that your account drops to Free — links over the limit will be paused, not deleted.
             </p>
           </div>
         </BillingModal>
@@ -336,11 +374,7 @@ export default function BillingClient() {
       {(modal === "addCard" || modal === "editCard") && (
         <BillingModal
           title={editingCard ? "Edit card" : "Add a card"}
-          subtitle={
-            editingCard
-              ? `${brandName(editingCard.brand)} ending in ${editingCard.last4}`
-              : "This is a demo — no real card is charged."
-          }
+          subtitle={editingCard ? `${brandName(editingCard.brand)} ending in ${editingCard.last4}` : "This is a demo — no real card is charged."}
           onClose={closeModal}
           footer={
             <>
@@ -392,9 +426,7 @@ export default function BillingClient() {
         >
           <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
             <span style={{ width: 44, height: 44, borderRadius: "50%", flexShrink: 0, background: "#fdebef", color: "#e11d48", display: "grid", placeItems: "center" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-              </svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
             </span>
             <p style={{ fontSize: 13, color: "#3a4474", lineHeight: 1.55 }}>
               <strong style={{ color: "#0b1020" }}>{brandName(removingCard.brand)} ending in {removingCard.last4}</strong> will be removed.
@@ -408,6 +440,4 @@ export default function BillingClient() {
   );
 }
 
-/* Shared Tailwind class for modal form inputs — focus ring via CSS, no DOM mutation */
-const inputCls =
-  "w-full border border-[#d6dae9] rounded-lg px-3 py-[9px] text-[13.5px] text-[#0b1020] bg-white outline-none transition-all focus:border-[#6873ff] focus:ring-2 focus:ring-[#6873ff]/15 placeholder:text-[#a8aecb]";
+const inputCls = "w-full border border-[#d6dae9] rounded-lg px-3 py-[9px] text-[13.5px] text-[#0b1020] bg-white outline-none transition-all focus:border-[#6873ff] focus:ring-2 focus:ring-[#6873ff]/15 placeholder:text-[#a8aecb]";
