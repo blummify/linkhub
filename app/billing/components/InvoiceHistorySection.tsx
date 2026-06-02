@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { BillingSectionCard } from "./BillingSectionCard";
 
 type InvoiceStatus = "paid" | "pending" | "failed";
@@ -25,10 +26,8 @@ const STATUS: Record<InvoiceStatus, { bg: string; dot: string; text: string; lab
 
 const TH: React.CSSProperties = {
   textAlign: "left",
-  fontSize: 10.5,
-  fontWeight: 600,
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
+  fontSize: 10.5, fontWeight: 600,
+  textTransform: "uppercase", letterSpacing: "0.08em",
   color: "#6b75a3",
   padding: "0 8px 12px",
   borderBottom: "1px solid #eef0f7",
@@ -51,6 +50,7 @@ export function InvoiceHistorySection() {
         <thead>
           <tr>
             <th style={TH}>Date</th>
+            {/* inv-desc-col hidden on mobile via globals.css */}
             <th style={TH} className="inv-desc-col">Description</th>
             <th style={{ ...TH, textAlign: "right" }}>Amount</th>
             <th style={TH}>Status</th>
@@ -63,38 +63,24 @@ export function InvoiceHistorySection() {
             const isLast = i === INVOICES.length - 1;
             const td: React.CSSProperties = { ...TD, borderBottom: isLast ? "none" : TD.borderBottom };
             return (
-              <tr
-                key={inv.id}
-                style={{ transition: "background 0.1s" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#f7f8fc")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
+              /* hover:bg-[#f7f8fc] via Tailwind — no onMouseEnter/Leave DOM mutation */
+              <tr key={inv.id} className="hover:bg-[#f7f8fc] transition-colors">
                 <td style={{ ...td, color: "#1a2244", fontWeight: 500, whiteSpace: "nowrap" }}>{inv.date}</td>
                 <td style={{ ...td, color: "#3a4474" }} className="inv-desc-col">{inv.description}</td>
                 <td style={{ ...td, textAlign: "right", fontFamily: "'Geist Mono', monospace", fontSize: 12.5, color: "#1a2244" }}>
                   {inv.amount}
                 </td>
                 <td style={td}>
-                  <span
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 5,
-                      fontSize: 11, fontWeight: 500, padding: "3px 9px", borderRadius: 99,
-                      background: s.bg, color: s.text,
-                    }}
-                  >
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 500, padding: "3px 9px", borderRadius: 99, background: s.bg, color: s.text }}>
                     <span style={{ width: 5, height: 5, borderRadius: "50%", background: s.dot }} />
                     {s.label}
                   </span>
                 </td>
                 <td style={{ ...td, textAlign: "right" }}>
+                  {/* hover via Tailwind — no onMouseEnter/Leave DOM mutation */}
                   <button
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 5,
-                      background: "none", border: "none", padding: "4px 6px", borderRadius: 6,
-                      color: "#3b46e0", fontSize: 12, fontWeight: 500, cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#f1f3ff"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+                    onClick={() => toast(`Downloading invoice from ${inv.date}…`)}
+                    className="inline-flex items-center gap-[5px] bg-transparent hover:bg-[#f1f3ff] rounded-[6px] px-[6px] py-1 text-[#3b46e0] hover:text-[#2a37c0] transition-colors text-[12px] font-medium cursor-pointer border-0"
                     aria-label={`Download invoice from ${inv.date}`}
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -109,23 +95,14 @@ export function InvoiceHistorySection() {
         </tbody>
       </table>
 
-      <div style={{ marginTop: 14, textAlign: "center" }}>
+      <div className="mt-3.5 text-center">
         <button
-          style={{
-            background: "white", color: "#1a2244",
-            border: "1px solid #d6dae9", borderRadius: 8, padding: "6px 14px",
-            fontSize: 12, fontWeight: 500, cursor: "pointer",
-          }}
+          onClick={() => toast("Loading older invoices…")}
+          className="bg-white text-[#1a2244] border border-[#d6dae9] rounded-lg px-[14px] py-[6px] text-[12px] font-medium cursor-pointer hover:border-[#a8aecb] hover:bg-[#f7f8fc] transition-colors"
         >
           View all invoices
         </button>
       </div>
-
-      <style>{`
-        @media (max-width: 560px) {
-          .inv-desc-col { display: none; }
-        }
-      `}</style>
     </BillingSectionCard>
   );
 }
