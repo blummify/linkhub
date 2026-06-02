@@ -48,7 +48,14 @@ export async function registerUser(formData: RegisterFormData) {
     });
 
     if (existingUser) {
-      return { error: "An account with this email already exists." };
+      const googleAccount = await db.account.findFirst({
+        where: { userId: existingUser.id, provider: "google" },
+      });
+      return {
+        error: googleAccount
+          ? "This email is linked to a Google account. Please sign in with Google."
+          : "An account with this email already exists.",
+      };
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -213,6 +220,13 @@ export async function loginWithCredentials(formData: CredentialsFormData) {
         causeMessage.includes("email_not_verified")
       ) {
         return { error: "email_not_verified" };
+      }
+
+      if (
+        message.includes("oauth_account_no_password") ||
+        causeMessage.includes("oauth_account_no_password")
+      ) {
+        return { error: "oauth_account_no_password" };
       }
     }
 

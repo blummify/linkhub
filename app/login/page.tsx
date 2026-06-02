@@ -13,7 +13,7 @@ import {
   resendVerificationCode,
   sendVerificationCode,
 } from "@/app/actions/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
@@ -23,6 +23,8 @@ type SignupErrors = { name: string; password: string; confirmPassword: string };
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const oauthError = searchParams.get("error");
   const { update: updateSession } = useSession();
   const [email, setEmail] = useState("");
   const [signupName, setSignupName] = useState("");
@@ -36,6 +38,7 @@ export default function LoginPage() {
 
   const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
   const [showNoAccountModal, setShowNoAccountModal] = useState(false);
+  const [showOauthNoPasswordBanner, setShowOauthNoPasswordBanner] = useState(false);
 
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -83,6 +86,11 @@ export default function LoginPage() {
 
       if (result?.error === "email_not_verified") {
         setShowUnverifiedModal(true);
+        return;
+      }
+
+      if (result?.error === "oauth_account_no_password") {
+        setShowOauthNoPasswordBanner(true);
         return;
       }
 
@@ -206,6 +214,15 @@ export default function LoginPage() {
     >
       <div className="space-y-6">
 
+        {oauthError === "OAuthAccountNotLinked" && (
+          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+            <span className="material-symbols-outlined text-[18px] shrink-0 mt-0.5">info</span>
+            <span>
+              You already have an account with this email. Please sign in with your password instead.
+            </span>
+          </div>
+        )}
+
         {showUnverifiedModal && (
           <UnverifiedEmailModal
             email={email}
@@ -273,6 +290,21 @@ export default function LoginPage() {
 
         {stage === "password" && (
           <form onSubmit={handleLogin} className="space-y-6 animate-stage-in" noValidate>
+
+            {showOauthNoPasswordBanner && (
+              <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-4 py-3 text-sm text-blue-800 dark:text-blue-300">
+                <span className="material-symbols-outlined text-[18px] shrink-0 mt-0.5">info</span>
+                <span>
+                  This account uses Google sign-in. Use the{" "}
+                  <span className="font-semibold">Continue with Google</span> button below, or{" "}
+                  <Link href="/forgot-password" className="underline">
+                    reset your password
+                  </Link>{" "}
+                  to set one.
+                </span>
+              </div>
+            )}
+
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-on-surface">
