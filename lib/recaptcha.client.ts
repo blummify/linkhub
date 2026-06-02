@@ -8,12 +8,17 @@ export type RecaptchaAction =
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 const SCRIPT_LOAD_TIMEOUT_MS = 10000;
 
+interface GrecaptchaApi {
+  ready: (cb: () => void) => void;
+  execute: (siteKey: string, options: { action: string }) => string | Promise<string>;
+}
+
 function getGreCaptcha() {
   if (typeof window === "undefined") {
     return undefined;
   }
 
-  return (window as Window & { grecaptcha?: any }).grecaptcha;
+  return (window as Window & { grecaptcha?: GrecaptchaApi }).grecaptcha;
 }
 
 export async function waitForGreCaptchaReady(): Promise<void> {
