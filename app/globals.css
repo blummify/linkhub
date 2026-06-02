@@ -175,6 +175,26 @@
   --radius-full: 9999px;
 }
 
+/* Dashboard / account palette — ink (neutrals), indigo (primary), paper (page bg).
+   Registered as theme colors so they're first-class utilities (bg-paper,
+   text-ink-900, bg-indigo-500) and exposed as --color-* vars for component CSS. */
+@theme {
+  --color-paper: #f7f8fc;
+
+  --color-ink-100: #eef0f7;
+  --color-ink-200: #d6dae9;
+  --color-ink-300: #a8aecb;
+  --color-ink-400: #6b75a3;
+  --color-ink-500: #3a4474;
+  --color-ink-700: #1a2244;
+  --color-ink-900: #0b1020;
+
+  --color-indigo-50: #f1f3ff;
+  --color-indigo-400: #6873ff;
+  --color-indigo-500: #3b46e0;
+  --color-indigo-600: #2a37c0;
+}
+
 @import "tailwindcss";
 
 @source "../templates/**/*.html";

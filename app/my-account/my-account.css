@@ -1,0 +1,162 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   My account page — component skins only.
+
+   Layout, spacing and simple token colors live as Tailwind utilities in the
+   JSX. This file holds just the reusable styled widgets (with hover/disabled
+   variants) and the password-strength score colors — the parts utilities
+   express poorly. Palette tokens (ink / indigo / paper) are defined in
+   app/globals.css @theme and consumed here as var(--color-*).
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Input ───────────────────────────────────────────────────────────────── */
+.acc-input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--color-ink-100);
+  background: var(--color-paper);
+  padding: 11px 14px;
+  font-size: 14px;
+  color: var(--color-ink-900);
+  outline: none;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+.acc-input:focus {
+  border-color: var(--color-indigo-400);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(104, 115, 255, 0.12);
+}
+.acc-input--pass {
+  padding-right: 38px;
+}
+
+/* ── Button ──────────────────────────────────────────────────────────────── */
+.acc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 12px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+.acc-btn:disabled {
+  cursor: not-allowed;
+}
+
+.acc-btn--primary {
+  background: var(--color-indigo-500);
+  color: #fff;
+  box-shadow: 0 4px 12px -4px rgba(59, 70, 224, 0.4);
+}
+.acc-btn--primary:hover:not(:disabled) {
+  background: var(--color-indigo-600);
+  transform: translateY(-1px);
+}
+.acc-btn--primary:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+  transform: none;
+}
+
+.acc-btn--ghost {
+  border: 1px solid var(--color-ink-100);
+  color: var(--color-ink-700);
+}
+.acc-btn--ghost:hover:not(:disabled) {
+  background: var(--color-paper);
+  border-color: var(--color-ink-200);
+  color: var(--color-ink-900);
+}
+.acc-btn--ghost:disabled {
+  opacity: 0.5;
+}
+
+.acc-btn--secondary {
+  background: var(--color-ink-100);
+  color: var(--color-ink-700);
+}
+.acc-btn--secondary:hover:not(:disabled) {
+  background: var(--color-ink-200);
+  color: var(--color-ink-900);
+}
+
+.acc-btn--danger {
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  color: #e11d48;
+}
+.acc-btn--danger:hover:not(:disabled) {
+  background: #fdebef;
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+/* ── Badge ───────────────────────────────────────────────────────────────── */
+.acc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 9999px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.acc-badge--on {
+  background: #e8f6ee;
+  color: #16a34a;
+}
+.acc-badge--off {
+  background: var(--color-ink-100);
+  color: var(--color-ink-500);
+}
+.acc-badge--recommended {
+  background: var(--color-indigo-50);
+  color: var(--color-indigo-600);
+}
+.acc-badge-dot {
+  height: 5px;
+  width: 5px;
+  border-radius: 9999px;
+  background: var(--color-ink-400);
+}
+.acc-badge--on .acc-badge-dot {
+  background: #16a34a;
+}
+
+/* ── Password strength: per-score bar fill + label color ─────────────────────
+   Driven by data-score on .acc-strength so the score → color mapping stays out
+   of the component. Segment base + label default fall back to ink tones. */
+.acc-strength-seg {
+  background: var(--color-ink-100);
+}
+.acc-strength-value {
+  color: var(--color-ink-400);
+}
+
+.acc-strength[data-score="1"] .acc-strength-seg.is-on {
+  background: #e11d48;
+}
+.acc-strength[data-score="2"] .acc-strength-seg.is-on {
+  background: #d97706;
+}
+.acc-strength[data-score="3"] .acc-strength-seg.is-on {
+  background: #84cc16;
+}
+.acc-strength[data-score="4"] .acc-strength-seg.is-on {
+  background: #16a34a;
+}
+
+.acc-strength[data-score="1"] .acc-strength-value {
+  color: #e11d48;
+}
+.acc-strength[data-score="2"] .acc-strength-value {
+  color: #d97706;
+}
+.acc-strength[data-score="3"] .acc-strength-value {
+  color: #65a30d;
+}
+.acc-strength[data-score="4"] .acc-strength-value {
+  color: #16a34a;
+}
