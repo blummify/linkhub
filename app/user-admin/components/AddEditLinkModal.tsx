@@ -166,6 +166,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   const [title, setTitle]               = useState(() => initialLink?.title ?? "");
   const [url, setUrl]                   = useState(() => initialLink?.url ?? "");
   const [status, setStatus]             = useState<LinkStatusValue>( () => initialLink?.status ?? LinkStatus.PUBLISHED);
+  const [currentStatus] = useState<LinkStatusValue>(() => initialLink?.status ?? LinkStatus.PUBLISHED);
   const [titleLen, setTitleLen]         = useState(() => (initialLink?.title ?? "").length);
   const [urlValidState, setUrlValidState] = useState<"none" | "valid" | "invalid">("none");
   const [urlError, setUrlError]         = useState(false);
@@ -766,16 +767,23 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               type="button"
               role="switch"
               aria-checked={status === LinkStatus.PUBLISHED}
-              onClick={() => setStatus(s => {
-                      if (!isEdit) {
-                        // add mode
-                        return s === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
+              onClick={() => setStatus(current => {
+                if (!isEdit) {
+                  return current === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
+                }
+                switch (currentStatus) {
+                  case LinkStatus.DRAFT:
+                    return current === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
+                
+                  case LinkStatus.PUBLISHED:
+                    return current === LinkStatus.PUBLISHED ? LinkStatus.UNPUBLISHED : LinkStatus.PUBLISHED;
+                
+                  case LinkStatus.UNPUBLISHED:
+                    return current === LinkStatus.UNPUBLISHED ? LinkStatus.PUBLISHED : LinkStatus.UNPUBLISHED;
+                
+                  default:
+                    return current === LinkStatus.PUBLISHED ? LinkStatus.DRAFT : LinkStatus.PUBLISHED;
                       }
-                      // edit mode 
-                      if (s === LinkStatus.PUBLISHED) {
-                          return LinkStatus.UNPUBLISHED
-                      };
-                          return LinkStatus.PUBLISHED;
                     })}
               className="relative shrink-0 outline-none"
               style={{
