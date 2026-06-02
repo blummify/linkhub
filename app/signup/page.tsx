@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { registerUser, checkUserExists, sendVerificationCode } from "@/app/actions/auth";
-import { executeRecaptcha } from "@/lib/recaptcha.client";
+import { executeRecaptcha, RecaptchaError } from "@/lib/recaptcha.client";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
@@ -124,7 +124,11 @@ function SignupPageContent() {
         sendVerificationCode(formData.email).catch(() => {});
         router.push(verifyUrl);
       }
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        setError("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       setError("Something went wrong while creating your account. Please try again.");
     } finally {
       setIsLoading(false);

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { sendVerificationCode, verifyEmailCode, resendVerificationCode } from "@/app/actions/auth";
-import { executeRecaptcha } from "@/lib/recaptcha.client";
+import { executeRecaptcha, RecaptchaError } from "@/lib/recaptcha.client";
 
 const PANEL_FEATURES = [
   {
@@ -190,7 +190,12 @@ const emailFromParam = searchParams.get("email");
         return;
       }
       router.replace("/user-dashboard");
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        setError("Security check couldn't complete. Please refresh the page and try again.");
+        setIsLoading(false);
+        return;
+      }
       setError("Something went wrong. Please try again.");
       setIsLoading(false);
     }
@@ -212,7 +217,12 @@ const emailFromParam = searchParams.get("email");
       setDigits(Array(6).fill(""));
       startCooldown(60);
       inputRefs.current[0]?.focus();
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        setError("Security check couldn't complete. Please refresh the page and try again.");
+        setIsResending(false);
+        return;
+      }
       setError("Something went wrong. Please try again.");
       setIsResending(false);
     }

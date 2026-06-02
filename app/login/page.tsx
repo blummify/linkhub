@@ -6,7 +6,7 @@ import { UnverifiedEmailModal } from "@/app/components/auth/UnverifiedEmailModal
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { executeRecaptcha } from "@/lib/recaptcha.client";
+import { executeRecaptcha, RecaptchaError } from "@/lib/recaptcha.client";
 import {
   checkUserExists,
   loginWithCredentials,
@@ -98,6 +98,10 @@ export default function LoginPage() {
       if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
         return;
       }
+      if (error instanceof RecaptchaError) {
+        toast.error("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsValidating(false);
@@ -120,7 +124,11 @@ export default function LoginPage() {
         toast.success("Verification code sent! Check your inbox.");
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       }
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        toast.error("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsResending(false);
@@ -179,7 +187,11 @@ export default function LoginPage() {
       }
       sendVerificationCode(email).catch(() => {});
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        toast.error("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       toast.error("An unexpected error occurred.");
     } finally {
       setIsValidating(false);

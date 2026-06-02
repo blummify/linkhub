@@ -71,7 +71,7 @@ export default async function RootLayout({
               '(function(){try{var t=localStorage.getItem("theme");var m=window.matchMedia("(prefers-color-scheme: dark)").matches;var d=t==="dark"||(!t&&m);var c=document.documentElement.classList;if(d){c.add("dark")}else{c.remove("dark")}}catch(e){}})();',
           }}
         />
-        {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? (
+        {!session && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? (
           <script
             src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
             async
