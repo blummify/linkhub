@@ -90,8 +90,6 @@ export default function BillingClient() {
     getSubscription()
       .then((sub) => {
         setSubscription(sub);
-        // Seed the card list from the stored card on the subscription.
-        // Free users (null sub) or subscribers with no card on file get an empty list.
         if (sub?.card) {
           setCards([cardDtoToPaymentCard(sub.card)]);
         }

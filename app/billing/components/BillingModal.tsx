@@ -20,7 +20,6 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  // Trap focus inside modal
   useEffect(() => {
     const modal = overlayRef.current?.querySelector<HTMLElement>("dialog, [role='dialog']");
     const firstFocusable = modal?.querySelector<HTMLElement>(

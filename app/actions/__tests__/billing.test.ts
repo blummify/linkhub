@@ -78,7 +78,6 @@ describe("getSubscription", () => {
     expect(result?.status).toBe("active");
     expect(result?.cancelAtPeriodEnd).toBe(false);
 
-    // Must not contain internal Paystack identifiers
     expect(result).not.toHaveProperty("paystackCustomerId");
     expect(result).not.toHaveProperty("paystackSubscriptionId");
     expect(result).not.toHaveProperty("paystackPlanCode");
@@ -102,7 +101,6 @@ describe("createCheckoutSession", () => {
     const result = await createCheckoutSession("PLN_test");
 
     expect(result).toEqual({ url: "https://checkout.paystack.com/abc123" });
-    // Must not include the reference or any Paystack token
     expect(result).not.toHaveProperty("reference");
     expect(result).not.toHaveProperty("authorizationUrl");
   });
@@ -158,7 +156,6 @@ describe("getInvoices", () => {
     expect(result[0].amount).toBe("$12.00");
     expect(result[0].status).toBe("success");
 
-    // Internal Paystack customer code must never appear in the response
     const serialized = JSON.stringify(result);
     expect(serialized).not.toContain("CUS_secret_internal_code");
   });

@@ -97,7 +97,6 @@ describe("BillingClient", () => {
     await waitFor(() => screen.getByText(/upgrade to pro/i));
     fireEvent.click(screen.getByText(/upgrade to pro/i));
 
-    // Modal opens with plan options and Confirm change button
     await waitFor(() => screen.getByText(/confirm change/i));
     expect(screen.getByText(/confirm change/i)).toBeInTheDocument();
     expect(screen.getByText(/change plan/i)).toBeInTheDocument();
@@ -116,15 +115,12 @@ describe("BillingClient", () => {
 
     render(<BillingClient />);
 
-    // Wait for plan card to render
     await waitFor(() => screen.getByText(/change plan/i));
     fireEvent.click(screen.getByText(/change plan/i));
 
-    // Select "Business" in the modal
     await waitFor(() => screen.getByText("Business"));
     fireEvent.click(screen.getByText("Business"));
 
-    // Confirm
     fireEvent.click(screen.getByText(/confirm change/i));
 
     await waitFor(() =>

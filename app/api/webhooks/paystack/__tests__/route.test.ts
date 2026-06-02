@@ -76,7 +76,6 @@ describe("POST /api/webhooks/paystack — signature", () => {
     const body = JSON.stringify({ event: "unknown.event", data: {} });
     const res = await POST(makeRequest(body, sign(body)));
     expect(res.status).toBe(200);
-    // No DB writes for unknown events
     expect(db.user.findUnique).not.toHaveBeenCalled();
   });
 });
