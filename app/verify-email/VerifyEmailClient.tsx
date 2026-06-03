@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { sendVerificationCode, verifyEmailCode, resendVerificationCode } from "@/app/actions/auth";
+import { executeRecaptcha, RecaptchaError } from "@/lib/recaptcha.client";
 
 const PANEL_FEATURES = [
   {
@@ -158,49 +159,73 @@ const emailFromParam = searchParams.get("email");
     if (code.length !== 6) { setError("Please enter all 6 digits."); return; }
     setIsLoading(true);
     setError("");
-    const result = await verifyEmailCode(email, code);
-    if ("error" in result) {
-      if (result.error.includes("Too many incorrect attempts")) {
-        if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
-        cooldownTimerRef.current = null;
-        sessionStorage.removeItem("lh_cooldown_until");
-        setCooldown(0);
+
+    try {
+      const recaptchaToken = await executeRecaptcha("verify_email");
+      const result = await verifyEmailCode(email, code, recaptchaToken);
+      if ("error" in result) {
+        if (result.error.includes("Too many incorrect attempts")) {
+          if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+          cooldownTimerRef.current = null;
+          sessionStorage.removeItem("lh_cooldown_until");
+          setCooldown(0);
+        }
+        setError(result.error);
+        setDigits(Array(6).fill(""));
+        setTimeout(() => inputRefs.current[0]?.focus(), 0);
+        setIsLoading(false);
+        return;
       }
-      setError(result.error);
-      setDigits(Array(6).fill(""));
-      setTimeout(() => inputRefs.current[0]?.focus(), 0);
+      guardActiveRef.current = false;
+      const signInResult = await signIn("credentials", {
+        email,
+        autoLoginToken: result.autoLoginToken,
+        redirect: false,
+        callbackUrl: "/user-dashboard",
+      });
+      if (signInResult?.error) {
+        setError("Your email is verified! Please log in to continue.");
+        guardActiveRef.current = true;
+        setIsLoading(false);
+        return;
+      }
+      router.replace("/user-dashboard");
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        setError("Security check couldn't complete. Please refresh the page and try again.");
+        setIsLoading(false);
+        return;
+      }
+      setError("Something went wrong. Please try again.");
       setIsLoading(false);
-      return;
     }
-    guardActiveRef.current = false;
-    const signInResult = await signIn("credentials", {
-      email,
-      autoLoginToken: result.autoLoginToken,
-      redirect: false,
-      callbackUrl: "/user-dashboard",
-    });
-    if (signInResult?.error) {
-      setError("Your email is verified! Please log in to continue.");
-      guardActiveRef.current = true;
-      setIsLoading(false);
-      return;
-    }
-    router.replace("/user-dashboard");
   };
 
   const handleResend = async () => {
     if (!email) { setError("Could not determine your email. Please return to the sign-in page."); return; }
     setIsResending(true);
     setError("");
-    const result = await resendVerificationCode(email);
-    setIsResending(false);
-    if ("error" in result) {
-      if (!result.error.startsWith("Please wait")) setError(result.error);
-      return;
+
+    try {
+      const recaptchaToken = await executeRecaptcha("resend_verification");
+      const result = await resendVerificationCode(email, recaptchaToken);
+      if ("error" in result) {
+        if (!result.error.startsWith("Please wait")) setError(result.error);
+        setIsResending(false);
+        return;
+      }
+      setDigits(Array(6).fill(""));
+      startCooldown(60);
+      inputRefs.current[0]?.focus();
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        setError("Security check couldn't complete. Please refresh the page and try again.");
+        setIsResending(false);
+        return;
+      }
+      setError("Something went wrong. Please try again.");
+      setIsResending(false);
     }
-    setDigits(Array(6).fill(""));
-    startCooldown(60);
-    inputRefs.current[0]?.focus();
   };
 
   const handleLeaveAnyway = () => {
