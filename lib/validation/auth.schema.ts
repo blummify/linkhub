@@ -35,5 +35,24 @@ export function validatePassword(password: string): string {
   return result.success ? "" : result.error.issues[0].message;
 }
 
+// Strength score 0–4 for the password strength meter (signup, reset, account).
+export function scorePassword(password: string): number {
+  if (!password) return 0;
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+  if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) score++;
+  return Math.min(4, score);
+}
+
+export const PASSWORD_STRENGTH_LABELS: Record<number, string> = {
+  0: "—",
+  1: "Weak",
+  2: "Fair",
+  3: "Good",
+  4: "Strong",
+};
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

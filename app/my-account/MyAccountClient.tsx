@@ -1,7 +1,7 @@
 "use client";
 
-// My account settings page. Layout/colors use Tailwind + theme tokens;
-// reusable widget skins live in my-account.css. Password/2FA are UI-only.
+// My account settings page. Styled with Tailwind utilities + ink/indigo/paper
+// theme tokens. Password/2FA sections are UI-only.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -14,7 +14,7 @@ import { CommandPalette } from "../components/CommandPalette";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { updateBranding } from "@/app/actions/profile";
 import { useSidebarStore } from "@/store/sidebarStore";
-import "./my-account.css"; // input / button / badge / strength skins
+import { scorePassword, PASSWORD_STRENGTH_LABELS } from "@/lib/validation/auth.schema";
 
 /* ───────────────── Section card primitives ───────────────── */
 function Section({ children, danger }: { children: ReactNode; danger?: boolean }) {
@@ -22,7 +22,7 @@ function Section({ children, danger }: { children: ReactNode; danger?: boolean }
     <section
       className={
         danger
-          ? "mt-6 overflow-hidden rounded-2xl border border-rose-500/[0.18] bg-[#fdebef]"
+          ? "mt-6 overflow-hidden rounded-2xl border border-[#f43f5e]/[0.18] bg-[#fdebef]"
           : "mb-4 overflow-hidden rounded-2xl border border-ink-100 bg-white"
       }
     >
@@ -45,10 +45,10 @@ function SectionHead({
   return (
     <div className={`px-6 pt-5 ${danger ? "pb-2" : "pb-1"} ${actions ? "flex items-start justify-between gap-4" : ""}`}>
       <div>
-        <div className={`text-base font-semibold tracking-[-0.015em] ${danger ? "text-rose-600" : "text-ink-900"}`}>
+        <div className={`text-base font-semibold tracking-[-0.015em] ${danger ? "text-[#e11d48]" : "text-ink-900"}`}>
           {title}
         </div>
-        <div className={`mt-1 text-[12.5px] leading-[1.45] ${danger ? "text-rose-500/70" : "text-ink-400"}`}>{desc}</div>
+        <div className={`mt-1 text-[12.5px] leading-[1.45] ${danger ? "text-[#f43f5e]/70" : "text-ink-400"}`}>{desc}</div>
       </div>
       {actions}
     </div>
@@ -56,6 +56,9 @@ function SectionHead({
 }
 
 /* ───────────────── Field ───────────────── */
+const INPUT_CLASS =
+  "w-full rounded-[12px] border border-ink-100 bg-paper px-[14px] py-[11px] text-[14px] text-ink-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-400/[0.12]";
+
 function Field({
   id,
   label,
@@ -76,15 +79,25 @@ function Field({
       <label className="text-xs font-medium text-ink-500" htmlFor={id}>
         {label}
       </label>
-      <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} className="acc-input" />
+      <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} />
       {hint && <div className="mt-0.5 text-[11.5px] text-ink-400">{hint}</div>}
     </div>
   );
 }
 
 /* ───────────────── Button ───────────────── */
-// Variant names match the .acc-btn--* modifiers in my-account.css.
 type BtnVariant = "primary" | "ghost" | "secondary" | "danger";
+
+const BTN_BASE =
+  "inline-flex items-center gap-[7px] rounded-[12px] px-4 py-[9px] text-[13px] font-medium tracking-[-0.005em] transition cursor-pointer disabled:cursor-not-allowed";
+const BTN_VARIANTS: Record<BtnVariant, string> = {
+  primary:
+    "bg-indigo-500 text-white shadow-[0_4px_12px_-4px_rgba(59,70,224,0.4)] hover:bg-indigo-600 hover:-translate-y-px disabled:opacity-50 disabled:shadow-none disabled:translate-y-0 disabled:hover:bg-indigo-500",
+  ghost:
+    "border border-ink-100 text-ink-700 hover:bg-paper hover:border-ink-200 hover:text-ink-900 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:border-ink-100",
+  secondary: "bg-ink-100 text-ink-700 hover:bg-ink-200 hover:text-ink-900",
+  danger: "border border-[#f43f5e]/20 text-[#e11d48] hover:bg-[#fdebef] hover:border-[#f43f5e]/40",
+};
 
 function Button({
   variant,
@@ -98,37 +111,34 @@ function Button({
   disabled?: boolean;
 }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={`acc-btn acc-btn--${variant}`}>
+    <button type="button" onClick={onClick} disabled={disabled} className={`${BTN_BASE} ${BTN_VARIANTS[variant]}`}>
       {children}
     </button>
   );
 }
 
-/* ───────────────── Password strength (ported from the design) ───────────────── */
-// 0–4 score; also rendered as `data-score` to drive the bar/label colors in CSS.
-function scorePassword(pw: string): number {
-  if (!pw) return 0;
-  let s = 0;
-  if (pw.length >= 8) s++;
-  if (pw.length >= 12) s++;
-  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++;
-  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) s++;
-  return Math.min(4, s);
+/* ───────────────── Password strength meter ───────────────── */
+// Bar fill + label color per score — design's exact hues (differ from Tailwind v4 defaults).
+function strengthColors(score: number): { bar: string; label: string } {
+  if (score >= 4) return { bar: "bg-[#16a34a]", label: "text-[#16a34a]" };
+  if (score === 3) return { bar: "bg-[#84cc16]", label: "text-[#65a30d]" };
+  if (score === 2) return { bar: "bg-[#d97706]", label: "text-[#d97706]" };
+  if (score === 1) return { bar: "bg-[#e11d48]", label: "text-[#e11d48]" };
+  return { bar: "bg-ink-100", label: "text-ink-400" };
 }
-const STRENGTH_LABEL: Record<number, string> = { 0: "—", 1: "Weak", 2: "Fair", 3: "Good", 4: "Strong" };
 
-// Bar fill + label color per score live in my-account.css, keyed off data-score.
 function StrengthMeter({ score }: { score: number }) {
+  const { bar, label } = strengthColors(score);
   return (
-    <div className="acc-strength mt-2 flex flex-col gap-[5px]" data-score={score}>
+    <div className="mt-2 flex flex-col gap-[5px]">
       <div className="grid grid-cols-4 gap-[3px]">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className={`acc-strength-seg h-1 rounded-[2px] transition-colors${i < score ? " is-on" : ""}`} />
+          <div key={i} className={`h-1 rounded-[2px] transition-colors ${i < score ? bar : "bg-ink-100"}`} />
         ))}
       </div>
       <div className="flex justify-between text-[11.5px] text-ink-400">
         <span>Password strength</span>
-        <span className="acc-strength-value">{STRENGTH_LABEL[score]}</span>
+        <span className={score > 0 ? label : "text-ink-400"}>{PASSWORD_STRENGTH_LABELS[score]}</span>
       </div>
     </div>
   );
@@ -170,7 +180,7 @@ function PassField({
           autoComplete={autoComplete}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="acc-input acc-input--pass"
+          className={`${INPUT_CLASS} pr-[38px]`}
         />
         <button
           type="button"
@@ -189,10 +199,19 @@ function PassField({
 /* ───────────────── Security row (2FA factor, demo state) ───────────────── */
 type SecFactor = { title: string; recommended?: boolean; offDesc: string; onDesc: string; icon: ReactNode };
 
+const BADGE_BASE = "inline-flex items-center gap-1 rounded-full px-[7px] py-0.5 text-[10px] font-semibold tracking-[0.04em]";
+const BADGE_VARIANTS: Record<"on" | "off" | "recommended", string> = {
+  on: "bg-[#e8f6ee] text-[#16a34a]",
+  off: "bg-ink-100 text-ink-500",
+  recommended: "bg-indigo-50 text-indigo-600",
+};
+
 function Badge({ kind, children }: { kind: "on" | "off" | "recommended"; children: ReactNode }) {
   return (
-    <span className={`acc-badge acc-badge--${kind}`}>
-      {kind !== "recommended" && <span className="acc-badge-dot" />}
+    <span className={`${BADGE_BASE} ${BADGE_VARIANTS[kind]}`}>
+      {kind !== "recommended" && (
+        <span className={`h-[5px] w-[5px] rounded-full ${kind === "on" ? "bg-[#16a34a]" : "bg-ink-400"}`} />
+      )}
       {children}
     </span>
   );
@@ -317,7 +336,7 @@ export default function MyAccountClient() {
 
   const confirmHint = useMemo(() => {
     if (!confirmPw) return { cls: "text-ink-400", text: "Re-type your new password to confirm." };
-    if (newPw && confirmPw === newPw) return { cls: "text-green-600", text: "Passwords match." };
+    if (newPw && confirmPw === newPw) return { cls: "text-[#16a34a]", text: "Passwords match." };
     return { cls: "text-[#b9405a]", text: "Passwords don't match yet." };
   }, [newPw, confirmPw]);
 
