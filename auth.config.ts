@@ -18,7 +18,7 @@ export default {
       authorization: { params: { prompt: "select_account" } },
     }),
   ],
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
   callbacks: {
     async session({ session, token }) {
       if (token.sub && session.user) {
