@@ -35,6 +35,16 @@ export function validatePassword(password: string): string {
   return result.success ? "" : result.error.issues[0].message;
 }
 
+// Shared confirm-password check (signup, reset, account).
+export function passwordsMatch(password: string, confirmPassword: string): boolean {
+  return password === confirmPassword;
+}
+
+/** Confirm-field error message — empty string when the two match. */
+export function validatePasswordMatch(password: string, confirmPassword: string): string {
+  return passwordsMatch(password, confirmPassword) ? "" : "Passwords do not match";
+}
+
 // Strength score 0–4 for the password strength meter (signup, reset, account).
 export function scorePassword(password: string): number {
   if (!password) return 0;

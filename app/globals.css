@@ -192,6 +192,11 @@
   --color-indigo-400: #6873ff;
   --color-indigo-500: #3b46e0;
   --color-indigo-600: #2a37c0;
+
+  /* Status tints — exact design hues (Tailwind's rose-50/green-50 differ). */
+  --color-danger-50: #fdebef;  /* danger-zone / mismatch card bg */
+  --color-danger-400: #b9405a; /* "passwords don't match yet" hint */
+  --color-success-50: #e8f6ee; /* active-badge bg */
 }
 
 @import "tailwindcss";

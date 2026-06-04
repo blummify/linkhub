@@ -14,7 +14,7 @@ import { CommandPalette } from "../components/CommandPalette";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { updateBranding } from "@/app/actions/profile";
 import { useSidebarStore } from "@/store/sidebarStore";
-import { scorePassword, PASSWORD_STRENGTH_LABELS } from "@/lib/validation/auth.schema";
+import { scorePassword, passwordsMatch, PASSWORD_STRENGTH_LABELS } from "@/lib/validation/auth.schema";
 
 /* ───────────────── Section card primitives ───────────────── */
 function Section({ children, danger }: { children: ReactNode; danger?: boolean }) {
@@ -22,7 +22,7 @@ function Section({ children, danger }: { children: ReactNode; danger?: boolean }
     <section
       className={
         danger
-          ? "mt-6 overflow-hidden rounded-2xl border border-[#f43f5e]/[0.18] bg-[#fdebef]"
+          ? "mt-6 overflow-hidden rounded-2xl border border-rose-500/[0.18] bg-danger-50"
           : "mb-4 overflow-hidden rounded-2xl border border-ink-100 bg-white"
       }
     >
@@ -45,10 +45,10 @@ function SectionHead({
   return (
     <div className={`px-6 pt-5 ${danger ? "pb-2" : "pb-1"} ${actions ? "flex items-start justify-between gap-4" : ""}`}>
       <div>
-        <div className={`text-base font-semibold tracking-[-0.015em] ${danger ? "text-[#e11d48]" : "text-ink-900"}`}>
+        <div className={`text-base font-semibold tracking-[-0.015em] ${danger ? "text-rose-600" : "text-ink-900"}`}>
           {title}
         </div>
-        <div className={`mt-1 text-[12.5px] leading-[1.45] ${danger ? "text-[#f43f5e]/70" : "text-ink-400"}`}>{desc}</div>
+        <div className={`mt-1 text-[12.5px] leading-[1.45] ${danger ? "text-rose-500/70" : "text-ink-400"}`}>{desc}</div>
       </div>
       {actions}
     </div>
@@ -96,7 +96,7 @@ const BTN_VARIANTS: Record<BtnVariant, string> = {
   ghost:
     "border border-ink-100 text-ink-700 hover:bg-paper hover:border-ink-200 hover:text-ink-900 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:border-ink-100",
   secondary: "bg-ink-100 text-ink-700 hover:bg-ink-200 hover:text-ink-900",
-  danger: "border border-[#f43f5e]/20 text-[#e11d48] hover:bg-[#fdebef] hover:border-[#f43f5e]/40",
+  danger: "border border-rose-500/20 text-rose-600 hover:bg-danger-50 hover:border-rose-500/40",
 };
 
 function Button({
@@ -118,12 +118,12 @@ function Button({
 }
 
 /* ───────────────── Password strength meter ───────────────── */
-// Bar fill + label color per score — design's exact hues (differ from Tailwind v4 defaults).
+// Bar fill + label color per score.
 function strengthColors(score: number): { bar: string; label: string } {
-  if (score >= 4) return { bar: "bg-[#16a34a]", label: "text-[#16a34a]" };
-  if (score === 3) return { bar: "bg-[#84cc16]", label: "text-[#65a30d]" };
-  if (score === 2) return { bar: "bg-[#d97706]", label: "text-[#d97706]" };
-  if (score === 1) return { bar: "bg-[#e11d48]", label: "text-[#e11d48]" };
+  if (score >= 4) return { bar: "bg-green-600", label: "text-green-600" };
+  if (score === 3) return { bar: "bg-lime-500", label: "text-lime-600" };
+  if (score === 2) return { bar: "bg-amber-600", label: "text-amber-600" };
+  if (score === 1) return { bar: "bg-rose-600", label: "text-rose-600" };
   return { bar: "bg-ink-100", label: "text-ink-400" };
 }
 
@@ -201,7 +201,7 @@ type SecFactor = { title: string; recommended?: boolean; offDesc: string; onDesc
 
 const BADGE_BASE = "inline-flex items-center gap-1 rounded-full px-[7px] py-0.5 text-[10px] font-semibold tracking-[0.04em]";
 const BADGE_VARIANTS: Record<"on" | "off" | "recommended", string> = {
-  on: "bg-[#e8f6ee] text-[#16a34a]",
+  on: "bg-success-50 text-green-600",
   off: "bg-ink-100 text-ink-500",
   recommended: "bg-indigo-50 text-indigo-600",
 };
@@ -210,7 +210,7 @@ function Badge({ kind, children }: { kind: "on" | "off" | "recommended"; childre
   return (
     <span className={`${BADGE_BASE} ${BADGE_VARIANTS[kind]}`}>
       {kind !== "recommended" && (
-        <span className={`h-[5px] w-[5px] rounded-full ${kind === "on" ? "bg-[#16a34a]" : "bg-ink-400"}`} />
+        <span className={`h-[5px] w-[5px] rounded-full ${kind === "on" ? "bg-green-600" : "bg-ink-400"}`} />
       )}
       {children}
     </span>
@@ -336,15 +336,15 @@ export default function MyAccountClient() {
 
   const confirmHint = useMemo(() => {
     if (!confirmPw) return { cls: "text-ink-400", text: "Re-type your new password to confirm." };
-    if (newPw && confirmPw === newPw) return { cls: "text-[#16a34a]", text: "Passwords match." };
-    return { cls: "text-[#b9405a]", text: "Passwords don't match yet." };
+    if (newPw && passwordsMatch(newPw, confirmPw)) return { cls: "text-green-600", text: "Passwords match." };
+    return { cls: "text-danger-400", text: "Passwords don't match yet." };
   }, [newPw, confirmPw]);
 
   const pwValid =
     currentPw.length >= 1 &&
     newPw.length >= 8 &&
     score >= 2 &&
-    newPw === confirmPw &&
+    passwordsMatch(newPw, confirmPw) &&
     newPw !== currentPw;
 
   const handlePasswordSave = () => {
