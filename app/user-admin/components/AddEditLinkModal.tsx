@@ -166,6 +166,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   const [title, setTitle]               = useState(() => initialLink?.title ?? "");
   const [url, setUrl]                   = useState(() => initialLink?.url ?? "");
   const [status, setStatus]             = useState<LinkStatusValue>( () => initialLink?.status ?? LinkStatus.PUBLISHED);
+  const initialStatusRef                = useRef<LinkStatusValue>(initialLink?.status ?? LinkStatus.PUBLISHED);
   const [titleLen, setTitleLen]         = useState(() => (initialLink?.title ?? "").length);
   const [urlValidState, setUrlValidState] = useState<"none" | "valid" | "invalid">("none");
   const [urlError, setUrlError]         = useState(false);
@@ -747,17 +748,15 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               type="button"
               role="switch"
               aria-checked={status === LinkStatus.PUBLISHED}
-              onClick={() => setStatus(s => {
-                      if (!isEdit) {
-                        // add mode
-                        return s === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
-                      }
-                      // edit mode 
-                      if (s === LinkStatus.PUBLISHED) {
-                          return LinkStatus.UNPUBLISHED
-                      };
-                          return LinkStatus.PUBLISHED;
-                    })}
+              onClick={() => setStatus(current => {
+                  if (!isEdit) {
+                    return current === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
+                  }
+                  if (initialStatusRef.current === LinkStatus.DRAFT) {
+                    return current === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
+                  }
+                  return current === LinkStatus.PUBLISHED ? LinkStatus.UNPUBLISHED : LinkStatus.PUBLISHED;
+                      })}
               className="relative shrink-0 outline-none"
               style={{
                 width: 42,

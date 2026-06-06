@@ -175,6 +175,30 @@
   --radius-full: 9999px;
 }
 
+/* Dashboard/account palette — ink (neutrals), indigo (primary), paper (bg).
+   Registered as theme colors → usable as bg-paper, text-ink-900, etc. */
+@theme {
+  --color-paper: #f7f8fc;
+
+  --color-ink-100: #eef0f7;
+  --color-ink-200: #d6dae9;
+  --color-ink-300: #a8aecb;
+  --color-ink-400: #6b75a3;
+  --color-ink-500: #3a4474;
+  --color-ink-700: #1a2244;
+  --color-ink-900: #0b1020;
+
+  --color-indigo-50: #f1f3ff;
+  --color-indigo-400: #6873ff;
+  --color-indigo-500: #3b46e0;
+  --color-indigo-600: #2a37c0;
+
+  /* Status tints — exact design hues (Tailwind's rose-50/green-50 differ). */
+  --color-danger-50: #fdebef;  /* danger-zone / mismatch card bg */
+  --color-danger-400: #b9405a; /* "passwords don't match yet" hint */
+  --color-success-50: #e8f6ee; /* active-badge bg */
+}
+
 @import "tailwindcss";
 
 @source "../templates/**/*.html";
