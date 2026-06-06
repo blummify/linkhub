@@ -52,7 +52,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!credentials?.password) return null;
         const user = await db.user.findUnique({ where: { email } });
-        if (!user || !user.passwordHash) return null;
+        if (!user) return null;
+        if (!user.passwordHash) throw new Error("oauth_account_no_password");
+
         const isValid = await bcrypt.compare(credentials.password as string, user.passwordHash);
         if (!isValid) return null;
 
