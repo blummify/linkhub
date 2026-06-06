@@ -187,7 +187,6 @@ export function ManagedLinkCard({
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex min-w-0 flex-1 gap-3 sm:gap-[14px]">
-        {/* Drag handle */}
         <div
           {...dragHandleListeners}
           {...dragHandleAttributes}
@@ -207,7 +206,6 @@ export function ManagedLinkCard({
           </svg>
         </div>
 
-        {/* Platform icon / thumbnail */}
         <div
           className="shrink-0 flex items-center justify-center mt-0.5"
           style={{
@@ -238,7 +236,6 @@ export function ManagedLinkCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              {/* Title + status tag */}
               <div className="flex items-center gap-2 min-w-0">
                 {editingField === "title" ? (
                   <input
@@ -295,7 +292,6 @@ export function ManagedLinkCard({
                 )}
               </div>
 
-              {/* URL */}
               {editingField === "url" ? (
                 <input
                   autoFocus
@@ -322,9 +318,7 @@ export function ManagedLinkCard({
               )}
             </div>
 
-            {/* Right actions */}
             <div className="flex shrink-0 items-center gap-1">
-              {/* Toggle / Draft pill */}
               {onToggle ? (
                 visualStatus === "draft" ? (
                   <button
@@ -395,7 +389,6 @@ export function ManagedLinkCard({
             </div>
           </div>
 
-          {/* Stats row */}
           {showStats && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2" style={{ fontSize: 12, color: "#6b75a3" }}>
 

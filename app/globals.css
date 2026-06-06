@@ -710,3 +710,14 @@ body {
   0%   { background-position: -300% 0; }
   100% { background-position: 300% 0; }
 }
+
+/* ── Billing bento grid ──────────────────────────────────────────────────────── */
+@media (max-width: 880px) {
+  .billing-bento { grid-template-columns: 1fr 1fr !important; }
+  .billing-bento > div { grid-column: span 2 !important; }
+}
+@media (max-width: 560px) {
+  .billing-bento { grid-template-columns: 1fr !important; }
+  .billing-bento > div { grid-column: span 1 !important; }
+  .inv-desc-col { display: none; }
+}

@@ -40,7 +40,6 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
           padding: "28px 28px 24px",
         }}
       >
-        {/* Icon */}
         <div
           className="flex items-center justify-center mb-5 shrink-0"
           style={{

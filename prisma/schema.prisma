@@ -22,6 +22,26 @@ model User {
   passwordResetTokens PasswordResetToken[]
   profile             Profile?
   sessions            Session[]
+  subscription        Subscription?
+}
+
+model Subscription {
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  paystackCustomerId     String    @unique
+  paystackSubscriptionId String?   @unique
+  paystackPlanCode       String?
+  authorizationCode      String?
+  cardLast4              String?
+  cardBrand              String?
+  cardExpiry             String?
+  planId                 String    @default("free")
+  status                 String    @default("active")
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean   @default(false)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {

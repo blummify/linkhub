@@ -56,6 +56,7 @@ export function AuthShell({
                 alt="LinkHub"
                 width={256}
                 height={256}
+                style={{ height: "auto" }}
                 className="h-auto w-32 max-w-full object-contain"
               />
             </Link>

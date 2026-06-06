@@ -116,7 +116,6 @@ export function DashboardTopBar({
 
   const toolbar = (
       <div className="flex items-center" style={{ gap: 14 }}>
-        {/* Menu / sidebar toggle */}
         <button
           type="button"
           onClick={toggleSidebar}
@@ -139,7 +138,6 @@ export function DashboardTopBar({
           </svg>
         </button>
 
-        {/* Search bar */}
         <div
           className="relative flex-1 flex items-center"
           style={{ height: 42, cursor: onSearchClick ? "pointer" : "text" }}
@@ -191,10 +189,8 @@ export function DashboardTopBar({
           </div>
         </div>
 
-        {/* Action icons */}
         <div className="flex items-center" style={{ gap: 8 }}>
 
-          {/* Notifications */}
           <div ref={notifRef} style={{ position: "relative" }}>
             <IconBtn aria-label="Notifications" active={showNotif} onClick={handleOpenNotif}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
@@ -223,7 +219,6 @@ export function DashboardTopBar({
                   animation: "topbarPopIn 0.18s cubic-bezier(0.16,1,0.3,1)",
                 }}
               >
-                {/* Caret */}
                 <div
                   style={{
                     position: "absolute", top: -6, right: 13,
@@ -235,7 +230,6 @@ export function DashboardTopBar({
                   }}
                 />
 
-                {/* Header */}
                 <div
                   style={{
                     display: "flex",
@@ -282,7 +276,6 @@ export function DashboardTopBar({
                   )}
                 </div>
 
-                {/* Items */}
                 <div style={{ padding: "6px 0" }}>
                   {DEMO_NOTIFICATIONS.map((n) => {
                     const s = NOTIF_ICON_STYLES[n.icon];
@@ -349,7 +342,6 @@ export function DashboardTopBar({
             )}
           </div>
 
-          {/* Help */}
           <div ref={helpRef} style={{ position: "relative" }}>
             <IconBtn aria-label="Help" active={showHelp} onClick={handleOpenHelp}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
@@ -374,7 +366,6 @@ export function DashboardTopBar({
                   padding: "6px 0",
                 }}
               >
-                {/* Caret */}
                 <div
                   style={{
                     position: "absolute", top: -6, right: 13,
