@@ -31,6 +31,7 @@ export function PublicNav({ activePage }: PublicNavProps) {
               width={256}
               height={256}
               priority
+              style={{ height: "auto" }}
               className="h-auto w-32 max-w-full object-contain"
             />
           </span>

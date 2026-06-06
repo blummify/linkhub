@@ -38,7 +38,7 @@ async function requireSession() {
 }
 
 function formatAmount(pesewas: number): string {
-  return `$${(pesewas / 100).toFixed(2)}`;
+  return `₵${(pesewas / 100).toFixed(2)}`;
 }
 
 export async function getSubscription(): Promise<SubscriptionDTO | null> {
@@ -75,9 +75,17 @@ export async function getSubscription(): Promise<SubscriptionDTO | null> {
 }
 
 export async function createCheckoutSession(
-  planCode: string
+  planId: "hub" | "studio"
 ): Promise<{ url: string }> {
   const user = await requireSession();
+
+  const planMap: Record<string, { code: string | undefined; amount: number }> = {
+    hub:    { code: process.env.PAYSTACK_HUB_PLAN_CODE,    amount: 1000 }, // GHS 10.00
+    studio: { code: process.env.PAYSTACK_STUDIO_PLAN_CODE, amount: 2000 }, // GHS 20.00
+  };
+  const plan = planMap[planId];
+  const planCode = plan?.code;
+  if (!planCode) throw new Error(`Plan "${planId}" is not configured. Set PAYSTACK_${planId.toUpperCase()}_PLAN_CODE.`);
 
   const rlKey = `checkout:${user.id}`;
   try {
@@ -96,7 +104,7 @@ export async function createCheckoutSession(
 
   const { authorizationUrl } = await initializeTransaction({
     email: user.email,
-    amount: 0,
+    amount: plan.amount,
     planCode,
     callbackUrl: `${baseUrl}/billing?checkout=success`,
     metadata: { userId: user.id },

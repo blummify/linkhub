@@ -88,17 +88,18 @@ describe("getSubscription", () => {
 describe("createCheckoutSession", () => {
   it("throws Unauthorized when there is no session", async () => {
     mockAuth(null);
-    await expect(createCheckoutSession("PLN_test")).rejects.toThrow("Unauthorized");
+    await expect(createCheckoutSession("hub")).rejects.toThrow("Unauthorized");
   });
 
   it("returns only { url } — never the full Paystack transaction object", async () => {
     mockAuth(MOCK_SESSION);
+    process.env.PAYSTACK_HUB_PLAN_CODE = "PLN_test";
     (initializeTransaction as ReturnType<typeof vi.fn>).mockResolvedValue({
       authorizationUrl: "https://checkout.paystack.com/abc123",
       reference: "ref_abc",
     });
 
-    const result = await createCheckoutSession("PLN_test");
+    const result = await createCheckoutSession("hub");
 
     expect(result).toEqual({ url: "https://checkout.paystack.com/abc123" });
     expect(result).not.toHaveProperty("reference");
@@ -153,7 +154,7 @@ describe("getInvoices", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("ref_pub_abc");
-    expect(result[0].amount).toBe("$12.00");
+    expect(result[0].amount).toBe("₵12.00");
     expect(result[0].status).toBe("success");
 
     const serialized = JSON.stringify(result);

@@ -1,20 +1,22 @@
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
 
-const PLANS = {
-  free: { name: "Free", price: "$0", per: "forever" },
-  pro:  { name: "Pro",  price: "$12", per: "/ month · billed annually" },
+const PLAN_META = {
+  free:   { name: "Free",   per: "forever" },
+  hub:    { name: "Hub",    per: "/ month" },
+  studio: { name: "Studio", per: "/ month" },
 };
 
 interface PlanCardProps {
-  plan: "free" | "pro";
+  plan: "free" | "hub" | "studio";
+  price: string;
   canceled: boolean;
   onChangePlan: () => void;
   onCancelSubscription: () => void;
   onResumeSubscription: () => void;
 }
 
-export function PlanCard({ plan, canceled, onChangePlan, onCancelSubscription, onResumeSubscription }: PlanCardProps) {
-  const p = PLANS[plan];
+export function PlanCard({ plan, price, canceled, onChangePlan, onCancelSubscription, onResumeSubscription }: PlanCardProps) {
+  const p = PLAN_META[plan];
 
   if (plan === "free") {
     return (
@@ -42,7 +44,7 @@ export function PlanCard({ plan, canceled, onChangePlan, onCancelSubscription, o
               boxShadow: "0 4px 12px -4px rgba(59,70,224,0.4)",
             }}
           >
-            Upgrade to Pro
+            Upgrade
           </button>
         </div>
       </div>
@@ -65,7 +67,7 @@ export function PlanCard({ plan, canceled, onChangePlan, onCancelSubscription, o
             {p.name}
           </div>
           <div style={{ fontSize: 14, color: "rgba(255,255,255,0.8)" }}>
-            <strong style={{ color: "white", fontWeight: 600 }}>{p.price}</strong> {p.per}
+            <strong style={{ color: "white", fontWeight: 600 }}>{price}</strong> {p.per}
           </div>
         </div>
         <button

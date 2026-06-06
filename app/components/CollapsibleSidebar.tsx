@@ -86,6 +86,7 @@ export default function CollapsibleSidebar({
             alt="LinkHub Logo"
             width={128}
             height={128}
+            style={isCollapsed ? undefined : { height: "auto" }}
             className={`object-contain transition-all duration-300 cursor-pointer hover:opacity-80 ${
               isCollapsed ? "h-8 w-8" : "h-auto w-32"
             }`}

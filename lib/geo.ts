@@ -1,0 +1,41 @@
+import { detectCurrency, type CurrencyCode } from "./currencies";
+
+/**
+ * Resolve the visitor's currency from request headers.
+ * Only import this from Server Components / Route Handlers — never from client components.
+ *
+ * Priority:
+ *   1. x-vercel-ip-country — injected by Vercel (dev / preview)
+ *   2. geoip-lite          — in-process IP lookup, works on any Node.js host (VPS, etc.)
+ *   3. accept-language     — browser locale header, universal last resort
+ */
+export function detectCurrencyFromHeaders(
+  get: (name: string) => string | null
+): CurrencyCode {
+  // 1. Vercel
+  const vercel = get("x-vercel-ip-country");
+  if (vercel) return detectCurrency(vercel);
+
+  // 2. geoip-lite — Node.js only, bundled MaxMind database
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const geoip = require("geoip-lite") as {
+      lookup: (ip: string) => { country?: string } | null;
+    };
+    const forwarded = get("x-forwarded-for");
+    const ip = (forwarded ? forwarded.split(",")[0] : (get("x-real-ip") ?? "")).trim();
+    if (ip) {
+      const geo = geoip.lookup(ip);
+      if (geo?.country) return detectCurrency(geo.country);
+    }
+  } catch {
+    // geoip-lite not available — skip silently
+  }
+
+  // 3. accept-language: "en-GH,en;q=0.9" → "GH"
+  const lang = get("accept-language") ?? "";
+  const match = lang.match(/[a-z]{2}-([A-Z]{2})/);
+  if (match) return detectCurrency(match[1]);
+
+  return "USD";
+}

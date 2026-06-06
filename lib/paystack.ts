@@ -55,7 +55,7 @@ async function paystackFetch<T>(
 
 export async function initializeTransaction(params: {
   email: string;
-  amount: number;   // kobo / pesewas — must be an integer
+  amount: number;
   planCode: string;
   callbackUrl: string;
   metadata?: Record<string, string>;

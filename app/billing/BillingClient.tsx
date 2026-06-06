@@ -24,12 +24,16 @@ import {
   type InvoiceDTO,
   type CardDTO,
 } from "@/app/actions/billing";
+import { CURRENCIES, formatPrice, type CurrencyCode } from "@/lib/currencies";
+import { CurrencySelector } from "@/app/components/CurrencySelector";
+
+const CURRENCY_STORAGE_KEY = "lh_currency";
 
 /* ── Plan selector data (UI only — no secrets) ──────────────────────────── */
 const PLANS = [
-  { id: "free",     name: "Free",     price: "$0",  per: "forever",                  desc: "5 links · 1k views · no custom domain" },
-  { id: "pro",      name: "Pro",      price: "$12", per: "/ month · billed annually", desc: "100 links · 50k views · 3 domains · 1 GB" },
-  { id: "business", name: "Business", price: "$32", per: "/ month · billed annually", desc: "Unlimited links · 500k views · 10 domains · 10 GB" },
+  { id: "free",   name: "Free",   ghsAmount: 0,  per: "forever",  desc: "5 links · 1k views · no custom domain" },
+  { id: "hub",    name: "Hub",    ghsAmount: 10, per: "/ month",  desc: "100 links · 50k views · 3 domains · 1 GB" },
+  { id: "studio", name: "Studio", ghsAmount: 20, per: "/ month",  desc: "Unlimited links · 500k views · 10 domains · 10 GB" },
 ] as const;
 
 type PlanId = (typeof PLANS)[number]["id"];
@@ -62,10 +66,22 @@ function formatCardNumber(v: string) { return v.replace(/\D/g, "").slice(0, 16).
 function formatExpiry(v: string) { const d = v.replace(/\D/g, "").slice(0, 4); return d.length >= 3 ? d.slice(0, 2) + "/" + d.slice(2) : d; }
 
 /* ── Component ──────────────────────────────────────────────────────────── */
-export default function BillingClient() {
+export default function BillingClient({ defaultCurrency }: { defaultCurrency: CurrencyCode }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const router = useRouter();
   const formId = useId();
+
+  /* ── Currency state ── */
+  const [currency, setCurrency] = useState<CurrencyCode>(() => {
+    if (typeof window === "undefined") return defaultCurrency;
+    const saved = localStorage.getItem(CURRENCY_STORAGE_KEY) as CurrencyCode | null;
+    return saved && saved in CURRENCIES ? saved : defaultCurrency;
+  });
+  function handleCurrencyChange(code: CurrencyCode) {
+    setCurrency(code);
+    localStorage.setItem(CURRENCY_STORAGE_KEY, code);
+  }
+  const curr = CURRENCIES[currency];
 
   /* ── Live subscription state ── */
   const [subscription, setSubscription] = useState<SubscriptionDTO | null>(null);
@@ -81,7 +97,7 @@ export default function BillingClient() {
   const [modal, setModal]               = useState<ModalType | null>(null);
   const [editingCard, setEditingCard]   = useState<PaymentCard | null>(null);
   const [removingCard, setRemovingCard] = useState<PaymentCard | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>("pro");
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>("hub");
   const [cardForm, setCardForm] = useState<CardFormState>({ name: "", number: "", expiry: "", cvc: "", error: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -129,11 +145,7 @@ export default function BillingClient() {
 
     setIsSubmitting(true);
     try {
-      const planCode = selectedPlan === "pro"
-        ? (process.env.NEXT_PUBLIC_PAYSTACK_PRO_MONTHLY_PLAN_CODE ?? "")
-        : (process.env.NEXT_PUBLIC_PAYSTACK_PRO_ANNUAL_PLAN_CODE ?? "");
-
-      const { url } = await createCheckoutSession(planCode);
+      const { url } = await createCheckoutSession(selectedPlan as "hub" | "studio");
       closeModal();
       router.push(url);
     } catch (err) {
@@ -246,9 +258,16 @@ export default function BillingClient() {
                   <span style={{ color: "#a8aecb" }}>/</span>
                   <span style={{ color: "#0b1020" }}>Billing</span>
                 </nav>
-                <h1 style={{ fontFamily: BRANDING_FONT_SERIF, fontStyle: "italic", fontSize: 46, lineHeight: 1, letterSpacing: "-0.02em", color: "#0b1020" }}>
-                  Billing.
-                </h1>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <h1 style={{ fontFamily: BRANDING_FONT_SERIF, fontStyle: "italic", fontSize: 46, lineHeight: 1, letterSpacing: "-0.02em", color: "#0b1020" }}>
+                    Billing.
+                  </h1>
+                  <CurrencySelector
+                    value={currency}
+                    onChange={handleCurrencyChange}
+                    className="text-[#6b75a3] border-[#d6dae9] mb-1"
+                  />
+                </div>
                 <p style={{ fontSize: 14.5, color: "#6b75a3", marginTop: 10 }}>
                   Your plan, payment, and invoices — all in one place.
                 </p>
@@ -274,7 +293,8 @@ export default function BillingClient() {
                     <div className="h-[160px] bg-[#eef0f7] rounded-2xl animate-pulse" />
                   ) : (
                     <PlanCard
-                      plan={planId === "free" ? "free" : "pro"}
+                      plan={planId === "hub" || planId === "studio" ? planId : "free"}
+                      price={formatPrice(PLANS.find((p) => p.id === planId)?.ghsAmount ?? 0, curr)}
                       canceled={canceled}
                       onChangePlan={() => openChangePlan()}
                       onCancelSubscription={openCancelSub}
@@ -284,7 +304,7 @@ export default function BillingClient() {
                 </div>
                 <div>
                   <NextPaymentCard
-                    amount={planId === "pro" ? "$144.00" : null}
+                    amount={planId !== "free" ? formatPrice(PLANS.find((p) => p.id === planId)?.ghsAmount ?? 0, curr) : null}
                     dueDate={subscription?.currentPeriodEnd ?? null}
                     cardBrand={cards.find((c) => c.isDefault)?.brand}
                     cardLast4={cards.find((c) => c.isDefault)?.last4}
@@ -292,7 +312,7 @@ export default function BillingClient() {
                 </div>
 
                 <div style={{ gridColumn: "span 2" }}>
-                  <UsageSection onUpgrade={() => openChangePlan("business")} />
+                  <UsageSection onUpgrade={() => openChangePlan("studio")} />
                 </div>
 
                 <div style={{ gridColumn: "span 3" }}>
@@ -350,7 +370,7 @@ export default function BillingClient() {
                   </span>
                   <span style={{ fontSize: 12, color: "#6b75a3", marginTop: 2, display: "block" }}>{p.desc}</span>
                 </span>
-                <span style={{ fontSize: 14, fontWeight: 600, color: "#0b1020", whiteSpace: "nowrap", fontFamily: "'Geist Mono', monospace" }}>{p.price}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#0b1020", whiteSpace: "nowrap", fontFamily: "'Geist Mono', monospace" }}>{formatPrice(p.ghsAmount, curr)}</span>
               </button>
             ))}
           </div>

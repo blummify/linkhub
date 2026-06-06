@@ -39,39 +39,39 @@ beforeEach(() => {
 describe("BillingClient", () => {
   it("renders the main element", async () => {
     (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-    render(<BillingClient />);
+    render(<BillingClient defaultCurrency="GHS" />);
     expect(screen.getByRole("main")).toBeInTheDocument();
   });
 
   it("shows Upgrade CTA for a free user (null subscription)", async () => {
     (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-    render(<BillingClient />);
+    render(<BillingClient defaultCurrency="GHS" />);
     await waitFor(() =>
-      expect(screen.getByText(/upgrade to pro/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/upgrade/i).length).toBeGreaterThan(0)
     );
   });
 
-  it("shows Cancel subscription for an active Pro user", async () => {
+  it("shows Cancel subscription for an active Hub user", async () => {
     (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
-      planId: "pro",
+      planId: "hub",
       status: "active",
       currentPeriodEnd: "2026-12-14T00:00:00Z",
       cancelAtPeriodEnd: false,
     });
-    render(<BillingClient />);
+    render(<BillingClient defaultCurrency="GHS" />);
     await waitFor(() =>
       expect(screen.getByText(/cancel subscription/i)).toBeInTheDocument()
     );
   });
 
-  it("shows Resume for a Pro user with cancelAtPeriodEnd=true", async () => {
+  it("shows Resume for a Hub user with cancelAtPeriodEnd=true", async () => {
     (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
-      planId: "pro",
+      planId: "hub",
       status: "non-renewing",
       currentPeriodEnd: "2026-12-14T00:00:00Z",
       cancelAtPeriodEnd: true,
     });
-    render(<BillingClient />);
+    render(<BillingClient defaultCurrency="GHS" />);
     await waitFor(() =>
       expect(screen.getByText(/resume/i)).toBeInTheDocument()
     );
@@ -79,32 +79,32 @@ describe("BillingClient", () => {
 
   it("shows the payment failed banner for a past_due subscription", async () => {
     (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
-      planId: "pro",
+      planId: "hub",
       status: "past_due",
       currentPeriodEnd: "2026-12-14T00:00:00Z",
       cancelAtPeriodEnd: false,
     });
-    render(<BillingClient />);
+    render(<BillingClient defaultCurrency="GHS" />);
     await waitFor(() =>
       expect(screen.getByText(/payment failed/i)).toBeInTheDocument()
     );
   });
 
-  it("opens the plan change modal when Upgrade to Pro is clicked", async () => {
+  it("opens the plan change modal when Upgrade is clicked", async () => {
     (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-    render(<BillingClient />);
+    render(<BillingClient defaultCurrency="GHS" />);
 
-    await waitFor(() => screen.getByText(/upgrade to pro/i));
-    fireEvent.click(screen.getByText(/upgrade to pro/i));
+    await waitFor(() => screen.getAllByText("Upgrade"));
+    fireEvent.click(screen.getAllByText("Upgrade")[0]);
 
     await waitFor(() => screen.getByText(/confirm change/i));
     expect(screen.getByText(/confirm change/i)).toBeInTheDocument();
     expect(screen.getByText(/change plan/i)).toBeInTheDocument();
   });
 
-  it("calls createCheckoutSession when a Pro user changes to Business", async () => {
+  it("calls createCheckoutSession when a Hub user changes to Studio", async () => {
     (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
-      planId: "pro",
+      planId: "hub",
       status: "active",
       currentPeriodEnd: "2026-12-14T00:00:00Z",
       cancelAtPeriodEnd: false,
@@ -113,13 +113,13 @@ describe("BillingClient", () => {
       url: "https://checkout.paystack.com/test",
     });
 
-    render(<BillingClient />);
+    render(<BillingClient defaultCurrency="GHS" />);
 
-    await waitFor(() => screen.getByText(/change plan/i));
-    fireEvent.click(screen.getByText(/change plan/i));
+    await waitFor(() => screen.getAllByText("Change plan"));
+    fireEvent.click(screen.getAllByText("Change plan")[0]);
 
-    await waitFor(() => screen.getByText("Business"));
-    fireEvent.click(screen.getByText("Business"));
+    await waitFor(() => screen.getByText("Studio"));
+    fireEvent.click(screen.getByText("Studio"));
 
     fireEvent.click(screen.getByText(/confirm change/i));
 

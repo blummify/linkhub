@@ -13,6 +13,7 @@ export function SiteFooter() {
               width={256}
               height={256}
               loading="eager"
+              style={{ height: "auto" }}
               className="mx-auto h-auto w-32 max-w-full object-contain"
             />
           </div>
