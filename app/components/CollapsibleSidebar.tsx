@@ -62,7 +62,6 @@ export default function CollapsibleSidebar({
 
   return (
     <>
-      {/* Mobile overlay */}
       {!isCollapsed && (
         <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
@@ -70,7 +69,6 @@ export default function CollapsibleSidebar({
         />
       )}
 
-      {/* Sidebar */}
       <aside
         id="sidebar"
         className={`h-screen bg-white border-r z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 flex flex-col overflow-hidden ${
@@ -80,7 +78,6 @@ export default function CollapsibleSidebar({
         }`}
         style={{ borderColor: "#eef0f7" }}
       >
-        {/* Brand */}
 
       <div className={`flex items-center justify-center ${isCollapsed ? 'mb-6 pt-1' : 'mb-8 pt-2'}`} >
         <Link href="/user-dashboard">
@@ -89,6 +86,7 @@ export default function CollapsibleSidebar({
             alt="LinkHub Logo"
             width={128}
             height={128}
+            style={isCollapsed ? undefined : { height: "auto" }}
             className={`object-contain transition-all duration-300 cursor-pointer hover:opacity-80 ${
               isCollapsed ? "h-8 w-8" : "h-auto w-32"
             }`}
@@ -96,7 +94,6 @@ export default function CollapsibleSidebar({
         </Link>
       </div>
 
-        {/* WORKSPACE label */}
         {!isCollapsed && (
           <p
             className="px-3 mb-2.5"
@@ -112,7 +109,6 @@ export default function CollapsibleSidebar({
           </p>
         )}
 
-        {/* Workspace Nav */}
         <nav className="flex flex-col gap-0.5">
           {NAV_ITEMS.map(({ label, href, Icon, showBadge }) => {
             const active = isActiveLink(href);
@@ -204,7 +200,6 @@ export default function CollapsibleSidebar({
           })}
         </nav>
 
-        {/* ACCOUNT section */}
         <div className="mt-5">
           {!isCollapsed && (
             <p
@@ -273,13 +268,10 @@ export default function CollapsibleSidebar({
           </nav>
         </div>
 
-        {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Upgrade card */}
         <UpgradeCard isCollapsed={isCollapsed} />
 
-        {/* User chip */}
         <div
           className={`flex items-center transition-all cursor-pointer ${
             isCollapsed ? "justify-center p-1.5" : "gap-[11px] p-2.5"
@@ -330,7 +322,6 @@ export default function CollapsibleSidebar({
           )}
         </div>
 
-        {/* Bottom links: Help + Logout */}
         <div className={`flex gap-2 mt-2.5 ${isCollapsed ? "flex-col" : ""}`}>
           <Link
             href="/help"
@@ -388,7 +379,6 @@ export default function CollapsibleSidebar({
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 h-screen overflow-hidden relative flex flex-col">
         {children}
       </div>

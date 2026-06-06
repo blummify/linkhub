@@ -34,9 +34,7 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
           minHeight: 400,
         }}
       >
-        {/* Illustration */}
         <div className="relative w-40 h-32 mb-8 mx-auto">
-          {/* Card 1 — back */}
           <div
             className="absolute inset-0"
             style={{
@@ -52,7 +50,6 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
               animation: "floatIn 0.55s cubic-bezier(.22,.68,0,1.2) 0.05s both",
             } as React.CSSProperties}
           />
-          {/* Card 2 — mid */}
           <div
             className="absolute"
             style={{
@@ -68,7 +65,6 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
               animation: "floatIn 0.55s cubic-bezier(.22,.68,0,1.2) 0.15s both",
             } as React.CSSProperties}
           />
-          {/* Card 3 — front */}
           <div
             className="absolute flex items-center gap-2 px-3"
             style={{
@@ -91,7 +87,6 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
             </div>
           </div>
 
-          {/* Sparkle 1 — top right, amber */}
           <svg
             width="16" height="16" viewBox="0 0 16 16" fill="none"
             className="absolute"
@@ -99,7 +94,6 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
           >
             <path d="M8 1L9.5 6.5L15 8L9.5 9.5L8 15L6.5 9.5L1 8L6.5 6.5Z" fill="#f59e0b"/>
           </svg>
-          {/* Sparkle 2 — left, indigo */}
           <svg
             width="11" height="11" viewBox="0 0 16 16" fill="none"
             className="absolute"
@@ -107,7 +101,6 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
           >
             <path d="M8 1L9.5 6.5L15 8L9.5 9.5L8 15L6.5 9.5L1 8L6.5 6.5Z" fill="#6366f1"/>
           </svg>
-          {/* Sparkle 3 — bottom right, soft indigo */}
           <svg
             width="9" height="9" viewBox="0 0 16 16" fill="none"
             className="absolute"
@@ -117,7 +110,6 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
           </svg>
         </div>
 
-        {/* Text */}
         <h2 style={{ fontSize: 22, fontWeight: 500, color: "#0b1020", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
           Your page is empty{" "}
           <em style={{ fontStyle: "italic", color: "#6366f1" }}>for now</em>.
@@ -126,7 +118,6 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
           Add a link to start showing the world what you&apos;re working on. It takes about ten seconds.
         </p>
 
-        {/* CTA */}
         {onAddLink ? (
           <button
             type="button"
@@ -157,7 +148,6 @@ function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
           </button>
         ) : null}
 
-        {/* Keyboard hint */}
         <p className="mt-4" style={{ fontSize: 12, color: "#9399b8" }}>
           Press{" "}
           <kbd style={{ display: "inline-block", padding: "1px 6px", background: "#eef0f9", borderRadius: 5, border: "1px solid #dde0ef", fontSize: 11, fontFamily: "monospace", color: "#4a5080" }}>
@@ -352,10 +342,8 @@ export function ManageLinksSection({
 
   return (
     <div className="space-y-6">
-      {/* Inline topbar — search, menu toggle, notifications */}
       <DashboardTopBar onSearchClick={openPalette} />
 
-      {/* Header row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1
@@ -400,10 +388,8 @@ export function ManageLinksSection({
         ) : null}
       </div>
 
-      {/* Analytics cards */}
       <AnalyticsCards />
 
-      {/* Filter tab bar — hidden when there are no links */}
       {links.length === 0 ? null : <div className="flex items-center gap-2 flex-wrap">
         <span className="mr-auto" style={{ fontSize: 12.5, color: "#6b75a3" }}>
           <b style={{ color: "#0b1020", fontWeight: 600 }}>{filteredLinks.length} link{filteredLinks.length !== 1 ? "s" : ""}</b>
@@ -438,7 +424,6 @@ export function ManageLinksSection({
         </div>
       </div>}
 
-      {/* Link list / empty states */}
       {isLoadingLinks && links.length === 0 ? (
         <div className="space-y-3">
           {[0, 1, 2, 3].map((i) => <SkeletonLinkCard key={i} delay={i * 70} />)}

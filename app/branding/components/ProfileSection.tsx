@@ -96,7 +96,6 @@ export function ProfileSection({
         alignItems: "start",
       }}
     >
-      {/* Avatar column */}
       <div
         style={{
           display: "flex",
@@ -106,7 +105,6 @@ export function ProfileSection({
         }}
       >
         <div style={{ position: "relative" }}>
-          {/* Avatar circle */}
           <div
             suppressHydrationWarning
             style={{
@@ -142,7 +140,6 @@ export function ProfileSection({
               initial
             )}
 
-            {/* Upload progress overlay */}
             {isUploadingAvatar && (
               <div
                 aria-label="Uploading…"
@@ -170,7 +167,6 @@ export function ProfileSection({
             )}
           </div>
 
-          {/* Camera button */}
           <button
             type="button"
             aria-label="Upload new photo"
@@ -200,7 +196,6 @@ export function ProfileSection({
           </button>
         </div>
 
-        {/* Upload / Remove buttons */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <button
             type="button"
@@ -255,7 +250,6 @@ export function ProfileSection({
           </button>
         </div>
 
-        {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
@@ -265,7 +259,6 @@ export function ProfileSection({
         />
       </div>
 
-      {/* Fields column */}
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <div
           style={{

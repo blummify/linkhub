@@ -122,7 +122,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
         className="relative bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
         style={{ width: "100%", maxWidth: 680 }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-base font-bold text-gray-900 tracking-tight">Crop photo</h2>
           <button
@@ -136,7 +135,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
           </button>
         </div>
 
-        {/* Crop area */}
         <div
           className="relative overflow-hidden flex items-center justify-center"
           style={{ height: 420, background: CHECKER_BG }}
@@ -152,7 +150,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
             minWidth={60}
             minHeight={60}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imgRef}
               src={objectUrl}
@@ -162,7 +159,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
             />
           </ReactCrop>
 
-          {/* Shape picker — top right */}
           <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
             <div className="flex gap-1 bg-black/50 backdrop-blur-sm rounded-full p-1">
               {(["circle", "square", "rect"] as Shape[]).map((s) => (
@@ -208,7 +204,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
             )}
           </div>
 
-          {/* Live preview card — bottom left */}
           <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3 z-10" style={{ minWidth: 170 }}>
             <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-200 shrink-0 ring-2 ring-white/80 shadow">
               {previewUrl ? (
@@ -227,7 +222,6 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-7 py-5">
           <button
             type="button"

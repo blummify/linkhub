@@ -324,7 +324,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
         }}
       >
 
-        {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-4" style={{ padding: "24px 28px 0" }}>
           <div className="flex-1">
             <h2
@@ -371,10 +370,8 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
           </button>
         </div>
 
-        {/* ── Body ───────────────────────────────────────────────────── */}
         <div className="overflow-y-auto flex flex-col" style={{ padding: "22px 28px 0", gap: 18 }}>
 
-          {/* URL field */}
           <div className="flex flex-col" style={{ gap: 7 }}>
             <div className="flex items-center justify-between">
               <label
@@ -386,7 +383,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               </label>
             </div>
 
-            {/* Input + inline validation icon */}
             <div style={{ position: "relative" }}>
               <input
                 id="m-url"
@@ -418,7 +414,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   e.currentTarget.style.boxShadow = "none";
                 }}
               />
-              {/* Validation icon */}
               {urlValidState !== "none" && (
                 <div
                   className="flex items-center justify-center"
@@ -447,7 +442,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               )}
             </div>
 
-            {/* Error message */}
             {urlError && (
               <div className="flex items-center" style={{ fontSize: 11.5, color: "#e11d48", gap: 5 }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12">
@@ -458,7 +452,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               </div>
             )}
 
-            {/* Hint text */}
             {!urlError && (
               <div className="flex items-center" style={{ fontSize: 11.5, color: "#6b75a3", gap: 5 }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12">
@@ -469,7 +462,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               </div>
             )}
 
-            {/* Detected title banner */}
             {detectedInfo && (
               <div
                 className="flex items-center"
@@ -510,7 +502,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             )}
           </div>
 
-          {/* Title field */}
           <div className="flex flex-col" style={{ gap: 7 }}>
             <div className="flex items-center justify-between">
               <label
@@ -560,7 +551,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             />
           </div>
 
-          {/* Thumbnail / icon picker */}
           <div className="flex flex-col" style={{ gap: 7 }}>
             <div className="flex items-center justify-between">
               <span
@@ -572,9 +562,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               <span style={{ fontSize: 11.5, color: "#6b75a3" }}>Optional</span>
             </div>
 
-            {/* Preview + buttons row */}
             <div className="flex items-center" style={{ gap: 12 }}>
-              {/* 64×64 preview */}
               <div
                 onClick={() => { if (!isUploadingThumb) fileInputRef.current?.click(); }}
                 style={{
@@ -607,7 +595,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                 )}
               </div>
 
-              {/* Upload / remove buttons */}
               <div className="flex flex-col flex-1" style={{ gap: 6 }}>
                 <div className="flex" style={{ gap: 6 }}>
                   <button
@@ -671,7 +658,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               </div>
             </div>
 
-            {/* Hidden file input */}
             <input
               ref={fileInputRef}
               type="file"
@@ -680,7 +666,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               onChange={handleFileChange}
             />
 
-            {/* Preset icons row */}
             <div className="flex flex-wrap" style={{ marginTop: 10, gap: 6 }}>
               {PRESET_ICONS.map(p => (
                 <button
@@ -709,7 +694,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             </div>
           </div>
 
-          {/* Status row */}
           <div
             className="flex items-center"
             style={{
@@ -720,7 +704,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               gap: 14,
             }}
           >
-            {/* Status icon */}
             <div
               className="flex items-center justify-center shrink-0"
               style={{
@@ -748,7 +731,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               )}
             </div>
 
-            {/* Status text */}
             <div className="flex-1 min-w-0">
               <p style={{ fontSize: 13.5, fontWeight: 600, color: "#0b1020" }}>
                 {status === LinkStatus.DRAFT ? "Save as draft"
@@ -762,7 +744,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               </p>
             </div>
 
-            {/* Toggle */}
             <button
               type="button"
               role="switch"
@@ -804,7 +785,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
 
         </div>{/* end body */}
 
-        {/* ── Footer ─────────────────────────────────────────────────── */}
         <div
           className="flex items-center justify-between gap-3 shrink-0"
           style={{
@@ -814,7 +794,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             background: "linear-gradient(180deg, transparent, rgba(241,243,255,0.4))",
           }}
         >
-          {/* Keyboard hint */}
           <div className="flex items-center" style={{ fontSize: 11.5, color: "#6b75a3", gap: 6 }}>
             <kbd style={{
               fontFamily: "monospace",

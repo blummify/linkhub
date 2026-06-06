@@ -130,6 +130,7 @@ export function HomeHeroSection() {
                     alt="LinkHub"
                     width={256}
                     height={256}
+                    style={{ height: "auto" }}
                     className="h-auto w-20 max-w-full object-contain"
                   />
                 </div>

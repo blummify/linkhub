@@ -33,10 +33,12 @@ export default auth((req) => {
   if (PUBLIC_STATIC_EXT.test(pathname)) return undefined;
 
   const isApiAuthRoute = pathname.startsWith("/api/auth");
+  // Paystack webhook calls this without a user session; it authenticates via HMAC signature
+  const isWebhookRoute = pathname.startsWith("/api/webhooks");
   const isPublicRoute = PUBLIC_EXACT.has(pathname);
   const isAuthRoute = pathname === "/login" || pathname === "/signup";
 
-  if (isApiAuthRoute) return undefined;
+  if (isApiAuthRoute || isWebhookRoute) return undefined;
 
   // Always allow /login and /signup (even when signed in) so people can add another
   // account, use incognito expectations, or sign out from the app and return here.
