@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import VerifyEmailClient from "../VerifyEmailClient";
+import { verifyEmailCode } from "@/app/actions/auth";
+import { signIn } from "next-auth/react";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -29,6 +31,11 @@ vi.mock("@/app/actions/auth", () => ({
   resendVerificationCode: vi.fn(),
 }));
 
+vi.mock("@/lib/recaptcha.client", () => ({
+  executeRecaptcha: vi.fn().mockResolvedValue("recaptcha-token"),
+  RecaptchaError: class RecaptchaError extends Error {},
+}));
+
 vi.mock("@/app/components/auth/AuthShell", () => ({
   AuthShell: ({
     children,
@@ -44,11 +51,44 @@ vi.mock("@/app/components/auth/AuthShell", () => ({
   ),
 }));
 
+function fillDigits(value: string) {
+  const inputs = screen.getAllByLabelText(/Digit \d of 6/);
+  value.split("").forEach((char, i) => {
+    fireEvent.change(inputs[i], { target: { value: char } });
+  });
+  return inputs;
+}
+
 describe("VerifyEmailClient", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders verification form for email from search params", () => {
     render(<VerifyEmailClient />);
     expect(screen.getByText("Keep Your Account Secure")).toBeInTheDocument();
     expect(screen.getByText("Verify & Continue")).toBeInTheDocument();
     expect(screen.getByText("Resend Code")).toBeInTheDocument();
+  });
+
+  it("submits the code when Enter is pressed in a digit input", async () => {
+    vi.mocked(verifyEmailCode).mockResolvedValue({ success: true, autoLoginToken: "t" });
+    vi.mocked(signIn).mockResolvedValue({ ok: true } as never);
+
+    render(<VerifyEmailClient />);
+    const inputs = fillDigits("123456");
+    fireEvent.keyDown(inputs[5], { key: "Enter" });
+
+    await waitFor(() =>
+      expect(verifyEmailCode).toHaveBeenCalledWith("test@example.com", "123456", "recaptcha-token"),
+    );
+  });
+
+  it("does not submit on Enter when the code is incomplete", () => {
+    render(<VerifyEmailClient />);
+    const inputs = fillDigits("123");
+    fireEvent.keyDown(inputs[2], { key: "Enter" });
+
+    expect(verifyEmailCode).not.toHaveBeenCalled();
   });
 });

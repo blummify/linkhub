@@ -159,7 +159,8 @@ export function ManagedLinkCard({
     setEditingField(null);
   };
 
-  const showStats = link.status !== 0 || Number(String(clicks).replace(/,/g, "")) > 0;
+
+  const showStats = link.status !== 0 || Number(String(clicks).replace(/,/g, "")) > 0 || !!createdAt;
   const iconKey = (link.icon && link.icon in ICON_MAP)
     ? (link.icon as IconKey)
     : detectIconKey(link.url);
@@ -397,14 +398,24 @@ export function ManagedLinkCard({
           {/* Stats row */}
           {showStats && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2" style={{ fontSize: 12, color: "#6b75a3" }}>
-              <span className="flex items-center gap-1.5">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                {clicks} clicks
-              </span>
-              {trendLabel ? (
+
+              {visualStatus !== "draft" && (
+                <span className="flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  {clicks} clicks
+                </span>
+              )}
+
+              {visualStatus === "draft" && (
+                <span className="flex items-center" style={{ color: "#6b75a3" }}>
+                  Not yet published
+                </span>
+              )}
+
+              {trendLabel && visualStatus !== "draft" ? (
                 <span className="flex items-center gap-1.5 font-medium" style={{ color: "#16a34a" }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 17l5-5 4 4 6-7"/>
@@ -412,6 +423,7 @@ export function ManagedLinkCard({
                   {trendLabel}
                 </span>
               ) : null}
+
               {createdAt ? (
                 <span className="flex items-center gap-1.5">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
