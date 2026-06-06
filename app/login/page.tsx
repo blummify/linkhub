@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
-import { validateEmail, validatePassword } from "@/lib/validation/auth.schema";
+import { validateEmail, validatePassword, validatePasswordMatch } from "@/lib/validation/auth.schema";
 
 type SignupErrors = { name: string; password: string; confirmPassword: string };
 
@@ -145,7 +145,7 @@ export default function LoginPage() {
       case "password":
         return validatePassword(value);
       case "confirmPassword":
-        return value === password ? "" : "Passwords do not match";
+        return validatePasswordMatch(password, value);
       default:
         return "";
     }

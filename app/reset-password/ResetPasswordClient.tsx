@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PasswordField } from "@/app/components/auth/PasswordField";
-import { validatePassword } from "@/lib/validation/auth.schema";
+import { validatePassword, validatePasswordMatch } from "@/lib/validation/auth.schema";
 import { resetPassword } from "@/app/actions/auth";
 
 type TokenState = "valid" | "invalid" | "used" | "expired";
@@ -33,16 +33,12 @@ export function ResetPasswordClient({ token, initialState, tokenError }: Props) 
   };
 
   const handleConfirmBlur = () => {
-    if (confirmPassword && confirmPassword !== newPassword) {
-      setConfirmPasswordError("Passwords do not match");
-    } else {
-      setConfirmPasswordError("");
-    }
+    setConfirmPasswordError(confirmPassword ? validatePasswordMatch(newPassword, confirmPassword) : "");
   };
 
   const validateAll = (): boolean => {
     const passwordErr = validatePassword(newPassword);
-    const confirmErr = confirmPassword !== newPassword ? "Passwords do not match" : "";
+    const confirmErr = validatePasswordMatch(newPassword, confirmPassword);
     setNewPasswordError(passwordErr);
     setConfirmPasswordError(confirmErr);
     return !passwordErr && !confirmErr && newPassword !== "";
@@ -147,7 +143,7 @@ export function ResetPasswordClient({ token, initialState, tokenError }: Props) 
           setNewPassword(value);
           if (newPasswordError) setNewPasswordError("");
           if (confirmPasswordError) {
-            setConfirmPasswordError(confirmPassword === value ? "" : "Passwords do not match");
+            setConfirmPasswordError(validatePasswordMatch(value, confirmPassword));
           }
         }}
         onBlur={handleNewPasswordBlur}

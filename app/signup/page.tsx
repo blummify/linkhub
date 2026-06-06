@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
-import { validateEmail, validatePassword } from "@/lib/validation/auth.schema";
+import { validateEmail, validatePassword, validatePasswordMatch, passwordsMatch } from "@/lib/validation/auth.schema";
 
 type FieldErrors = {
   name: string;
@@ -48,7 +48,7 @@ function SignupPageContent() {
       case "password":
         return validatePassword(value);
       case "confirmPassword":
-        return value === formData.password ? "" : "Passwords do not match";
+        return validatePasswordMatch(formData.password, value);
     }
   };
 
@@ -140,7 +140,7 @@ function SignupPageContent() {
     formData.email !== "" &&
     formData.password !== "" &&
     formData.confirmPassword !== "" &&
-    formData.confirmPassword === formData.password &&
+    passwordsMatch(formData.password, formData.confirmPassword) &&
     termsAccepted;
 
   const panelFeatures = [
@@ -225,7 +225,7 @@ function SignupPageContent() {
                 ...prev,
                 password: prev.password ? "" : prev.password,
                 confirmPassword: prev.confirmPassword
-                  ? (formData.confirmPassword === value ? "" : "Passwords do not match")
+                  ? validatePasswordMatch(value, formData.confirmPassword)
                   : "",
               }));
             }}
