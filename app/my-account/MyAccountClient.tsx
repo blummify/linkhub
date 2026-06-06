@@ -85,6 +85,28 @@ function Field({
   );
 }
 
+/* ───────────────── Edit icon button ───────────────── */
+function EditIconBtn({ editing, onClick }: { editing: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={editing ? "Close" : "Edit"}
+      className="w-8 h-8 rounded-lg border border-ink-100 text-ink-400 grid place-items-center transition-colors hover:bg-paper hover:border-ink-200 hover:text-ink-700"
+    >
+      {editing ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 /* ───────────────── Button ───────────────── */
 type BtnVariant = "primary" | "ghost" | "secondary" | "danger";
 
@@ -284,6 +306,11 @@ export default function MyAccountClient() {
   const { data: session } = useSession();
   const [showPalette, setShowPalette] = useState(false);
 
+  /* ── Per-section editing state ── */
+  const [editingProfile,  setEditingProfile]  = useState(false);
+  const [editingPassword, setEditingPassword] = useState(false);
+  const [editingSecurity, setEditingSecurity] = useState(false);
+
   /* ── Profile (name + email) ── */
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -316,6 +343,7 @@ export default function MyAccountClient() {
         return;
       }
       setBaseline({ name, email });
+      setEditingProfile(false);
       toast.success("Profile updated");
     } finally {
       setSavingProfile(false);
@@ -325,6 +353,7 @@ export default function MyAccountClient() {
   const handleProfileCancel = () => {
     setName(baseline.name);
     setEmail(baseline.email);
+    setEditingProfile(false);
   };
 
   /* ── Change password (UI-only — no backend yet) ── */
@@ -351,7 +380,15 @@ export default function MyAccountClient() {
     setCurrentPw("");
     setNewPw("");
     setConfirmPw("");
+    setEditingPassword(false);
     toast.success("Password updated — signed out on other devices");
+  };
+
+  const handlePasswordCancel = () => {
+    setCurrentPw("");
+    setNewPw("");
+    setConfirmPw("");
+    setEditingPassword(false);
   };
 
   return (
@@ -386,29 +423,45 @@ export default function MyAccountClient() {
                 <SectionHead
                   title="Profile"
                   desc="Your name and contact email. This stays private — not shown on your public page."
+                  actions={<EditIconBtn editing={editingProfile} onClick={editingProfile ? handleProfileCancel : () => setEditingProfile(true)} />}
                 />
-                <div className="px-6 pt-5 pb-6">
-                  <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
-                    <Field id="acc-name" label="Full name" value={name} onChange={setName} />
-                    <Field
-                      id="acc-email"
-                      label="Email"
-                      type="email"
-                      value={email}
-                      onChange={setEmail}
-                      hint="We'll send a confirmation link to verify any new email."
-                    />
+                {editingProfile ? (
+                  <>
+                    <div className="px-6 pt-4 pb-6">
+                      <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+                        <Field id="acc-name" label="Full name" value={name} onChange={setName} />
+                        <Field
+                          id="acc-email"
+                          label="Email"
+                          type="email"
+                          value={email}
+                          onChange={setEmail}
+                          hint="We'll send a confirmation link to verify any new email."
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-end gap-2.5 border-t border-ink-100 bg-paper px-6 py-3.5">
+                      <span className="mr-auto text-xs text-ink-400">{profileDirty ? "Unsaved changes" : ""}</span>
+                      <Button variant="ghost" onClick={handleProfileCancel} disabled={savingProfile}>
+                        Cancel
+                      </Button>
+                      <Button variant="primary" onClick={handleProfileSave} disabled={!profileDirty || savingProfile}>
+                        {savingProfile ? "Saving…" : "Save changes"}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="px-6 pb-5 pt-1 flex gap-5">
+                    <div>
+                      <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Name</div>
+                      <div className="text-[13.5px] text-ink-900">{name || "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Email</div>
+                      <div className="text-[13.5px] text-ink-900">{email || "—"}</div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-end gap-2.5 border-t border-ink-100 bg-paper px-6 py-3.5">
-                  <span className="mr-auto text-xs text-ink-400">{profileDirty ? "You have unsaved changes" : ""}</span>
-                  <Button variant="ghost" onClick={handleProfileCancel} disabled={!profileDirty || savingProfile}>
-                    Cancel
-                  </Button>
-                  <Button variant="primary" onClick={handleProfileSave} disabled={!profileDirty || savingProfile}>
-                    {savingProfile ? "Saving…" : "Save changes"}
-                  </Button>
-                </div>
+                )}
               </Section>
 
               {/* ── Change password ── */}
@@ -416,43 +469,56 @@ export default function MyAccountClient() {
                 <SectionHead
                   title="Change password"
                   desc="Use a strong, unique password. We'll sign you out of other sessions after you change it."
+                  actions={<EditIconBtn editing={editingPassword} onClick={editingPassword ? handlePasswordCancel : () => setEditingPassword(true)} />}
                 />
-                <div className="px-6 pt-5 pb-6">
-                  <div className="grid grid-cols-1 gap-x-4 gap-y-3.5">
-                    <PassField
-                      id="pw-current"
-                      label="Current password"
-                      value={currentPw}
-                      onChange={setCurrentPw}
-                      autoComplete="current-password"
-                    />
+                {editingPassword ? (
+                  <>
+                    <div className="px-6 pt-4 pb-6">
+                      <div className="grid grid-cols-1 gap-x-4 gap-y-3.5">
+                        <PassField
+                          id="pw-current"
+                          label="Current password"
+                          value={currentPw}
+                          onChange={setCurrentPw}
+                          autoComplete="current-password"
+                        />
+                      </div>
+                      <div className="mt-3.5 grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+                        <PassField
+                          id="pw-new"
+                          label="New password"
+                          value={newPw}
+                          onChange={setNewPw}
+                          autoComplete="new-password"
+                        >
+                          <StrengthMeter score={score} />
+                        </PassField>
+                        <PassField
+                          id="pw-confirm"
+                          label="Confirm new password"
+                          value={confirmPw}
+                          onChange={setConfirmPw}
+                          autoComplete="new-password"
+                        >
+                          <div className={`mt-0.5 text-[11.5px] ${confirmHint.cls}`}>{confirmHint.text}</div>
+                        </PassField>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-end gap-2.5 border-t border-ink-100 bg-paper px-6 py-3.5">
+                      <Button variant="ghost" onClick={handlePasswordCancel}>
+                        Cancel
+                      </Button>
+                      <Button variant="primary" onClick={handlePasswordSave} disabled={!pwValid}>
+                        Update password
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="px-6 pb-5 pt-1">
+                    <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Password</div>
+                    <div className="text-[18px] tracking-[0.18em] text-ink-300 leading-none">••••••••••</div>
                   </div>
-                  <div className="mt-3.5 grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
-                    <PassField
-                      id="pw-new"
-                      label="New password"
-                      value={newPw}
-                      onChange={setNewPw}
-                      autoComplete="new-password"
-                    >
-                      <StrengthMeter score={score} />
-                    </PassField>
-                    <PassField
-                      id="pw-confirm"
-                      label="Confirm new password"
-                      value={confirmPw}
-                      onChange={setConfirmPw}
-                      autoComplete="new-password"
-                    >
-                      <div className={`mt-0.5 text-[11.5px] ${confirmHint.cls}`}>{confirmHint.text}</div>
-                    </PassField>
-                  </div>
-                </div>
-                <div className="flex items-center justify-end gap-2.5 border-t border-ink-100 bg-paper px-6 py-3.5">
-                  <Button variant="primary" onClick={handlePasswordSave} disabled={!pwValid}>
-                    Update password
-                  </Button>
-                </div>
+                )}
               </Section>
 
               {/* ── Security ── */}
@@ -460,12 +526,20 @@ export default function MyAccountClient() {
                 <SectionHead
                   title="Security"
                   desc="Add a second factor of authentication. We strongly recommend at least one — it'll be required if your account is ever flagged as suspicious."
+                  actions={<EditIconBtn editing={editingSecurity} onClick={() => setEditingSecurity((v) => !v)} />}
                 />
-                <div className="px-6 pt-5 pb-6">
-                  {SECURITY_FACTORS.map((factor) => (
-                    <SecRow key={factor.title} factor={factor} />
-                  ))}
-                </div>
+                {editingSecurity ? (
+                  <div className="px-6 pt-4 pb-6">
+                    {SECURITY_FACTORS.map((factor) => (
+                      <SecRow key={factor.title} factor={factor} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="px-6 pb-5 pt-1">
+                    <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Two-factor authentication</div>
+                    <div className="text-[13.5px] text-ink-400">No second factors active</div>
+                  </div>
+                )}
               </Section>
 
               {/* ── Danger zone ── */}
