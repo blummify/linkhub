@@ -123,6 +123,43 @@ export default function UserAdminClient() {
     return () => clearTimeout(timer);
   }, [profileReady, isFirstTimeUser]);
 
+  // Ref lets the keydown handler read claimOpen without re-binding.
+  const claimOpenRef = useRef(claimOpen);
+  useEffect(() => {
+    claimOpenRef.current = claimOpen;
+  }, [claimOpen]);
+
+  // Press "N" to open the add-link modal.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== "n") return;
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || e.shiftKey) return;
+
+      // Skip when typing in a field.
+      const el = document.activeElement as HTMLElement | null;
+      if (
+        el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT" ||
+          el.isContentEditable)
+      ) {
+        return;
+      }
+
+      // Skip while an overlay is open.
+      const { showLinkModal: linkOpen, showPalette: paletteOpen, pendingDelete: deletePending } =
+        useUIStore.getState();
+      if (linkOpen || paletteOpen || claimOpenRef.current || deletePending !== null) return;
+
+      e.preventDefault();
+      openAddLink();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [openAddLink]);
+
   const handleClaimHandle = async (handle: string) => {
     const result = await claimHandle(handle);
     if (result.success) {
