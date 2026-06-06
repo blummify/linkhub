@@ -3,12 +3,13 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { registerUser, checkUserExists, sendVerificationCode } from "@/app/actions/auth";
+import { executeRecaptcha, RecaptchaError } from "@/lib/recaptcha.client";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
-import { validateEmail, validatePassword } from "@/lib/validation/auth.schema";
+import { validateEmail, validatePassword, validatePasswordMatch, passwordsMatch } from "@/lib/validation/auth.schema";
 
 type FieldErrors = {
   name: string;
@@ -47,7 +48,7 @@ function SignupPageContent() {
       case "password":
         return validatePassword(value);
       case "confirmPassword":
-        return value === formData.password ? "" : "Passwords do not match";
+        return validatePasswordMatch(formData.password, value);
     }
   };
 
@@ -106,10 +107,12 @@ function SignupPageContent() {
     setIsLoading(true);
 
     try {
+      const recaptchaToken = await executeRecaptcha("signup");
       const result = await registerUser({
         name: formData.name,
         email: formData.email,
         password: formData.password,
+        recaptchaToken,
       });
 
       if (result?.error) {
@@ -121,7 +124,11 @@ function SignupPageContent() {
         sendVerificationCode(formData.email).catch(() => {});
         router.push(verifyUrl);
       }
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        setError("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       setError("Something went wrong while creating your account. Please try again.");
     } finally {
       setIsLoading(false);
@@ -133,7 +140,7 @@ function SignupPageContent() {
     formData.email !== "" &&
     formData.password !== "" &&
     formData.confirmPassword !== "" &&
-    formData.confirmPassword === formData.password &&
+    passwordsMatch(formData.password, formData.confirmPassword) &&
     termsAccepted;
 
   const panelFeatures = [
@@ -218,7 +225,7 @@ function SignupPageContent() {
                 ...prev,
                 password: prev.password ? "" : prev.password,
                 confirmPassword: prev.confirmPassword
-                  ? (formData.confirmPassword === value ? "" : "Passwords do not match")
+                  ? validatePasswordMatch(value, formData.confirmPassword)
                   : "",
               }));
             }}

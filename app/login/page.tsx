@@ -6,6 +6,7 @@ import { UnverifiedEmailModal } from "@/app/components/auth/UnverifiedEmailModal
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { executeRecaptcha, RecaptchaError } from "@/lib/recaptcha.client";
 import {
   checkUserExists,
   loginWithCredentials,
@@ -17,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
-import { validateEmail, validatePassword } from "@/lib/validation/auth.schema";
+import { validateEmail, validatePassword, validatePasswordMatch } from "@/lib/validation/auth.schema";
 
 type SignupErrors = { name: string; password: string; confirmPassword: string };
 
@@ -79,7 +80,8 @@ export default function LoginPage() {
     setIsValidating(true);
 
     try {
-      const result = await loginWithCredentials({ email, password });
+      const recaptchaToken = await executeRecaptcha("login");
+      const result = await loginWithCredentials({ email, password, recaptchaToken });
 
       if (result?.error === "email_not_verified") {
         setShowUnverifiedModal(true);
@@ -96,6 +98,10 @@ export default function LoginPage() {
       if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
         return;
       }
+      if (error instanceof RecaptchaError) {
+        toast.error("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsValidating(false);
@@ -110,14 +116,19 @@ export default function LoginPage() {
   const handleResendVerification = async () => {
     setIsResending(true);
     try {
-      const result = await resendVerificationCode(email);
+      const recaptchaToken = await executeRecaptcha("resend_verification");
+      const result = await resendVerificationCode(email, recaptchaToken);
       if ("error" in result) {
         toast.error(result.error);
       } else {
         toast.success("Verification code sent! Check your inbox.");
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       }
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        toast.error("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsResending(false);
@@ -134,7 +145,7 @@ export default function LoginPage() {
       case "password":
         return validatePassword(value);
       case "confirmPassword":
-        return value === password ? "" : "Passwords do not match";
+        return validatePasswordMatch(password, value);
       default:
         return "";
     }
@@ -163,14 +174,24 @@ export default function LoginPage() {
 
     setIsValidating(true);
     try {
-      const result = await registerUser({ name: signupName, email, password });
+      const recaptchaToken = await executeRecaptcha("signup");
+      const result = await registerUser({
+        name: signupName,
+        email,
+        password,
+        recaptchaToken,
+      });
       if (result?.error) {
         toast.error(result.error);
         return;
       }
       sendVerificationCode(email).catch(() => {});
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        toast.error("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       toast.error("An unexpected error occurred.");
     } finally {
       setIsValidating(false);

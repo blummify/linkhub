@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { validateEmail } from "@/lib/validation/auth.schema";
+import { executeRecaptcha, RecaptchaError } from "@/lib/recaptcha.client";
 import { sendResetLink } from "@/app/actions/auth";
 
 export default function ForgotPasswordPage() {
@@ -25,13 +26,18 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      const result = await sendResetLink(email);
+      const recaptchaToken = await executeRecaptcha("forgot_password");
+      const result = await sendResetLink(email, recaptchaToken);
       if ("error" in result) {
         setError(result.error);
       } else {
         setSuccess(true);
       }
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        setError("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       setError("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);

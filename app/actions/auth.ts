@@ -8,10 +8,12 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { createHash, randomBytes } from "crypto";
 import { after } from "next/server";
+import { verifyRecaptcha } from "@/lib/recaptcha.server";
 
 type CredentialsFormData = {
   email: string;
   password: string;
+  recaptchaToken: string;
 };
 
 type RegisterFormData = CredentialsFormData & {
@@ -40,7 +42,14 @@ export async function checkUserExists(email: string) {
 }
 
 export async function registerUser(formData: RegisterFormData) {
-  const { name, email, password } = formData;
+  const { name, email, password, recaptchaToken } = formData;
+
+  try {
+    await verifyRecaptcha(recaptchaToken, "signup");
+  } catch (error) {
+    console.error("[registerUser] reCAPTCHA failed", error);
+    return { error: "Something went wrong. Please try again." };
+  }
 
   try {
     const existingUser = await db.user.findUnique({
@@ -118,8 +127,16 @@ export async function sendVerificationCode(email: string): Promise<{ success: tr
 
 export async function verifyEmailCode(
   email: string,
-  inputCode: string
+  inputCode: string,
+  recaptchaToken: string
 ): Promise<{ success: true; autoLoginToken: string } | { error: string }> {
+  try {
+    await verifyRecaptcha(recaptchaToken, "verify_email");
+  } catch (error) {
+    console.error("[verifyEmailCode] reCAPTCHA failed", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+
   try {
     const user = await db.user.findUnique({ where: { email }, select: { id: true } });
     if (!user) return { error: "No verification code found. Request a new one." };
@@ -158,7 +175,17 @@ export async function verifyEmailCode(
   }
 }
 
-export async function resendVerificationCode(email: string): Promise<{ success: true } | { error: string }> {
+export async function resendVerificationCode(
+  email: string,
+  recaptchaToken: string
+): Promise<{ success: true } | { error: string }> {
+  try {
+    await verifyRecaptcha(recaptchaToken, "resend_verification");
+  } catch (error) {
+    console.error("[resendVerificationCode] reCAPTCHA failed", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+
   try {
     const rateLimitKey = `resend:${email}`;
     try {
@@ -186,7 +213,14 @@ export async function resendVerificationCode(email: string): Promise<{ success: 
 }
 
 export async function loginWithCredentials(formData: CredentialsFormData) {
-  const { email, password } = formData;
+  const { email, password, recaptchaToken } = formData;
+
+  try {
+    await verifyRecaptcha(recaptchaToken, "login");
+  } catch (error) {
+    console.error("[loginWithCredentials] reCAPTCHA failed", error);
+    return { error: "Something went wrong. Please try again." };
+  }
 
   const rateLimitKey = `login:${email.toLowerCase()}`;
   try {
@@ -280,7 +314,17 @@ export async function signInWithGoogleOneTap(
   }
 }
 
-export async function sendResetLink(email: string): Promise<{ success: true } | { error: string }> {
+export async function sendResetLink(
+  email: string,
+  recaptchaToken: string
+): Promise<{ success: true } | { error: string }> {
+  try {
+    await verifyRecaptcha(recaptchaToken, "forgot_password");
+  } catch (error) {
+    console.error("[sendResetLink] reCAPTCHA failed", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+
   try {
     const user = await db.user.findUnique({ where: { email }, select: { id: true, name: true } });
 
