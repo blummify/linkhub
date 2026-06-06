@@ -54,35 +54,44 @@ describe("MyAccountClient", () => {
 
   it("hydrates the profile fields from the session", () => {
     render(<MyAccountClient />);
+    fireEvent.click(screen.getAllByLabelText("Edit")[0]);
     expect(screen.getByLabelText("Full name")).toHaveValue("Joel Osei Acquah");
     expect(screen.getByLabelText("Email")).toHaveValue("joel@linkhub.co");
   });
 
   it("enables Save only when the profile is dirty and persists the name", async () => {
     render(<MyAccountClient />);
+    fireEvent.click(screen.getAllByLabelText("Edit")[0]);
+
     const save = screen.getByRole("button", { name: /save changes/i });
     expect(save).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Joel O." } });
-    expect(screen.getByText("You have unsaved changes")).toBeInTheDocument();
+    expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
     expect(save).toBeEnabled();
 
     fireEvent.click(save);
     await waitFor(() => expect(updateBranding).toHaveBeenCalledWith({ displayName: "Joel O." }));
     await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith("Profile updated"));
-    expect(save).toBeDisabled();
+    await waitFor(() => expect(screen.queryByRole("button", { name: /save changes/i })).not.toBeInTheDocument());
   });
 
   it("reverts edits with Cancel", () => {
     render(<MyAccountClient />);
-    const nameInput = screen.getByLabelText("Full name");
-    fireEvent.change(nameInput, { target: { value: "Changed" } });
+    fireEvent.click(screen.getAllByLabelText("Edit")[0]);
+
+    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Changed" } });
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
-    expect(nameInput).toHaveValue("Joel Osei Acquah");
+
+    // form closes; re-open to verify value was reverted
+    fireEvent.click(screen.getAllByLabelText("Edit")[0]);
+    expect(screen.getByLabelText("Full name")).toHaveValue("Joel Osei Acquah");
   });
 
   it("gates the password update until the form is valid", () => {
     render(<MyAccountClient />);
+    fireEvent.click(screen.getAllByLabelText("Edit")[1]);
+
     const update = screen.getByRole("button", { name: /update password/i });
     expect(update).toBeDisabled();
 
@@ -100,6 +109,8 @@ describe("MyAccountClient", () => {
 
   it("toggles a security factor between set-up and active", () => {
     render(<MyAccountClient />);
+    fireEvent.click(screen.getAllByLabelText("Edit")[2]);
+
     const setUpButtons = screen.getAllByRole("button", { name: /set up/i });
     fireEvent.click(setUpButtons[0]);
     expect(toastSuccess).toHaveBeenCalledWith("Second factor enabled");
