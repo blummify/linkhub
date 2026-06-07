@@ -5,11 +5,11 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { redis } from "@/lib/redis";
 import { deleteFromR2 } from "@/lib/r2";
+import { VALID_FONT_VALUES } from "@/app/constants/editorFonts";
 
 // ── Validation helpers ────────────────────────────────────────────────────────
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const VALID_CARD_STYLES   = new Set(["filled", "ghost", "soft", "shadow"]);
-const VALID_BODY_FONTS    = new Set(["Geist", "DM Sans", "Inter", "Geist Mono"]);
 const VALID_LAYOUTS       = new Set(["classic", "minimal", "centered"]);
 const VALID_LINK_DENSITY  = new Set(["default", "comfortable", "compact"]);
 const VALID_BUTTON_STYLES = new Set(["rounded", "pill", "sharp"]);
@@ -27,6 +27,7 @@ function validateEditorInput(data: {
   accentColor: string;
   buttonStyle: string;
   backgroundType: string;
+  fontFamily: string;
   cardStyle: string;
   bodyFont: string;
   overlayColor: string;
@@ -45,8 +46,10 @@ function validateEditorInput(data: {
     return "Invalid background type.";
   if (!VALID_CARD_STYLES.has(data.cardStyle))
     return "Invalid card style.";
-  if (!VALID_BODY_FONTS.has(data.bodyFont))
+  if (!VALID_FONT_VALUES.has(data.bodyFont))
     return "Invalid body font.";
+  if (!VALID_FONT_VALUES.has(data.fontFamily))
+    return "Invalid heading font.";
   if (!isValidHex(data.overlayColor))
     return "Invalid overlay color.";
   if (!Number.isInteger(data.overlayOpacity) || data.overlayOpacity < 0 || data.overlayOpacity > 100)

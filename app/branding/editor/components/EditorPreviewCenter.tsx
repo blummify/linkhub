@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useBrandingStore } from "@/store/brandingStore";
 import { useLinksStore } from "@/store/linksStore";
 import { useShallow } from "zustand/react/shallow";
+import { loadGoogleFont } from "@/lib/fontLoader";
 import { brandingStateToPreviewAppearance, brandingPublicUrl } from "@/lib/brandingState";
 import { getGradientById } from "@/app/constants/editorBackgroundGradients";
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
@@ -29,6 +30,12 @@ export function EditorPreviewCenter() {
   const published = rawLinks.filter((l) => l.status === 1);
   // Show sample links so users can see how effects + card styles will look
   const links = published.length > 0 ? rawLinks : SAMPLE_LINKS;
+
+  // Load selected fonts into the document so the preview renders them correctly
+  const fontFamily = useBrandingStore((s) => s.fontFamily);
+  const bodyFont   = useBrandingStore((s) => s.bodyFont);
+  useEffect(() => { if (fontFamily) loadGoogleFont(fontFamily); }, [fontFamily]);
+  useEffect(() => { if (bodyFont)   loadGoogleFont(bodyFont);   }, [bodyFont]);
 
   const store = useBrandingStore(
     useShallow((s) => ({
