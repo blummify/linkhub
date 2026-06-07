@@ -13,6 +13,7 @@ import {
   brandingStateToPreviewAppearance,
   getBrandingThemeById,
 } from "@/lib/brandingState";
+import { getGradientById } from "@/app/constants/editorBackgroundGradients";
 
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
   website:   { bg: "linear-gradient(135deg,#eef1ff,#dbe2ff)", fg: "#2a37c0" },
@@ -1278,6 +1279,8 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
   const handle = useBrandingStore((s) => s.handle);
   const publicUrl = useBrandingStore((s) => brandingPublicUrl(s.handle));
   const appearance = useBrandingStore(useShallow(brandingStateToPreviewAppearance)) as AppearanceTheme;
+  const backgroundType = useBrandingStore((s) => s.backgroundType);
+  const backgroundValue = useBrandingStore((s) => s.backgroundValue);
   const themeId = useBrandingStore((s) => s.themeId);
   const themeLabel = getBrandingThemeById(themeId).name;
   const onRandomTheme = useBrandingStore((s) => s.randomTheme);
@@ -1319,13 +1322,29 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
   const domain = slashIdx >= 0 ? publicUrl.slice(0, slashIdx + 1) : publicUrl;
   const slug   = slashIdx >= 0 ? publicUrl.slice(slashIdx + 1)     : "";
 
-  const screenBg =
+  let screenBg =
     appearance?.bgStyle ??
     appearance?.bgColor ??
     "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)";
-  const screenDark =
+  let screenDark =
     appearance?.dark ??
     (appearance?.bgColor ? isDarkBg(appearance.bgColor) : false);
+
+  if (backgroundType === "gradient") {
+    if (backgroundValue.startsWith("solid:")) {
+      screenBg = backgroundValue.replace("solid:", "");
+      screenDark = false;
+    } else {
+      const grad = getGradientById(backgroundValue);
+      if (grad) { screenBg = grad.value; screenDark = grad.dark; }
+    }
+  } else if (backgroundType === "image" || backgroundType === "video") {
+    screenBg = "#0b1020";
+    screenDark = true;
+  }
+
+  const imageUrl = backgroundType === "image" && backgroundValue ? backgroundValue : undefined;
+  const videoUrl = backgroundType === "video" && backgroundValue ? backgroundValue : undefined;
 
   if (!hydrated) return <DashboardPreviewPanelSkeleton width={width} />;
 
@@ -1625,7 +1644,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
           }}
         >
           {device === "desktop" ? (
-            <BrowserShell bgStyle={screenBg}>
+            <BrowserShell bgStyle={screenBg} imageUrl={imageUrl} videoUrl={videoUrl} effects={appearance?.effects}>
               <PhoneScreenContent
                 displayName={displayName}
                 bio={bio}
@@ -1635,7 +1654,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
               />
             </BrowserShell>
           ) : (
-            <PhoneShell bgStyle={screenBg} showGlow={screenDark}>
+            <PhoneShell bgStyle={screenBg} showGlow={screenDark} imageUrl={imageUrl} videoUrl={videoUrl} effects={appearance?.effects}>
               <PhoneScreenContent
                 displayName={displayName}
                 bio={bio}

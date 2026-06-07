@@ -6,17 +6,24 @@ import { db } from "@/lib/db";
 import { redis } from "@/lib/redis";
 import { deleteFromR2 } from "@/lib/r2";
 import { VALID_FONT_VALUES } from "@/app/constants/editorFonts";
+import { BACKGROUND_GRADIENTS } from "@/app/constants/editorBackgroundGradients";
 
-const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+const HEX_RE         = /^#[0-9a-fA-F]{6}$/;
+const SOLID_COLOR_RE = /^solid:#[0-9a-fA-F]{6}$/;
+
 const VALID_CARD_STYLES   = new Set(["filled", "ghost", "soft", "shadow"]);
 const VALID_LAYOUTS       = new Set(["classic", "minimal", "centered"]);
 const VALID_LINK_DENSITY  = new Set(["default", "comfortable", "compact"]);
 const VALID_BUTTON_STYLES = new Set(["rounded", "pill", "sharp"]);
 const VALID_BG_TYPES      = new Set(["gradient", "image", "video"]);
+const VALID_GRADIENT_IDS  = new Set(BACKGROUND_GRADIENTS.map((g) => g.id));
+const VALID_VIDEO_SLUGS   = new Set(["rain", "smoke"]);
 const VALID_EFFECT_IDS    = new Set([
   "starParticles", "snowfall", "aurora", "bokeh", "rain", "confetti", "floatingEmoji",
   "glassmorphism", "neonBorders", "gradientBorder", "shimmer", "textGlow", "pulseRing",
 ]);
+
+const MAX_CUSTOM_THEMES = 20;
 
 function isValidHex(v: unknown): v is string {
   return typeof v === "string" && HEX_RE.test(v);
@@ -26,6 +33,8 @@ function validateEditorInput(data: {
   accentColor: string;
   buttonStyle: string;
   backgroundType: string;
+  backgroundValue: string;
+  backgroundKey: string | null;
   fontFamily: string;
   cardStyle: string;
   bodyFont: string;
@@ -43,6 +52,24 @@ function validateEditorInput(data: {
     return "Invalid button style.";
   if (!VALID_BG_TYPES.has(data.backgroundType))
     return "Invalid background type.";
+
+  // Validate backgroundValue per type
+  if (data.backgroundType === "gradient") {
+    if (!VALID_GRADIENT_IDS.has(data.backgroundValue) && !SOLID_COLOR_RE.test(data.backgroundValue))
+      return "Invalid background value.";
+  } else if (data.backgroundType === "image") {
+    const r2Base = (process.env.CLOUDFLARE_R2_PUBLIC_URL ?? "").replace(/\/$/, "");
+    if (!r2Base || !data.backgroundValue.startsWith(`${r2Base}/`))
+      return "Invalid image URL.";
+  } else if (data.backgroundType === "video") {
+    if (!VALID_VIDEO_SLUGS.has(data.backgroundValue))
+      return "Invalid video background.";
+  }
+
+  // backgroundKey must be under the backgrounds/ prefix
+  if (data.backgroundKey !== null && !data.backgroundKey.startsWith("backgrounds/"))
+    return "Invalid background key.";
+
   if (!VALID_CARD_STYLES.has(data.cardStyle))
     return "Invalid card style.";
   if (!VALID_FONT_VALUES.has(data.bodyFont))
@@ -201,10 +228,17 @@ export async function saveEditorTheme(data: {
   }
 
   try {
-    const current = await db.profile.findUnique({
-      where: { userId: session.user.id },
-      select: { backgroundKey: true },
-    });
+    const [current, themeCount] = await Promise.all([
+      db.profile.findUnique({
+        where: { userId: session.user.id },
+        select: { backgroundKey: true },
+      }),
+      db.customTheme.count({ where: { userId: session.user.id } }),
+    ]);
+
+    if (themeCount >= MAX_CUSTOM_THEMES) {
+      return { error: `You've reached the limit of ${MAX_CUSTOM_THEMES} saved themes. Delete one to continue.` };
+    }
 
     const customTheme = await db.customTheme.create({
       data: {
@@ -253,9 +287,17 @@ export async function saveEditorTheme(data: {
 
     const oldKey = current?.backgroundKey;
     if (oldKey && oldKey !== data.backgroundKey) {
-      after(async () => {
-        try { await deleteFromR2(oldKey); } catch {}
+      // Only delete if no CustomTheme still references this key (the new theme we
+      // just created uses data.backgroundKey, so we're checking the old key)
+      const stillReferenced = await db.customTheme.findFirst({
+        where: { userId: session.user.id, backgroundKey: oldKey },
+        select: { id: true },
       });
+      if (!stillReferenced) {
+        after(async () => {
+          try { await deleteFromR2(oldKey); } catch {}
+        });
+      }
     }
 
     await redis.del(`profile:${session.user.id}`);
@@ -291,7 +333,7 @@ export async function deleteCustomTheme(
 
     const profile = await db.profile.findUnique({
       where: { userId: session.user.id },
-      select: { activeCustomThemeId: true },
+      select: { activeCustomThemeId: true, backgroundKey: true },
     });
 
     await db.customTheme.delete({ where: { id, userId: session.user.id } });
@@ -305,9 +347,21 @@ export async function deleteCustomTheme(
 
     if (theme.backgroundKey) {
       const key = theme.backgroundKey;
-      after(async () => {
-        try { await deleteFromR2(key); } catch {}
-      });
+      // Skip R2 deletion if Profile still references this file
+      const profileUsesKey = profile?.backgroundKey === key;
+      if (!profileUsesKey) {
+        // Skip R2 deletion if another CustomTheme still references this file
+        // (the record we deleted is already gone, so no need to exclude by id)
+        const otherRef = await db.customTheme.findFirst({
+          where: { userId: session.user.id, backgroundKey: key },
+          select: { id: true },
+        });
+        if (!otherRef) {
+          after(async () => {
+            try { await deleteFromR2(key); } catch {}
+          });
+        }
+      }
     }
 
     try { await redis.del(`profile:${session.user.id}`); } catch {}
@@ -325,9 +379,13 @@ export async function applyCustomTheme(
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   try {
-    const theme = await db.customTheme.findUnique({
-      where: { id, userId: session.user.id },
-    });
+    const [theme, currentProfile] = await Promise.all([
+      db.customTheme.findUnique({ where: { id, userId: session.user.id } }),
+      db.profile.findUnique({
+        where: { userId: session.user.id },
+        select: { backgroundKey: true },
+      }),
+    ]);
     if (!theme) return { error: "Theme not found." };
 
     await db.profile.update({
@@ -352,6 +410,20 @@ export async function applyCustomTheme(
         activeCustomThemeId: theme.id,
       },
     });
+
+    // Clean up the old Profile background if it's no longer referenced anywhere
+    const oldKey = currentProfile?.backgroundKey;
+    if (oldKey && oldKey !== theme.backgroundKey) {
+      const stillReferenced = await db.customTheme.findFirst({
+        where: { userId: session.user.id, backgroundKey: oldKey },
+        select: { id: true },
+      });
+      if (!stillReferenced) {
+        after(async () => {
+          try { await deleteFromR2(oldKey); } catch {}
+        });
+      }
+    }
 
     try { await redis.del(`profile:${session.user.id}`); } catch {}
     return { success: true, theme };

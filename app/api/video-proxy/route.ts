@@ -11,7 +11,7 @@ async function resolveVideoUrl(slug: string): Promise<string | null> {
   const cached = videoUrlCache.get(slug);
   if (cached) return cached;
 
-  const pexelsId = PEXELS_VIDEO_IDS[slug] ?? (/^\d+$/.test(slug) ? parseInt(slug, 10) : null);
+  const pexelsId = PEXELS_VIDEO_IDS[slug];
   if (!pexelsId) return null;
 
   const res = await fetch(`https://api.pexels.com/videos/videos/${pexelsId}`, {
@@ -39,8 +39,7 @@ export async function GET(request: NextRequest) {
   const slug = request.nextUrl.searchParams.get("id");
   if (!slug) return new NextResponse("Not found", { status: 404 });
 
-  const isNumeric = /^\d+$/.test(slug);
-  if (!isNumeric && !(slug in PEXELS_VIDEO_IDS)) {
+  if (!(slug in PEXELS_VIDEO_IDS)) {
     return new NextResponse("Not found", { status: 404 });
   }
 

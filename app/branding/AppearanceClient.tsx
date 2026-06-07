@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { BRANDING_THEMES } from "../constants/brandingThemes";
-import { getBrandingThemeById } from "@/lib/brandingState";
+import { getBrandingThemeById, type BrandingAppearanceState } from "@/lib/brandingState";
 import { BRANDING_FONT_SERIF } from "../constants/brandingFonts";
 import { ProfileSection } from "./components/ProfileSection";
 import { ThemesSection } from "./components/ThemesSection";
@@ -18,7 +18,7 @@ import { QuickTuneSection } from "./components/QuickTuneSection";
 import { AvatarCropModal } from "./components/AvatarCropModal";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { updateAvatarUrl, removeAvatar, updateBranding, getUserCustomThemes, applyCustomTheme, deleteCustomTheme } from "@/app/actions/profile";
-import { getProfile, claimHandle, checkHandleAvailability } from "@/app/actions/links";
+import { claimHandle, checkHandleAvailability } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
 import { useBrandingStore } from "@/store/brandingStore";
 import { useProfileStore } from "@/store/profileStore";
@@ -61,7 +61,19 @@ function SectionHead({
   );
 }
 
-export default function AppearanceClient() {
+type CustomThemeRecord = Awaited<ReturnType<typeof getUserCustomThemes>>[number];
+
+export default function AppearanceClient({
+  initialState,
+  initialAvatarUrl,
+  initialActiveCustomThemeId,
+  initialCustomThemes = [],
+}: {
+  initialState?: Partial<BrandingAppearanceState> | null;
+  initialAvatarUrl?: string | null;
+  initialActiveCustomThemeId?: string | null;
+  initialCustomThemes?: CustomThemeRecord[];
+}) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
 
   const displayName = useBrandingStore((s) => s.displayName);
@@ -98,15 +110,14 @@ export default function AppearanceClient() {
 
   const theme = getBrandingThemeById(themeId);
 
-  // Avatar — read from profileStore if already fetched, otherwise fetch once
-  const avatarUrl = useProfileStore((s) => s.avatarUrl);
+  // Avatar — seeded from server, kept in profileStore for other pages
+  const avatarUrl = useProfileStore((s) => s.avatarUrl ?? initialAvatarUrl);
   const profileFetched = useProfileStore((s) => s.fetched);
 
   const router = useRouter();
 
-  type CustomThemeRecord = Awaited<ReturnType<typeof getUserCustomThemes>>[number];
-  const [customThemes, setCustomThemes] = useState<CustomThemeRecord[]>([]);
-  const [activeCustomThemeId, setActiveCustomThemeId] = useState<string | null>(null);
+  const [customThemes, setCustomThemes] = useState<CustomThemeRecord[]>(initialCustomThemes);
+  const [activeCustomThemeId, setActiveCustomThemeId] = useState<string | null>(initialActiveCustomThemeId ?? null);
   const [applyingThemeId, setApplyingThemeId] = useState<string | null>(null);
 
   const [showPalette, setShowPalette] = useState(false);
@@ -124,52 +135,26 @@ export default function AppearanceClient() {
     queueMicrotask(() => setMounted(true));
   }, []);
 
+  // Track whether we've applied the server-provided initial state yet.
+  // We wait for the Zustand store to finish its localStorage hydration (hydrated===true)
+  // before overriding, so server data always wins over stale localStorage.
+  const hydrated = useBrandingStore((s) => s.hydrated);
+  const serverSyncedRef = useRef(false);
+
   useEffect(() => {
-    if (profileFetched) {
-      getUserCustomThemes().then(setCustomThemes).catch(() => {});
-      return;
+    if (!hydrated || serverSyncedRef.current) return;
+    serverSyncedRef.current = true;
+
+    // Seed the profileStore so other pages don't re-fetch
+    if (!profileFetched) {
+      useProfileStore.getState().markFetched({ avatarUrl: initialAvatarUrl ?? null });
     }
-    Promise.all([getProfile(), getUserCustomThemes()]).then(([p, themes]) => {
-      setCustomThemes(themes);
-      if (!p) {
-        useProfileStore.getState().markFetched({ avatarUrl: null });
-        return;
-      }
-      const profile = p as {
-        avatarUrl?: string | null; handle?: string | null; displayName?: string | null;
-        bio?: string | null; themeId?: string | null; accentColor?: string | null;
-        buttonStyle?: string | null; fontFamily?: string | null;
-        backgroundType?: string | null; backgroundValue?: string | null; backgroundKey?: string | null;
-        effects?: string | null; textColor?: string | null; cardStyle?: string | null;
-        bodyFont?: string | null; overlayColor?: string | null; overlayOpacity?: number | null;
-        layout?: string | null; linkDensity?: string | null; customThemeName?: string | null;
-        activeCustomThemeId?: string | null;
-      };
-      setActiveCustomThemeId(profile.activeCustomThemeId ?? null);
-      useProfileStore.getState().markFetched({ avatarUrl: profile.avatarUrl ?? null });
-      const patch: Partial<import("@/lib/brandingState").BrandingAppearanceState> = {};
-      if (profile.displayName) patch.displayName = profile.displayName;
-      if (profile.handle)      patch.handle      = profile.handle;
-      if (profile.bio)         patch.bio         = profile.bio;
-      if (profile.themeId && profile.themeId !== "default") patch.themeId = profile.themeId;
-      if (profile.accentColor) patch.accentColor = profile.accentColor;
-      if (profile.buttonStyle) patch.buttonStyle = profile.buttonStyle;
-      if (profile.fontFamily)  patch.fontFamily  = profile.fontFamily;
-      if (profile.backgroundType) patch.backgroundType = profile.backgroundType as "gradient" | "image" | "video";
-      if (profile.backgroundValue) patch.backgroundValue = profile.backgroundValue;
-      patch.backgroundKey = profile.backgroundKey ?? null;
-      patch.effects = profile.effects ? profile.effects.split(",").filter(Boolean) : [];
-      patch.textColor = profile.textColor ?? null;
-      if (profile.cardStyle)   patch.cardStyle   = profile.cardStyle;
-      if (profile.bodyFont)    patch.bodyFont    = profile.bodyFont;
-      if (profile.overlayColor) patch.overlayColor = profile.overlayColor;
-      if (typeof profile.overlayOpacity === "number") patch.overlayOpacity = profile.overlayOpacity;
-      if (profile.layout)      patch.profileLayout  = profile.layout;
-      if (profile.linkDensity) patch.linkDensity = profile.linkDensity;
-      if (profile.customThemeName) patch.customThemeName = profile.customThemeName;
-      if (Object.keys(patch).length) useBrandingStore.getState().syncFromDb(patch);
-    }).catch(() => {});
-  }, [profileFetched]);
+
+    // Override stale localStorage with fresh server data
+    if (initialState && Object.keys(initialState).length > 0) {
+      useBrandingStore.getState().syncFromDb(initialState);
+    }
+  }, [hydrated, profileFetched, initialState, initialAvatarUrl]);
 
   const isDirtyOrPending = isDirty || !!pendingAvatarBlob;
 
