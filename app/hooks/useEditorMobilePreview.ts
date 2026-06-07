@@ -24,6 +24,13 @@ export function useEditorMobilePreview(
     backgroundValue: s.backgroundValue,
     backgroundKey: s.backgroundKey,
     effects: s.effects,
+    textColor: s.textColor,
+    cardStyle: s.cardStyle,
+    bodyFont: s.bodyFont,
+    overlayColor: s.overlayColor,
+    overlayOpacity: s.overlayOpacity,
+    profileLayout: s.profileLayout,
+    linkDensity: s.linkDensity,
   })));
   const handle = useBrandingStore((s) => s.handle);
 

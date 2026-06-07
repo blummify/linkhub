@@ -232,9 +232,12 @@ export function PhoneScreenContent({
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
   const linkBorderRadius = previewLinkBorderRadiusPx(appearance?.buttonStyle ?? "rounded");
   const activeEffects = appearance?.effects ?? [];
-  const hasGlass = activeEffects.includes("glassmorphism");
-  const hasNeon  = activeEffects.includes("neonBorders");
-  const hasGlow  = activeEffects.includes("textGlow");
+  const hasGlass       = activeEffects.includes("glassmorphism");
+  const hasNeon        = activeEffects.includes("neonBorders");
+  const hasGlow        = activeEffects.includes("textGlow");
+  const hasGradBorder  = activeEffects.includes("gradientBorder");
+  const hasShimmer     = activeEffects.includes("shimmer");
+  const hasPulse       = activeEffects.includes("pulseRing");
 
   // Effect overrides applied on top of card style
   const glassStyle: React.CSSProperties = hasGlass
@@ -274,6 +277,10 @@ export function PhoneScreenContent({
             fontSize: Math.round(avatarSize * 0.4), fontStyle: "italic",
             boxShadow: "0 10px 24px -8px rgba(59,70,224,0.45)",
             border: "3px solid white",
+            ...(hasPulse ? {
+              ["--pc" as string]: `${neonAccent}66`,
+              animation: "lhPulse 1.8s ease-out infinite",
+            } : {}),
           }}
         >
           {initial}
@@ -367,6 +374,8 @@ export function PhoneScreenContent({
             <div
               key={link.id ?? i}
               style={{
+                position: "relative",
+                overflow: "hidden",
                 background: linkCardBg,
                 border: linkCardBorder,
                 borderRadius: linkBorderRadius,
@@ -379,12 +388,28 @@ export function PhoneScreenContent({
                 color: linkTextColor,
                 fontFamily: bodyFontStack,
                 boxShadow: linkCardShadow,
-                animation: "scIn 0.22s cubic-bezier(0.16,1,0.3,1) both",
-                animationDelay: `${i * 35}ms`,
+                animation: hasGradBorder
+                  ? "lhGradBorder 2s linear infinite"
+                  : `scIn 0.22s cubic-bezier(0.16,1,0.3,1) ${i * 35}ms both`,
                 ...glassStyle,
                 ...neonStyle,
               }}
             >
+              {/* Shimmer sweep */}
+              {hasShimmer && (
+                <div
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    top: 0, left: 0,
+                    width: "40%", height: "100%",
+                    background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
+                    animation: `lhShimmer ${1.8 + i * 0.15}s cubic-bezier(0.4,0,0.6,1) ${i * 0.2}s infinite`,
+                    pointerEvents: "none",
+                    zIndex: 1,
+                  }}
+                />
+              )}
               <PhoneLinkIcon iconKey={link.icon} thumbnailUrl={link.thumbnailUrl} />
               <span
                 style={{
@@ -393,12 +418,14 @@ export function PhoneScreenContent({
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   fontSize: 12.5,
+                  position: "relative",
+                  zIndex: 2,
                   ...glowStyle,
                 }}
               >
                 {link.title}
               </span>
-              <span style={{ color: linkChevronColor, flexShrink: 0 }}>
+              <span style={{ color: linkChevronColor, flexShrink: 0, position: "relative", zIndex: 2 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
                 </svg>
@@ -485,46 +512,184 @@ function PreviewActionBtn({
   );
 }
 
-// ── Effect overlays rendered inside the phone shell ──────────────────────────
-// Seeded pseudo-random so positions are stable across renders
+// ── Seeded PRNG — stable positions across renders ────────────────────────────
 function seeded(seed: number, mod: number) {
   return ((seed * 1664525 + 1013904223) & 0x7fffffff) % mod;
 }
 
+// ── All ambient effect CSS keyframes ─────────────────────────────────────────
+const EFFECT_KEYFRAMES = `
+  @keyframes lhFloat {
+    0%,100% { transform: translate(0,0); }
+    50%      { transform: translate(var(--dx),var(--dy)); }
+  }
+  @keyframes lhTwinkle {
+    0%,100% { opacity: var(--lo); }
+    50%      { opacity: var(--hi); }
+  }
+  @keyframes lhSnow {
+    0%   { transform: translateX(0) translateY(-20px); opacity: 0.9; }
+    80%  { opacity: 0.7; }
+    100% { transform: translateX(var(--sx)) translateY(660px); opacity: 0; }
+  }
+  @keyframes lhBokeh {
+    0%   { transform: translateY(0) scale(1);   opacity: var(--op); }
+    100% { transform: translateY(-680px) scale(0.4); opacity: 0; }
+  }
+  @keyframes lhRain {
+    0%   { transform: translate(0,-30px); opacity: 0.6; }
+    100% { transform: translate(-14px,680px); opacity: 0; }
+  }
+  @keyframes lhConfetti {
+    0%   { transform: translateY(-10px) rotate(0deg) scale(1); opacity: 1; }
+    80%  { opacity: 0.8; }
+    100% { transform: translateY(680px) rotate(var(--r)); opacity: 0; }
+  }
+  @keyframes lhEmoji {
+    0%   { transform: translateY(0) scale(1); opacity: 0.9; }
+    20%  { opacity: 0.9; }
+    100% { transform: translateY(-700px) scale(0.6); opacity: 0; }
+  }
+  @keyframes lhAurora1 {
+    0%,100% { transform: translateX(-15%) scaleX(1);   opacity: 0.45; }
+    50%     { transform: translateX(12%) scaleX(1.25); opacity: 0.75; }
+  }
+  @keyframes lhAurora2 {
+    0%,100% { transform: translateX(10%) scaleX(1);    opacity: 0.35; }
+    50%     { transform: translateX(-18%) scaleX(0.9); opacity: 0.65; }
+  }
+  @keyframes lhAurora3 {
+    0%,100% { transform: translateX(-5%) scaleX(1.1);  opacity: 0.30; }
+    50%     { transform: translateX(8%) scaleX(0.95);  opacity: 0.60; }
+  }
+  @keyframes lhShimmer {
+    0%   { transform: translateX(-120%); }
+    100% { transform: translateX(300%); }
+  }
+  @keyframes lhGradBorder {
+    0%   { box-shadow: 0 0 0 2px #f43f5e, 0 2px 10px rgba(0,0,0,0.08); }
+    16%  { box-shadow: 0 0 0 2px #f97316, 0 2px 10px rgba(0,0,0,0.08); }
+    33%  { box-shadow: 0 0 0 2px #eab308, 0 2px 10px rgba(0,0,0,0.08); }
+    50%  { box-shadow: 0 0 0 2px #22c55e, 0 2px 10px rgba(0,0,0,0.08); }
+    66%  { box-shadow: 0 0 0 2px #3b82f6, 0 2px 10px rgba(0,0,0,0.08); }
+    83%  { box-shadow: 0 0 0 2px #a855f7, 0 2px 10px rgba(0,0,0,0.08); }
+    100% { box-shadow: 0 0 0 2px #f43f5e, 0 2px 10px rgba(0,0,0,0.08); }
+  }
+  @keyframes lhPulse {
+    0%   { box-shadow: 0 0 0 0   var(--pc); }
+    60%  { box-shadow: 0 0 0 12px transparent; }
+    100% { box-shadow: 0 0 0 0   transparent; }
+  }
+`;
+
+// ── Ambient overlay (stars, snow, aurora, bokeh, rain, confetti, emoji) ───────
 function EffectsOverlay({ effects }: { effects?: string[] }) {
   if (!effects?.length) return null;
-  const hasStars    = effects.includes("starParticles");
-  const hasSnowfall = effects.includes("snowfall");
-  if (!hasStars && !hasSnowfall) return null;
+  const has = (id: string) => effects.includes(id);
 
-  // 42 stars — varied sizes, unique float+twinkle animation per star
+  const hasStars    = has("starParticles");
+  const hasSnow     = has("snowfall");
+  const hasAurora   = has("aurora");
+  const hasBokeh    = has("bokeh");
+  const hasRain     = has("rain");
+  const hasConfetti = has("confetti");
+  const hasEmoji    = has("floatingEmoji");
+
+  if (!hasStars && !hasSnow && !hasAurora && !hasBokeh && !hasRain && !hasConfetti && !hasEmoji) {
+    return null;
+  }
+
+  // ── Star particles ─────────────────────────
   const stars = hasStars
     ? Array.from({ length: 42 }, (_, i) => {
-        const seed = i * 7919;
-        const x    = seeded(seed,        100);
-        const y    = seeded(seed + 1,    100);
-        // three tiers: tiny (2px), medium (4px), bright (7px)
-        const tier = i % 7 === 0 ? "bright" : i % 3 === 0 ? "medium" : "tiny";
-        const size = tier === "bright" ? 7 : tier === "medium" ? 4 : 2;
-        const floatDur   = 3 + seeded(seed + 2, 40) / 10;  // 3s – 7s
-        const twinkleDur = 1.2 + seeded(seed + 3, 30) / 10; // 1.2s – 4.2s
-        const delay      = -(seeded(seed + 4, 80) / 10);    // stagger phase
-        const driftX     = (seeded(seed + 5, 12) - 6);      // ±6px
-        const driftY     = (seeded(seed + 6, 10) - 5);      // ±5px
-        return { x, y, size, tier, floatDur, twinkleDur, delay, driftX, driftY };
+        const s = i * 7919;
+        const tier = i % 7 === 0 ? "bright" : i % 3 === 0 ? "med" : "tiny";
+        const size = tier === "bright" ? 7 : tier === "med" ? 4 : 2;
+        return {
+          x: seeded(s, 100), y: seeded(s + 1, 100), size, tier,
+          floatDur:   3 + seeded(s + 2, 40) / 10,
+          twinkleDur: 1.2 + seeded(s + 3, 30) / 10,
+          delay:      -(seeded(s + 4, 80) / 10),
+          driftX:     seeded(s + 5, 12) - 6,
+          driftY:     seeded(s + 6, 10) - 5,
+        };
       })
     : [];
 
-  // 24 snowflakes — three sizes, gentle horizontal sway
-  const flakes = hasSnowfall
+  // ── Snowfall ────────────────────────────────
+  const flakes = hasSnow
     ? Array.from({ length: 24 }, (_, i) => {
-        const seed   = i * 6271;
-        const x      = seeded(seed,     95);
-        const size   = i % 4 === 0 ? 10 : i % 2 === 0 ? 7 : 5;
-        const dur    = 3 + seeded(seed + 1, 40) / 10;   // 3s – 7s
-        const delay  = -(seeded(seed + 2, 60) / 10);    // pre-stagger
-        const swayX  = seeded(seed + 3, 20) - 10;       // ±10px sway
-        return { x, size, dur, delay, swayX };
+        const s = i * 6271;
+        return {
+          x:    seeded(s, 95),
+          size: i % 4 === 0 ? 10 : i % 2 === 0 ? 7 : 5,
+          dur:  3 + seeded(s + 1, 40) / 10,
+          delay:-(seeded(s + 2, 60) / 10),
+          swayX:seeded(s + 3, 20) - 10,
+        };
+      })
+    : [];
+
+  // ── Bokeh bubbles ───────────────────────────
+  const bubbles = hasBokeh
+    ? Array.from({ length: 22 }, (_, i) => {
+        const s = i * 5381;
+        return {
+          x:    seeded(s, 90),
+          size: 28 + seeded(s + 1, 60),          // 28–88px
+          dur:  5 + seeded(s + 2, 60) / 10,      // 5–11s
+          delay:-(seeded(s + 3, 90) / 10),
+          op:   (15 + seeded(s + 4, 25)) / 100,  // 0.15–0.40
+          hue:  seeded(s + 5, 360),
+        };
+      })
+    : [];
+
+  // ── Rain ────────────────────────────────────
+  const rainDrops = hasRain
+    ? Array.from({ length: 35 }, (_, i) => {
+        const s = i * 4793;
+        return {
+          x:    seeded(s, 100),
+          len:  14 + seeded(s + 1, 20),          // 14–34px
+          dur:  0.5 + seeded(s + 2, 8) / 10,    // 0.5–1.3s
+          delay:-(seeded(s + 3, 50) / 10),
+          op:   (40 + seeded(s + 4, 40)) / 100,
+        };
+      })
+    : [];
+
+  // ── Confetti ────────────────────────────────
+  const CONFETTI_COLORS = ["#f43f5e","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899"];
+  const confettiPieces = hasConfetti
+    ? Array.from({ length: 38 }, (_, i) => {
+        const s = i * 3571;
+        const isCircle = i % 3 === 0;
+        return {
+          x:     seeded(s, 98),
+          size:  5 + seeded(s + 1, 8),           // 5–13px
+          dur:   3 + seeded(s + 2, 40) / 10,
+          delay: -(seeded(s + 3, 70) / 10),
+          color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+          rot:   seeded(s + 4, 720) - 360,       // ±360deg rotation
+          wide:  isCircle ? 1 : 0.45 + seeded(s + 5, 10) / 20,
+          isCircle,
+        };
+      })
+    : [];
+
+  // ── Floating emoji ──────────────────────────
+  const EMOJI_SET = ["✨","⭐","🔥","💫","🌟","💎","🎯","🚀"];
+  const emojis = hasEmoji
+    ? Array.from({ length: 14 }, (_, i) => {
+        const s = i * 2311;
+        return {
+          x:     seeded(s, 90),
+          size:  14 + seeded(s + 1, 14),         // 14–28px
+          dur:   4 + seeded(s + 2, 40) / 10,
+          delay: -(seeded(s + 3, 80) / 10),
+          emoji: EMOJI_SET[i % EMOJI_SET.length],
+        };
       })
     : [];
 
@@ -533,72 +698,126 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
       aria-hidden
       style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 3, overflow: "hidden" }}
     >
-      <style>{`
-        @keyframes lhFloat {
-          0%,100% { transform: translate(0,0); }
-          50%      { transform: translate(var(--dx),var(--dy)); }
-        }
-        @keyframes lhTwinkle {
-          0%,100% { opacity: var(--lo); }
-          50%      { opacity: var(--hi); }
-        }
-        @keyframes lhSnow {
-          0%   { transform: translateX(0) translateY(-20px); opacity: 0.9; }
-          80%  { opacity: 0.7; }
-          100% { transform: translateX(var(--sx)) translateY(640px); opacity: 0; }
-        }
-      `}</style>
+      <style>{EFFECT_KEYFRAMES}</style>
 
+      {/* Aurora bands */}
+      {hasAurora && (
+        <>
+          <div style={{
+            position: "absolute", top: "-10%", left: "-20%",
+            width: "140%", height: "45%",
+            background: "radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.55) 0%, rgba(59,130,246,0.35) 50%, transparent 80%)",
+            animation: "lhAurora1 7s ease-in-out infinite",
+            filter: "blur(18px)",
+          }} />
+          <div style={{
+            position: "absolute", top: "5%", left: "-10%",
+            width: "130%", height: "35%",
+            background: "radial-gradient(ellipse at 50% 50%, rgba(139,92,246,0.50) 0%, rgba(236,72,153,0.30) 50%, transparent 80%)",
+            animation: "lhAurora2 9s ease-in-out infinite",
+            filter: "blur(22px)",
+          }} />
+          <div style={{
+            position: "absolute", top: "15%", left: "10%",
+            width: "120%", height: "30%",
+            background: "radial-gradient(ellipse at 50% 50%, rgba(14,165,233,0.45) 0%, rgba(99,102,241,0.25) 50%, transparent 80%)",
+            animation: "lhAurora3 11s ease-in-out infinite",
+            filter: "blur(16px)",
+          }} />
+        </>
+      )}
+
+      {/* Stars */}
       {stars.map((s, i) => {
-        const glow  = s.tier === "bright"
-          ? `0 0 12px 3px rgba(255,255,255,0.9), 0 0 24px 6px rgba(255,255,255,0.4)`
-          : s.tier === "medium"
-          ? `0 0 6px 2px rgba(255,255,255,0.75)`
-          : `0 0 3px 1px rgba(255,255,255,0.5)`;
-        const lo    = s.tier === "bright" ? 0.5 : s.tier === "medium" ? 0.3 : 0.15;
-        const hi    = s.tier === "bright" ? 1.0 : s.tier === "medium" ? 0.85 : 0.6;
+        const glow = s.tier === "bright"
+          ? "0 0 12px 3px rgba(255,255,255,0.9), 0 0 24px 6px rgba(255,255,255,0.4)"
+          : s.tier === "med"
+          ? "0 0 6px 2px rgba(255,255,255,0.75)"
+          : "0 0 3px 1px rgba(255,255,255,0.5)";
+        const lo = s.tier === "bright" ? 0.5 : s.tier === "med" ? 0.3 : 0.15;
+        const hi = s.tier === "bright" ? 1.0 : s.tier === "med" ? 0.85 : 0.6;
         return (
-          <div
-            key={`star-${i}`}
-            style={{
-              position: "absolute",
-              left: `${s.x}%`,
-              top: `${s.y}%`,
-              width: s.size,
-              height: s.size,
-              borderRadius: "50%",
-              background: "white",
-              boxShadow: glow,
-              // CSS custom props drive the keyframe values
-              ["--dx" as string]: `${s.driftX}px`,
-              ["--dy" as string]: `${s.driftY}px`,
-              ["--lo" as string]: lo,
-              ["--hi" as string]: hi,
-              animation: [
-                `lhFloat ${s.floatDur.toFixed(1)}s ${s.delay.toFixed(1)}s ease-in-out infinite`,
-                `lhTwinkle ${s.twinkleDur.toFixed(1)}s ${s.delay.toFixed(1)}s ease-in-out infinite`,
-              ].join(", "),
-            }}
-          />
+          <div key={`st-${i}`} style={{
+            position: "absolute",
+            left: `${s.x}%`, top: `${s.y}%`,
+            width: s.size, height: s.size,
+            borderRadius: "50%", background: "white",
+            boxShadow: glow,
+            ["--dx" as string]: `${s.driftX}px`,
+            ["--dy" as string]: `${s.driftY}px`,
+            ["--lo" as string]: lo,
+            ["--hi" as string]: hi,
+            animation: `lhFloat ${s.floatDur.toFixed(1)}s ${s.delay.toFixed(1)}s ease-in-out infinite, lhTwinkle ${s.twinkleDur.toFixed(1)}s ${s.delay.toFixed(1)}s ease-in-out infinite`,
+          }} />
         );
       })}
 
+      {/* Snow */}
       {flakes.map((f, i) => (
-        <div
-          key={`flake-${i}`}
-          style={{
-            position: "absolute",
-            left: `${f.x}%`,
-            top: 0,
-            fontSize: f.size,
-            color: "rgba(255,255,255,0.82)",
-            ["--sx" as string]: `${f.swayX}px`,
-            animation: `lhSnow ${f.dur.toFixed(1)}s ${f.delay.toFixed(1)}s linear infinite`,
-            filter: "drop-shadow(0 0 3px rgba(255,255,255,0.5))",
-          }}
-        >
-          ❄
-        </div>
+        <div key={`fl-${i}`} style={{
+          position: "absolute",
+          left: `${f.x}%`, top: 0,
+          fontSize: f.size,
+          color: "rgba(255,255,255,0.85)",
+          ["--sx" as string]: `${f.swayX}px`,
+          animation: `lhSnow ${f.dur.toFixed(1)}s ${f.delay.toFixed(1)}s linear infinite`,
+          filter: "drop-shadow(0 0 3px rgba(255,255,255,0.5))",
+        }}>❄</div>
+      ))}
+
+      {/* Bokeh */}
+      {bubbles.map((b, i) => (
+        <div key={`bk-${i}`} style={{
+          position: "absolute",
+          left: `${b.x}%`, bottom: "-10%",
+          width: b.size, height: b.size,
+          borderRadius: "50%",
+          border: `1.5px solid hsla(${b.hue},80%,80%,0.5)`,
+          background: `hsla(${b.hue},70%,85%,0.08)`,
+          ["--op" as string]: b.op,
+          animation: `lhBokeh ${b.dur.toFixed(1)}s ${b.delay.toFixed(1)}s ease-in infinite`,
+          backdropFilter: "blur(1px)",
+        }} />
+      ))}
+
+      {/* Rain */}
+      {rainDrops.map((r, i) => (
+        <div key={`rn-${i}`} style={{
+          position: "absolute",
+          left: `${r.x}%`, top: 0,
+          width: 1, height: r.len,
+          background: `rgba(180,220,255,${r.op})`,
+          borderRadius: 99,
+          transform: "rotate(15deg)",
+          transformOrigin: "top center",
+          animation: `lhRain ${r.dur.toFixed(2)}s ${r.delay.toFixed(2)}s linear infinite`,
+        }} />
+      ))}
+
+      {/* Confetti */}
+      {confettiPieces.map((c, i) => (
+        <div key={`cf-${i}`} style={{
+          position: "absolute",
+          left: `${c.x}%`, top: "-2%",
+          width: c.size,
+          height: c.isCircle ? c.size : c.size * c.wide,
+          background: c.color,
+          borderRadius: c.isCircle ? "50%" : 2,
+          ["--r" as string]: `${c.rot}deg`,
+          animation: `lhConfetti ${c.dur.toFixed(1)}s ${c.delay.toFixed(1)}s linear infinite`,
+          opacity: 0.9,
+        }} />
+      ))}
+
+      {/* Floating emoji */}
+      {emojis.map((e, i) => (
+        <div key={`em-${i}`} style={{
+          position: "absolute",
+          left: `${e.x}%`, bottom: "5%",
+          fontSize: e.size,
+          animation: `lhEmoji ${e.dur.toFixed(1)}s ${e.delay.toFixed(1)}s ease-out infinite`,
+          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+        }}>{e.emoji}</div>
       ))}
     </div>
   );
