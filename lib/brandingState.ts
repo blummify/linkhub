@@ -37,6 +37,7 @@ export interface BrandingAppearanceState {
   overlayOpacity: number;
   profileLayout: string;
   linkDensity: string;
+  customThemeName: string;
 }
 
 export interface PreviewAppearance {
@@ -72,6 +73,7 @@ export function getDefaultBrandingState(): BrandingAppearanceState {
     overlayOpacity: 0,
     profileLayout: "classic",
     linkDensity: "default",
+    customThemeName: "My Theme",
   };
 }
 
@@ -98,6 +100,7 @@ function normalizeBrandingState(
   if (typeof merged.overlayOpacity !== "number") merged.overlayOpacity = 0;
   if (!merged.profileLayout) merged.profileLayout = defaults.profileLayout;
   if (!merged.linkDensity) merged.linkDensity = defaults.linkDensity;
+  if (!merged.customThemeName) merged.customThemeName = defaults.customThemeName;
 
   return merged;
 }

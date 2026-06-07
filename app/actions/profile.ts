@@ -35,6 +35,7 @@ function validateEditorInput(data: {
   linkDensity: string;
   effects: string;
   textColor: string | null;
+  customThemeName: string;
 }): string | null {
   if (!isValidHex(data.accentColor))
     return "Invalid accent color.";
@@ -62,6 +63,8 @@ function validateEditorInput(data: {
       if (!VALID_EFFECT_IDS.has(id)) return `Invalid effect: ${id}`;
     }
   }
+  if (typeof data.customThemeName !== "string" || data.customThemeName.length > 60)
+    return "Theme name must be 60 characters or fewer.";
   return null;
 }
 
@@ -196,6 +199,7 @@ export async function saveEditorTheme(data: {
   overlayOpacity: number;
   profileLayout: string;
   linkDensity: string;
+  customThemeName: string;
 }): Promise<{ success: true } | { requiresUpgrade: true } | { error: string }> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
@@ -236,6 +240,7 @@ export async function saveEditorTheme(data: {
         overlayOpacity:  data.overlayOpacity,
         layout:          data.profileLayout,
         linkDensity:     data.linkDensity,
+        customThemeName: data.customThemeName.trim() || "My Theme",
       },
     });
 

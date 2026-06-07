@@ -8,6 +8,8 @@ import { getDefaultBrandingState } from "@/lib/brandingState";
 import { EntryScreen } from "./components/EntryScreen";
 import { EditorShell } from "./components/EditorShell";
 import { EditorUpgradeModal } from "./components/EditorUpgradeModal";
+import { DiscardModal } from "./components/DiscardModal";
+import { SaveThemeModal } from "./components/SaveThemeModal";
 
 type Step = "entry" | "editing";
 type StartMode = "template" | "scratch";
@@ -20,6 +22,8 @@ export function EditorClient() {
   const [startMode, setStartMode] = useState<StartMode>("template");
   const [isSaving, setIsSaving] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleOpen = useCallback(() => {
@@ -41,12 +45,29 @@ export function EditorClient() {
         overlayOpacity: defaults.overlayOpacity,
         profileLayout: defaults.profileLayout,
         linkDensity: defaults.linkDensity,
+        customThemeName: defaults.customThemeName,
       });
     }
     setStep("editing");
   }, [startMode, store]);
 
-  const handleSave = useCallback(async () => {
+  // Cancel: navigate away, prompting if dirty
+  const handleCancel = useCallback(() => {
+    if (store.isDirty) {
+      setShowDiscardModal(true);
+    } else {
+      router.push("/branding");
+    }
+  }, [store.isDirty, router]);
+
+  // "Save" button click → open name modal
+  const handleSaveClick = useCallback(() => {
+    setShowSaveModal(true);
+  }, []);
+
+  // Confirmed save from modal with chosen theme name
+  const handleSaveConfirm = useCallback(async (themeName: string) => {
+    store.setCustomThemeName(themeName);
     setIsSaving(true);
     setSaveError(null);
     try {
@@ -66,17 +87,21 @@ export function EditorClient() {
         overlayOpacity: store.overlayOpacity,
         profileLayout: store.profileLayout,
         linkDensity: store.linkDensity,
+        customThemeName: themeName,
       });
 
       if ("requiresUpgrade" in result) {
+        setShowSaveModal(false);
         setShowUpgradeModal(true);
       } else if ("success" in result) {
         store.markSaved();
         router.push("/branding");
       } else if ("error" in result) {
+        setShowSaveModal(false);
         setSaveError(result.error);
       }
     } catch {
+      setShowSaveModal(false);
       setSaveError("Something went wrong. Please try again.");
     } finally {
       setIsSaving(false);
@@ -92,13 +117,38 @@ export function EditorClient() {
           onOpen={handleOpen}
         />
       ) : (
-        <EditorShell onSave={handleSave} isSaving={isSaving} />
+        <EditorShell
+          isDirty={store.isDirty}
+          isSaving={isSaving}
+          onSave={handleSaveClick}
+          onCancel={handleCancel}
+        />
       )}
 
+      {/* Discard confirmation */}
+      {showDiscardModal && (
+        <DiscardModal
+          onKeepEditing={() => setShowDiscardModal(false)}
+          onDiscard={() => router.push("/branding")}
+        />
+      )}
+
+      {/* Save with name */}
+      {showSaveModal && (
+        <SaveThemeModal
+          initialName={store.customThemeName}
+          isSaving={isSaving}
+          onCancel={() => setShowSaveModal(false)}
+          onSave={handleSaveConfirm}
+        />
+      )}
+
+      {/* Upgrade gate */}
       {showUpgradeModal && (
         <EditorUpgradeModal onClose={() => setShowUpgradeModal(false)} />
       )}
 
+      {/* Save error toast */}
       {saveError && (
         <div
           role="alert"

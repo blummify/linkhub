@@ -51,6 +51,7 @@ export function EditorPreviewCenter() {
       overlayOpacity: s.overlayOpacity,
       profileLayout: s.profileLayout,
       linkDensity: s.linkDensity,
+      customThemeName: s.customThemeName,
     }))
   );
 

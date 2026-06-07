@@ -29,6 +29,7 @@ export interface BrandingStore extends BrandingAppearanceState {
   setOverlay: (color: string, opacity: number) => void;
   setProfileLayout: (v: string) => void;
   setLinkDensity: (v: string) => void;
+  setCustomThemeName: (v: string) => void;
   selectTheme: (theme: ReturnType<typeof getBrandingThemeById>) => void;
   randomTheme: () => void;
   patchState: (patch: Partial<BrandingAppearanceState>) => void;
@@ -88,6 +89,7 @@ export const useBrandingStore = create<BrandingStore>()(
       setOverlay: (color, opacity) => set({ overlayColor: color, overlayOpacity: opacity, isDirty: true }),
       setProfileLayout: (v) => set({ profileLayout: v, isDirty: true }),
       setLinkDensity: (v) => set({ linkDensity: v, isDirty: true }),
+      setCustomThemeName: (v) => set({ customThemeName: v }),
 
       selectTheme: (theme) =>
         set({
@@ -145,6 +147,7 @@ export const useBrandingStore = create<BrandingStore>()(
           overlayOpacity: s.overlayOpacity,
           profileLayout: s.profileLayout,
           linkDensity: s.linkDensity,
+          customThemeName: s.customThemeName,
         };
         set({ _baseline: baseline, isDirty: false });
       },
@@ -173,6 +176,7 @@ export const useBrandingStore = create<BrandingStore>()(
           if (typeof state.overlayOpacity !== "number") state.overlayOpacity = 0;
           if (!state.profileLayout) state.profileLayout = "classic";
           if (!state.linkDensity) state.linkDensity = "default";
+          if (!state.customThemeName) state.customThemeName = "My Theme";
           const baseline: BrandingAppearanceState = {
             themeId: state.themeId,
             displayName: state.displayName,
@@ -193,6 +197,7 @@ export const useBrandingStore = create<BrandingStore>()(
             overlayOpacity: state.overlayOpacity,
             profileLayout: state.profileLayout,
             linkDensity: state.linkDensity,
+            customThemeName: state.customThemeName,
           };
           state._baseline = baseline;
         }

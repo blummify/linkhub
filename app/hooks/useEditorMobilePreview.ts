@@ -31,6 +31,7 @@ export function useEditorMobilePreview(
     overlayOpacity: s.overlayOpacity,
     profileLayout: s.profileLayout,
     linkDensity: s.linkDensity,
+    customThemeName: s.customThemeName,
   })));
   const handle = useBrandingStore((s) => s.handle);
 
