@@ -17,6 +17,14 @@ interface TemplateMediaGridProps {
   type: "image" | "video";
 }
 
+const prewarmed = new Set<string>();
+
+function prewarm(url: string) {
+  if (prewarmed.has(url)) return;
+  prewarmed.add(url);
+  fetch(url, { method: "HEAD" }).catch(() => {});
+}
+
 export function TemplateMediaGrid({ items, activeId, onSelect, type }: TemplateMediaGridProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -37,7 +45,16 @@ export function TemplateMediaGrid({ items, activeId, onSelect, type }: TemplateM
             key={item.id}
             type="button"
             onClick={() => onSelect(item)}
-            onMouseEnter={() => setHoveredId(item.id)}
+            onMouseEnter={() => {
+              setHoveredId(item.id);
+              if (type === "image" && item.url) {
+                const img = new Image();
+                img.src = item.url;
+              }
+              if (type === "video" && item.videoUrl) {
+                prewarm(item.videoUrl);
+              }
+            }}
             onMouseLeave={() => setHoveredId(null)}
             title={item.name}
             style={{
@@ -53,7 +70,6 @@ export function TemplateMediaGrid({ items, activeId, onSelect, type }: TemplateM
               transition: "border-color 0.15s, box-shadow 0.15s",
             }}
           >
-            {/* Thumbnail — dynamic external URL, next/image not suitable here */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={item.thumbnailUrl}
@@ -70,25 +86,26 @@ export function TemplateMediaGrid({ items, activeId, onSelect, type }: TemplateM
               }}
             />
 
-            {/* Video preview on hover */}
-            {type === "video" && item.videoUrl && hovered && (
+            {type === "video" && item.videoUrl && (
               <video
                 src={item.videoUrl}
                 autoPlay
                 muted
                 loop
                 playsInline
+                preload="auto"
                 style={{
                   position: "absolute",
                   inset: 0,
                   width: "100%",
                   height: "100%",
                   objectFit: "cover",
+                  opacity: hovered ? 1 : 0,
+                  transition: "opacity 0.2s",
                 }}
               />
             )}
 
-            {/* Name label */}
             <div
               style={{
                 position: "absolute",
@@ -107,7 +124,6 @@ export function TemplateMediaGrid({ items, activeId, onSelect, type }: TemplateM
               {item.name}
             </div>
 
-            {/* Active checkmark */}
             {active && (
               <div
                 style={{

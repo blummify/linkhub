@@ -803,12 +803,14 @@ export function PhoneShell({
   showGlow = false,
   effects,
   videoUrl,
+  imageUrl,
 }: {
   children: React.ReactNode;
   bgStyle?: string;
   showGlow?: boolean;
   effects?: string[];
   videoUrl?: string;
+  imageUrl?: string;
 }) {
   return (
     <div
@@ -840,12 +842,20 @@ export function PhoneShell({
           borderRadius: 34,
           overflow: "hidden",
           position: "relative",
-          background: videoUrl ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
+          background: (videoUrl || imageUrl) ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
           padding: "44px 22px 22px",
           display: "flex",
           flexDirection: "column",
         }}
       >
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt=""
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+          />
+        )}
         {videoUrl && (
           <video
             src={videoUrl}
@@ -853,6 +863,7 @@ export function PhoneShell({
             muted
             loop
             playsInline
+            preload="auto"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
           />
         )}
@@ -878,7 +889,7 @@ export function PhoneShell({
   );
 }
 
-export function BrowserShell({ children, bgStyle, effects, videoUrl }: { children: React.ReactNode; bgStyle?: string; effects?: string[]; videoUrl?: string }) {
+export function BrowserShell({ children, bgStyle, effects, videoUrl, imageUrl }: { children: React.ReactNode; bgStyle?: string; effects?: string[]; videoUrl?: string; imageUrl?: string }) {
   return (
     <div
       style={{
@@ -927,12 +938,20 @@ export function BrowserShell({ children, bgStyle, effects, videoUrl }: { childre
       <div
         style={{
           position: "absolute", top: 32, left: 0, right: 0, bottom: 0,
-          background: videoUrl ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
+          background: (videoUrl || imageUrl) ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
           padding: "24px 28px 24px",
           display: "flex", flexDirection: "column",
           overflow: "hidden",
         }}
       >
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt=""
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+          />
+        )}
         {videoUrl && (
           <video
             src={videoUrl}
@@ -940,6 +959,7 @@ export function BrowserShell({ children, bgStyle, effects, videoUrl }: { childre
             muted
             loop
             playsInline
+            preload="auto"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
           />
         )}

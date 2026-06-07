@@ -79,12 +79,16 @@ export function EditorPreviewCenter() {
       }
     }
   } else if (store.backgroundType === "image" && store.backgroundValue) {
-    bgStyle = `url(${store.backgroundValue}) center/cover no-repeat`;
+    bgStyle = "#0b1020";
     dark = true;
   } else if (store.backgroundType === "video") {
-    bgStyle = "linear-gradient(135deg, #1e293b, #0f172a)";
+    bgStyle = "#0b1020";
     dark = true;
   }
+
+  const imageUrl = store.backgroundType === "image" && store.backgroundValue
+    ? store.backgroundValue
+    : undefined;
 
   const videoUrl = store.backgroundType === "video" && store.backgroundValue
     ? store.backgroundValue
@@ -241,7 +245,7 @@ export function EditorPreviewCenter() {
         }}
       >
         {device === "desktop" ? (
-          <BrowserShell bgStyle={bgStyle} effects={store.effects} videoUrl={videoUrl}>
+          <BrowserShell bgStyle={bgStyle} effects={store.effects} videoUrl={videoUrl} imageUrl={imageUrl}>
             {overlayStyle && <div style={overlayStyle} />}
             <PhoneScreenContent
               displayName={store.displayName}
@@ -252,7 +256,7 @@ export function EditorPreviewCenter() {
             />
           </BrowserShell>
         ) : (
-          <PhoneShell bgStyle={bgStyle} showGlow={dark} effects={store.effects} videoUrl={videoUrl}>
+          <PhoneShell bgStyle={bgStyle} showGlow={dark} effects={store.effects} videoUrl={videoUrl} imageUrl={imageUrl}>
             {overlayStyle && <div style={overlayStyle} />}
             <PhoneScreenContent
               displayName={store.displayName}
