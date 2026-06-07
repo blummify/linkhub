@@ -19,7 +19,6 @@ export function EditorShell({ isDirty, isSaving, onSave, onCancel }: EditorShell
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
-      {/* ── Top bar ─────────────────────────────────────────────────────────── */}
       <div
         style={{
           height: 56,
@@ -34,7 +33,6 @@ export function EditorShell({ isDirty, isSaving, onSave, onCancel }: EditorShell
           gap: 12,
         }}
       >
-        {/* Left — user avatar + editor label */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
           <UserAvatar
             src={user?.image}
@@ -64,9 +62,7 @@ export function EditorShell({ isDirty, isSaving, onSave, onCancel }: EditorShell
           </div>
         </div>
 
-        {/* Right — cancel + save */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          {/* Unsaved indicator */}
           {isDirty && (
             <div
               aria-label="Unsaved changes"
@@ -131,7 +127,6 @@ export function EditorShell({ isDirty, isSaving, onSave, onCancel }: EditorShell
         </div>
       </div>
 
-      {/* ── 3-column body ───────────────────────────────────────────────────── */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <EditorLeftPanel />
         <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>

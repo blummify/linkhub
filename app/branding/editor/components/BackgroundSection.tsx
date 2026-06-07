@@ -95,7 +95,6 @@ export function BackgroundSection({
     <div>
       <p style={sectionLabel}>Background</p>
 
-      {/* Primary tab switcher */}
       <div
         style={{
           display: "flex",
@@ -138,7 +137,6 @@ export function BackgroundSection({
         })}
       </div>
 
-      {/* Hidden file inputs */}
       <input
         ref={imgRef}
         type="file"
@@ -154,7 +152,6 @@ export function BackgroundSection({
         onChange={handleVideoFile}
       />
 
-      {/* Upload progress */}
       {isUploading && (
         <div style={{ marginBottom: 14 }}>
           <div style={{ height: 3, background: "#eef0f7", borderRadius: 99, overflow: "hidden" }}>
@@ -176,10 +173,8 @@ export function BackgroundSection({
         <p style={{ fontSize: 12, color: "#e11d48", marginBottom: 12 }}>{uploadError}</p>
       )}
 
-      {/* ── GRADIENT TAB ──────────────────────────────── */}
       {backgroundType === "gradient" && (
         <>
-          {/* Solid color row */}
           <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
             <label
               style={{ position: "relative", cursor: "pointer", display: "flex", alignItems: "center", gap: 9, flex: 1 }}
@@ -221,7 +216,6 @@ export function BackgroundSection({
             </button>
           </div>
 
-          {/* Gradient swatches — 2-column grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
             {BACKGROUND_GRADIENTS.map((g) => {
               const active = backgroundType === "gradient" && backgroundValue === g.id;
@@ -270,10 +264,8 @@ export function BackgroundSection({
         </>
       )}
 
-      {/* ── IMAGE TAB ─────────────────────────────────── */}
       {backgroundType === "image" && (
         <>
-          {/* Sub-mode toggle */}
           <div
             style={{
               display: "flex",
@@ -288,7 +280,6 @@ export function BackgroundSection({
             <button type="button" onClick={() => setImageMode("templates")} style={subModePill(imageMode === "templates")}>Templates</button>
           </div>
 
-          {/* Applied badge */}
           {backgroundValue && backgroundValue.startsWith("http") && (
             <div
               style={{
@@ -363,10 +354,8 @@ export function BackgroundSection({
         </>
       )}
 
-      {/* ── VIDEO TAB ─────────────────────────────────── */}
       {backgroundType === "video" && (
         <>
-          {/* Sub-mode toggle */}
           <div
             style={{
               display: "flex",
@@ -381,7 +370,6 @@ export function BackgroundSection({
             <button type="button" onClick={() => setVideoMode("templates")} style={subModePill(videoMode === "templates")}>Templates</button>
           </div>
 
-          {/* Applied badge */}
           <div
             style={{
               display: "flex",

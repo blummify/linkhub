@@ -51,7 +51,6 @@ export function EditorClient() {
     setStep("editing");
   }, [startMode, store]);
 
-  // Cancel: navigate away, prompting if dirty
   const handleCancel = useCallback(() => {
     if (store.isDirty) {
       setShowDiscardModal(true);
@@ -60,12 +59,10 @@ export function EditorClient() {
     }
   }, [store.isDirty, router]);
 
-  // "Save" button click → open name modal
   const handleSaveClick = useCallback(() => {
     setShowSaveModal(true);
   }, []);
 
-  // Confirmed save from modal with chosen theme name
   const handleSaveConfirm = useCallback(async (themeName: string) => {
     store.setCustomThemeName(themeName);
     setIsSaving(true);
@@ -125,7 +122,6 @@ export function EditorClient() {
         />
       )}
 
-      {/* Discard confirmation */}
       {showDiscardModal && (
         <DiscardModal
           onKeepEditing={() => setShowDiscardModal(false)}
@@ -133,7 +129,6 @@ export function EditorClient() {
         />
       )}
 
-      {/* Save with name */}
       {showSaveModal && (
         <SaveThemeModal
           initialName={store.customThemeName}
@@ -143,12 +138,10 @@ export function EditorClient() {
         />
       )}
 
-      {/* Upgrade gate */}
       {showUpgradeModal && (
         <EditorUpgradeModal onClose={() => setShowUpgradeModal(false)} />
       )}
 
-      {/* Save error toast */}
       {saveError && (
         <div
           role="alert"

@@ -14,7 +14,6 @@ import {
   getBrandingThemeById,
 } from "@/lib/brandingState";
 
-// ── Icon bg/fg per link type ──────────────────────────────────────────────────
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
   website:   { bg: "linear-gradient(135deg,#eef1ff,#dbe2ff)", fg: "#2a37c0" },
   instagram: { bg: "linear-gradient(135deg,#ffe9f1,#ffd9e6)", fg: "#d6336c" },
@@ -74,7 +73,6 @@ function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailU
   );
 }
 
-// ── Static social icons shown in the phone preview ────────────────────────────
 const SOCIAL_ICONS = [
   {
     label: "Instagram",
@@ -113,7 +111,6 @@ const SOCIAL_ICONS = [
   },
 ];
 
-// ── Share network definitions ─────────────────────────────────────────────────
 const SHARE_NETWORKS = [
   { key: "twitter",  label: "X / Twitter", bg: "#0f1419" },
   { key: "facebook", label: "Facebook",    bg: "#1877f2" },
@@ -159,7 +156,6 @@ function ShareNetIcon({ network }: { network: string }) {
   return null;
 }
 
-// ── Theme helpers ──────────────────────────────────────────────────────────────
 function isDarkBg(hex: string): boolean {
   if (!hex.startsWith("#") || hex.length < 7) return false;
   const r = parseInt(hex.slice(1, 3), 16);
@@ -180,11 +176,9 @@ export interface AppearanceTheme {
   bodyFont?: string;
   overlayColor?: string;
   overlayOpacity?: number;
-  /** Active effect IDs from EDITOR_EFFECTS */
   effects?: string[];
 }
 
-// ── Phone screen content ──────────────────────────────────────────────────────
 export function PhoneScreenContent({
   displayName,
   bio,
@@ -209,7 +203,6 @@ export function PhoneScreenContent({
     ? `"${appearance.bodyFont}", ui-sans-serif, system-ui, sans-serif`
     : "inherit";
 
-  // Link card styles per cardStyle value
   const linkCardBg = (() => {
     if (cardStyle === "ghost") return "transparent";
     if (cardStyle === "soft") {
@@ -227,7 +220,6 @@ export function PhoneScreenContent({
     ? "0 4px 12px rgba(0,0,0,0.12)"
     : dark ? "none" : "0 2px 6px rgba(15,23,42,0.04)";
 
-  // Text color: explicit override > theme default
   const linkTextColor = appearance?.textColor
     ?? (dark ? "rgba(255,255,255,0.88)" : "#0b1020");
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
@@ -240,7 +232,6 @@ export function PhoneScreenContent({
   const hasShimmer     = activeEffects.includes("shimmer");
   const hasPulse       = activeEffects.includes("pulseRing");
 
-  // Effect overrides applied on top of card style
   const glassStyle: React.CSSProperties = hasGlass
     ? { background: "rgba(255,255,255,0.12)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }
     : {};
@@ -396,7 +387,6 @@ export function PhoneScreenContent({
                 ...neonStyle,
               }}
             >
-              {/* Shimmer sweep */}
               {hasShimmer && (
                 <div
                   aria-hidden
@@ -455,7 +445,6 @@ export function PhoneScreenContent({
   );
 }
 
-// ── Small action icon button ──────────────────────────────────────────────────
 function PreviewActionBtn({
   children,
   title,
@@ -513,12 +502,10 @@ function PreviewActionBtn({
   );
 }
 
-// ── Seeded PRNG — stable positions across renders ────────────────────────────
 function seeded(seed: number, mod: number) {
   return ((seed * 1664525 + 1013904223) & 0x7fffffff) % mod;
 }
 
-// ── All ambient effect CSS keyframes ─────────────────────────────────────────
 const EFFECT_KEYFRAMES = `
   @keyframes lhFloat {
     0%,100% { transform: translate(0,0); }
@@ -583,7 +570,6 @@ const EFFECT_KEYFRAMES = `
   }
 `;
 
-// ── Ambient overlay (stars, snow, aurora, bokeh, rain, confetti, emoji) ───────
 function EffectsOverlay({ effects }: { effects?: string[] }) {
   if (!effects?.length) return null;
   const has = (id: string) => effects.includes(id);
@@ -600,7 +586,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
     return null;
   }
 
-  // ── Star particles ─────────────────────────
   const stars = hasStars
     ? Array.from({ length: 42 }, (_, i) => {
         const s = i * 7919;
@@ -617,7 +602,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
       })
     : [];
 
-  // ── Snowfall ────────────────────────────────
   const flakes = hasSnow
     ? Array.from({ length: 24 }, (_, i) => {
         const s = i * 6271;
@@ -631,7 +615,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
       })
     : [];
 
-  // ── Bokeh bubbles ───────────────────────────
   const bubbles = hasBokeh
     ? Array.from({ length: 22 }, (_, i) => {
         const s = i * 5381;
@@ -646,7 +629,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
       })
     : [];
 
-  // ── Rain ────────────────────────────────────
   const rainDrops = hasRain
     ? Array.from({ length: 35 }, (_, i) => {
         const s = i * 4793;
@@ -660,7 +642,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
       })
     : [];
 
-  // ── Confetti ────────────────────────────────
   const CONFETTI_COLORS = ["#f43f5e","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899"];
   const confettiPieces = hasConfetti
     ? Array.from({ length: 38 }, (_, i) => {
@@ -679,7 +660,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
       })
     : [];
 
-  // ── Floating emoji ──────────────────────────
   const EMOJI_SET = ["✨","⭐","🔥","💫","🌟","💎","🎯","🚀"];
   const emojis = hasEmoji
     ? Array.from({ length: 14 }, (_, i) => {
@@ -701,7 +681,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
     >
       <style>{EFFECT_KEYFRAMES}</style>
 
-      {/* Aurora bands */}
       {hasAurora && (
         <>
           <div style={{
@@ -728,7 +707,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         </>
       )}
 
-      {/* Stars */}
       {stars.map((s, i) => {
         const glow = s.tier === "bright"
           ? "0 0 12px 3px rgba(255,255,255,0.9), 0 0 24px 6px rgba(255,255,255,0.4)"
@@ -753,7 +731,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         );
       })}
 
-      {/* Snow */}
       {flakes.map((f, i) => (
         <div key={`fl-${i}`} style={{
           position: "absolute",
@@ -766,7 +743,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         }}>❄</div>
       ))}
 
-      {/* Bokeh */}
       {bubbles.map((b, i) => (
         <div key={`bk-${i}`} style={{
           position: "absolute",
@@ -781,7 +757,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         }} />
       ))}
 
-      {/* Rain */}
       {rainDrops.map((r, i) => (
         <div key={`rn-${i}`} style={{
           position: "absolute",
@@ -795,7 +770,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         }} />
       ))}
 
-      {/* Confetti */}
       {confettiPieces.map((c, i) => (
         <div key={`cf-${i}`} style={{
           position: "absolute",
@@ -810,7 +784,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         }} />
       ))}
 
-      {/* Floating emoji */}
       {emojis.map((e, i) => (
         <div key={`em-${i}`} style={{
           position: "absolute",
@@ -824,7 +797,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
   );
 }
 
-// ── Phone shell (frame + notch + gradient screen) ─────────────────────────────
 export function PhoneShell({
   children,
   bgStyle,
@@ -894,7 +866,6 @@ export function PhoneShell({
   );
 }
 
-// ── Browser shell (desktop mode) ──────────────────────────────────────────────
 export function BrowserShell({ children, bgStyle, effects }: { children: React.ReactNode; bgStyle?: string; effects?: string[] }) {
   return (
     <div

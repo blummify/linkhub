@@ -7,7 +7,6 @@ import { redis } from "@/lib/redis";
 import { deleteFromR2 } from "@/lib/r2";
 import { VALID_FONT_VALUES } from "@/app/constants/editorFonts";
 
-// ── Validation helpers ────────────────────────────────────────────────────────
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const VALID_CARD_STYLES   = new Set(["filled", "ghost", "soft", "shadow"]);
 const VALID_LAYOUTS       = new Set(["classic", "minimal", "centered"]);
@@ -102,11 +101,6 @@ export async function updateBranding(data: {
   }
 }
 
-/**
- * Persists a new avatar URL + key to the user's profile.
- * Automatically cleans up the previous R2 object (if any) after the DB write,
- * without blocking the response.
- */
 export async function updateAvatarUrl(
   avatarUrl: string | null,
   avatarKey: string | null
@@ -125,15 +119,12 @@ export async function updateAvatarUrl(
       data: { avatarUrl, avatarKey },
     });
 
-    // Non-blocking: delete the old R2 object after the response is sent
     const oldKey = current?.avatarKey;
     if (oldKey && oldKey !== avatarKey) {
       after(async () => {
         try {
           await deleteFromR2(oldKey);
-        } catch {
-          // Logged inside deleteFromR2; orphan is a minor storage cost, not fatal
-        }
+        } catch {}
       });
     }
 
@@ -144,9 +135,6 @@ export async function updateAvatarUrl(
   }
 }
 
-/**
- * Clears the avatar from the user's profile and deletes the R2 object.
- */
 export async function removeAvatar(): Promise<{ success: true } | { error: string }> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
@@ -162,15 +150,12 @@ export async function removeAvatar(): Promise<{ success: true } | { error: strin
       data: { avatarUrl: null, avatarKey: null },
     });
 
-    // TODO: also clean up when the user account is deleted (batch delete by userId prefix)
     const oldKey = current?.avatarKey;
     if (oldKey) {
       after(async () => {
         try {
           await deleteFromR2(oldKey);
-        } catch {
-          // Logged inside deleteFromR2
-        }
+        } catch {}
       });
     }
 
@@ -181,11 +166,6 @@ export async function removeAvatar(): Promise<{ success: true } | { error: strin
   }
 }
 
-/**
- * Saves the full custom theme from the Open Editor.
- * Gated behind an active paid subscription (Hub or Studio).
- * Free users receive { requiresUpgrade: true } — nothing is written.
- */
 export async function saveEditorTheme(data: {
   themeId: string;
   accentColor: string;
@@ -247,7 +227,6 @@ export async function saveEditorTheme(data: {
       },
     });
 
-    // Non-blocking cleanup of old background R2 asset
     const oldKey = current?.backgroundKey;
     if (oldKey && oldKey !== data.backgroundKey) {
       after(async () => {

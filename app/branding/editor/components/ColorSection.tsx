@@ -35,7 +35,6 @@ export function ColorSection() {
 
   return (
     <div>
-      {/* ── Accent color ──────────────────────────────── */}
       <span style={subsLabel}>Accent color</span>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 12 }}>
@@ -95,7 +94,6 @@ export function ColorSection() {
         </label>
       </div>
 
-      {/* Hex readout */}
       <div
         style={{
           display: "flex",
@@ -123,7 +121,6 @@ export function ColorSection() {
         </span>
       </div>
 
-      {/* ── Text color ────────────────────────────────── */}
       <span style={subsLabel}>Text color</span>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
@@ -168,7 +165,6 @@ export function ColorSection() {
           );
         })}
 
-        {/* Custom text color */}
         <label aria-label="Custom text color" style={{ position: "relative", cursor: "pointer", display: "block", flex: 1 }}>
           <div
             style={{

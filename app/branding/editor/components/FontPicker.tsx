@@ -34,8 +34,6 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
   const [category, setCategory] = useState<CategoryFilter>("all");
   const listRef                  = useRef<HTMLDivElement>(null);
 
-  // On mount: batch-load all non-preloaded fonts with a character subset
-  // so we can show each font name rendered in its own typeface.
   useEffect(() => {
     const families = EDITOR_FONTS
       .filter((f) => !f.preloaded)
@@ -43,7 +41,6 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
     loadPickerFonts(families);
   }, []);
 
-  // When the current value changes (e.g. initial load), ensure full font is loaded
   useEffect(() => {
     if (value) loadGoogleFont(value);
   }, [value]);
@@ -82,7 +79,6 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
         {label}
       </span>
 
-      {/* ── Search ────────────────────────────────────────────── */}
       <div style={{ position: "relative", marginBottom: 8 }}>
         <svg
           aria-hidden
@@ -131,7 +127,6 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
         />
       </div>
 
-      {/* ── Category chips ────────────────────────────────────── */}
       <div
         style={{
           display: "flex",
@@ -169,7 +164,6 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
         })}
       </div>
 
-      {/* ── Font list ─────────────────────────────────────────── */}
       <div
         ref={listRef}
         style={{
@@ -216,7 +210,6 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
                 onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "#f7f8fc"; }}
                 onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
               >
-                {/* Checkmark */}
                 <span
                   style={{
                     width: 14,
@@ -230,7 +223,6 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
                   </svg>
                 </span>
 
-                {/* Font name rendered in that font */}
                 <span
                   style={{
                     flex: 1,
@@ -246,7 +238,6 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
                   {font.name}
                 </span>
 
-                {/* Category badge */}
                 <span
                   style={{
                     flexShrink: 0,
@@ -268,7 +259,6 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
         )}
       </div>
 
-      {/* Current selection preview */}
       <div
         style={{
           marginTop: 8,
