@@ -171,14 +171,18 @@ export interface AppearanceTheme {
   bgColor?: string;
   bgStyle?: string;
   dark?: boolean;
-  textColor?: string;
+  textColor?: string | null;
   titleColor?: string;
   buttonStyle?: string;
   headlineFont?: string;
+  cardStyle?: string;
+  bodyFont?: string;
+  overlayColor?: string;
+  overlayOpacity?: number;
 }
 
 // ── Phone screen content ──────────────────────────────────────────────────────
-function PhoneScreenContent({
+export function PhoneScreenContent({
   displayName,
   bio,
   links,
@@ -197,9 +201,32 @@ function PhoneScreenContent({
     (appearance?.bgColor ? isDarkBg(appearance.bgColor) : false);
   const titleColor = appearance?.titleColor ?? "#0b1020";
   const subtitleColor = dark ? "rgba(255,255,255,0.5)" : "#6b75a3";
-  const linkCardBg = dark ? "rgba(255,255,255,0.08)" : "white";
-  const linkCardBorder = dark ? "rgba(255,255,255,0.10)" : "#eef0f7";
-  const linkTextColor = dark ? "rgba(255,255,255,0.88)" : "#0b1020";
+  const cardStyle = appearance?.cardStyle ?? "filled";
+  const bodyFontStack = appearance?.bodyFont
+    ? `"${appearance.bodyFont}", ui-sans-serif, system-ui, sans-serif`
+    : "inherit";
+
+  // Link card styles per cardStyle value
+  const linkCardBg = (() => {
+    if (cardStyle === "ghost") return "transparent";
+    if (cardStyle === "soft") {
+      const acc = appearance?.titleColor ?? "#3b46e0";
+      return `color-mix(in srgb, ${acc} 12%, transparent)`;
+    }
+    return dark ? "rgba(255,255,255,0.08)" : "white";
+  })();
+  const linkCardBorder = (() => {
+    if (cardStyle === "ghost") return `1.5px solid ${dark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.18)"}`;
+    if (cardStyle === "soft") return "1px solid transparent";
+    return `1px solid ${dark ? "rgba(255,255,255,0.10)" : "#eef0f7"}`;
+  })();
+  const linkCardShadow = cardStyle === "shadow"
+    ? "0 4px 12px rgba(0,0,0,0.12)"
+    : dark ? "none" : "0 2px 6px rgba(15,23,42,0.04)";
+
+  // Text color: explicit override > theme default
+  const linkTextColor = appearance?.textColor
+    ?? (dark ? "rgba(255,255,255,0.88)" : "#0b1020");
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
   const linkBorderRadius = previewLinkBorderRadiusPx(appearance?.buttonStyle ?? "rounded");
   const published = links.filter((l) => l.status === 1);
@@ -267,6 +294,7 @@ function PhoneScreenContent({
             margin: "8px 12px 16px",
             textAlign: "center",
             lineHeight: 1.5,
+            fontFamily: bodyFontStack,
           }}
         >
           {bio}
@@ -321,7 +349,7 @@ function PhoneScreenContent({
               key={link.id ?? i}
               style={{
                 background: linkCardBg,
-                border: `1px solid ${linkCardBorder}`,
+                border: linkCardBorder,
                 borderRadius: linkBorderRadius,
                 padding: "11px 14px",
                 display: "flex",
@@ -330,7 +358,8 @@ function PhoneScreenContent({
                 fontSize: 12.5,
                 fontWeight: 500,
                 color: linkTextColor,
-                boxShadow: dark ? "none" : "0 2px 6px rgba(15,23,42,0.04)",
+                fontFamily: bodyFontStack,
+                boxShadow: linkCardShadow,
                 animation: "scIn 0.22s cubic-bezier(0.16,1,0.3,1) both",
                 animationDelay: `${i * 35}ms`,
               }}
@@ -435,7 +464,7 @@ function PreviewActionBtn({
 }
 
 // ── Phone shell (frame + notch + gradient screen) ─────────────────────────────
-function PhoneShell({
+export function PhoneShell({
   children,
   bgStyle,
   showGlow = false,
@@ -502,7 +531,7 @@ function PhoneShell({
 }
 
 // ── Browser shell (desktop mode) ──────────────────────────────────────────────
-function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyle?: string }) {
+export function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyle?: string }) {
   return (
     <div
       style={{

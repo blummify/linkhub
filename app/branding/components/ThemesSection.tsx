@@ -1,9 +1,9 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   BRANDING_THEMES,
-  DEFAULT_THEME,
   type BrandingTheme,
 } from "@/app/constants/brandingThemes";
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
@@ -14,6 +14,8 @@ interface ThemesSectionProps {
   displayName: string;
   handle: string;
   onSelect: (theme: BrandingTheme) => void;
+  /** Compact mode for narrow containers: scrollable pill row + 2-column grid */
+  compact?: boolean;
 }
 
 type CategoryId =
@@ -260,6 +262,7 @@ export function ThemesSection({
   displayName,
   handle,
   onSelect,
+  compact = false,
 }: ThemesSectionProps) {
   const [category, setCategory] = useState<CategoryId>("all");
   const [proModalTheme, setProModalTheme] = useState<BrandingTheme | null>(null);
@@ -271,9 +274,6 @@ export function ThemesSection({
     }
     onSelect(theme);
   };
-
-  const selectedTheme =
-    BRANDING_THEMES.find((t) => t.id === selectedThemeId) ?? DEFAULT_THEME;
 
   const filteredThemes = useMemo(() => {
     const cat = CATEGORIES.find((c) => c.id === category);
@@ -305,7 +305,10 @@ export function ThemesSection({
           display: "flex",
           gap: 8,
           marginBottom: 16,
-          flexWrap: "wrap",
+          flexWrap: compact ? "nowrap" : "wrap",
+          overflowX: compact ? "auto" : "visible",
+          scrollbarWidth: "none",
+          paddingBottom: compact ? 4 : 0,
         }}
       >
         {CATEGORIES.map((cat) => {
@@ -329,6 +332,8 @@ export function ThemesSection({
                 border: `1px solid ${active ? "#0b1020" : "#eef0f7"}`,
                 fontFamily: "inherit",
                 transition: "all 0.15s ease",
+                flexShrink: 0,
+                whiteSpace: "nowrap",
               }}
             >
               {cat.icon}
@@ -349,7 +354,7 @@ export function ThemesSection({
         })}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className={compact ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 sm:grid-cols-3 gap-4"}>
         {filteredThemes.map((theme) => (
           <ThemePreviewCard
             key={theme.id}
@@ -379,74 +384,136 @@ export function ThemesSection({
         }}
       />
 
+      {/* Pro custom theme banner */}
       <div
         style={{
           marginTop: 20,
-          background: "linear-gradient(135deg, white, #f4f6fc)",
-          border: "1px solid #eef0f7",
           borderRadius: 18,
-          padding: "18px 20px",
-          display: "grid",
-          gridTemplateColumns: "auto 1fr auto",
-          alignItems: "center",
-          gap: 20,
+          overflow: "hidden",
+          position: "relative",
+          background: "linear-gradient(135deg, #0e1340 0%, #1b2580 60%, #2d1f6e 100%)",
+          padding: "20px 20px 20px 20px",
         }}
       >
+        {/* Subtle radial glow */}
         <div
+          aria-hidden
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: 12,
-            background: "linear-gradient(135deg, #eef0f7, #f0f1ff)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#3b46e0",
+            position: "absolute",
+            inset: 0,
+            background: "radial-gradient(ellipse at 80% 20%, rgba(109,120,255,0.35) 0%, transparent 65%)",
+            pointerEvents: "none",
           }}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l7-7 3 3-7 7-3-3z"/>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586"/>
-            <circle cx="11" cy="11" r="2"/>
-          </svg>
-        </div>
-        <div>
-          <div
+        />
+
+        {/* Star-dot accent */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: 14,
+            right: 18,
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.35)",
+            boxShadow: "10px 18px 0 rgba(255,255,255,0.15), -8px 28px 0 rgba(255,255,255,0.1)",
+          }}
+        />
+
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Badge */}
+          <span
             style={{
-              fontFamily: BRANDING_FONT_SERIF,
-              fontStyle: "italic",
-              fontSize: 18,
-              color: "#0b1020",
-              letterSpacing: "-0.01em",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              background: "rgba(255,255,255,0.12)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              borderRadius: 99,
+              padding: "3px 10px 3px 7px",
+              fontSize: 11,
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.9)",
+              letterSpacing: "0.06em",
+              width: "fit-content",
             }}
           >
-            Currently using{" "}
-            <em style={{ color: "#3b46e0", fontStyle: "italic" }}>{selectedTheme.name}</em>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/>
+            </svg>
+            PRO
+          </span>
+
+          {/* Heading + subtext */}
+          <div>
+            <div
+              style={{
+                fontFamily: BRANDING_FONT_SERIF,
+                fontStyle: "italic",
+                fontSize: 20,
+                color: "white",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.25,
+                marginBottom: 6,
+              }}
+            >
+              Create a custom theme
+            </div>
+            <p style={{ fontSize: 12.5, color: "rgba(180,190,255,0.85)", lineHeight: 1.5, margin: 0 }}>
+              Upload your own background, add effects, and build a fully custom look with the Open Editor.
+            </p>
           </div>
-          <p style={{ fontSize: 12.5, color: "#6b75a3", marginTop: 2 }}>
-            Customize colors, fonts, and button shapes below.
-          </p>
+
+          {/* Feature pills */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {["Custom backgrounds", "Visual effects", "21 themes"].map((f) => (
+              <span
+                key={f}
+                style={{
+                  fontSize: 11.5,
+                  color: "rgba(200,210,255,0.9)",
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 6,
+                  padding: "3px 9px",
+                }}
+              >
+                {f}
+              </span>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <Link
+            href="/branding/editor"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 7,
+              background: "white",
+              color: "#1a2244",
+              borderRadius: 10,
+              padding: "10px 18px",
+              fontSize: 13,
+              fontWeight: 600,
+              textDecoration: "none",
+              width: "fit-content",
+              boxShadow: "0 4px 16px -4px rgba(0,0,0,0.35)",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l7-7 3 3-7 7-3-3z"/>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586"/>
+              <circle cx="11" cy="11" r="2"/>
+            </svg>
+            Open the Editor
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </Link>
         </div>
-        <button
-          type="button"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 7,
-            background: "white",
-            border: "1px solid #eef0f7",
-            color: "#1a2244",
-            padding: "10px 14px",
-            borderRadius: 99,
-            fontFamily: "inherit",
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-          }}
-        >
-          Open editor →
-        </button>
       </div>
     </div>
   );

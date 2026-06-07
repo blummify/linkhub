@@ -1,0 +1,243 @@
+"use client";
+
+import { useState } from "react";
+import { useBrandingStore } from "@/store/brandingStore";
+import { useLinksStore } from "@/store/linksStore";
+import { useShallow } from "zustand/react/shallow";
+import { brandingStateToPreviewAppearance, brandingPublicUrl } from "@/lib/brandingState";
+import { getGradientById } from "@/app/constants/editorBackgroundGradients";
+import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
+import {
+  PhoneShell,
+  BrowserShell,
+  PhoneScreenContent,
+  type AppearanceTheme,
+} from "@/app/components/DashboardPreviewPanel";
+
+export function EditorPreviewCenter() {
+  const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
+  const links = useLinksStore((s) => s.links);
+
+  const store = useBrandingStore(
+    useShallow((s) => ({
+      themeId: s.themeId,
+      displayName: s.displayName,
+      handle: s.handle,
+      bio: s.bio,
+      accentColor: s.accentColor,
+      buttonStyle: s.buttonStyle,
+      fontFamily: s.fontFamily,
+      userPickedTheme: s.userPickedTheme,
+      backgroundType: s.backgroundType,
+      backgroundValue: s.backgroundValue,
+      backgroundKey: s.backgroundKey,
+      effects: s.effects,
+      textColor: s.textColor,
+      cardStyle: s.cardStyle,
+      bodyFont: s.bodyFont,
+      overlayColor: s.overlayColor,
+      overlayOpacity: s.overlayOpacity,
+      profileLayout: s.profileLayout,
+      linkDensity: s.linkDensity,
+    }))
+  );
+
+  // Derive base appearance from theme, then override with editor state
+  const base = brandingStateToPreviewAppearance(store) as AppearanceTheme;
+  let bgStyle = base.bgStyle ?? "linear-gradient(180deg, #fafbff, #f0f2fb)";
+  let dark = base.dark ?? false;
+
+  if (store.backgroundType === "gradient") {
+    if (store.backgroundValue.startsWith("solid:")) {
+      bgStyle = store.backgroundValue.replace("solid:", "");
+      dark = false;
+    } else {
+      const grad = getGradientById(store.backgroundValue);
+      if (grad) {
+        bgStyle = grad.value;
+        dark = grad.dark;
+      }
+    }
+  } else if (store.backgroundType === "image" && store.backgroundValue) {
+    bgStyle = `url(${store.backgroundValue}) center/cover no-repeat`;
+    dark = true;
+  } else if (store.backgroundType === "video") {
+    bgStyle = "linear-gradient(135deg, #1e293b, #0f172a)";
+    dark = true;
+  }
+
+  const appearance: AppearanceTheme = {
+    ...base,
+    bgStyle,
+    dark,
+    textColor: store.textColor,
+    cardStyle: store.cardStyle,
+    bodyFont: store.bodyFont,
+  };
+
+  const publicUrl = brandingPublicUrl(store.handle);
+  const slashIdx = publicUrl.lastIndexOf("/");
+  const domain = slashIdx >= 0 ? publicUrl.slice(0, slashIdx + 1) : publicUrl;
+  const slug = slashIdx >= 0 ? publicUrl.slice(slashIdx + 1) : "";
+
+  const overlayStyle: React.CSSProperties | null =
+    store.overlayOpacity > 0
+      ? {
+          position: "absolute",
+          inset: 0,
+          background: store.overlayColor,
+          opacity: store.overlayOpacity / 100,
+          pointerEvents: "none",
+          zIndex: 1,
+        }
+      : null;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        flex: 1,
+        width: "100%",
+        height: "100%",
+        padding: "24px",
+        background: "linear-gradient(180deg, #f0f2fb 0%, #e9ecf8 100%)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Ambient glow */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage:
+            "radial-gradient(circle at 20% 10%, rgba(104,115,255,0.12), transparent 50%), radial-gradient(circle at 80% 80%, rgba(59,70,224,0.10), transparent 50%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          marginBottom: 16,
+          position: "relative",
+          zIndex: 10,
+          flexShrink: 0,
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontFamily: BRANDING_FONT_SERIF,
+              fontStyle: "italic",
+              fontSize: 22,
+              letterSpacing: "-0.01em",
+              color: "#0b1020",
+            }}
+          >
+            Live preview
+          </div>
+          <div
+            suppressHydrationWarning
+            style={{ fontSize: 12, color: "#6b75a3", marginTop: 2, display: "flex", gap: 2 }}
+          >
+            <span suppressHydrationWarning>{domain}</span>
+            {slug && (
+              <span style={{ color: "#3b46e0", fontWeight: 500 }}>{slug}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Device toggle */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: 16,
+          position: "relative",
+          zIndex: 10,
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            background: "rgba(255,255,255,0.7)",
+            border: "1px solid rgba(255,255,255,0.9)",
+            backdropFilter: "blur(8px)",
+            borderRadius: 99,
+            padding: 3,
+            display: "inline-flex",
+          }}
+        >
+          {(["mobile", "desktop"] as const).map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDevice(d)}
+              style={{
+                padding: "6px 14px",
+                fontSize: 12,
+                fontWeight: 500,
+                color: device === d ? "#0b1020" : "#6b75a3",
+                background: device === d ? "white" : "transparent",
+                borderRadius: 99,
+                border: 0,
+                cursor: "pointer",
+                boxShadow:
+                  device === d
+                    ? "0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)"
+                    : "none",
+                fontFamily: "inherit",
+                transition: "all 0.15s",
+              }}
+            >
+              {d === "mobile" ? "📱 Mobile" : "💻 Desktop"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Phone / Browser frame */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: 0,
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
+        {device === "desktop" ? (
+          <BrowserShell bgStyle={bgStyle}>
+            {overlayStyle && <div style={overlayStyle} />}
+            <PhoneScreenContent
+              displayName={store.displayName}
+              bio={store.bio}
+              links={links}
+              avatarSize={76}
+              appearance={appearance}
+            />
+          </BrowserShell>
+        ) : (
+          <PhoneShell bgStyle={bgStyle} showGlow={dark}>
+            {overlayStyle && <div style={overlayStyle} />}
+            <PhoneScreenContent
+              displayName={store.displayName}
+              bio={store.bio}
+              links={links}
+              appearance={appearance}
+            />
+          </PhoneShell>
+        )}
+      </div>
+    </div>
+  );
+}

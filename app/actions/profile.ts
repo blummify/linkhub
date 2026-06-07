@@ -115,3 +115,80 @@ export async function removeAvatar(): Promise<{ success: true } | { error: strin
     return { error: "Failed to remove avatar. Please try again." };
   }
 }
+
+/**
+ * Saves the full custom theme from the Open Editor.
+ * Gated behind an active paid subscription (Hub or Studio).
+ * Free users receive { requiresUpgrade: true } — nothing is written.
+ */
+export async function saveEditorTheme(data: {
+  themeId: string;
+  accentColor: string;
+  buttonStyle: string;
+  fontFamily: string;
+  backgroundType: "gradient" | "image" | "video";
+  backgroundValue: string;
+  backgroundKey: string | null;
+  effects: string;
+  textColor: string | null;
+  cardStyle: string;
+  bodyFont: string;
+  overlayColor: string;
+  overlayOpacity: number;
+  profileLayout: string;
+  linkDensity: string;
+}): Promise<{ success: true } | { requiresUpgrade: true } | { error: string }> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const sub = await db.subscription.findUnique({
+    where: { userId: session.user.id },
+    select: { planId: true },
+  });
+
+  if (!sub || sub.planId === "free") {
+    return { requiresUpgrade: true };
+  }
+
+  try {
+    const current = await db.profile.findUnique({
+      where: { userId: session.user.id },
+      select: { backgroundKey: true },
+    });
+
+    await db.profile.update({
+      where: { userId: session.user.id },
+      data: {
+        themeId:         data.themeId,
+        accentColor:     data.accentColor,
+        buttonStyle:     data.buttonStyle,
+        fontFamily:      data.fontFamily,
+        backgroundType:  data.backgroundType,
+        backgroundValue: data.backgroundValue,
+        backgroundKey:   data.backgroundKey,
+        effects:         data.effects,
+        textColor:       data.textColor,
+        cardStyle:       data.cardStyle,
+        bodyFont:        data.bodyFont,
+        overlayColor:    data.overlayColor,
+        overlayOpacity:  data.overlayOpacity,
+        layout:          data.profileLayout,
+        linkDensity:     data.linkDensity,
+      },
+    });
+
+    // Non-blocking cleanup of old background R2 asset
+    const oldKey = current?.backgroundKey;
+    if (oldKey && oldKey !== data.backgroundKey) {
+      after(async () => {
+        try { await deleteFromR2(oldKey); } catch {}
+      });
+    }
+
+    await redis.del(`profile:${session.user.id}`);
+    return { success: true };
+  } catch (err) {
+    console.error("[saveEditorTheme] failed:", err);
+    return { error: "Failed to save theme. Please try again." };
+  }
+}

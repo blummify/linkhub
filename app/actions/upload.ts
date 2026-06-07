@@ -4,13 +4,16 @@ import { randomUUID } from "crypto";
 import { auth } from "@/auth";
 import { getPresignedUploadUrl, getR2PublicUrl, deleteFromR2 } from "@/lib/r2";
 
-export type UploadFolder = "avatars" | "link-thumbnails";
+export type UploadFolder = "avatars" | "link-thumbnails" | "backgrounds";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
+  "video/mp4",
+  "video/webm",
+  "video/ogg",
 ]);
 
 const EXT_MAP: Record<string, string> = {
@@ -18,11 +21,15 @@ const EXT_MAP: Record<string, string> = {
   "image/png":  "png",
   "image/webp": "webp",
   "image/gif":  "gif",
+  "video/mp4":  "mp4",
+  "video/webm": "webm",
+  "video/ogg":  "ogv",
 };
 
 const FOLDER_SIZE_LIMITS: Record<UploadFolder, number> = {
-  "avatars":         5 * 1024 * 1024,  // 5 MB
-  "link-thumbnails": 2 * 1024 * 1024,  // 2 MB
+  "avatars":         5  * 1024 * 1024,  //  5 MB
+  "link-thumbnails": 2  * 1024 * 1024,  //  2 MB
+  "backgrounds":     50 * 1024 * 1024,  // 50 MB (covers HD images + short videos)
 };
 
 /**
@@ -70,7 +77,8 @@ export async function deleteOrphanedUpload(key: string): Promise<{ success: true
   // Key must be scoped to this user: {folder}/{userId}/...
   const expectedPrefix = `avatars/${session.user.id}/`;
   const thumbPrefix    = `link-thumbnails/${session.user.id}/`;
-  if (!key.startsWith(expectedPrefix) && !key.startsWith(thumbPrefix)) {
+  const bgPrefix       = `backgrounds/${session.user.id}/`;
+  if (!key.startsWith(expectedPrefix) && !key.startsWith(thumbPrefix) && !key.startsWith(bgPrefix)) {
     return { error: "Unauthorized" };
   }
 

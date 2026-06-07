@@ -20,6 +20,10 @@ export function useEditorMobilePreview(
     buttonStyle: s.buttonStyle,
     fontFamily: s.fontFamily,
     userPickedTheme: s.userPickedTheme,
+    backgroundType: s.backgroundType,
+    backgroundValue: s.backgroundValue,
+    backgroundKey: s.backgroundKey,
+    effects: s.effects,
   })));
   const handle = useBrandingStore((s) => s.handle);
 

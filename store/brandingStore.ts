@@ -21,6 +21,14 @@ export interface BrandingStore extends BrandingAppearanceState {
   setAccentColor: (v: string) => void;
   setButtonStyle: (v: string) => void;
   setFontFamily: (v: string) => void;
+  setBackground: (type: "gradient" | "image" | "video", value: string, key?: string | null) => void;
+  toggleEffect: (id: string) => void;
+  setTextColor: (v: string | null) => void;
+  setCardStyle: (v: string) => void;
+  setBodyFont: (v: string) => void;
+  setOverlay: (color: string, opacity: number) => void;
+  setProfileLayout: (v: string) => void;
+  setLinkDensity: (v: string) => void;
   selectTheme: (theme: ReturnType<typeof getBrandingThemeById>) => void;
   randomTheme: () => void;
   patchState: (patch: Partial<BrandingAppearanceState>) => void;
@@ -32,17 +40,13 @@ export interface BrandingStore extends BrandingAppearanceState {
 
 const defaults = getDefaultBrandingState();
 
-// Reads the existing raw-JSON format written by the old BrandingAppearanceContext
-// and wraps it into Zustand's { state, version } envelope so persist can parse it.
 const migratingStorage = {
   getItem: (name: string): string | null => {
     try {
       const raw = localStorage.getItem(name);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      // Already in Zustand format
       if (parsed && typeof parsed === "object" && "state" in parsed) return raw;
-      // Old raw format — wrap it
       return JSON.stringify({ state: parsed, version: 0 });
     } catch {
       return null;
@@ -66,6 +70,24 @@ export const useBrandingStore = create<BrandingStore>()(
       setAccentColor: (v) => set({ accentColor: v, isDirty: true }),
       setButtonStyle: (v) => set({ buttonStyle: v, isDirty: true }),
       setFontFamily: (v) => set({ fontFamily: v, isDirty: true }),
+
+      setBackground: (type, value, key = null) =>
+        set({ backgroundType: type, backgroundValue: value, backgroundKey: key ?? null, isDirty: true }),
+
+      toggleEffect: (id) =>
+        set((s) => ({
+          effects: s.effects.includes(id)
+            ? s.effects.filter((e) => e !== id)
+            : [...s.effects, id],
+          isDirty: true,
+        })),
+
+      setTextColor: (v) => set({ textColor: v, isDirty: true }),
+      setCardStyle: (v) => set({ cardStyle: v, isDirty: true }),
+      setBodyFont: (v) => set({ bodyFont: v, isDirty: true }),
+      setOverlay: (color, opacity) => set({ overlayColor: color, overlayOpacity: opacity, isDirty: true }),
+      setProfileLayout: (v) => set({ profileLayout: v, isDirty: true }),
+      setLinkDensity: (v) => set({ linkDensity: v, isDirty: true }),
 
       selectTheme: (theme) =>
         set({
@@ -91,8 +113,6 @@ export const useBrandingStore = create<BrandingStore>()(
 
       patchState: (patch) => set({ ...patch, isDirty: true }),
 
-      // Syncs values loaded from the DB into both state and _baseline so the
-      // computed isDirty stays false after a fresh load (no false dirty state).
       syncFromDb: (data) => set((s) => ({
         ...data,
         _baseline: { ...s._baseline, ...data },
@@ -114,6 +134,17 @@ export const useBrandingStore = create<BrandingStore>()(
           buttonStyle: s.buttonStyle,
           fontFamily: s.fontFamily,
           userPickedTheme: s.userPickedTheme,
+          backgroundType: s.backgroundType,
+          backgroundValue: s.backgroundValue,
+          backgroundKey: s.backgroundKey,
+          effects: s.effects,
+          textColor: s.textColor,
+          cardStyle: s.cardStyle,
+          bodyFont: s.bodyFont,
+          overlayColor: s.overlayColor,
+          overlayOpacity: s.overlayOpacity,
+          profileLayout: s.profileLayout,
+          linkDensity: s.linkDensity,
         };
         set({ _baseline: baseline, isDirty: false });
       },
@@ -123,17 +154,26 @@ export const useBrandingStore = create<BrandingStore>()(
     {
       name: BRANDING_STORAGE_KEY,
       storage: migratingStorage as unknown as ReturnType<typeof createJSONStorage>,
-      skipHydration: true, // client rehydrates via BrandingHydrator to avoid SSR mismatch
+      skipHydration: true,
       partialize: (s): Partial<BrandingStore> => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { isDirty, hydrated, _baseline, ...rest } = s;
         return rest;
       },
       onRehydrateStorage: () => (state) => {
-        // After loading from localStorage, set baseline = loaded state so reset() works correctly
         if (state) {
-          // Clean up legacy dummy handle persisted from old default
           if (state.handle === "joelosei") state.handle = "";
+          if (!state.backgroundType) state.backgroundType = "gradient";
+          if (!state.backgroundValue) state.backgroundValue = "midnight";
+          if (state.backgroundKey === undefined) state.backgroundKey = null;
+          if (!Array.isArray(state.effects)) state.effects = [];
+          if (state.textColor === undefined) state.textColor = null;
+          if (!state.cardStyle) state.cardStyle = "filled";
+          if (!state.bodyFont) state.bodyFont = "Geist";
+          if (!state.overlayColor) state.overlayColor = "#000000";
+          if (typeof state.overlayOpacity !== "number") state.overlayOpacity = 0;
+          if (!state.profileLayout) state.profileLayout = "classic";
+          if (!state.linkDensity) state.linkDensity = "default";
           const baseline: BrandingAppearanceState = {
             themeId: state.themeId,
             displayName: state.displayName,
@@ -143,6 +183,17 @@ export const useBrandingStore = create<BrandingStore>()(
             buttonStyle: state.buttonStyle,
             fontFamily: state.fontFamily,
             userPickedTheme: state.userPickedTheme,
+            backgroundType: state.backgroundType,
+            backgroundValue: state.backgroundValue,
+            backgroundKey: state.backgroundKey,
+            effects: state.effects,
+            textColor: state.textColor,
+            cardStyle: state.cardStyle,
+            bodyFont: state.bodyFont,
+            overlayColor: state.overlayColor,
+            overlayOpacity: state.overlayOpacity,
+            profileLayout: state.profileLayout,
+            linkDensity: state.linkDensity,
           };
           state._baseline = baseline;
         }

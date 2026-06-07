@@ -23,6 +23,20 @@ export interface BrandingAppearanceState {
   fontFamily: string;
   /** Set when the user picks a theme (not an old default) */
   userPickedTheme?: boolean;
+  /** Editor background fields */
+  backgroundType: "gradient" | "image" | "video";
+  backgroundValue: string;
+  backgroundKey: string | null;
+  /** Comma-separated effect IDs */
+  effects: string[];
+  /** Editor v2 fields */
+  textColor: string | null;
+  cardStyle: string;
+  bodyFont: string;
+  overlayColor: string;
+  overlayOpacity: number;
+  profileLayout: string;
+  linkDensity: string;
 }
 
 export interface PreviewAppearance {
@@ -31,6 +45,11 @@ export interface PreviewAppearance {
   titleColor?: string;
   buttonStyle?: string;
   headlineFont?: string;
+  textColor?: string | null;
+  cardStyle?: string;
+  bodyFont?: string;
+  overlayColor?: string;
+  overlayOpacity?: number;
 }
 
 export function getDefaultBrandingState(): BrandingAppearanceState {
@@ -42,6 +61,17 @@ export function getDefaultBrandingState(): BrandingAppearanceState {
     accentColor: DEFAULT_THEME.screen.titleColor,
     buttonStyle: "rounded",
     fontFamily: "Instrument Serif",
+    backgroundType: "gradient",
+    backgroundValue: "midnight",
+    backgroundKey: null,
+    effects: [],
+    textColor: null,
+    cardStyle: "filled",
+    bodyFont: "Geist",
+    overlayColor: "#000000",
+    overlayOpacity: 0,
+    profileLayout: "classic",
+    linkDensity: "default",
   };
 }
 
@@ -55,6 +85,19 @@ function normalizeBrandingState(
     merged.themeId = defaults.themeId;
     merged.accentColor = defaults.accentColor;
   }
+
+  // Coerce missing fields from older persisted blobs
+  if (!merged.backgroundType) merged.backgroundType = defaults.backgroundType;
+  if (!merged.backgroundValue) merged.backgroundValue = defaults.backgroundValue;
+  if (merged.backgroundKey === undefined) merged.backgroundKey = null;
+  if (!Array.isArray(merged.effects)) merged.effects = [];
+  if (merged.textColor === undefined) merged.textColor = null;
+  if (!merged.cardStyle) merged.cardStyle = defaults.cardStyle;
+  if (!merged.bodyFont) merged.bodyFont = defaults.bodyFont;
+  if (!merged.overlayColor) merged.overlayColor = defaults.overlayColor;
+  if (typeof merged.overlayOpacity !== "number") merged.overlayOpacity = 0;
+  if (!merged.profileLayout) merged.profileLayout = defaults.profileLayout;
+  if (!merged.linkDensity) merged.linkDensity = defaults.linkDensity;
 
   return merged;
 }
@@ -75,6 +118,11 @@ export function brandingStateToPreviewAppearance(
     titleColor: state.accentColor,
     buttonStyle: state.buttonStyle,
     headlineFont: brandingHeadingFontStack(state.fontFamily),
+    textColor: state.textColor ?? null,
+    cardStyle: state.cardStyle,
+    bodyFont: state.bodyFont,
+    overlayColor: state.overlayColor,
+    overlayOpacity: state.overlayOpacity,
   };
 }
 
