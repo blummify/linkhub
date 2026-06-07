@@ -8,31 +8,16 @@ import {
 } from "@/app/constants/brandingThemes";
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
 import { BrandingConfirmModal } from "./BrandingConfirmModal";
-import type { getUserCustomThemes } from "@/app/actions/profile";
-
-type CustomThemeRecord = Awaited<ReturnType<typeof getUserCustomThemes>>[number];
-
-const GRADIENT_MAP: Record<string, string> = {
-  midnight:  "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
-  aurora:    "linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)",
-  sunset:    "linear-gradient(135deg, #f093fb, #f5576c)",
-  ocean:     "linear-gradient(135deg, #2193b0, #6dd5ed)",
-  forest:    "linear-gradient(135deg, #134e5e, #71b280)",
-  rose:      "linear-gradient(135deg, #f953c6, #b91d73)",
-  slate:     "linear-gradient(135deg, #373b44, #4286f4)",
-  peach:     "linear-gradient(135deg, #ffb347, #ffcc33)",
-  lavender:  "linear-gradient(135deg, #834d9b, #d04ed6)",
-  emerald:   "linear-gradient(135deg, #11998e, #38ef7d)",
-  noir:      "linear-gradient(135deg, #000000, #434343)",
-  cream:     "linear-gradient(135deg, #fdfcfb, #e2d1c3)",
-};
+import { getGradientById } from "@/app/constants/editorBackgroundGradients";
+import type { CustomTheme as CustomThemeRecord } from "@prisma/client";
 
 function swatchStyle(theme: CustomThemeRecord): React.CSSProperties {
   if (theme.backgroundType === "gradient") {
-    return { background: GRADIENT_MAP[theme.backgroundValue] ?? `linear-gradient(135deg, ${theme.accentColor}, #000)` };
-  }
-  if (theme.backgroundType === "image" || theme.backgroundType === "video") {
-    return { background: theme.accentColor };
+    if (theme.backgroundValue.startsWith("solid:")) {
+      return { background: theme.backgroundValue.replace("solid:", "") };
+    }
+    const grad = getGradientById(theme.backgroundValue);
+    return { background: grad?.value ?? `linear-gradient(135deg, ${theme.accentColor}, #000)` };
   }
   return { background: theme.accentColor };
 }
@@ -57,6 +42,7 @@ interface ThemesSectionProps {
   activeCustomThemeId?: string | null;
   onApplyCustomTheme?: (id: string) => Promise<void>;
   onDeleteCustomTheme?: (id: string) => Promise<void>;
+  onEditCustomTheme?: (theme: CustomThemeRecord) => void;
   applyingThemeId?: string | null;
 }
 
@@ -309,6 +295,7 @@ export function ThemesSection({
   activeCustomThemeId = null,
   onApplyCustomTheme,
   onDeleteCustomTheme,
+  onEditCustomTheme,
   applyingThemeId = null,
 }: ThemesSectionProps) {
   const [category, setCategory] = useState<CategoryId>("all");
@@ -416,6 +403,7 @@ export function ThemesSection({
                       <img
                         src={ct.backgroundValue}
                         alt=""
+                        loading="lazy"
                         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
                       />
                     )}
@@ -487,6 +475,40 @@ export function ThemesSection({
                       </button>
                       <button
                         type="button"
+                        onClick={() => onEditCustomTheme?.(ct)}
+                        title="Edit in editor"
+                        style={{
+                          width: 30,
+                          height: 30,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: 8,
+                          border: "1px solid #eef0f7",
+                          background: "white",
+                          color: "#9ba3c0",
+                          cursor: "pointer",
+                          flexShrink: 0,
+                          transition: "all 0.15s",
+                          padding: 0,
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLButtonElement).style.color = "#3b46e0";
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#c7d0ff";
+                          (e.currentTarget as HTMLButtonElement).style.background = "#f0f1ff";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLButtonElement).style.color = "#9ba3c0";
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#eef0f7";
+                          (e.currentTarget as HTMLButtonElement).style.background = "white";
+                        }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => setConfirmDeleteId(ct.id)}
                         title="Delete theme"
                         style={{
@@ -536,7 +558,11 @@ export function ThemesSection({
         onClose={() => setConfirmDeleteId(null)}
         icon="warn"
         title="Delete this theme?"
-        body="This action cannot be undone. The theme will be permanently removed from your library."
+        body={
+          confirmDeleteId === activeCustomThemeId
+            ? "This theme is currently active. Deleting it will remove it from your library, but your public page will keep its current appearance until you apply a different theme."
+            : "This action cannot be undone. The theme will be permanently removed from your library."
+        }
         confirmText="Delete"
         confirmStyle="danger"
         onConfirm={async () => {

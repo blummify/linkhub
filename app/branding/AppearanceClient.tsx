@@ -17,12 +17,13 @@ import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
 import { AvatarCropModal } from "./components/AvatarCropModal";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
-import { updateAvatarUrl, removeAvatar, updateBranding, getUserCustomThemes, applyCustomTheme, deleteCustomTheme } from "@/app/actions/profile";
+import { updateAvatarUrl, removeAvatar, updateBranding, applyCustomTheme, deleteCustomTheme } from "@/app/actions/profile";
 import { claimHandle, checkHandleAvailability } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
 import { useBrandingStore } from "@/store/brandingStore";
 import { useProfileStore } from "@/store/profileStore";
 import { useSidebarStore } from "@/store/sidebarStore";
+import type { CustomTheme as CustomThemeRecord } from "@prisma/client";
 
 function SectionHead({
   title,
@@ -60,8 +61,6 @@ function SectionHead({
     </div>
   );
 }
-
-type CustomThemeRecord = Awaited<ReturnType<typeof getUserCustomThemes>>[number];
 
 export default function AppearanceClient({
   initialState,
@@ -259,6 +258,28 @@ export default function AppearanceClient({
     setCustomThemes((prev) => prev.filter((t) => t.id !== id));
     if (activeCustomThemeId === id) setActiveCustomThemeId(null);
   }, [activeCustomThemeId]);
+
+  const handleEditCustomTheme = useCallback((theme: CustomThemeRecord) => {
+    useBrandingStore.getState().syncFromDb({
+      themeId:         theme.themeId,
+      accentColor:     theme.accentColor,
+      buttonStyle:     theme.buttonStyle,
+      fontFamily:      theme.fontFamily,
+      backgroundType:  theme.backgroundType as "gradient" | "image" | "video",
+      backgroundValue: theme.backgroundValue,
+      backgroundKey:   theme.backgroundKey,
+      effects:         theme.effects.split(",").filter(Boolean),
+      textColor:       theme.textColor,
+      cardStyle:       theme.cardStyle,
+      bodyFont:        theme.bodyFont,
+      overlayColor:    theme.overlayColor,
+      overlayOpacity:  theme.overlayOpacity,
+      profileLayout:   theme.profileLayout,
+      linkDensity:     theme.linkDensity,
+      customThemeName: theme.name,
+    });
+    router.push("/branding/editor");
+  }, [router]);
 
   const handleSave = useCallback(async () => {
     if (pendingAvatarBlob) {
@@ -468,6 +489,7 @@ export default function AppearanceClient({
                     activeCustomThemeId={activeCustomThemeId}
                     onApplyCustomTheme={handleApplyCustomTheme}
                     onDeleteCustomTheme={handleDeleteCustomTheme}
+                    onEditCustomTheme={handleEditCustomTheme}
                     applyingThemeId={applyingThemeId}
                   />
                 </section>

@@ -644,6 +644,84 @@ const EFFECT_KEYFRAMES = `
   }
 `;
 
+// Particle data is fully deterministic (seeded from index only), so it is computed
+// once at module load and reused across all mounts and re-renders.
+const STAR_DATA = Array.from({ length: 42 }, (_, i) => {
+  const s = i * 7919;
+  const tier = i % 7 === 0 ? "bright" : i % 3 === 0 ? "med" : "tiny";
+  const size = tier === "bright" ? 7 : tier === "med" ? 4 : 2;
+  return {
+    x: seeded(s, 100), y: seeded(s + 1, 100), size, tier,
+    floatDur:   3 + seeded(s + 2, 40) / 10,
+    twinkleDur: 1.2 + seeded(s + 3, 30) / 10,
+    delay:      -(seeded(s + 4, 80) / 10),
+    driftX:     seeded(s + 5, 12) - 6,
+    driftY:     seeded(s + 6, 10) - 5,
+  };
+});
+
+const FLAKE_DATA = Array.from({ length: 24 }, (_, i) => {
+  const s = i * 6271;
+  return {
+    x:    seeded(s, 95),
+    size: i % 4 === 0 ? 10 : i % 2 === 0 ? 7 : 5,
+    dur:  3 + seeded(s + 1, 40) / 10,
+    delay:-(seeded(s + 2, 60) / 10),
+    swayX:seeded(s + 3, 20) - 10,
+  };
+});
+
+const BUBBLE_DATA = Array.from({ length: 22 }, (_, i) => {
+  const s = i * 5381;
+  return {
+    x:    seeded(s, 90),
+    size: 28 + seeded(s + 1, 60),
+    dur:  5 + seeded(s + 2, 60) / 10,
+    delay:-(seeded(s + 3, 90) / 10),
+    op:   (15 + seeded(s + 4, 25)) / 100,
+    hue:  seeded(s + 5, 360),
+  };
+});
+
+const RAIN_DATA = Array.from({ length: 35 }, (_, i) => {
+  const s = i * 4793;
+  return {
+    x:    seeded(s, 100),
+    len:  14 + seeded(s + 1, 20),
+    dur:  0.5 + seeded(s + 2, 8) / 10,
+    delay:-(seeded(s + 3, 50) / 10),
+    op:   (40 + seeded(s + 4, 40)) / 100,
+  };
+});
+
+const CONFETTI_COLORS = ["#f43f5e","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899"];
+const CONFETTI_DATA = Array.from({ length: 38 }, (_, i) => {
+  const s = i * 3571;
+  const isCircle = i % 3 === 0;
+  return {
+    x:     seeded(s, 98),
+    size:  5 + seeded(s + 1, 8),
+    dur:   3 + seeded(s + 2, 40) / 10,
+    delay: -(seeded(s + 3, 70) / 10),
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    rot:   seeded(s + 4, 720) - 360,
+    wide:  isCircle ? 1 : 0.45 + seeded(s + 5, 10) / 20,
+    isCircle,
+  };
+});
+
+const EMOJI_SET = ["✨","⭐","🔥","💫","🌟","💎","🎯","🚀"];
+const EMOJI_DATA = Array.from({ length: 14 }, (_, i) => {
+  const s = i * 2311;
+  return {
+    x:     seeded(s, 90),
+    size:  14 + seeded(s + 1, 14),
+    dur:   4 + seeded(s + 2, 40) / 10,
+    delay: -(seeded(s + 3, 80) / 10),
+    emoji: EMOJI_SET[i % EMOJI_SET.length],
+  };
+});
+
 function EffectsOverlay({ effects }: { effects?: string[] }) {
   if (!effects?.length) return null;
   const has = (id: string) => effects.includes(id);
@@ -659,94 +737,6 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
   if (!hasStars && !hasSnow && !hasAurora && !hasBokeh && !hasRain && !hasConfetti && !hasEmoji) {
     return null;
   }
-
-  const stars = hasStars
-    ? Array.from({ length: 42 }, (_, i) => {
-        const s = i * 7919;
-        const tier = i % 7 === 0 ? "bright" : i % 3 === 0 ? "med" : "tiny";
-        const size = tier === "bright" ? 7 : tier === "med" ? 4 : 2;
-        return {
-          x: seeded(s, 100), y: seeded(s + 1, 100), size, tier,
-          floatDur:   3 + seeded(s + 2, 40) / 10,
-          twinkleDur: 1.2 + seeded(s + 3, 30) / 10,
-          delay:      -(seeded(s + 4, 80) / 10),
-          driftX:     seeded(s + 5, 12) - 6,
-          driftY:     seeded(s + 6, 10) - 5,
-        };
-      })
-    : [];
-
-  const flakes = hasSnow
-    ? Array.from({ length: 24 }, (_, i) => {
-        const s = i * 6271;
-        return {
-          x:    seeded(s, 95),
-          size: i % 4 === 0 ? 10 : i % 2 === 0 ? 7 : 5,
-          dur:  3 + seeded(s + 1, 40) / 10,
-          delay:-(seeded(s + 2, 60) / 10),
-          swayX:seeded(s + 3, 20) - 10,
-        };
-      })
-    : [];
-
-  const bubbles = hasBokeh
-    ? Array.from({ length: 22 }, (_, i) => {
-        const s = i * 5381;
-        return {
-          x:    seeded(s, 90),
-          size: 28 + seeded(s + 1, 60),          // 28–88px
-          dur:  5 + seeded(s + 2, 60) / 10,      // 5–11s
-          delay:-(seeded(s + 3, 90) / 10),
-          op:   (15 + seeded(s + 4, 25)) / 100,  // 0.15–0.40
-          hue:  seeded(s + 5, 360),
-        };
-      })
-    : [];
-
-  const rainDrops = hasRain
-    ? Array.from({ length: 35 }, (_, i) => {
-        const s = i * 4793;
-        return {
-          x:    seeded(s, 100),
-          len:  14 + seeded(s + 1, 20),          // 14–34px
-          dur:  0.5 + seeded(s + 2, 8) / 10,    // 0.5–1.3s
-          delay:-(seeded(s + 3, 50) / 10),
-          op:   (40 + seeded(s + 4, 40)) / 100,
-        };
-      })
-    : [];
-
-  const CONFETTI_COLORS = ["#f43f5e","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899"];
-  const confettiPieces = hasConfetti
-    ? Array.from({ length: 38 }, (_, i) => {
-        const s = i * 3571;
-        const isCircle = i % 3 === 0;
-        return {
-          x:     seeded(s, 98),
-          size:  5 + seeded(s + 1, 8),           // 5–13px
-          dur:   3 + seeded(s + 2, 40) / 10,
-          delay: -(seeded(s + 3, 70) / 10),
-          color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-          rot:   seeded(s + 4, 720) - 360,       // ±360deg rotation
-          wide:  isCircle ? 1 : 0.45 + seeded(s + 5, 10) / 20,
-          isCircle,
-        };
-      })
-    : [];
-
-  const EMOJI_SET = ["✨","⭐","🔥","💫","🌟","💎","🎯","🚀"];
-  const emojis = hasEmoji
-    ? Array.from({ length: 14 }, (_, i) => {
-        const s = i * 2311;
-        return {
-          x:     seeded(s, 90),
-          size:  14 + seeded(s + 1, 14),         // 14–28px
-          dur:   4 + seeded(s + 2, 40) / 10,
-          delay: -(seeded(s + 3, 80) / 10),
-          emoji: EMOJI_SET[i % EMOJI_SET.length],
-        };
-      })
-    : [];
 
   return (
     <div
@@ -781,7 +771,7 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         </>
       )}
 
-      {stars.map((s, i) => {
+      {hasStars && STAR_DATA.map((s, i) => {
         const glow = s.tier === "bright"
           ? "0 0 12px 3px rgba(255,255,255,0.9), 0 0 24px 6px rgba(255,255,255,0.4)"
           : s.tier === "med"
@@ -805,7 +795,7 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         );
       })}
 
-      {flakes.map((f, i) => (
+      {hasSnow && FLAKE_DATA.map((f, i) => (
         <div key={`fl-${i}`} style={{
           position: "absolute",
           left: `${f.x}%`, top: 0,
@@ -817,7 +807,7 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         }}>❄</div>
       ))}
 
-      {bubbles.map((b, i) => (
+      {hasBokeh && BUBBLE_DATA.map((b, i) => (
         <div key={`bk-${i}`} style={{
           position: "absolute",
           left: `${b.x}%`, bottom: "-10%",
@@ -831,7 +821,7 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         }} />
       ))}
 
-      {rainDrops.map((r, i) => (
+      {hasRain && RAIN_DATA.map((r, i) => (
         <div key={`rn-${i}`} style={{
           position: "absolute",
           left: `${r.x}%`, top: 0,
@@ -844,7 +834,7 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         }} />
       ))}
 
-      {confettiPieces.map((c, i) => (
+      {hasConfetti && CONFETTI_DATA.map((c, i) => (
         <div key={`cf-${i}`} style={{
           position: "absolute",
           left: `${c.x}%`, top: "-2%",
@@ -858,7 +848,7 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
         }} />
       ))}
 
-      {emojis.map((e, i) => (
+      {hasEmoji && EMOJI_DATA.map((e, i) => (
         <div key={`em-${i}`} style={{
           position: "absolute",
           left: `${e.x}%`, bottom: "5%",
@@ -1272,18 +1262,25 @@ export interface DashboardPreviewPanelProps {
 }
 
 export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, onPickHandle }: DashboardPreviewPanelProps) {
-  const hydrated = useBrandingStore((s) => s.hydrated);
   const links = useLinksStore((s) => s.links);
-  const displayName = useBrandingStore((s) => s.displayName);
-  const bio = useBrandingStore((s) => s.bio);
-  const handle = useBrandingStore((s) => s.handle);
-  const publicUrl = useBrandingStore((s) => brandingPublicUrl(s.handle));
+  const {
+    hydrated, displayName, bio, handle,
+    backgroundType, backgroundValue, themeId, onRandomTheme,
+  } = useBrandingStore(
+    useShallow((s) => ({
+      hydrated:        s.hydrated,
+      displayName:     s.displayName,
+      bio:             s.bio,
+      handle:          s.handle,
+      backgroundType:  s.backgroundType,
+      backgroundValue: s.backgroundValue,
+      themeId:         s.themeId,
+      onRandomTheme:   s.randomTheme,
+    }))
+  );
   const appearance = useBrandingStore(useShallow(brandingStateToPreviewAppearance)) as AppearanceTheme;
-  const backgroundType = useBrandingStore((s) => s.backgroundType);
-  const backgroundValue = useBrandingStore((s) => s.backgroundValue);
-  const themeId = useBrandingStore((s) => s.themeId);
+  const publicUrl = brandingPublicUrl(handle);
   const themeLabel = getBrandingThemeById(themeId).name;
-  const onRandomTheme = useBrandingStore((s) => s.randomTheme);
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [showSharePop, setShowSharePop] = useState(false);
   const [copied, setCopied] = useState(false);

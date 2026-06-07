@@ -129,7 +129,7 @@ model Profile {
   overlayColor     String   @default("#000000")
   overlayOpacity   Int      @default(0)
   linkDensity      String   @default("default")
-  customThemeName     String   @default("My Theme")
+  customThemeName     String   @default("My Theme") @db.VarChar(60)
   activeCustomThemeId String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -139,7 +139,7 @@ model Profile {
 model CustomTheme {
   id              String   @id @default(cuid())
   userId          String
-  name            String   @default("My Theme")
+  name            String   @default("My Theme") @db.VarChar(60)
   themeId         String   @default("default")
   accentColor     String   @default("#3b46e0")
   buttonStyle     String   @default("rounded")
