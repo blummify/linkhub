@@ -13,10 +13,22 @@ import {
   PhoneScreenContent,
   type AppearanceTheme,
 } from "@/app/components/DashboardPreviewPanel";
+import type { ManagedLink } from "@/app/user-admin/components/types";
+
+const SAMPLE_LINKS: ManagedLink[] = [
+  { id: "s1", title: "My Website",      url: "#", icon: "website",   clicks: "0", status: 1 },
+  { id: "s2", title: "Instagram",       url: "#", icon: "instagram", clicks: "0", status: 1 },
+  { id: "s3", title: "YouTube Channel", url: "#", icon: "youtube",   clicks: "0", status: 1 },
+  { id: "s4", title: "Twitter / X",     url: "#", icon: "twitter",   clicks: "0", status: 1 },
+  { id: "s5", title: "Spotify",         url: "#", icon: "spotify",   clicks: "0", status: 1 },
+];
 
 export function EditorPreviewCenter() {
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
-  const links = useLinksStore((s) => s.links);
+  const rawLinks = useLinksStore((s) => s.links);
+  const published = rawLinks.filter((l) => l.status === 1);
+  // Show sample links so users can see how effects + card styles will look
+  const links = published.length > 0 ? rawLinks : SAMPLE_LINKS;
 
   const store = useBrandingStore(
     useShallow((s) => ({
@@ -73,6 +85,7 @@ export function EditorPreviewCenter() {
     textColor: store.textColor,
     cardStyle: store.cardStyle,
     bodyFont: store.bodyFont,
+    effects: store.effects,
   };
 
   const publicUrl = brandingPublicUrl(store.handle);
@@ -216,7 +229,7 @@ export function EditorPreviewCenter() {
         }}
       >
         {device === "desktop" ? (
-          <BrowserShell bgStyle={bgStyle}>
+          <BrowserShell bgStyle={bgStyle} effects={store.effects}>
             {overlayStyle && <div style={overlayStyle} />}
             <PhoneScreenContent
               displayName={store.displayName}
@@ -227,7 +240,7 @@ export function EditorPreviewCenter() {
             />
           </BrowserShell>
         ) : (
-          <PhoneShell bgStyle={bgStyle} showGlow={dark}>
+          <PhoneShell bgStyle={bgStyle} showGlow={dark} effects={store.effects}>
             {overlayStyle && <div style={overlayStyle} />}
             <PhoneScreenContent
               displayName={store.displayName}

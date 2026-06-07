@@ -14,6 +14,7 @@ type VideoMode = "upload" | "templates";
 interface BackgroundSectionProps {
   backgroundType: BgType;
   backgroundValue: string;
+  onTabSwitch: (type: BgType) => void;
   onGradientSelect: (id: string) => void;
   onSolidSelect: (color: string) => void;
   onImageUpload: (url: string, key: string) => void;
@@ -48,6 +49,7 @@ const subModePill = (active: boolean): React.CSSProperties => ({
 export function BackgroundSection({
   backgroundType,
   backgroundValue,
+  onTabSwitch,
   onGradientSelect,
   onSolidSelect,
   onImageUpload,
@@ -111,16 +113,10 @@ export function BackgroundSection({
               key={tab}
               type="button"
               onClick={() => {
-                if (tab === "image" && backgroundType !== "image") {
-                  setImageMode("upload");
-                }
-                if (tab === "video" && backgroundType !== "video") {
-                  setVideoMode("upload");
-                }
-                // For image/video tabs just switching activates — actual upload/template handles file
-                if (tab === "gradient" && backgroundType !== "gradient") {
-                  onGradientSelect("midnight");
-                }
+                if (tab === backgroundType) return;
+                onTabSwitch(tab);
+                if (tab === "image") setImageMode("upload");
+                if (tab === "video") setVideoMode("upload");
               }}
               style={{
                 flex: 1,

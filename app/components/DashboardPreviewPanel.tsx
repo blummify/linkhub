@@ -179,6 +179,8 @@ export interface AppearanceTheme {
   bodyFont?: string;
   overlayColor?: string;
   overlayOpacity?: number;
+  /** Active effect IDs from EDITOR_EFFECTS */
+  effects?: string[];
 }
 
 // ── Phone screen content ──────────────────────────────────────────────────────
@@ -229,6 +231,23 @@ export function PhoneScreenContent({
     ?? (dark ? "rgba(255,255,255,0.88)" : "#0b1020");
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
   const linkBorderRadius = previewLinkBorderRadiusPx(appearance?.buttonStyle ?? "rounded");
+  const activeEffects = appearance?.effects ?? [];
+  const hasGlass = activeEffects.includes("glassmorphism");
+  const hasNeon  = activeEffects.includes("neonBorders");
+  const hasGlow  = activeEffects.includes("textGlow");
+
+  // Effect overrides applied on top of card style
+  const glassStyle: React.CSSProperties = hasGlass
+    ? { background: "rgba(255,255,255,0.12)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }
+    : {};
+  const neonAccent = appearance?.titleColor ?? "#3b46e0";
+  const neonStyle: React.CSSProperties = hasNeon
+    ? { boxShadow: `0 0 10px ${neonAccent}55, 0 0 2px ${neonAccent}99, inset 0 0 10px transparent`, borderColor: `${neonAccent}88` }
+    : {};
+  const glowStyle: React.CSSProperties = hasGlow
+    ? { textShadow: dark ? "0 0 10px rgba(255,255,255,0.6)" : `0 0 8px ${neonAccent}88` }
+    : {};
+
   const published = links.filter((l) => l.status === 1);
 
   return (
@@ -362,6 +381,8 @@ export function PhoneScreenContent({
                 boxShadow: linkCardShadow,
                 animation: "scIn 0.22s cubic-bezier(0.16,1,0.3,1) both",
                 animationDelay: `${i * 35}ms`,
+                ...glassStyle,
+                ...neonStyle,
               }}
             >
               <PhoneLinkIcon iconKey={link.icon} thumbnailUrl={link.thumbnailUrl} />
@@ -372,6 +393,7 @@ export function PhoneScreenContent({
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   fontSize: 12.5,
+                  ...glowStyle,
                 }}
               >
                 {link.title}
@@ -463,15 +485,136 @@ function PreviewActionBtn({
   );
 }
 
+// ── Effect overlays rendered inside the phone shell ──────────────────────────
+// Seeded pseudo-random so positions are stable across renders
+function seeded(seed: number, mod: number) {
+  return ((seed * 1664525 + 1013904223) & 0x7fffffff) % mod;
+}
+
+function EffectsOverlay({ effects }: { effects?: string[] }) {
+  if (!effects?.length) return null;
+  const hasStars    = effects.includes("starParticles");
+  const hasSnowfall = effects.includes("snowfall");
+  if (!hasStars && !hasSnowfall) return null;
+
+  // 42 stars — varied sizes, unique float+twinkle animation per star
+  const stars = hasStars
+    ? Array.from({ length: 42 }, (_, i) => {
+        const seed = i * 7919;
+        const x    = seeded(seed,        100);
+        const y    = seeded(seed + 1,    100);
+        // three tiers: tiny (2px), medium (4px), bright (7px)
+        const tier = i % 7 === 0 ? "bright" : i % 3 === 0 ? "medium" : "tiny";
+        const size = tier === "bright" ? 7 : tier === "medium" ? 4 : 2;
+        const floatDur   = 3 + seeded(seed + 2, 40) / 10;  // 3s – 7s
+        const twinkleDur = 1.2 + seeded(seed + 3, 30) / 10; // 1.2s – 4.2s
+        const delay      = -(seeded(seed + 4, 80) / 10);    // stagger phase
+        const driftX     = (seeded(seed + 5, 12) - 6);      // ±6px
+        const driftY     = (seeded(seed + 6, 10) - 5);      // ±5px
+        return { x, y, size, tier, floatDur, twinkleDur, delay, driftX, driftY };
+      })
+    : [];
+
+  // 24 snowflakes — three sizes, gentle horizontal sway
+  const flakes = hasSnowfall
+    ? Array.from({ length: 24 }, (_, i) => {
+        const seed   = i * 6271;
+        const x      = seeded(seed,     95);
+        const size   = i % 4 === 0 ? 10 : i % 2 === 0 ? 7 : 5;
+        const dur    = 3 + seeded(seed + 1, 40) / 10;   // 3s – 7s
+        const delay  = -(seeded(seed + 2, 60) / 10);    // pre-stagger
+        const swayX  = seeded(seed + 3, 20) - 10;       // ±10px sway
+        return { x, size, dur, delay, swayX };
+      })
+    : [];
+
+  return (
+    <div
+      aria-hidden
+      style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 3, overflow: "hidden" }}
+    >
+      <style>{`
+        @keyframes lhFloat {
+          0%,100% { transform: translate(0,0); }
+          50%      { transform: translate(var(--dx),var(--dy)); }
+        }
+        @keyframes lhTwinkle {
+          0%,100% { opacity: var(--lo); }
+          50%      { opacity: var(--hi); }
+        }
+        @keyframes lhSnow {
+          0%   { transform: translateX(0) translateY(-20px); opacity: 0.9; }
+          80%  { opacity: 0.7; }
+          100% { transform: translateX(var(--sx)) translateY(640px); opacity: 0; }
+        }
+      `}</style>
+
+      {stars.map((s, i) => {
+        const glow  = s.tier === "bright"
+          ? `0 0 12px 3px rgba(255,255,255,0.9), 0 0 24px 6px rgba(255,255,255,0.4)`
+          : s.tier === "medium"
+          ? `0 0 6px 2px rgba(255,255,255,0.75)`
+          : `0 0 3px 1px rgba(255,255,255,0.5)`;
+        const lo    = s.tier === "bright" ? 0.5 : s.tier === "medium" ? 0.3 : 0.15;
+        const hi    = s.tier === "bright" ? 1.0 : s.tier === "medium" ? 0.85 : 0.6;
+        return (
+          <div
+            key={`star-${i}`}
+            style={{
+              position: "absolute",
+              left: `${s.x}%`,
+              top: `${s.y}%`,
+              width: s.size,
+              height: s.size,
+              borderRadius: "50%",
+              background: "white",
+              boxShadow: glow,
+              // CSS custom props drive the keyframe values
+              ["--dx" as string]: `${s.driftX}px`,
+              ["--dy" as string]: `${s.driftY}px`,
+              ["--lo" as string]: lo,
+              ["--hi" as string]: hi,
+              animation: [
+                `lhFloat ${s.floatDur.toFixed(1)}s ${s.delay.toFixed(1)}s ease-in-out infinite`,
+                `lhTwinkle ${s.twinkleDur.toFixed(1)}s ${s.delay.toFixed(1)}s ease-in-out infinite`,
+              ].join(", "),
+            }}
+          />
+        );
+      })}
+
+      {flakes.map((f, i) => (
+        <div
+          key={`flake-${i}`}
+          style={{
+            position: "absolute",
+            left: `${f.x}%`,
+            top: 0,
+            fontSize: f.size,
+            color: "rgba(255,255,255,0.82)",
+            ["--sx" as string]: `${f.swayX}px`,
+            animation: `lhSnow ${f.dur.toFixed(1)}s ${f.delay.toFixed(1)}s linear infinite`,
+            filter: "drop-shadow(0 0 3px rgba(255,255,255,0.5))",
+          }}
+        >
+          ❄
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Phone shell (frame + notch + gradient screen) ─────────────────────────────
 export function PhoneShell({
   children,
   bgStyle,
   showGlow = false,
+  effects,
 }: {
   children: React.ReactNode;
   bgStyle?: string;
   showGlow?: boolean;
+  effects?: string[];
 }) {
   return (
     <div
@@ -522,6 +665,7 @@ export function PhoneShell({
             }}
           />
         )}
+        <EffectsOverlay effects={effects} />
         <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
           {children}
         </div>
@@ -531,7 +675,7 @@ export function PhoneShell({
 }
 
 // ── Browser shell (desktop mode) ──────────────────────────────────────────────
-export function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyle?: string }) {
+export function BrowserShell({ children, bgStyle, effects }: { children: React.ReactNode; bgStyle?: string; effects?: string[] }) {
   return (
     <div
       style={{
@@ -586,6 +730,7 @@ export function BrowserShell({ children, bgStyle }: { children: React.ReactNode;
           overflow: "hidden",
         }}
       >
+        <EffectsOverlay effects={effects} />
         <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
           {children}
         </div>

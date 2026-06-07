@@ -29,6 +29,11 @@ export function EditorLeftPanel() {
         <BackgroundSection
           backgroundType={store.backgroundType}
           backgroundValue={store.backgroundValue}
+          onTabSwitch={(type) => {
+            if (type === "gradient") store.setBackground("gradient", "midnight", null);
+            else if (type === "image") store.setBackground("image", "", null);
+            else if (type === "video") store.setBackground("video", "", null);
+          }}
           onGradientSelect={(id) => store.setBackground("gradient", id, null)}
           onSolidSelect={(color) => store.setBackground("gradient", `solid:${color}`, null)}
           onImageUpload={(url, key) => store.setBackground("image", url, key)}
