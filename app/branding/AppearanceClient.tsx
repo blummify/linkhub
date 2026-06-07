@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -10,19 +10,20 @@ import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { BRANDING_THEMES } from "../constants/brandingThemes";
-import { getBrandingThemeById } from "@/lib/brandingState";
+import { getBrandingThemeById, type BrandingAppearanceState } from "@/lib/brandingState";
 import { BRANDING_FONT_SERIF } from "../constants/brandingFonts";
 import { ProfileSection } from "./components/ProfileSection";
 import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
 import { AvatarCropModal } from "./components/AvatarCropModal";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
-import { updateAvatarUrl, removeAvatar, updateBranding } from "@/app/actions/profile";
-import { getProfile, claimHandle, checkHandleAvailability } from "@/app/actions/links";
+import { updateAvatarUrl, removeAvatar, updateBranding, applyCustomTheme, deleteCustomTheme } from "@/app/actions/profile";
+import { claimHandle, checkHandleAvailability } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
 import { useBrandingStore } from "@/store/brandingStore";
 import { useProfileStore } from "@/store/profileStore";
 import { useSidebarStore } from "@/store/sidebarStore";
+import type { CustomTheme as CustomThemeRecord } from "@prisma/client";
 
 function SectionHead({
   title,
@@ -61,7 +62,17 @@ function SectionHead({
   );
 }
 
-export default function AppearanceClient() {
+export default function AppearanceClient({
+  initialState,
+  initialAvatarUrl,
+  initialActiveCustomThemeId,
+  initialCustomThemes = [],
+}: {
+  initialState?: Partial<BrandingAppearanceState> | null;
+  initialAvatarUrl?: string | null;
+  initialActiveCustomThemeId?: string | null;
+  initialCustomThemes?: CustomThemeRecord[];
+}) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
 
   const displayName = useBrandingStore((s) => s.displayName);
@@ -98,11 +109,15 @@ export default function AppearanceClient() {
 
   const theme = getBrandingThemeById(themeId);
 
-  // Avatar — read from profileStore if already fetched, otherwise fetch once
-  const avatarUrl = useProfileStore((s) => s.avatarUrl);
+  // Avatar — seeded from server, kept in profileStore for other pages
+  const avatarUrl = useProfileStore((s) => s.avatarUrl ?? initialAvatarUrl);
   const profileFetched = useProfileStore((s) => s.fetched);
 
   const router = useRouter();
+
+  const [customThemes, setCustomThemes] = useState<CustomThemeRecord[]>(initialCustomThemes);
+  const [activeCustomThemeId, setActiveCustomThemeId] = useState<string | null>(initialActiveCustomThemeId ?? null);
+  const [applyingThemeId, setApplyingThemeId] = useState<string | null>(null);
 
   const [showPalette, setShowPalette] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -119,27 +134,26 @@ export default function AppearanceClient() {
     queueMicrotask(() => setMounted(true));
   }, []);
 
+  // Track whether we've applied the server-provided initial state yet.
+  // We wait for the Zustand store to finish its localStorage hydration (hydrated===true)
+  // before overriding, so server data always wins over stale localStorage.
+  const hydrated = useBrandingStore((s) => s.hydrated);
+  const serverSyncedRef = useRef(false);
+
   useEffect(() => {
-    if (profileFetched) return;
-    getProfile().then((p) => {
-      if (!p) {
-        useProfileStore.getState().markFetched({ avatarUrl: null });
-        return;
-      }
-      const profile = p as { avatarUrl?: string | null; handle?: string | null; displayName?: string | null; bio?: string | null; themeId?: string | null; accentColor?: string | null; buttonStyle?: string | null; fontFamily?: string | null };
-      useProfileStore.getState().markFetched({ avatarUrl: profile.avatarUrl ?? null });
-      // Sync profile fields from DB — updates both state and _baseline so isDirty stays false
-      const patch: Partial<import("@/lib/brandingState").BrandingAppearanceState> = {};
-      if (profile.displayName) patch.displayName = profile.displayName;
-      if (profile.handle)      patch.handle      = profile.handle;
-      if (profile.bio)         patch.bio         = profile.bio;
-      if (profile.themeId && profile.themeId !== "default") patch.themeId = profile.themeId;
-      if (profile.accentColor) patch.accentColor = profile.accentColor;
-      if (profile.buttonStyle) patch.buttonStyle = profile.buttonStyle;
-      if (profile.fontFamily)  patch.fontFamily  = profile.fontFamily;
-      if (Object.keys(patch).length) useBrandingStore.getState().syncFromDb(patch);
-    }).catch(() => {});
-  }, [profileFetched]);
+    if (!hydrated || serverSyncedRef.current) return;
+    serverSyncedRef.current = true;
+
+    // Seed the profileStore so other pages don't re-fetch
+    if (!profileFetched) {
+      useProfileStore.getState().markFetched({ avatarUrl: initialAvatarUrl ?? null });
+    }
+
+    // Override stale localStorage with fresh server data
+    if (initialState && Object.keys(initialState).length > 0) {
+      useBrandingStore.getState().syncFromDb(initialState);
+    }
+  }, [hydrated, profileFetched, initialState, initialAvatarUrl]);
 
   const isDirtyOrPending = isDirty || !!pendingAvatarBlob;
 
@@ -207,6 +221,65 @@ export default function AppearanceClient() {
     if ("error" in result) return;
     useProfileStore.getState().setAvatarUrl(null);
   }, []);
+
+  const handleApplyCustomTheme = useCallback(async (id: string) => {
+    setApplyingThemeId(id);
+    try {
+      const result = await applyCustomTheme(id);
+      if ("error" in result) return;
+      const t = result.theme;
+      useBrandingStore.getState().syncFromDb({
+        themeId:        t.themeId,
+        accentColor:    t.accentColor,
+        buttonStyle:    t.buttonStyle,
+        fontFamily:     t.fontFamily,
+        backgroundType: t.backgroundType as "gradient" | "image" | "video",
+        backgroundValue: t.backgroundValue,
+        backgroundKey:  t.backgroundKey,
+        effects:        t.effects.split(",").filter(Boolean),
+        textColor:      t.textColor,
+        cardStyle:      t.cardStyle,
+        bodyFont:       t.bodyFont,
+        overlayColor:   t.overlayColor,
+        overlayOpacity: t.overlayOpacity,
+        profileLayout:  t.profileLayout,
+        linkDensity:    t.linkDensity,
+        customThemeName: t.name,
+      });
+      setActiveCustomThemeId(id);
+    } finally {
+      setApplyingThemeId(null);
+    }
+  }, []);
+
+  const handleDeleteCustomTheme = useCallback(async (id: string) => {
+    const result = await deleteCustomTheme(id);
+    if ("error" in result) return;
+    setCustomThemes((prev) => prev.filter((t) => t.id !== id));
+    if (activeCustomThemeId === id) setActiveCustomThemeId(null);
+  }, [activeCustomThemeId]);
+
+  const handleEditCustomTheme = useCallback((theme: CustomThemeRecord) => {
+    useBrandingStore.getState().syncFromDb({
+      themeId:         theme.themeId,
+      accentColor:     theme.accentColor,
+      buttonStyle:     theme.buttonStyle,
+      fontFamily:      theme.fontFamily,
+      backgroundType:  theme.backgroundType as "gradient" | "image" | "video",
+      backgroundValue: theme.backgroundValue,
+      backgroundKey:   theme.backgroundKey,
+      effects:         theme.effects.split(",").filter(Boolean),
+      textColor:       theme.textColor,
+      cardStyle:       theme.cardStyle,
+      bodyFont:        theme.bodyFont,
+      overlayColor:    theme.overlayColor,
+      overlayOpacity:  theme.overlayOpacity,
+      profileLayout:   theme.profileLayout,
+      linkDensity:     theme.linkDensity,
+      customThemeName: theme.name,
+    });
+    router.push("/branding/editor");
+  }, [router]);
 
   const handleSave = useCallback(async () => {
     if (pendingAvatarBlob) {
@@ -408,7 +481,16 @@ export default function AppearanceClient() {
                     selectedThemeId={theme.id}
                     displayName={displayName}
                     handle={handle}
-                    onSelect={selectTheme}
+                    onSelect={(t) => {
+                      selectTheme(t);
+                      setActiveCustomThemeId(null);
+                    }}
+                    customThemes={customThemes}
+                    activeCustomThemeId={activeCustomThemeId}
+                    onApplyCustomTheme={handleApplyCustomTheme}
+                    onDeleteCustomTheme={handleDeleteCustomTheme}
+                    onEditCustomTheme={handleEditCustomTheme}
+                    applyingThemeId={applyingThemeId}
                   />
                 </section>
 

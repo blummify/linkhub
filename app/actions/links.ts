@@ -203,15 +203,17 @@ export async function getProfile() {
 }
 
 async function fetchProfile(userId: string, cacheKey: string) {
+  const userSelect = { select: { id: true, name: true, email: true, image: true } } as const;
+
   let profile = await db.profile.findUnique({
     where: { userId },
-    include: { user: true },
+    include: { user: userSelect },
   });
 
   if (!profile) {
     profile = await db.profile.create({
       data: { userId },
-      include: { user: true },
+      include: { user: userSelect },
     });
   }
 

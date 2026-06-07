@@ -19,6 +19,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         create: { userId: id },
         update: {},
       });
+      await db.subscription.upsert({
+        where: { userId: id },
+        create: { userId: id },
+        update: {},
+      });
       await db.user.update({
         where: { id },
         data: { emailVerified: new Date() },
