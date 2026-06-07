@@ -127,8 +127,8 @@ export function BackgroundSection({
   const [videoSearching, setVideoSearching] = useState(false);
 
   useEffect(() => {
-    if (!imageQuery.trim()) { setImageResults(null); return; }
     const t = setTimeout(async () => {
+      if (!imageQuery.trim()) { setImageResults(null); return; }
       setImageSearching(true);
       try {
         const res = await fetch(`/api/unsplash-search?q=${encodeURIComponent(imageQuery)}`);
@@ -136,13 +136,13 @@ export function BackgroundSection({
         setImageResults(data.photos ?? []);
       } catch { setImageResults([]); }
       finally { setImageSearching(false); }
-    }, 500);
+    }, imageQuery.trim() ? 500 : 0);
     return () => clearTimeout(t);
   }, [imageQuery]);
 
   useEffect(() => {
-    if (!videoQuery.trim()) { setVideoResults(null); return; }
     const t = setTimeout(async () => {
+      if (!videoQuery.trim()) { setVideoResults(null); return; }
       setVideoSearching(true);
       try {
         const res = await fetch(`/api/pexels-video-search?q=${encodeURIComponent(videoQuery)}`);
@@ -150,7 +150,7 @@ export function BackgroundSection({
         setVideoResults(data.videos ?? []);
       } catch { setVideoResults([]); }
       finally { setVideoSearching(false); }
-    }, 500);
+    }, videoQuery.trim() ? 500 : 0);
     return () => clearTimeout(t);
   }, [videoQuery]);
 
