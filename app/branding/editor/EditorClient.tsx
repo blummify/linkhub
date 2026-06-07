@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useBrandingStore } from "@/store/brandingStore";
 import { saveEditorTheme } from "@/app/actions/profile";
-import { getDefaultBrandingState } from "@/lib/brandingState";
+import { getDefaultBrandingState, type BrandingAppearanceState } from "@/lib/brandingState";
 import { EntryScreen } from "./components/EntryScreen";
 import { EditorShell } from "./components/EditorShell";
 import { EditorUpgradeModal } from "./components/EditorUpgradeModal";
@@ -14,9 +14,23 @@ import { SaveThemeModal } from "./components/SaveThemeModal";
 type Step = "entry" | "editing";
 type StartMode = "template" | "scratch";
 
-export function EditorClient({ isPaidUser }: { isPaidUser: boolean }) {
+export function EditorClient({
+  isPaidUser,
+  initialState,
+}: {
+  isPaidUser: boolean;
+  initialState?: Partial<BrandingAppearanceState> | null;
+}) {
   const router = useRouter();
   const store = useBrandingStore();
+
+  // Hydrate store from DB on first mount so the editor always reflects saved state
+  useEffect(() => {
+    if (initialState && Object.keys(initialState).length > 0) {
+      useBrandingStore.getState().syncFromDb(initialState);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [step, setStep] = useState<Step>("entry");
   const [startMode, setStartMode] = useState<StartMode>("template");

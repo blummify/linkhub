@@ -126,10 +126,18 @@ export default function AppearanceClient() {
         useProfileStore.getState().markFetched({ avatarUrl: null });
         return;
       }
-      const profile = p as { avatarUrl?: string | null; handle?: string | null; displayName?: string | null; bio?: string | null; themeId?: string | null; accentColor?: string | null; buttonStyle?: string | null; fontFamily?: string | null };
+      const profile = p as {
+        avatarUrl?: string | null; handle?: string | null; displayName?: string | null;
+        bio?: string | null; themeId?: string | null; accentColor?: string | null;
+        buttonStyle?: string | null; fontFamily?: string | null;
+        backgroundType?: string | null; backgroundValue?: string | null; backgroundKey?: string | null;
+        effects?: string | null; textColor?: string | null; cardStyle?: string | null;
+        bodyFont?: string | null; overlayColor?: string | null; overlayOpacity?: number | null;
+        layout?: string | null; linkDensity?: string | null; customThemeName?: string | null;
+      };
       useProfileStore.getState().markFetched({ avatarUrl: profile.avatarUrl ?? null });
-      // Sync profile fields from DB — updates both state and _baseline so isDirty stays false
       const patch: Partial<import("@/lib/brandingState").BrandingAppearanceState> = {};
+      // Core fields
       if (profile.displayName) patch.displayName = profile.displayName;
       if (profile.handle)      patch.handle      = profile.handle;
       if (profile.bio)         patch.bio         = profile.bio;
@@ -137,6 +145,19 @@ export default function AppearanceClient() {
       if (profile.accentColor) patch.accentColor = profile.accentColor;
       if (profile.buttonStyle) patch.buttonStyle = profile.buttonStyle;
       if (profile.fontFamily)  patch.fontFamily  = profile.fontFamily;
+      // Editor v2 fields — DB column "layout" maps to store field "profileLayout"
+      if (profile.backgroundType) patch.backgroundType = profile.backgroundType as "gradient" | "image" | "video";
+      if (profile.backgroundValue) patch.backgroundValue = profile.backgroundValue;
+      patch.backgroundKey = profile.backgroundKey ?? null;
+      patch.effects = profile.effects ? profile.effects.split(",").filter(Boolean) : [];
+      patch.textColor = profile.textColor ?? null;
+      if (profile.cardStyle)   patch.cardStyle   = profile.cardStyle;
+      if (profile.bodyFont)    patch.bodyFont    = profile.bodyFont;
+      if (profile.overlayColor) patch.overlayColor = profile.overlayColor;
+      if (typeof profile.overlayOpacity === "number") patch.overlayOpacity = profile.overlayOpacity;
+      if (profile.layout)      patch.profileLayout  = profile.layout;
+      if (profile.linkDensity) patch.linkDensity = profile.linkDensity;
+      if (profile.customThemeName) patch.customThemeName = profile.customThemeName;
       if (Object.keys(patch).length) useBrandingStore.getState().syncFromDb(patch);
     }).catch(() => {});
   }, [profileFetched]);
