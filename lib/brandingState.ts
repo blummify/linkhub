@@ -51,6 +51,8 @@ export interface PreviewAppearance {
   bodyFont?: string;
   overlayColor?: string;
   overlayOpacity?: number;
+  profileLayout?: string;
+  linkDensity?: string;
 }
 
 export function getDefaultBrandingState(): BrandingAppearanceState {
@@ -126,6 +128,8 @@ export function brandingStateToPreviewAppearance(
     bodyFont: state.bodyFont,
     overlayColor: state.overlayColor,
     overlayOpacity: state.overlayOpacity,
+    profileLayout: state.profileLayout,
+    linkDensity: state.linkDensity,
   };
 }
 

@@ -14,7 +14,7 @@ import { SaveThemeModal } from "./components/SaveThemeModal";
 type Step = "entry" | "editing";
 type StartMode = "template" | "scratch";
 
-export function EditorClient() {
+export function EditorClient({ isPaidUser }: { isPaidUser: boolean }) {
   const router = useRouter();
   const store = useBrandingStore();
 
@@ -60,8 +60,12 @@ export function EditorClient() {
   }, [store.isDirty, router]);
 
   const handleSaveClick = useCallback(() => {
-    setShowSaveModal(true);
-  }, []);
+    if (!isPaidUser) {
+      setShowUpgradeModal(true);
+    } else {
+      setShowSaveModal(true);
+    }
+  }, [isPaidUser]);
 
   const handleSaveConfirm = useCallback(async (themeName: string) => {
     store.setCustomThemeName(themeName);

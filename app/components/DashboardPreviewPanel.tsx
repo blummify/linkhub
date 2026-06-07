@@ -177,6 +177,8 @@ export interface AppearanceTheme {
   overlayColor?: string;
   overlayOpacity?: number;
   effects?: string[];
+  profileLayout?: string;
+  linkDensity?: string;
 }
 
 export function PhoneScreenContent({
@@ -244,6 +246,167 @@ export function PhoneScreenContent({
     : {};
 
   const published = links.filter((l) => l.status === 1);
+  const layout = appearance?.profileLayout ?? "classic";
+  const density = appearance?.linkDensity ?? "default";
+
+  const linkGap = density === "comfortable" ? 12 : density === "compact" ? 5 : 8;
+  const linkPadding = density === "comfortable" ? "14px 16px" : density === "compact" ? "8px 11px" : "11px 14px";
+
+  const headlineFont =
+    appearance?.headlineFont ??
+    'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)';
+
+  const linksList = (
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: linkGap,
+        overflowY: "auto",
+        flex: 1,
+        minHeight: 0,
+        scrollbarWidth: "none",
+      }}
+    >
+      {published.length === 0 ? (
+        <div style={{ textAlign: "center", color: subtitleColor, fontSize: 11, padding: "20px 0" }}>
+          No published links yet
+        </div>
+      ) : (
+        published.map((link, i) => (
+          <div
+            key={link.id ?? i}
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              background: linkCardBg,
+              border: linkCardBorder,
+              borderRadius: linkBorderRadius,
+              padding: linkPadding,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              fontSize: 12.5,
+              fontWeight: 500,
+              color: linkTextColor,
+              fontFamily: bodyFontStack,
+              boxShadow: linkCardShadow,
+              animation: hasGradBorder
+                ? "lhGradBorder 2s linear infinite"
+                : `scIn 0.22s cubic-bezier(0.16,1,0.3,1) ${i * 35}ms both`,
+              ...glassStyle,
+              ...neonStyle,
+            }}
+          >
+            {hasShimmer && (
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  top: 0, left: 0,
+                  width: "40%", height: "100%",
+                  background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
+                  animation: `lhShimmer ${1.8 + i * 0.15}s cubic-bezier(0.4,0,0.6,1) ${i * 0.2}s infinite`,
+                  pointerEvents: "none",
+                  zIndex: 1,
+                }}
+              />
+            )}
+            <PhoneLinkIcon iconKey={link.icon} thumbnailUrl={link.thumbnailUrl} />
+            <span
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: 12.5,
+                position: "relative",
+                zIndex: 2,
+                ...glowStyle,
+              }}
+            >
+              {link.title}
+            </span>
+            <span style={{ color: linkChevronColor, flexShrink: 0, position: "relative", zIndex: 2 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
+              </svg>
+            </span>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  // ── Minimal layout: side-by-side avatar + text header, no social icons ──
+  if (layout === "minimal") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 14 }}>
+          <div
+            style={{
+              width: 44, height: 44, flexShrink: 0,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "white",
+              fontFamily: headlineFont,
+              fontSize: 18, fontStyle: "italic",
+              ...(hasPulse ? { ["--pc" as string]: `${neonAccent}66`, animation: "lhPulse 1.8s ease-out infinite" } : {}),
+            }}
+          >
+            {initial}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                fontFamily: headlineFont,
+                fontSize: 14, fontWeight: 600,
+                color: titleColor,
+                letterSpacing: "-0.01em",
+                lineHeight: 1.2,
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}
+            >
+              {displayName || "Your Name"}
+            </div>
+            {bio && (
+              <div
+                style={{
+                  fontSize: 10, color: subtitleColor,
+                  marginTop: 2, lineHeight: 1.4,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  fontFamily: bodyFontStack,
+                }}
+              >
+                {bio}
+              </div>
+            )}
+          </div>
+        </div>
+        {linksList}
+        <div
+          style={{
+            marginTop: "auto",
+            paddingTop: 8,
+            fontFamily: "var(--font-instrument-serif), Georgia, serif",
+            fontStyle: "italic",
+            fontSize: 10.5,
+            color: "#6b75a3",
+            flexShrink: 0,
+          }}
+        >
+          made with{" "}
+          <span style={{ color: "#3b46e0", fontWeight: 600 }}>linkhub</span>
+          {" "}✦
+        </div>
+      </div>
+    );
+  }
+
+  // ── Centered layout: same as classic but larger avatar ──
+  const centeredSize = layout === "centered" ? 88 : avatarSize;
 
   return (
     <div
@@ -258,15 +421,13 @@ export function PhoneScreenContent({
       <div style={{ position: "relative", marginBottom: 12 }}>
         <div
           style={{
-            width: avatarSize, height: avatarSize,
+            width: centeredSize, height: centeredSize,
             borderRadius: "50%",
             background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "white",
-            fontFamily:
-              appearance?.headlineFont ??
-              'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)',
-            fontSize: Math.round(avatarSize * 0.4), fontStyle: "italic",
+            fontFamily: headlineFont,
+            fontSize: Math.round(centeredSize * 0.4), fontStyle: "italic",
             boxShadow: "0 10px 24px -8px rgba(59,70,224,0.45)",
             border: "3px solid white",
             ...(hasPulse ? {
@@ -290,11 +451,9 @@ export function PhoneScreenContent({
 
       <div
         style={{
-          fontFamily:
-            appearance?.headlineFont ??
-            'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)',
+          fontFamily: headlineFont,
           fontStyle: "italic",
-          fontSize: 19,
+          fontSize: layout === "centered" ? 21 : 19,
           color: titleColor,
           letterSpacing: "-0.01em",
           textAlign: "center",
@@ -338,93 +497,7 @@ export function PhoneScreenContent({
         ))}
       </div>
 
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-          overflowY: "auto",
-          flex: 1,
-          minHeight: 0,
-          scrollbarWidth: "none",
-        }}
-      >
-        {published.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              color: subtitleColor,
-              fontSize: 11,
-              padding: "20px 0",
-            }}
-          >
-            No published links yet
-          </div>
-        ) : (
-          published.map((link, i) => (
-            <div
-              key={link.id ?? i}
-              style={{
-                position: "relative",
-                overflow: "hidden",
-                background: linkCardBg,
-                border: linkCardBorder,
-                borderRadius: linkBorderRadius,
-                padding: "11px 14px",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontSize: 12.5,
-                fontWeight: 500,
-                color: linkTextColor,
-                fontFamily: bodyFontStack,
-                boxShadow: linkCardShadow,
-                animation: hasGradBorder
-                  ? "lhGradBorder 2s linear infinite"
-                  : `scIn 0.22s cubic-bezier(0.16,1,0.3,1) ${i * 35}ms both`,
-                ...glassStyle,
-                ...neonStyle,
-              }}
-            >
-              {hasShimmer && (
-                <div
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    top: 0, left: 0,
-                    width: "40%", height: "100%",
-                    background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
-                    animation: `lhShimmer ${1.8 + i * 0.15}s cubic-bezier(0.4,0,0.6,1) ${i * 0.2}s infinite`,
-                    pointerEvents: "none",
-                    zIndex: 1,
-                  }}
-                />
-              )}
-              <PhoneLinkIcon iconKey={link.icon} thumbnailUrl={link.thumbnailUrl} />
-              <span
-                style={{
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  fontSize: 12.5,
-                  position: "relative",
-                  zIndex: 2,
-                  ...glowStyle,
-                }}
-              >
-                {link.title}
-              </span>
-              <span style={{ color: linkChevronColor, flexShrink: 0, position: "relative", zIndex: 2 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
-                </svg>
-              </span>
-            </div>
-          ))
-        )}
-      </div>
+      {linksList}
 
       <div
         style={{

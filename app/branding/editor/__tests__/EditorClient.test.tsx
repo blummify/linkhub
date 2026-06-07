@@ -133,9 +133,9 @@ vi.mock("../components/DiscardModal", () => ({
   ),
 }));
 
-// Helper: open the editor
-function openEditor() {
-  render(<EditorClient />);
+// Helper: open the editor. Default to paid so save-modal tests work as before.
+function openEditor(isPaidUser = true) {
+  render(<EditorClient isPaidUser={isPaidUser} />);
   fireEvent.click(screen.getByText("Open the Editor"));
 }
 
@@ -148,7 +148,7 @@ describe("EditorClient", () => {
   // ── Entry screen ────────────────────────────────────────────────────────────
 
   it("renders entry screen by default", () => {
-    render(<EditorClient />);
+    render(<EditorClient isPaidUser={true} />);
     expect(screen.getByText("Entry screen")).toBeInTheDocument();
   });
 
@@ -158,7 +158,7 @@ describe("EditorClient", () => {
   });
 
   it("changes start mode selection", () => {
-    render(<EditorClient />);
+    render(<EditorClient isPaidUser={true} />);
     expect(screen.getByTestId("selected").textContent).toBe("template");
     fireEvent.click(screen.getByText("Scratch"));
     expect(screen.getByTestId("selected").textContent).toBe("scratch");
@@ -192,28 +192,30 @@ describe("EditorClient", () => {
     expect(mockStore.markSaved).toHaveBeenCalledOnce();
   });
 
-  it("shows upgrade modal when save returns requiresUpgrade", async () => {
+  it("shows upgrade modal immediately when a free user clicks Save", () => {
+    openEditor(false);
+    fireEvent.click(screen.getByText("Save"));
+    expect(screen.getByLabelText("upgrade")).toBeInTheDocument();
+    expect(screen.queryByText("Save theme modal")).not.toBeInTheDocument();
+  });
+
+  it("closes upgrade modal when Keep editing is clicked", () => {
+    openEditor(false);
+    fireEvent.click(screen.getByText("Save"));
+    const dialog = screen.getByLabelText("upgrade");
+    fireEvent.click(screen.getByText("Keep editing"));
+    expect(dialog).not.toBeInTheDocument();
+  });
+
+  it("shows upgrade modal when server returns requiresUpgrade (paid flag stale)", async () => {
     const { saveEditorTheme } = await import("@/app/actions/profile");
     (saveEditorTheme as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ requiresUpgrade: true });
 
-    openEditor();
+    openEditor(true);
     fireEvent.click(screen.getByText("Save"));
     fireEvent.click(screen.getByText("Confirm save"));
 
     expect(await screen.findByLabelText("upgrade")).toBeInTheDocument();
-  });
-
-  it("closes upgrade modal when Keep editing is clicked", async () => {
-    const { saveEditorTheme } = await import("@/app/actions/profile");
-    (saveEditorTheme as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ requiresUpgrade: true });
-
-    openEditor();
-    fireEvent.click(screen.getByText("Save"));
-    fireEvent.click(screen.getByText("Confirm save"));
-
-    const dialog = await screen.findByLabelText("upgrade");
-    fireEvent.click(screen.getByText("Keep editing"));
-    expect(dialog).not.toBeInTheDocument();
   });
 
   it("shows error banner when save returns an error", async () => {
