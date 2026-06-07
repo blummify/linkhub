@@ -5,8 +5,8 @@ const PEXELS_VIDEO_IDS: Record<string, number> = {
   "particles":   3129957,
   "rain":        3571264,
   "aurora":      4818030,
-  "city-lights": 2098996,
-  "smoke":       4490051,
+  "city-lights": 11533613,
+  "smoke":       4320605,
 };
 
 const videoUrlCache = new Map<string, string>();
@@ -15,7 +15,7 @@ async function resolveVideoUrl(slug: string): Promise<string | null> {
   const cached = videoUrlCache.get(slug);
   if (cached) return cached;
 
-  const pexelsId = PEXELS_VIDEO_IDS[slug];
+  const pexelsId = PEXELS_VIDEO_IDS[slug] ?? (/^\d+$/.test(slug) ? parseInt(slug, 10) : null);
   if (!pexelsId) return null;
 
   const res = await fetch(`https://api.pexels.com/videos/videos/${pexelsId}`, {
@@ -28,7 +28,10 @@ async function resolveVideoUrl(slug: string): Promise<string | null> {
   };
 
   const files = data.video_files ?? [];
-  const file = files.find((f) => f.quality === "hd") ?? files[0];
+  const file =
+    files.find((f) => f.quality === "hd") ??
+    files.find((f) => f.quality === "sd") ??
+    files[0];
   if (!file) return null;
 
   videoUrlCache.set(slug, file.link);
@@ -37,7 +40,11 @@ async function resolveVideoUrl(slug: string): Promise<string | null> {
 
 export async function GET(request: NextRequest) {
   const slug = request.nextUrl.searchParams.get("id");
-  if (!slug || !(slug in PEXELS_VIDEO_IDS)) {
+  if (!slug) return new NextResponse("Not found", { status: 404 });
+
+  // Accept pre-defined slugs OR raw numeric Pexels video IDs (from search)
+  const isNumeric = /^\d+$/.test(slug);
+  if (!isNumeric && !(slug in PEXELS_VIDEO_IDS)) {
     return new NextResponse("Not found", { status: 404 });
   }
 

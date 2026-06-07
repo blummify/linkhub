@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { BACKGROUND_GRADIENTS } from "@/app/constants/editorBackgroundGradients";
 import { TEMPLATE_IMAGES } from "@/app/constants/editorTemplateImages";
 import { TEMPLATE_VIDEOS } from "@/app/constants/editorTemplateVideos";
 import { TemplateMediaGrid } from "./TemplateMediaGrid";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
+
+type SearchItem = { id: string; name: string; thumbnailUrl: string; url?: string; videoUrl?: string };
 
 type BgType = "gradient" | "image" | "video";
 type ImageMode = "upload" | "templates";
@@ -46,6 +48,59 @@ const subModePill = (active: boolean): React.CSSProperties => ({
   transition: "all 0.15s",
 });
 
+function MediaSearchInput({
+  value,
+  onChange,
+  loading,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  loading: boolean;
+  placeholder: string;
+}) {
+  return (
+    <div style={{ position: "relative", marginBottom: 8 }}>
+      <svg
+        aria-hidden
+        width="13" height="13" viewBox="0 0 24 24" fill="none"
+        stroke="#6b75a3" strokeWidth="2"
+        style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
+      >
+        <circle cx="11" cy="11" r="8" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
+      </svg>
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={{
+          width: "100%", boxSizing: "border-box",
+          paddingLeft: 28, paddingRight: loading ? 28 : 8,
+          height: 32, borderRadius: 8,
+          border: "1px solid #eef0f7", fontSize: 12.5,
+          color: "#0b1020", background: "#f7f8fc",
+          outline: "none", fontFamily: "inherit",
+        }}
+        onFocus={(e) => { e.currentTarget.style.borderColor = "#6873ff"; e.currentTarget.style.background = "white"; }}
+        onBlur={(e) => { e.currentTarget.style.borderColor = "#eef0f7"; e.currentTarget.style.background = "#f7f8fc"; }}
+      />
+      {loading && (
+        <svg
+          aria-label="Searching…"
+          width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="#6b75a3" strokeWidth="2"
+          style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", animation: "spin 0.8s linear infinite" }}
+        >
+          <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+          <style>{`@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }`}</style>
+        </svg>
+      )}
+    </div>
+  );
+}
+
 export function BackgroundSection({
   backgroundType,
   backgroundValue,
@@ -62,6 +117,42 @@ export function BackgroundSection({
   const [imageMode, setImageMode] = useState<ImageMode>("upload");
   const [videoMode, setVideoMode] = useState<VideoMode>("upload");
   const [solidColor, setSolidColor] = useState("#1e1e2e");
+
+  const [imageQuery, setImageQuery] = useState("");
+  const [imageResults, setImageResults] = useState<SearchItem[] | null>(null);
+  const [imageSearching, setImageSearching] = useState(false);
+
+  const [videoQuery, setVideoQuery] = useState("");
+  const [videoResults, setVideoResults] = useState<SearchItem[] | null>(null);
+  const [videoSearching, setVideoSearching] = useState(false);
+
+  useEffect(() => {
+    if (!imageQuery.trim()) { setImageResults(null); return; }
+    const t = setTimeout(async () => {
+      setImageSearching(true);
+      try {
+        const res = await fetch(`/api/unsplash-search?q=${encodeURIComponent(imageQuery)}`);
+        const data = await res.json() as { photos?: SearchItem[]; error?: string };
+        setImageResults(data.photos ?? []);
+      } catch { setImageResults([]); }
+      finally { setImageSearching(false); }
+    }, 500);
+    return () => clearTimeout(t);
+  }, [imageQuery]);
+
+  useEffect(() => {
+    if (!videoQuery.trim()) { setVideoResults(null); return; }
+    const t = setTimeout(async () => {
+      setVideoSearching(true);
+      try {
+        const res = await fetch(`/api/pexels-video-search?q=${encodeURIComponent(videoQuery)}`);
+        const data = await res.json() as { videos?: SearchItem[] };
+        setVideoResults(data.videos ?? []);
+      } catch { setVideoResults([]); }
+      finally { setVideoSearching(false); }
+    }, 500);
+    return () => clearTimeout(t);
+  }, [videoQuery]);
 
   const imgUpload = useFileUpload({
     folder: "backgrounds",
@@ -337,19 +428,38 @@ export function BackgroundSection({
               <span style={{ fontSize: 11, color: "#a8aecb" }}>JPG, PNG, WebP, GIF — max 10MB</span>
             </button>
           ) : (
-            <TemplateMediaGrid
-              type="image"
-              items={TEMPLATE_IMAGES.map((img) => ({
-                id: img.id,
-                name: img.name,
-                thumbnailUrl: img.thumb,
-              }))}
-              activeId={TEMPLATE_IMAGES.find((img) => img.url === backgroundValue)?.id}
-              onSelect={(item) => {
-                const found = TEMPLATE_IMAGES.find((img) => img.id === item.id);
-                if (found) onTemplateImage(found.url);
-              }}
-            />
+            <>
+              <MediaSearchInput
+                value={imageQuery}
+                onChange={setImageQuery}
+                loading={imageSearching}
+                placeholder="Search Unsplash…"
+              />
+              {imageResults?.length === 0 && !imageSearching ? (
+                <div style={{ textAlign: "center", fontSize: 12, color: "#a8aecb", padding: "16px 0" }}>
+                  No results for &ldquo;{imageQuery}&rdquo;
+                </div>
+              ) : (
+                <TemplateMediaGrid
+                  type="image"
+                  items={(imageResults ?? TEMPLATE_IMAGES.map((img) => ({
+                    id: img.id,
+                    name: img.name,
+                    thumbnailUrl: img.thumb,
+                    url: img.url,
+                  })))}
+                  activeId={
+                    imageResults
+                      ? imageResults.find((i) => i.url === backgroundValue)?.id
+                      : TEMPLATE_IMAGES.find((img) => img.url === backgroundValue)?.id
+                  }
+                  onSelect={(item) => {
+                    const url = item.url ?? TEMPLATE_IMAGES.find((img) => img.id === item.id)?.url;
+                    if (url) onTemplateImage(url);
+                  }}
+                />
+              )}
+            </>
           )}
         </>
       )}
@@ -425,20 +535,38 @@ export function BackgroundSection({
               <span style={{ fontSize: 11, color: "#a8aecb" }}>MP4, WebM, OGG — max 50MB</span>
             </button>
           ) : (
-            <TemplateMediaGrid
-              type="video"
-              items={TEMPLATE_VIDEOS.map((v) => ({
-                id: v.id,
-                name: v.name,
-                thumbnailUrl: v.thumbnailUrl,
-                videoUrl: v.videoUrl,
-              }))}
-              activeId={TEMPLATE_VIDEOS.find((v) => v.videoUrl === backgroundValue)?.id}
-              onSelect={(item) => {
-                const found = TEMPLATE_VIDEOS.find((v) => v.id === item.id);
-                if (found) onTemplateVideo(found.videoUrl);
-              }}
-            />
+            <>
+              <MediaSearchInput
+                value={videoQuery}
+                onChange={setVideoQuery}
+                loading={videoSearching}
+                placeholder="Search Pexels…"
+              />
+              {videoResults?.length === 0 && !videoSearching ? (
+                <div style={{ textAlign: "center", fontSize: 12, color: "#a8aecb", padding: "16px 0" }}>
+                  No results for &ldquo;{videoQuery}&rdquo;
+                </div>
+              ) : (
+                <TemplateMediaGrid
+                  type="video"
+                  items={(videoResults ?? TEMPLATE_VIDEOS.map((v) => ({
+                    id: v.id,
+                    name: v.name,
+                    thumbnailUrl: v.thumbnailUrl,
+                    videoUrl: v.videoUrl,
+                  })))}
+                  activeId={
+                    videoResults
+                      ? videoResults.find((v) => v.videoUrl === backgroundValue)?.id
+                      : TEMPLATE_VIDEOS.find((v) => v.videoUrl === backgroundValue)?.id
+                  }
+                  onSelect={(item) => {
+                    const url = item.videoUrl ?? TEMPLATE_VIDEOS.find((v) => v.id === item.id)?.videoUrl;
+                    if (url) onTemplateVideo(url);
+                  }}
+                />
+              )}
+            </>
           )}
         </>
       )}

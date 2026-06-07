@@ -802,11 +802,13 @@ export function PhoneShell({
   bgStyle,
   showGlow = false,
   effects,
+  videoUrl,
 }: {
   children: React.ReactNode;
   bgStyle?: string;
   showGlow?: boolean;
   effects?: string[];
+  videoUrl?: string;
 }) {
   return (
     <div
@@ -838,12 +840,22 @@ export function PhoneShell({
           borderRadius: 34,
           overflow: "hidden",
           position: "relative",
-          background: bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
+          background: videoUrl ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
           padding: "44px 22px 22px",
           display: "flex",
           flexDirection: "column",
         }}
       >
+        {videoUrl && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+          />
+        )}
         {showGlow && (
           <div
             aria-hidden
@@ -866,7 +878,7 @@ export function PhoneShell({
   );
 }
 
-export function BrowserShell({ children, bgStyle, effects }: { children: React.ReactNode; bgStyle?: string; effects?: string[] }) {
+export function BrowserShell({ children, bgStyle, effects, videoUrl }: { children: React.ReactNode; bgStyle?: string; effects?: string[]; videoUrl?: string }) {
   return (
     <div
       style={{
@@ -915,12 +927,22 @@ export function BrowserShell({ children, bgStyle, effects }: { children: React.R
       <div
         style={{
           position: "absolute", top: 32, left: 0, right: 0, bottom: 0,
-          background: bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
+          background: videoUrl ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
           padding: "24px 28px 24px",
           display: "flex", flexDirection: "column",
           overflow: "hidden",
         }}
       >
+        {videoUrl && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+          />
+        )}
         <EffectsOverlay effects={effects} />
         <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
           {children}

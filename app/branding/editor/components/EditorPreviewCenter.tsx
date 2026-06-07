@@ -86,6 +86,10 @@ export function EditorPreviewCenter() {
     dark = true;
   }
 
+  const videoUrl = store.backgroundType === "video" && store.backgroundValue
+    ? store.backgroundValue
+    : undefined;
+
   const appearance: AppearanceTheme = {
     ...base,
     bgStyle,
@@ -237,7 +241,7 @@ export function EditorPreviewCenter() {
         }}
       >
         {device === "desktop" ? (
-          <BrowserShell bgStyle={bgStyle} effects={store.effects}>
+          <BrowserShell bgStyle={bgStyle} effects={store.effects} videoUrl={videoUrl}>
             {overlayStyle && <div style={overlayStyle} />}
             <PhoneScreenContent
               displayName={store.displayName}
@@ -248,7 +252,7 @@ export function EditorPreviewCenter() {
             />
           </BrowserShell>
         ) : (
-          <PhoneShell bgStyle={bgStyle} showGlow={dark} effects={store.effects}>
+          <PhoneShell bgStyle={bgStyle} showGlow={dark} effects={store.effects} videoUrl={videoUrl}>
             {overlayStyle && <div style={overlayStyle} />}
             <PhoneScreenContent
               displayName={store.displayName}

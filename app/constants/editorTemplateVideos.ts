@@ -33,13 +33,13 @@ export const TEMPLATE_VIDEOS: TemplateVideo[] = [
   {
     id: "city-lights",
     name: "City Lights",
-    thumbnailUrl: "https://images.pexels.com/videos/2098996/free-video-2098996.jpg?auto=compress&cs=tinysrgb&w=200",
+    thumbnailUrl: "https://images.pexels.com/videos/11533613/pexels-photo-11533613.jpeg?auto=compress&cs=tinysrgb&w=200",
     videoUrl: "/api/video-proxy?id=city-lights",
   },
   {
     id: "smoke",
     name: "Smoke",
-    thumbnailUrl: "https://images.pexels.com/videos/4490051/free-video-4490051.jpg?auto=compress&cs=tinysrgb&w=200",
+    thumbnailUrl: "https://images.pexels.com/videos/4320605/pexels-photo-4320605.jpeg?auto=compress&cs=tinysrgb&w=200",
     videoUrl: "/api/video-proxy?id=smoke",
   },
 ];

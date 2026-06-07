@@ -7,6 +7,7 @@ interface TemplateItem {
   name: string;
   thumbnailUrl: string;
   videoUrl?: string;
+  url?: string;
 }
 
 interface TemplateMediaGridProps {
