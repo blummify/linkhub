@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { EditorClient } from "../EditorClient";
 
@@ -6,27 +6,38 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+const mockStore = {
+  themeId: "monochrome",
+  accentColor: "#3b46e0",
+  buttonStyle: "rounded",
+  fontFamily: "inter",
+  backgroundType: "gradient",
+  backgroundValue: "midnight",
+  backgroundKey: null,
+  effects: [],
+  displayName: "Test User",
+  handle: "testuser",
+  // new fields added in editor v2
+  textColor: null,
+  cardStyle: "filled",
+  bodyFont: "Geist",
+  overlayColor: "#000000",
+  overlayOpacity: 0,
+  profileLayout: "classic",
+  linkDensity: "default",
+  // actions
+  syncFromDb: vi.fn(),
+  markSaved: vi.fn(),
+  setBackground: vi.fn(),
+  toggleEffect: vi.fn(),
+  setAccentColor: vi.fn(),
+  setButtonStyle: vi.fn(),
+  setFontFamily: vi.fn(),
+  selectTheme: vi.fn(),
+};
+
 vi.mock("@/store/brandingStore", () => ({
-  useBrandingStore: () => ({
-    themeId: "monochrome",
-    accentColor: "#3b46e0",
-    buttonStyle: "rounded",
-    fontFamily: "inter",
-    backgroundType: "gradient",
-    backgroundValue: "midnight",
-    backgroundKey: null,
-    effects: [],
-    displayName: "Test User",
-    handle: "testuser",
-    syncFromDb: vi.fn(),
-    markSaved: vi.fn(),
-    setBackground: vi.fn(),
-    toggleEffect: vi.fn(),
-    setAccentColor: vi.fn(),
-    setButtonStyle: vi.fn(),
-    setFontFamily: vi.fn(),
-    selectTheme: vi.fn(),
-  }),
+  useBrandingStore: () => mockStore,
 }));
 
 vi.mock("@/app/actions/profile", () => ({
@@ -72,6 +83,10 @@ vi.mock("../components/EditorUpgradeModal", () => ({
 }));
 
 describe("EditorClient", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders entry screen by default", () => {
     render(<EditorClient />);
     expect(screen.getByText("Entry screen")).toBeInTheDocument();
@@ -112,5 +127,58 @@ describe("EditorClient", () => {
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(screen.getByText("Keep editing"));
     expect(dialog).not.toBeInTheDocument();
+  });
+
+  it("shows error banner when save returns an error", async () => {
+    const { saveEditorTheme } = await import("@/app/actions/profile");
+    (saveEditorTheme as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      error: "Failed to save theme. Please try again.",
+    });
+
+    render(<EditorClient />);
+    fireEvent.click(screen.getByText("Open the Editor"));
+    fireEvent.click(screen.getByText("Save changes"));
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(await screen.findByText(/Failed to save theme/)).toBeInTheDocument();
+  });
+
+  it("dismisses error banner when the dismiss button is clicked", async () => {
+    const { saveEditorTheme } = await import("@/app/actions/profile");
+    (saveEditorTheme as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      error: "Failed to save theme. Please try again.",
+    });
+
+    render(<EditorClient />);
+    fireEvent.click(screen.getByText("Open the Editor"));
+    fireEvent.click(screen.getByText("Save changes"));
+
+    const alert = await screen.findByRole("alert");
+    fireEvent.click(screen.getByLabelText("Dismiss error"));
+    expect(alert).not.toBeInTheDocument();
+  });
+
+  it("shows error banner on unexpected thrown error during save", async () => {
+    const { saveEditorTheme } = await import("@/app/actions/profile");
+    (saveEditorTheme as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("Network error"));
+
+    render(<EditorClient />);
+    fireEvent.click(screen.getByText("Open the Editor"));
+    fireEvent.click(screen.getByText("Save changes"));
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(await screen.findByText(/Something went wrong/)).toBeInTheDocument();
+  });
+
+  it("calls markSaved and navigates on successful save", async () => {
+    const { saveEditorTheme } = await import("@/app/actions/profile");
+    (saveEditorTheme as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ success: true });
+
+    render(<EditorClient />);
+    fireEvent.click(screen.getByText("Open the Editor"));
+    fireEvent.click(screen.getByText("Save changes"));
+
+    await screen.findByText("Editor shell");
+    expect(mockStore.markSaved).toHaveBeenCalledOnce();
   });
 });

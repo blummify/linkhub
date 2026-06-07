@@ -162,7 +162,6 @@ export const useBrandingStore = create<BrandingStore>()(
       },
       onRehydrateStorage: () => (state) => {
         if (state) {
-          if (state.handle === "joelosei") state.handle = "";
           if (!state.backgroundType) state.backgroundType = "gradient";
           if (!state.backgroundValue) state.backgroundValue = "midnight";
           if (state.backgroundKey === undefined) state.backgroundKey = null;

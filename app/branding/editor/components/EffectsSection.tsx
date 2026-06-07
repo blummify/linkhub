@@ -24,8 +24,13 @@ export function EffectsSection({ effects, onToggle }: EffectsSectionProps) {
         {EDITOR_EFFECTS.map((effect) => {
           const enabled = effects.includes(effect.id);
           return (
-            <div
+            <button
               key={effect.id}
+              type="button"
+              role="switch"
+              aria-checked={enabled}
+              aria-label={`Toggle ${effect.name}`}
+              onClick={() => onToggle(effect.id)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -36,31 +41,29 @@ export function EffectsSection({ effects, onToggle }: EffectsSectionProps) {
                 border: `1px solid ${enabled ? "#c7d0ff" : "#eef0f7"}`,
                 cursor: "pointer",
                 transition: "all 0.15s",
+                width: "100%",
+                textAlign: "left",
+                fontFamily: "inherit",
               }}
-              onClick={() => onToggle(effect.id)}
             >
-              <span style={{ fontSize: 16, lineHeight: 1, width: 20, textAlign: "center" }}>
+              <span aria-hidden style={{ fontSize: 16, lineHeight: 1, width: 20, textAlign: "center" }}>
                 {effect.icon}
               </span>
               <span style={{ flex: 1, fontSize: 13.5, color: "#0b1020", fontWeight: enabled ? 500 : 400 }}>
                 {effect.name}
               </span>
-              {/* Toggle */}
-              <button
-                type="button"
-                role="switch"
-                aria-checked={enabled}
-                onClick={(e) => { e.stopPropagation(); onToggle(effect.id); }}
+              {/* Visual toggle knob — decorative, semantics are on the button */}
+              <span
+                aria-hidden
                 style={{
                   width: 40,
                   height: 22,
                   borderRadius: 11,
-                  border: "none",
                   background: enabled ? "#3b46e0" : "#d6dae9",
                   position: "relative",
-                  cursor: "pointer",
-                  transition: "background 0.2s",
                   flexShrink: 0,
+                  display: "inline-block",
+                  transition: "background 0.2s",
                 }}
               >
                 <span
@@ -76,8 +79,8 @@ export function EffectsSection({ effects, onToggle }: EffectsSectionProps) {
                     transition: "left 0.2s",
                   }}
                 />
-              </button>
-            </div>
+              </span>
+            </button>
           );
         })}
       </div>

@@ -46,6 +46,8 @@ export function ColorSection() {
               key={color}
               type="button"
               onClick={() => store.setAccentColor(color)}
+              aria-label={`Accent color ${color}${active ? " (selected)" : ""}`}
+              aria-pressed={active}
               title={color}
               style={{
                 width: 32,
@@ -62,7 +64,7 @@ export function ColorSection() {
           );
         })}
 
-        <label title="Custom color" style={{ position: "relative", cursor: "pointer", display: "block", flexShrink: 0 }}>
+        <label aria-label="Custom accent color" title="Custom color" style={{ position: "relative", cursor: "pointer", display: "block", flexShrink: 0 }}>
           <div
             style={{
               width: 32,
@@ -131,6 +133,8 @@ export function ColorSection() {
             <button
               key={String(p.value)}
               type="button"
+              aria-label={`Text color: ${p.label}${active ? " (selected)" : ""}`}
+              aria-pressed={active}
               title={p.label}
               onClick={() => store.setTextColor(p.value)}
               style={{
@@ -165,7 +169,7 @@ export function ColorSection() {
         })}
 
         {/* Custom text color */}
-        <label style={{ position: "relative", cursor: "pointer", display: "block", flex: 1 }}>
+        <label aria-label="Custom text color" style={{ position: "relative", cursor: "pointer", display: "block", flex: 1 }}>
           <div
             style={{
               display: "flex",

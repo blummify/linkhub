@@ -52,7 +52,8 @@ export function TemplateMediaGrid({ items, activeId, onSelect, type }: TemplateM
               transition: "border-color 0.15s, box-shadow 0.15s",
             }}
           >
-            {/* Thumbnail image */}
+            {/* Thumbnail — dynamic external URL, next/image not suitable here */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={item.thumbnailUrl}
               alt={item.name}

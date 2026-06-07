@@ -33,6 +33,7 @@ function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailU
           overflow: "hidden",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       </div>
     );

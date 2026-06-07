@@ -20,6 +20,7 @@ export function EditorClient() {
   const [startMode, setStartMode] = useState<StartMode>("template");
   const [isSaving, setIsSaving] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleOpen = useCallback(() => {
     if (startMode === "scratch") {
@@ -47,6 +48,7 @@ export function EditorClient() {
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
+    setSaveError(null);
     try {
       const result = await saveEditorTheme({
         themeId: store.themeId,
@@ -71,7 +73,11 @@ export function EditorClient() {
       } else if ("success" in result) {
         store.markSaved();
         router.push("/branding");
+      } else if ("error" in result) {
+        setSaveError(result.error);
       }
+    } catch {
+      setSaveError("Something went wrong. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -91,6 +97,46 @@ export function EditorClient() {
 
       {showUpgradeModal && (
         <EditorUpgradeModal onClose={() => setShowUpgradeModal(false)} />
+      )}
+
+      {saveError && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#dc2626",
+            borderRadius: 10,
+            padding: "12px 20px",
+            fontSize: 13.5,
+            fontWeight: 500,
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+            maxWidth: 420,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {saveError}
+          <button
+            type="button"
+            onClick={() => setSaveError(null)}
+            aria-label="Dismiss error"
+            style={{ marginLeft: 8, background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 0, lineHeight: 1 }}
+          >
+            ✕
+          </button>
+        </div>
       )}
     </>
   );
