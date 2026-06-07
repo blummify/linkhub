@@ -48,7 +48,10 @@ export const BRANDING_HEADING_FONT_OPTIONS = [
 
 export function brandingHeadingFontStack(name: string): string {
   const opt = BRANDING_HEADING_FONT_OPTIONS.find((f) => f.value === name);
-  return opt?.stack ?? BRANDING_FONT_SERIF;
+  if (opt) return opt.stack;
+  // Arbitrary Google Font selected via FontPicker — fall back gracefully
+  if (name) return `"${name}", ui-serif, Georgia, serif`;
+  return BRANDING_FONT_SERIF;
 }
 
 export function isBrandingHeadlineFont(name: string): boolean {

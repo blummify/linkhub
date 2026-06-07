@@ -75,6 +75,7 @@ export async function registerUser(formData: RegisterFormData) {
         email,
         passwordHash,
         profile: { create: {} },
+        subscription: { create: {} },
       },
     });
 

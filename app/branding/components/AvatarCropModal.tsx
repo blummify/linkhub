@@ -150,6 +150,7 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
             minWidth={60}
             minHeight={60}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imgRef}
               src={objectUrl}

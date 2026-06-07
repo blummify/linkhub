@@ -13,8 +13,8 @@ import {
   brandingStateToPreviewAppearance,
   getBrandingThemeById,
 } from "@/lib/brandingState";
+import { getGradientById } from "@/app/constants/editorBackgroundGradients";
 
-// ── Icon bg/fg per link type ──────────────────────────────────────────────────
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
   website:   { bg: "linear-gradient(135deg,#eef1ff,#dbe2ff)", fg: "#2a37c0" },
   instagram: { bg: "linear-gradient(135deg,#ffe9f1,#ffd9e6)", fg: "#d6336c" },
@@ -33,6 +33,7 @@ function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailU
           overflow: "hidden",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       </div>
     );
@@ -73,7 +74,6 @@ function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailU
   );
 }
 
-// ── Static social icons shown in the phone preview ────────────────────────────
 const SOCIAL_ICONS = [
   {
     label: "Instagram",
@@ -112,7 +112,6 @@ const SOCIAL_ICONS = [
   },
 ];
 
-// ── Share network definitions ─────────────────────────────────────────────────
 const SHARE_NETWORKS = [
   { key: "twitter",  label: "X / Twitter", bg: "#0f1419" },
   { key: "facebook", label: "Facebook",    bg: "#1877f2" },
@@ -158,7 +157,6 @@ function ShareNetIcon({ network }: { network: string }) {
   return null;
 }
 
-// ── Theme helpers ──────────────────────────────────────────────────────────────
 function isDarkBg(hex: string): boolean {
   if (!hex.startsWith("#") || hex.length < 7) return false;
   const r = parseInt(hex.slice(1, 3), 16);
@@ -171,14 +169,20 @@ export interface AppearanceTheme {
   bgColor?: string;
   bgStyle?: string;
   dark?: boolean;
-  textColor?: string;
+  textColor?: string | null;
   titleColor?: string;
   buttonStyle?: string;
   headlineFont?: string;
+  cardStyle?: string;
+  bodyFont?: string;
+  overlayColor?: string;
+  overlayOpacity?: number;
+  effects?: string[];
+  profileLayout?: string;
+  linkDensity?: string;
 }
 
-// ── Phone screen content ──────────────────────────────────────────────────────
-function PhoneScreenContent({
+export function PhoneScreenContent({
   displayName,
   bio,
   links,
@@ -197,12 +201,213 @@ function PhoneScreenContent({
     (appearance?.bgColor ? isDarkBg(appearance.bgColor) : false);
   const titleColor = appearance?.titleColor ?? "#0b1020";
   const subtitleColor = dark ? "rgba(255,255,255,0.5)" : "#6b75a3";
-  const linkCardBg = dark ? "rgba(255,255,255,0.08)" : "white";
-  const linkCardBorder = dark ? "rgba(255,255,255,0.10)" : "#eef0f7";
-  const linkTextColor = dark ? "rgba(255,255,255,0.88)" : "#0b1020";
+  const cardStyle = appearance?.cardStyle ?? "filled";
+  const bodyFontStack = appearance?.bodyFont
+    ? `"${appearance.bodyFont}", ui-sans-serif, system-ui, sans-serif`
+    : "inherit";
+
+  const linkCardBg = (() => {
+    if (cardStyle === "ghost") return "transparent";
+    if (cardStyle === "soft") {
+      const acc = appearance?.titleColor ?? "#3b46e0";
+      return `color-mix(in srgb, ${acc} 12%, transparent)`;
+    }
+    return dark ? "rgba(255,255,255,0.08)" : "white";
+  })();
+  const linkCardBorder = (() => {
+    if (cardStyle === "ghost") return `1.5px solid ${dark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.18)"}`;
+    if (cardStyle === "soft") return "1px solid transparent";
+    return `1px solid ${dark ? "rgba(255,255,255,0.10)" : "#eef0f7"}`;
+  })();
+  const linkCardShadow = cardStyle === "shadow"
+    ? "0 4px 12px rgba(0,0,0,0.12)"
+    : dark ? "none" : "0 2px 6px rgba(15,23,42,0.04)";
+
+  const linkTextColor = appearance?.textColor
+    ?? (dark ? "rgba(255,255,255,0.88)" : "#0b1020");
   const linkChevronColor = dark ? "rgba(255,255,255,0.3)" : "#a8aecb";
   const linkBorderRadius = previewLinkBorderRadiusPx(appearance?.buttonStyle ?? "rounded");
+  const activeEffects = appearance?.effects ?? [];
+  const hasGlass       = activeEffects.includes("glassmorphism");
+  const hasNeon        = activeEffects.includes("neonBorders");
+  const hasGlow        = activeEffects.includes("textGlow");
+  const hasGradBorder  = activeEffects.includes("gradientBorder");
+  const hasShimmer     = activeEffects.includes("shimmer");
+  const hasPulse       = activeEffects.includes("pulseRing");
+
+  const glassStyle: React.CSSProperties = hasGlass
+    ? { background: "rgba(255,255,255,0.12)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }
+    : {};
+  const neonAccent = appearance?.titleColor ?? "#3b46e0";
+  const neonStyle: React.CSSProperties = hasNeon
+    ? { boxShadow: `0 0 10px ${neonAccent}55, 0 0 2px ${neonAccent}99, inset 0 0 10px transparent`, borderColor: `${neonAccent}88` }
+    : {};
+  const glowStyle: React.CSSProperties = hasGlow
+    ? { textShadow: dark ? "0 0 10px rgba(255,255,255,0.6)" : `0 0 8px ${neonAccent}88` }
+    : {};
+
   const published = links.filter((l) => l.status === 1);
+  const layout = appearance?.profileLayout ?? "classic";
+  const density = appearance?.linkDensity ?? "default";
+
+  const linkGap = density === "comfortable" ? 12 : density === "compact" ? 5 : 8;
+  const linkPadding = density === "comfortable" ? "14px 16px" : density === "compact" ? "8px 11px" : "11px 14px";
+
+  const headlineFont =
+    appearance?.headlineFont ??
+    'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)';
+
+  const linksList = (
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: linkGap,
+        overflowY: "auto",
+        flex: 1,
+        minHeight: 0,
+        scrollbarWidth: "none",
+      }}
+    >
+      {published.length === 0 ? (
+        <div style={{ textAlign: "center", color: subtitleColor, fontSize: 11, padding: "20px 0" }}>
+          No published links yet
+        </div>
+      ) : (
+        published.map((link, i) => (
+          <div
+            key={link.id ?? i}
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              background: linkCardBg,
+              border: linkCardBorder,
+              borderRadius: linkBorderRadius,
+              padding: linkPadding,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              fontSize: 12.5,
+              fontWeight: 500,
+              color: linkTextColor,
+              fontFamily: bodyFontStack,
+              boxShadow: linkCardShadow,
+              animation: hasGradBorder
+                ? "lhGradBorder 2s linear infinite"
+                : `scIn 0.22s cubic-bezier(0.16,1,0.3,1) ${i * 35}ms both`,
+              ...glassStyle,
+              ...neonStyle,
+            }}
+          >
+            {hasShimmer && (
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  top: 0, left: 0,
+                  width: "40%", height: "100%",
+                  background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
+                  animation: `lhShimmer ${1.8 + i * 0.15}s cubic-bezier(0.4,0,0.6,1) ${i * 0.2}s infinite`,
+                  pointerEvents: "none",
+                  zIndex: 1,
+                }}
+              />
+            )}
+            <PhoneLinkIcon iconKey={link.icon} thumbnailUrl={link.thumbnailUrl} />
+            <span
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: 12.5,
+                position: "relative",
+                zIndex: 2,
+                ...glowStyle,
+              }}
+            >
+              {link.title}
+            </span>
+            <span style={{ color: linkChevronColor, flexShrink: 0, position: "relative", zIndex: 2 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
+              </svg>
+            </span>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  // ── Minimal layout: side-by-side avatar + text header, no social icons ──
+  if (layout === "minimal") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 14 }}>
+          <div
+            style={{
+              width: 44, height: 44, flexShrink: 0,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "white",
+              fontFamily: headlineFont,
+              fontSize: 18, fontStyle: "italic",
+              ...(hasPulse ? { ["--pc" as string]: `${neonAccent}66`, animation: "lhPulse 1.8s ease-out infinite" } : {}),
+            }}
+          >
+            {initial}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                fontFamily: headlineFont,
+                fontSize: 14, fontWeight: 600,
+                color: titleColor,
+                letterSpacing: "-0.01em",
+                lineHeight: 1.2,
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}
+            >
+              {displayName || "Your Name"}
+            </div>
+            {bio && (
+              <div
+                style={{
+                  fontSize: 10, color: subtitleColor,
+                  marginTop: 2, lineHeight: 1.4,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  fontFamily: bodyFontStack,
+                }}
+              >
+                {bio}
+              </div>
+            )}
+          </div>
+        </div>
+        {linksList}
+        <div
+          style={{
+            marginTop: "auto",
+            paddingTop: 8,
+            fontFamily: "var(--font-instrument-serif), Georgia, serif",
+            fontStyle: "italic",
+            fontSize: 10.5,
+            color: "#6b75a3",
+            flexShrink: 0,
+          }}
+        >
+          made with{" "}
+          <span style={{ color: "#3b46e0", fontWeight: 600 }}>linkhub</span>
+          {" "}✦
+        </div>
+      </div>
+    );
+  }
+
+  // ── Centered layout: same as classic but larger avatar ──
+  const centeredSize = layout === "centered" ? 88 : avatarSize;
 
   return (
     <div
@@ -217,17 +422,19 @@ function PhoneScreenContent({
       <div style={{ position: "relative", marginBottom: 12 }}>
         <div
           style={{
-            width: avatarSize, height: avatarSize,
+            width: centeredSize, height: centeredSize,
             borderRadius: "50%",
             background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "white",
-            fontFamily:
-              appearance?.headlineFont ??
-              'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)',
-            fontSize: Math.round(avatarSize * 0.4), fontStyle: "italic",
+            fontFamily: headlineFont,
+            fontSize: Math.round(centeredSize * 0.4), fontStyle: "italic",
             boxShadow: "0 10px 24px -8px rgba(59,70,224,0.45)",
             border: "3px solid white",
+            ...(hasPulse ? {
+              ["--pc" as string]: `${neonAccent}66`,
+              animation: "lhPulse 1.8s ease-out infinite",
+            } : {}),
           }}
         >
           {initial}
@@ -245,11 +452,9 @@ function PhoneScreenContent({
 
       <div
         style={{
-          fontFamily:
-            appearance?.headlineFont ??
-            'var(--branding-font-serif, var(--font-instrument-serif), "Instrument Serif", Georgia, serif)',
+          fontFamily: headlineFont,
           fontStyle: "italic",
-          fontSize: 19,
+          fontSize: layout === "centered" ? 21 : 19,
           color: titleColor,
           letterSpacing: "-0.01em",
           textAlign: "center",
@@ -267,6 +472,7 @@ function PhoneScreenContent({
             margin: "8px 12px 16px",
             textAlign: "center",
             lineHeight: 1.5,
+            fontFamily: bodyFontStack,
           }}
         >
           {bio}
@@ -292,70 +498,7 @@ function PhoneScreenContent({
         ))}
       </div>
 
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-          overflowY: "auto",
-          flex: 1,
-          minHeight: 0,
-          scrollbarWidth: "none",
-        }}
-      >
-        {published.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              color: subtitleColor,
-              fontSize: 11,
-              padding: "20px 0",
-            }}
-          >
-            No published links yet
-          </div>
-        ) : (
-          published.map((link, i) => (
-            <div
-              key={link.id ?? i}
-              style={{
-                background: linkCardBg,
-                border: `1px solid ${linkCardBorder}`,
-                borderRadius: linkBorderRadius,
-                padding: "11px 14px",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontSize: 12.5,
-                fontWeight: 500,
-                color: linkTextColor,
-                boxShadow: dark ? "none" : "0 2px 6px rgba(15,23,42,0.04)",
-                animation: "scIn 0.22s cubic-bezier(0.16,1,0.3,1) both",
-                animationDelay: `${i * 35}ms`,
-              }}
-            >
-              <PhoneLinkIcon iconKey={link.icon} thumbnailUrl={link.thumbnailUrl} />
-              <span
-                style={{
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  fontSize: 12.5,
-                }}
-              >
-                {link.title}
-              </span>
-              <span style={{ color: linkChevronColor, flexShrink: 0 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
-                </svg>
-              </span>
-            </div>
-          ))
-        )}
-      </div>
+      {linksList}
 
       <div
         style={{
@@ -376,7 +519,6 @@ function PhoneScreenContent({
   );
 }
 
-// ── Small action icon button ──────────────────────────────────────────────────
 function PreviewActionBtn({
   children,
   title,
@@ -434,15 +576,305 @@ function PreviewActionBtn({
   );
 }
 
-// ── Phone shell (frame + notch + gradient screen) ─────────────────────────────
-function PhoneShell({
+function seeded(seed: number, mod: number) {
+  return ((seed * 1664525 + 1013904223) & 0x7fffffff) % mod;
+}
+
+const EFFECT_KEYFRAMES = `
+  @keyframes lhFloat {
+    0%,100% { transform: translate(0,0); }
+    50%      { transform: translate(var(--dx),var(--dy)); }
+  }
+  @keyframes lhTwinkle {
+    0%,100% { opacity: var(--lo); }
+    50%      { opacity: var(--hi); }
+  }
+  @keyframes lhSnow {
+    0%   { transform: translateX(0) translateY(-20px); opacity: 0.9; }
+    80%  { opacity: 0.7; }
+    100% { transform: translateX(var(--sx)) translateY(660px); opacity: 0; }
+  }
+  @keyframes lhBokeh {
+    0%   { transform: translateY(0) scale(1);   opacity: var(--op); }
+    100% { transform: translateY(-680px) scale(0.4); opacity: 0; }
+  }
+  @keyframes lhRain {
+    0%   { transform: translate(0,-30px); opacity: 0.6; }
+    100% { transform: translate(-14px,680px); opacity: 0; }
+  }
+  @keyframes lhConfetti {
+    0%   { transform: translateY(-10px) rotate(0deg) scale(1); opacity: 1; }
+    80%  { opacity: 0.8; }
+    100% { transform: translateY(680px) rotate(var(--r)); opacity: 0; }
+  }
+  @keyframes lhEmoji {
+    0%   { transform: translateY(0) scale(1); opacity: 0.9; }
+    20%  { opacity: 0.9; }
+    100% { transform: translateY(-700px) scale(0.6); opacity: 0; }
+  }
+  @keyframes lhAurora1 {
+    0%,100% { transform: translateX(-15%) scaleX(1);   opacity: 0.45; }
+    50%     { transform: translateX(12%) scaleX(1.25); opacity: 0.75; }
+  }
+  @keyframes lhAurora2 {
+    0%,100% { transform: translateX(10%) scaleX(1);    opacity: 0.35; }
+    50%     { transform: translateX(-18%) scaleX(0.9); opacity: 0.65; }
+  }
+  @keyframes lhAurora3 {
+    0%,100% { transform: translateX(-5%) scaleX(1.1);  opacity: 0.30; }
+    50%     { transform: translateX(8%) scaleX(0.95);  opacity: 0.60; }
+  }
+  @keyframes lhShimmer {
+    0%   { transform: translateX(-120%); }
+    100% { transform: translateX(300%); }
+  }
+  @keyframes lhGradBorder {
+    0%   { box-shadow: 0 0 0 2px #f43f5e, 0 2px 10px rgba(0,0,0,0.08); }
+    16%  { box-shadow: 0 0 0 2px #f97316, 0 2px 10px rgba(0,0,0,0.08); }
+    33%  { box-shadow: 0 0 0 2px #eab308, 0 2px 10px rgba(0,0,0,0.08); }
+    50%  { box-shadow: 0 0 0 2px #22c55e, 0 2px 10px rgba(0,0,0,0.08); }
+    66%  { box-shadow: 0 0 0 2px #3b82f6, 0 2px 10px rgba(0,0,0,0.08); }
+    83%  { box-shadow: 0 0 0 2px #a855f7, 0 2px 10px rgba(0,0,0,0.08); }
+    100% { box-shadow: 0 0 0 2px #f43f5e, 0 2px 10px rgba(0,0,0,0.08); }
+  }
+  @keyframes lhPulse {
+    0%   { box-shadow: 0 0 0 0   var(--pc); }
+    60%  { box-shadow: 0 0 0 12px transparent; }
+    100% { box-shadow: 0 0 0 0   transparent; }
+  }
+`;
+
+// Particle data is fully deterministic (seeded from index only), so it is computed
+// once at module load and reused across all mounts and re-renders.
+const STAR_DATA = Array.from({ length: 42 }, (_, i) => {
+  const s = i * 7919;
+  const tier = i % 7 === 0 ? "bright" : i % 3 === 0 ? "med" : "tiny";
+  const size = tier === "bright" ? 7 : tier === "med" ? 4 : 2;
+  return {
+    x: seeded(s, 100), y: seeded(s + 1, 100), size, tier,
+    floatDur:   3 + seeded(s + 2, 40) / 10,
+    twinkleDur: 1.2 + seeded(s + 3, 30) / 10,
+    delay:      -(seeded(s + 4, 80) / 10),
+    driftX:     seeded(s + 5, 12) - 6,
+    driftY:     seeded(s + 6, 10) - 5,
+  };
+});
+
+const FLAKE_DATA = Array.from({ length: 24 }, (_, i) => {
+  const s = i * 6271;
+  return {
+    x:    seeded(s, 95),
+    size: i % 4 === 0 ? 10 : i % 2 === 0 ? 7 : 5,
+    dur:  3 + seeded(s + 1, 40) / 10,
+    delay:-(seeded(s + 2, 60) / 10),
+    swayX:seeded(s + 3, 20) - 10,
+  };
+});
+
+const BUBBLE_DATA = Array.from({ length: 22 }, (_, i) => {
+  const s = i * 5381;
+  return {
+    x:    seeded(s, 90),
+    size: 28 + seeded(s + 1, 60),
+    dur:  5 + seeded(s + 2, 60) / 10,
+    delay:-(seeded(s + 3, 90) / 10),
+    op:   (15 + seeded(s + 4, 25)) / 100,
+    hue:  seeded(s + 5, 360),
+  };
+});
+
+const RAIN_DATA = Array.from({ length: 35 }, (_, i) => {
+  const s = i * 4793;
+  return {
+    x:    seeded(s, 100),
+    len:  14 + seeded(s + 1, 20),
+    dur:  0.5 + seeded(s + 2, 8) / 10,
+    delay:-(seeded(s + 3, 50) / 10),
+    op:   (40 + seeded(s + 4, 40)) / 100,
+  };
+});
+
+const CONFETTI_COLORS = ["#f43f5e","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899"];
+const CONFETTI_DATA = Array.from({ length: 38 }, (_, i) => {
+  const s = i * 3571;
+  const isCircle = i % 3 === 0;
+  return {
+    x:     seeded(s, 98),
+    size:  5 + seeded(s + 1, 8),
+    dur:   3 + seeded(s + 2, 40) / 10,
+    delay: -(seeded(s + 3, 70) / 10),
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    rot:   seeded(s + 4, 720) - 360,
+    wide:  isCircle ? 1 : 0.45 + seeded(s + 5, 10) / 20,
+    isCircle,
+  };
+});
+
+const EMOJI_SET = ["✨","⭐","🔥","💫","🌟","💎","🎯","🚀"];
+const EMOJI_DATA = Array.from({ length: 14 }, (_, i) => {
+  const s = i * 2311;
+  return {
+    x:     seeded(s, 90),
+    size:  14 + seeded(s + 1, 14),
+    dur:   4 + seeded(s + 2, 40) / 10,
+    delay: -(seeded(s + 3, 80) / 10),
+    emoji: EMOJI_SET[i % EMOJI_SET.length],
+  };
+});
+
+function EffectsOverlay({ effects }: { effects?: string[] }) {
+  if (!effects?.length) return null;
+  const has = (id: string) => effects.includes(id);
+
+  const hasStars    = has("starParticles");
+  const hasSnow     = has("snowfall");
+  const hasAurora   = has("aurora");
+  const hasBokeh    = has("bokeh");
+  const hasRain     = has("rain");
+  const hasConfetti = has("confetti");
+  const hasEmoji    = has("floatingEmoji");
+
+  if (!hasStars && !hasSnow && !hasAurora && !hasBokeh && !hasRain && !hasConfetti && !hasEmoji) {
+    return null;
+  }
+
+  return (
+    <div
+      aria-hidden
+      style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 3, overflow: "hidden" }}
+    >
+      <style>{EFFECT_KEYFRAMES}</style>
+
+      {hasAurora && (
+        <>
+          <div style={{
+            position: "absolute", top: "-10%", left: "-20%",
+            width: "140%", height: "45%",
+            background: "radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.55) 0%, rgba(59,130,246,0.35) 50%, transparent 80%)",
+            animation: "lhAurora1 7s ease-in-out infinite",
+            filter: "blur(18px)",
+          }} />
+          <div style={{
+            position: "absolute", top: "5%", left: "-10%",
+            width: "130%", height: "35%",
+            background: "radial-gradient(ellipse at 50% 50%, rgba(139,92,246,0.50) 0%, rgba(236,72,153,0.30) 50%, transparent 80%)",
+            animation: "lhAurora2 9s ease-in-out infinite",
+            filter: "blur(22px)",
+          }} />
+          <div style={{
+            position: "absolute", top: "15%", left: "10%",
+            width: "120%", height: "30%",
+            background: "radial-gradient(ellipse at 50% 50%, rgba(14,165,233,0.45) 0%, rgba(99,102,241,0.25) 50%, transparent 80%)",
+            animation: "lhAurora3 11s ease-in-out infinite",
+            filter: "blur(16px)",
+          }} />
+        </>
+      )}
+
+      {hasStars && STAR_DATA.map((s, i) => {
+        const glow = s.tier === "bright"
+          ? "0 0 12px 3px rgba(255,255,255,0.9), 0 0 24px 6px rgba(255,255,255,0.4)"
+          : s.tier === "med"
+          ? "0 0 6px 2px rgba(255,255,255,0.75)"
+          : "0 0 3px 1px rgba(255,255,255,0.5)";
+        const lo = s.tier === "bright" ? 0.5 : s.tier === "med" ? 0.3 : 0.15;
+        const hi = s.tier === "bright" ? 1.0 : s.tier === "med" ? 0.85 : 0.6;
+        return (
+          <div key={`st-${i}`} style={{
+            position: "absolute",
+            left: `${s.x}%`, top: `${s.y}%`,
+            width: s.size, height: s.size,
+            borderRadius: "50%", background: "white",
+            boxShadow: glow,
+            ["--dx" as string]: `${s.driftX}px`,
+            ["--dy" as string]: `${s.driftY}px`,
+            ["--lo" as string]: lo,
+            ["--hi" as string]: hi,
+            animation: `lhFloat ${s.floatDur.toFixed(1)}s ${s.delay.toFixed(1)}s ease-in-out infinite, lhTwinkle ${s.twinkleDur.toFixed(1)}s ${s.delay.toFixed(1)}s ease-in-out infinite`,
+          }} />
+        );
+      })}
+
+      {hasSnow && FLAKE_DATA.map((f, i) => (
+        <div key={`fl-${i}`} style={{
+          position: "absolute",
+          left: `${f.x}%`, top: 0,
+          fontSize: f.size,
+          color: "rgba(255,255,255,0.85)",
+          ["--sx" as string]: `${f.swayX}px`,
+          animation: `lhSnow ${f.dur.toFixed(1)}s ${f.delay.toFixed(1)}s linear infinite`,
+          filter: "drop-shadow(0 0 3px rgba(255,255,255,0.5))",
+        }}>❄</div>
+      ))}
+
+      {hasBokeh && BUBBLE_DATA.map((b, i) => (
+        <div key={`bk-${i}`} style={{
+          position: "absolute",
+          left: `${b.x}%`, bottom: "-10%",
+          width: b.size, height: b.size,
+          borderRadius: "50%",
+          border: `1.5px solid hsla(${b.hue},80%,80%,0.5)`,
+          background: `hsla(${b.hue},70%,85%,0.08)`,
+          ["--op" as string]: b.op,
+          animation: `lhBokeh ${b.dur.toFixed(1)}s ${b.delay.toFixed(1)}s ease-in infinite`,
+          backdropFilter: "blur(1px)",
+        }} />
+      ))}
+
+      {hasRain && RAIN_DATA.map((r, i) => (
+        <div key={`rn-${i}`} style={{
+          position: "absolute",
+          left: `${r.x}%`, top: 0,
+          width: 1, height: r.len,
+          background: `rgba(180,220,255,${r.op})`,
+          borderRadius: 99,
+          transform: "rotate(15deg)",
+          transformOrigin: "top center",
+          animation: `lhRain ${r.dur.toFixed(2)}s ${r.delay.toFixed(2)}s linear infinite`,
+        }} />
+      ))}
+
+      {hasConfetti && CONFETTI_DATA.map((c, i) => (
+        <div key={`cf-${i}`} style={{
+          position: "absolute",
+          left: `${c.x}%`, top: "-2%",
+          width: c.size,
+          height: c.isCircle ? c.size : c.size * c.wide,
+          background: c.color,
+          borderRadius: c.isCircle ? "50%" : 2,
+          ["--r" as string]: `${c.rot}deg`,
+          animation: `lhConfetti ${c.dur.toFixed(1)}s ${c.delay.toFixed(1)}s linear infinite`,
+          opacity: 0.9,
+        }} />
+      ))}
+
+      {hasEmoji && EMOJI_DATA.map((e, i) => (
+        <div key={`em-${i}`} style={{
+          position: "absolute",
+          left: `${e.x}%`, bottom: "5%",
+          fontSize: e.size,
+          animation: `lhEmoji ${e.dur.toFixed(1)}s ${e.delay.toFixed(1)}s ease-out infinite`,
+          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+        }}>{e.emoji}</div>
+      ))}
+    </div>
+  );
+}
+
+export function PhoneShell({
   children,
   bgStyle,
   showGlow = false,
+  effects,
+  videoUrl,
+  imageUrl,
 }: {
   children: React.ReactNode;
   bgStyle?: string;
   showGlow?: boolean;
+  effects?: string[];
+  videoUrl?: string;
+  imageUrl?: string;
 }) {
   return (
     <div
@@ -474,12 +906,31 @@ function PhoneShell({
           borderRadius: 34,
           overflow: "hidden",
           position: "relative",
-          background: bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
+          background: (videoUrl || imageUrl) ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
           padding: "44px 22px 22px",
           display: "flex",
           flexDirection: "column",
         }}
       >
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt=""
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+          />
+        )}
+        {videoUrl && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+          />
+        )}
         {showGlow && (
           <div
             aria-hidden
@@ -493,6 +944,7 @@ function PhoneShell({
             }}
           />
         )}
+        <EffectsOverlay effects={effects} />
         <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
           {children}
         </div>
@@ -501,8 +953,7 @@ function PhoneShell({
   );
 }
 
-// ── Browser shell (desktop mode) ──────────────────────────────────────────────
-function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyle?: string }) {
+export function BrowserShell({ children, bgStyle, effects, videoUrl, imageUrl }: { children: React.ReactNode; bgStyle?: string; effects?: string[]; videoUrl?: string; imageUrl?: string }) {
   return (
     <div
       style={{
@@ -551,12 +1002,32 @@ function BrowserShell({ children, bgStyle }: { children: React.ReactNode; bgStyl
       <div
         style={{
           position: "absolute", top: 32, left: 0, right: 0, bottom: 0,
-          background: bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)",
+          background: (videoUrl || imageUrl) ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
           padding: "24px 28px 24px",
           display: "flex", flexDirection: "column",
           overflow: "hidden",
         }}
       >
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt=""
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+          />
+        )}
+        {videoUrl && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+          />
+        )}
+        <EffectsOverlay effects={effects} />
         <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
           {children}
         </div>
@@ -791,16 +1262,25 @@ export interface DashboardPreviewPanelProps {
 }
 
 export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, onPickHandle }: DashboardPreviewPanelProps) {
-  const hydrated = useBrandingStore((s) => s.hydrated);
   const links = useLinksStore((s) => s.links);
-  const displayName = useBrandingStore((s) => s.displayName);
-  const bio = useBrandingStore((s) => s.bio);
-  const handle = useBrandingStore((s) => s.handle);
-  const publicUrl = useBrandingStore((s) => brandingPublicUrl(s.handle));
+  const {
+    hydrated, displayName, bio, handle,
+    backgroundType, backgroundValue, themeId, onRandomTheme,
+  } = useBrandingStore(
+    useShallow((s) => ({
+      hydrated:        s.hydrated,
+      displayName:     s.displayName,
+      bio:             s.bio,
+      handle:          s.handle,
+      backgroundType:  s.backgroundType,
+      backgroundValue: s.backgroundValue,
+      themeId:         s.themeId,
+      onRandomTheme:   s.randomTheme,
+    }))
+  );
   const appearance = useBrandingStore(useShallow(brandingStateToPreviewAppearance)) as AppearanceTheme;
-  const themeId = useBrandingStore((s) => s.themeId);
+  const publicUrl = brandingPublicUrl(handle);
   const themeLabel = getBrandingThemeById(themeId).name;
-  const onRandomTheme = useBrandingStore((s) => s.randomTheme);
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [showSharePop, setShowSharePop] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -839,13 +1319,29 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
   const domain = slashIdx >= 0 ? publicUrl.slice(0, slashIdx + 1) : publicUrl;
   const slug   = slashIdx >= 0 ? publicUrl.slice(slashIdx + 1)     : "";
 
-  const screenBg =
+  let screenBg =
     appearance?.bgStyle ??
     appearance?.bgColor ??
     "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)";
-  const screenDark =
+  let screenDark =
     appearance?.dark ??
     (appearance?.bgColor ? isDarkBg(appearance.bgColor) : false);
+
+  if (backgroundType === "gradient") {
+    if (backgroundValue.startsWith("solid:")) {
+      screenBg = backgroundValue.replace("solid:", "");
+      screenDark = false;
+    } else {
+      const grad = getGradientById(backgroundValue);
+      if (grad) { screenBg = grad.value; screenDark = grad.dark; }
+    }
+  } else if (backgroundType === "image" || backgroundType === "video") {
+    screenBg = "#0b1020";
+    screenDark = true;
+  }
+
+  const imageUrl = backgroundType === "image" && backgroundValue ? backgroundValue : undefined;
+  const videoUrl = backgroundType === "video" && backgroundValue ? backgroundValue : undefined;
 
   if (!hydrated) return <DashboardPreviewPanelSkeleton width={width} />;
 
@@ -1145,7 +1641,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
           }}
         >
           {device === "desktop" ? (
-            <BrowserShell bgStyle={screenBg}>
+            <BrowserShell bgStyle={screenBg} imageUrl={imageUrl} videoUrl={videoUrl} effects={appearance?.effects}>
               <PhoneScreenContent
                 displayName={displayName}
                 bio={bio}
@@ -1155,7 +1651,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
               />
             </BrowserShell>
           ) : (
-            <PhoneShell bgStyle={screenBg} showGlow={screenDark}>
+            <PhoneShell bgStyle={screenBg} showGlow={screenDark} imageUrl={imageUrl} videoUrl={videoUrl} effects={appearance?.effects}>
               <PhoneScreenContent
                 displayName={displayName}
                 bio={bio}

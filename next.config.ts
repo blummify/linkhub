@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com", pathname: "/**" },
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
       { protocol: "https", hostname: "assets.getlinkhub.app", pathname: "/**" },
+      { protocol: "https", hostname: "images.pexels.com", pathname: "/**" },
     ],
   },
   async headers() {

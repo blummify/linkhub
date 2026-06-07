@@ -20,6 +20,18 @@ export function useEditorMobilePreview(
     buttonStyle: s.buttonStyle,
     fontFamily: s.fontFamily,
     userPickedTheme: s.userPickedTheme,
+    backgroundType: s.backgroundType,
+    backgroundValue: s.backgroundValue,
+    backgroundKey: s.backgroundKey,
+    effects: s.effects,
+    textColor: s.textColor,
+    cardStyle: s.cardStyle,
+    bodyFont: s.bodyFont,
+    overlayColor: s.overlayColor,
+    overlayOpacity: s.overlayOpacity,
+    profileLayout: s.profileLayout,
+    linkDensity: s.linkDensity,
+    customThemeName: s.customThemeName,
   })));
   const handle = useBrandingStore((s) => s.handle);
 
