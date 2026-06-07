@@ -17,7 +17,7 @@ import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
 import { AvatarCropModal } from "./components/AvatarCropModal";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
-import { updateAvatarUrl, removeAvatar, updateBranding } from "@/app/actions/profile";
+import { updateAvatarUrl, removeAvatar, updateBranding, getUserCustomThemes, applyCustomTheme, deleteCustomTheme } from "@/app/actions/profile";
 import { getProfile, claimHandle, checkHandleAvailability } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
 import { useBrandingStore } from "@/store/brandingStore";
@@ -104,6 +104,11 @@ export default function AppearanceClient() {
 
   const router = useRouter();
 
+  type CustomThemeRecord = Awaited<ReturnType<typeof getUserCustomThemes>>[number];
+  const [customThemes, setCustomThemes] = useState<CustomThemeRecord[]>([]);
+  const [activeCustomThemeId, setActiveCustomThemeId] = useState<string | null>(null);
+  const [applyingThemeId, setApplyingThemeId] = useState<string | null>(null);
+
   const [showPalette, setShowPalette] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -120,8 +125,12 @@ export default function AppearanceClient() {
   }, []);
 
   useEffect(() => {
-    if (profileFetched) return;
-    getProfile().then((p) => {
+    if (profileFetched) {
+      getUserCustomThemes().then(setCustomThemes).catch(() => {});
+      return;
+    }
+    Promise.all([getProfile(), getUserCustomThemes()]).then(([p, themes]) => {
+      setCustomThemes(themes);
       if (!p) {
         useProfileStore.getState().markFetched({ avatarUrl: null });
         return;
@@ -134,10 +143,11 @@ export default function AppearanceClient() {
         effects?: string | null; textColor?: string | null; cardStyle?: string | null;
         bodyFont?: string | null; overlayColor?: string | null; overlayOpacity?: number | null;
         layout?: string | null; linkDensity?: string | null; customThemeName?: string | null;
+        activeCustomThemeId?: string | null;
       };
+      setActiveCustomThemeId(profile.activeCustomThemeId ?? null);
       useProfileStore.getState().markFetched({ avatarUrl: profile.avatarUrl ?? null });
       const patch: Partial<import("@/lib/brandingState").BrandingAppearanceState> = {};
-      // Core fields
       if (profile.displayName) patch.displayName = profile.displayName;
       if (profile.handle)      patch.handle      = profile.handle;
       if (profile.bio)         patch.bio         = profile.bio;
@@ -145,7 +155,6 @@ export default function AppearanceClient() {
       if (profile.accentColor) patch.accentColor = profile.accentColor;
       if (profile.buttonStyle) patch.buttonStyle = profile.buttonStyle;
       if (profile.fontFamily)  patch.fontFamily  = profile.fontFamily;
-      // Editor v2 fields — DB column "layout" maps to store field "profileLayout"
       if (profile.backgroundType) patch.backgroundType = profile.backgroundType as "gradient" | "image" | "video";
       if (profile.backgroundValue) patch.backgroundValue = profile.backgroundValue;
       patch.backgroundKey = profile.backgroundKey ?? null;
@@ -228,6 +237,43 @@ export default function AppearanceClient() {
     if ("error" in result) return;
     useProfileStore.getState().setAvatarUrl(null);
   }, []);
+
+  const handleApplyCustomTheme = useCallback(async (id: string) => {
+    setApplyingThemeId(id);
+    try {
+      const result = await applyCustomTheme(id);
+      if ("error" in result) return;
+      const t = result.theme;
+      useBrandingStore.getState().syncFromDb({
+        themeId:        t.themeId,
+        accentColor:    t.accentColor,
+        buttonStyle:    t.buttonStyle,
+        fontFamily:     t.fontFamily,
+        backgroundType: t.backgroundType as "gradient" | "image" | "video",
+        backgroundValue: t.backgroundValue,
+        backgroundKey:  t.backgroundKey,
+        effects:        t.effects.split(",").filter(Boolean),
+        textColor:      t.textColor,
+        cardStyle:      t.cardStyle,
+        bodyFont:       t.bodyFont,
+        overlayColor:   t.overlayColor,
+        overlayOpacity: t.overlayOpacity,
+        profileLayout:  t.profileLayout,
+        linkDensity:    t.linkDensity,
+        customThemeName: t.name,
+      });
+      setActiveCustomThemeId(id);
+    } finally {
+      setApplyingThemeId(null);
+    }
+  }, []);
+
+  const handleDeleteCustomTheme = useCallback(async (id: string) => {
+    const result = await deleteCustomTheme(id);
+    if ("error" in result) return;
+    setCustomThemes((prev) => prev.filter((t) => t.id !== id));
+    if (activeCustomThemeId === id) setActiveCustomThemeId(null);
+  }, [activeCustomThemeId]);
 
   const handleSave = useCallback(async () => {
     if (pendingAvatarBlob) {
@@ -429,7 +475,15 @@ export default function AppearanceClient() {
                     selectedThemeId={theme.id}
                     displayName={displayName}
                     handle={handle}
-                    onSelect={selectTheme}
+                    onSelect={(t) => {
+                      selectTheme(t);
+                      setActiveCustomThemeId(null);
+                    }}
+                    customThemes={customThemes}
+                    activeCustomThemeId={activeCustomThemeId}
+                    onApplyCustomTheme={handleApplyCustomTheme}
+                    onDeleteCustomTheme={handleDeleteCustomTheme}
+                    applyingThemeId={applyingThemeId}
                   />
                 </section>
 

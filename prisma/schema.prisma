@@ -17,6 +17,7 @@ model User {
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   accounts            Account[]
+  customThemes        CustomTheme[]
   emailVerification   EmailVerification?
   links               Link[]
   passwordResetTokens PasswordResetToken[]
@@ -128,10 +129,35 @@ model Profile {
   overlayColor     String   @default("#000000")
   overlayOpacity   Int      @default(0)
   linkDensity      String   @default("default")
-  customThemeName  String   @default("My Theme")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customThemeName     String   @default("My Theme")
+  activeCustomThemeId String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CustomTheme {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String   @default("My Theme")
+  themeId         String   @default("default")
+  accentColor     String   @default("#3b46e0")
+  buttonStyle     String   @default("rounded")
+  fontFamily      String   @default("Instrument Serif")
+  backgroundType  String   @default("gradient")
+  backgroundValue String   @default("midnight")
+  backgroundKey   String?
+  effects         String   @default("")
+  textColor       String?
+  cardStyle       String   @default("filled")
+  bodyFont        String   @default("Geist")
+  overlayColor    String   @default("#000000")
+  overlayOpacity  Int      @default(0)
+  profileLayout   String   @default("classic")
+  linkDensity     String   @default("default")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PasswordResetToken {

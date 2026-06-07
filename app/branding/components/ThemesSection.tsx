@@ -8,6 +8,43 @@ import {
 } from "@/app/constants/brandingThemes";
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
 import { BrandingConfirmModal } from "./BrandingConfirmModal";
+import type { getUserCustomThemes } from "@/app/actions/profile";
+
+type CustomThemeRecord = Awaited<ReturnType<typeof getUserCustomThemes>>[number];
+
+const GRADIENT_MAP: Record<string, string> = {
+  midnight:  "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
+  aurora:    "linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)",
+  sunset:    "linear-gradient(135deg, #f093fb, #f5576c)",
+  ocean:     "linear-gradient(135deg, #2193b0, #6dd5ed)",
+  forest:    "linear-gradient(135deg, #134e5e, #71b280)",
+  rose:      "linear-gradient(135deg, #f953c6, #b91d73)",
+  slate:     "linear-gradient(135deg, #373b44, #4286f4)",
+  peach:     "linear-gradient(135deg, #ffb347, #ffcc33)",
+  lavender:  "linear-gradient(135deg, #834d9b, #d04ed6)",
+  emerald:   "linear-gradient(135deg, #11998e, #38ef7d)",
+  noir:      "linear-gradient(135deg, #000000, #434343)",
+  cream:     "linear-gradient(135deg, #fdfcfb, #e2d1c3)",
+};
+
+function swatchStyle(theme: CustomThemeRecord): React.CSSProperties {
+  if (theme.backgroundType === "gradient") {
+    return { background: GRADIENT_MAP[theme.backgroundValue] ?? `linear-gradient(135deg, ${theme.accentColor}, #000)` };
+  }
+  if (theme.backgroundType === "image" || theme.backgroundType === "video") {
+    return { background: theme.accentColor };
+  }
+  return { background: theme.accentColor };
+}
+
+function relativeTime(date: Date): string {
+  const diff = (Date.now() - new Date(date).getTime()) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 86400 * 7) return `${Math.floor(diff / 86400)}d ago`;
+  return new Date(date).toLocaleDateString();
+}
 
 interface ThemesSectionProps {
   selectedThemeId: string;
@@ -16,6 +53,11 @@ interface ThemesSectionProps {
   onSelect: (theme: BrandingTheme) => void;
   /** Compact mode for narrow containers: scrollable pill row + 2-column grid */
   compact?: boolean;
+  customThemes?: CustomThemeRecord[];
+  activeCustomThemeId?: string | null;
+  onApplyCustomTheme?: (id: string) => Promise<void>;
+  onDeleteCustomTheme?: (id: string) => Promise<void>;
+  applyingThemeId?: string | null;
 }
 
 type CategoryId =
@@ -263,9 +305,15 @@ export function ThemesSection({
   handle,
   onSelect,
   compact = false,
+  customThemes = [],
+  activeCustomThemeId = null,
+  onApplyCustomTheme,
+  onDeleteCustomTheme,
+  applyingThemeId = null,
 }: ThemesSectionProps) {
   const [category, setCategory] = useState<CategoryId>("all");
   const [proModalTheme, setProModalTheme] = useState<BrandingTheme | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const handleThemeClick = (theme: BrandingTheme) => {
     if (theme.isPro) {
@@ -300,6 +348,211 @@ export function ThemesSection({
 
   return (
     <div>
+      {customThemes.length > 0 && (
+        <div style={{ marginBottom: 28 }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#6b75a3",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              marginBottom: 12,
+            }}
+          >
+            My Themes
+          </div>
+          <div className={compact ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 sm:grid-cols-3 gap-4"}>
+            {customThemes.map((ct) => {
+              const isActive = ct.id === activeCustomThemeId;
+              const isApplying = ct.id === applyingThemeId;
+              return (
+                <div
+                  key={ct.id}
+                  style={{
+                    background: "white",
+                    border: `1px solid ${isActive ? "#3b46e0" : "#eef0f7"}`,
+                    borderRadius: 18,
+                    overflow: "hidden",
+                    boxShadow: isActive
+                      ? "0 0 0 3px rgba(59,70,224,0.15), 0 4px 12px rgba(15,23,42,0.08)"
+                      : "none",
+                    position: "relative",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {isActive && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        background: "#3b46e0",
+                        color: "white",
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase",
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                        zIndex: 2,
+                      }}
+                    >
+                      Active
+                    </div>
+                  )}
+
+                  {/* Swatch */}
+                  <div
+                    style={{
+                      height: 72,
+                      ...swatchStyle(ct),
+                      position: "relative",
+                    }}
+                  >
+                    {ct.backgroundType === "image" && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5">
+                          <rect x="3" y="3" width="18" height="18" rx="2"/>
+                          <circle cx="8.5" cy="8.5" r="1.5"/>
+                          <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                      </div>
+                    )}
+                    {ct.backgroundType === "video" && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5">
+                          <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info row */}
+                  <div style={{ padding: "10px 14px 12px" }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: "#0b1020",
+                        marginBottom: 2,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {ct.name}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#9ba3c0", marginBottom: 10 }}>
+                      {relativeTime(ct.createdAt)}
+                    </div>
+
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <button
+                        type="button"
+                        disabled={isActive || isApplying}
+                        onClick={() => onApplyCustomTheme?.(ct.id)}
+                        style={{
+                          flex: 1,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 5,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          padding: "7px 0",
+                          borderRadius: 8,
+                          border: "none",
+                          cursor: isActive || isApplying ? "default" : "pointer",
+                          background: isActive ? "#eef0f7" : "linear-gradient(180deg, #3b46e0, #2a37c0)",
+                          color: isActive ? "#9ba3c0" : "white",
+                          fontFamily: "inherit",
+                          transition: "opacity 0.15s",
+                          opacity: isApplying ? 0.7 : 1,
+                        }}
+                      >
+                        {isApplying ? (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="animate-spin">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                          </svg>
+                        ) : isActive ? "Active" : "Apply"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(ct.id)}
+                        title="Delete theme"
+                        style={{
+                          width: 30,
+                          height: 30,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: 8,
+                          border: "1px solid #eef0f7",
+                          background: "white",
+                          color: "#9ba3c0",
+                          cursor: "pointer",
+                          flexShrink: 0,
+                          transition: "all 0.15s",
+                          padding: 0,
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLButtonElement).style.color = "#dc2626";
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#fecaca";
+                          (e.currentTarget as HTMLButtonElement).style.background = "#fef2f2";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLButtonElement).style.color = "#9ba3c0";
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#eef0f7";
+                          (e.currentTarget as HTMLButtonElement).style.background = "white";
+                        }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path strokeLinecap="round" d="M19 6l-1 14H6L5 6"/>
+                          <path strokeLinecap="round" d="M10 11v6M14 11v6"/>
+                          <path strokeLinecap="round" d="M9 6V4h6v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <BrandingConfirmModal
+        open={confirmDeleteId !== null}
+        onClose={() => setConfirmDeleteId(null)}
+        icon="warn"
+        title="Delete this theme?"
+        body="This action cannot be undone. The theme will be permanently removed from your library."
+        confirmText="Delete"
+        confirmStyle="danger"
+        onConfirm={async () => {
+          if (confirmDeleteId) await onDeleteCustomTheme?.(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+      />
+
       <div
         style={{
           display: "flex",

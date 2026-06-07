@@ -20,6 +20,10 @@ vi.mock("@/app/actions/links", () => ({
 vi.mock("@/app/actions/profile", () => ({
   updateAvatarUrl: vi.fn().mockResolvedValue({ success: true }),
   removeAvatar: vi.fn().mockResolvedValue({ success: true }),
+  updateBranding: vi.fn().mockResolvedValue({ success: true }),
+  getUserCustomThemes: vi.fn().mockResolvedValue([]),
+  applyCustomTheme: vi.fn().mockResolvedValue({ success: true, theme: {} }),
+  deleteCustomTheme: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 vi.mock("@/app/actions/upload", () => ({

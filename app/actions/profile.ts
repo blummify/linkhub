@@ -91,6 +91,7 @@ export async function updateBranding(data: {
         ...(data.accentColor !== undefined && { accentColor: data.accentColor }),
         ...(data.buttonStyle !== undefined && { buttonStyle: data.buttonStyle }),
         ...(data.fontFamily  !== undefined && { fontFamily:  data.fontFamily  }),
+        activeCustomThemeId: null,
       },
     });
     try { await redis.del(`profile:${session.user.id}`); } catch {}
@@ -205,9 +206,10 @@ export async function saveEditorTheme(data: {
       select: { backgroundKey: true },
     });
 
-    await db.profile.update({
-      where: { userId: session.user.id },
+    const customTheme = await db.customTheme.create({
       data: {
+        userId:          session.user.id,
+        name:            data.customThemeName.trim() || "My Theme",
         themeId:         data.themeId,
         accentColor:     data.accentColor,
         buttonStyle:     data.buttonStyle,
@@ -221,9 +223,31 @@ export async function saveEditorTheme(data: {
         bodyFont:        data.bodyFont,
         overlayColor:    data.overlayColor,
         overlayOpacity:  data.overlayOpacity,
-        layout:          data.profileLayout,
+        profileLayout:   data.profileLayout,
         linkDensity:     data.linkDensity,
-        customThemeName: data.customThemeName.trim() || "My Theme",
+      },
+    });
+
+    await db.profile.update({
+      where: { userId: session.user.id },
+      data: {
+        themeId:            data.themeId,
+        accentColor:        data.accentColor,
+        buttonStyle:        data.buttonStyle,
+        fontFamily:         data.fontFamily,
+        backgroundType:     data.backgroundType,
+        backgroundValue:    data.backgroundValue,
+        backgroundKey:      data.backgroundKey,
+        effects:            data.effects,
+        textColor:          data.textColor,
+        cardStyle:          data.cardStyle,
+        bodyFont:           data.bodyFont,
+        overlayColor:       data.overlayColor,
+        overlayOpacity:     data.overlayOpacity,
+        layout:             data.profileLayout,
+        linkDensity:        data.linkDensity,
+        customThemeName:    data.customThemeName.trim() || "My Theme",
+        activeCustomThemeId: customTheme.id,
       },
     });
 
@@ -239,5 +263,100 @@ export async function saveEditorTheme(data: {
   } catch (err) {
     console.error("[saveEditorTheme] failed:", err);
     return { error: "Failed to save theme. Please try again." };
+  }
+}
+
+export async function getUserCustomThemes() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  return db.customTheme.findMany({
+    where: { userId: session.user.id },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function deleteCustomTheme(
+  id: string
+): Promise<{ success: true } | { error: string }> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    const theme = await db.customTheme.findUnique({
+      where: { id, userId: session.user.id },
+      select: { backgroundKey: true },
+    });
+    if (!theme) return { error: "Theme not found." };
+
+    const profile = await db.profile.findUnique({
+      where: { userId: session.user.id },
+      select: { activeCustomThemeId: true },
+    });
+
+    await db.customTheme.delete({ where: { id, userId: session.user.id } });
+
+    if (profile?.activeCustomThemeId === id) {
+      await db.profile.update({
+        where: { userId: session.user.id },
+        data: { activeCustomThemeId: null },
+      });
+    }
+
+    if (theme.backgroundKey) {
+      const key = theme.backgroundKey;
+      after(async () => {
+        try { await deleteFromR2(key); } catch {}
+      });
+    }
+
+    try { await redis.del(`profile:${session.user.id}`); } catch {}
+    return { success: true };
+  } catch (err) {
+    console.error("[deleteCustomTheme] failed:", err);
+    return { error: "Failed to delete theme. Please try again." };
+  }
+}
+
+export async function applyCustomTheme(
+  id: string
+): Promise<{ success: true; theme: Awaited<ReturnType<typeof getUserCustomThemes>>[number] } | { error: string }> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    const theme = await db.customTheme.findUnique({
+      where: { id, userId: session.user.id },
+    });
+    if (!theme) return { error: "Theme not found." };
+
+    await db.profile.update({
+      where: { userId: session.user.id },
+      data: {
+        themeId:            theme.themeId,
+        accentColor:        theme.accentColor,
+        buttonStyle:        theme.buttonStyle,
+        fontFamily:         theme.fontFamily,
+        backgroundType:     theme.backgroundType,
+        backgroundValue:    theme.backgroundValue,
+        backgroundKey:      theme.backgroundKey,
+        effects:            theme.effects,
+        textColor:          theme.textColor,
+        cardStyle:          theme.cardStyle,
+        bodyFont:           theme.bodyFont,
+        overlayColor:       theme.overlayColor,
+        overlayOpacity:     theme.overlayOpacity,
+        layout:             theme.profileLayout,
+        linkDensity:        theme.linkDensity,
+        customThemeName:    theme.name,
+        activeCustomThemeId: theme.id,
+      },
+    });
+
+    try { await redis.del(`profile:${session.user.id}`); } catch {}
+    return { success: true, theme };
+  } catch (err) {
+    console.error("[applyCustomTheme] failed:", err);
+    return { error: "Failed to apply theme. Please try again." };
   }
 }
