@@ -711,7 +711,7 @@ export default function MyAccountClient({ initial }: { initial: AccountInitial }
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           } ml-0`}
         >
-          <div className="px-4 pt-[22px] pb-14 sm:px-6 lg:px-8">
+          <div className="px-4 pt-[22px] pb-24 lg:pb-14 sm:px-6 lg:px-8">
             <DashboardTopBar searchPlaceholder="Search settings…" onSearchClick={() => setShowPalette(true)} />
 
             <div className="max-w-[920px] tracking-[-0.01em] text-ink-900">
