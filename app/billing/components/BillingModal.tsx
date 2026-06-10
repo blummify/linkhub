@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 interface BillingModalProps {
@@ -12,6 +12,10 @@ interface BillingModalProps {
 }
 
 export function BillingModal({ title, subtitle, children, footer, onClose }: BillingModalProps) {
+  const [isMobile] = useState(() =>
+    typeof window !== "undefined" && !!window.matchMedia &&
+    window.matchMedia("(max-width: 1023px)").matches
+  );
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +40,10 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
         position: "fixed", inset: 0, zIndex: 200,
         background: "rgba(11,16,32,0.55)",
         backdropFilter: "blur(3px)",
-        display: "grid", placeItems: "center", padding: 20,
+        display: "flex",
+        alignItems: isMobile ? "flex-end" : "center",
+        justifyContent: isMobile ? undefined : "center",
+        padding: isMobile ? 0 : 20,
         animation: "fadeIn 0.18s ease",
       }}
     >
@@ -45,13 +52,24 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
         aria-modal="true"
         aria-labelledby="billing-modal-title"
         style={{
-          background: "white", borderRadius: 16,
+          background: "white",
+          borderRadius: isMobile ? "24px 24px 0 0" : 16,
           boxShadow: "0 24px 48px -16px rgba(30,42,138,0.18), 0 8px 16px -8px rgba(15,23,42,0.06)",
-          width: "100%", maxWidth: 460,
-          maxHeight: "calc(100vh - 40px)", overflow: "auto",
-          animation: "modalIn 0.22s cubic-bezier(0.16,1,0.3,1)",
+          width: "100%",
+          maxWidth: isMobile ? undefined : 460,
+          maxHeight: isMobile ? "min(90dvh, 90vh)" : "calc(100vh - 40px)",
+          overflow: "auto",
+          animation: isMobile
+            ? "lhSheetIn 0.35s cubic-bezier(0.32,0.72,0,1)"
+            : "modalIn 0.22s cubic-bezier(0.16,1,0.3,1)",
         }}
       >
+        {isMobile && (
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 8 }}>
+            <div style={{ width: 36, height: 4, borderRadius: 99, background: "#d6dae9" }} />
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, padding: "22px 24px 0" }}>
           <div>
@@ -85,7 +103,9 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
         {/* Footer */}
         <div
           style={{
-            padding: "16px 24px 22px",
+            padding: isMobile
+              ? `16px 24px calc(16px + env(safe-area-inset-bottom,0px))`
+              : "16px 24px 22px",
             display: "flex", justifyContent: "flex-end", gap: 10,
             borderTop: "1px solid #eef0f7", marginTop: 4,
           }}
@@ -126,6 +146,7 @@ export function ModalBtn({
         display: "inline-flex", alignItems: "center", gap: 7,
         borderRadius: 8, padding: "8px 14px",
         fontSize: 13, fontWeight: 500,
+        minHeight: 46,
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.55 : 1,
         ...styles[variant],

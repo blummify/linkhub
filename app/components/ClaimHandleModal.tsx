@@ -112,6 +112,10 @@ export function ClaimHandleModal({
   const { handle, inputState, helperMsg, helperKind, continueEnabled, isSubmitting, suggestions } = state;
   const [isFocused, setIsFocused] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
+  const [isMobile] = useState(() =>
+    typeof window !== "undefined" && !!window.matchMedia &&
+    window.matchMedia("(max-width: 1023px)").matches
+  );
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkIdRef = useRef(0);
@@ -321,28 +325,37 @@ export function ClaimHandleModal({
         }
       `}</style>
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+      <div className={`fixed inset-0 z-[100] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}>
         {/* Backdrop */}
         <div
           className="absolute inset-0"
           style={{ background: "rgba(11, 16, 32, 0.6)", backdropFilter: "blur(8px)" }}
-          onClick={handleClose}
+          onClick={() => { if (!isMobile || handle.length === 0) handleClose(); }}
           aria-hidden
         />
 
         {/* Modal */}
         <div
-          className="lh-modal-in relative w-full overflow-hidden bg-white"
+          className={`${!isMobile ? "lh-modal-in" : ""} relative w-full bg-white`}
           style={{
-            maxWidth: 460,
-            borderRadius: 22,
+            maxWidth: isMobile ? undefined : 460,
+            maxHeight: isMobile ? "min(90dvh, 90vh)" : undefined,
+            overflow: isMobile ? "auto" : "hidden",
+            borderRadius: isMobile ? "24px 24px 0 0" : 22,
             boxShadow:
               "0 40px 80px -20px rgba(15, 23, 42, 0.25), 0 16px 32px -16px rgba(15, 23, 42, 0.12)",
+            animation: isMobile ? "lhSheetIn 0.35s cubic-bezier(0.32,0.72,0,1)" : undefined,
           }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="claimTitle"
         >
+          {isMobile && (
+            <div className="flex justify-center pt-3 pb-2 shrink-0">
+              <div style={{ width: 36, height: 4, borderRadius: 99, background: "#d6dae9" }} />
+            </div>
+          )}
+
           {/* Tinted top band */}
           <div
             aria-hidden
@@ -574,13 +587,22 @@ export function ClaimHandleModal({
           </div>
 
           {/* ── Footer ── */}
-          <div className="flex flex-col" style={{ padding: "24px 32px 28px", gap: 10 }}>
+          <div
+            className="flex flex-col"
+            style={{
+              padding: isMobile
+                ? `16px 28px calc(24px + env(safe-area-inset-bottom,0px))`
+                : "24px 32px 28px",
+              gap: 10,
+            }}
+          >
             <button
               type="button"
               onClick={handleSubmit}
               disabled={!continueEnabled || isSubmitting}
               className="lh-primary-btn w-full flex items-center justify-center transition-all duration-150 disabled:cursor-not-allowed"
               style={{
+                minHeight: isMobile ? 46 : undefined,
                 padding: "13px 18px",
                 borderRadius: 9999,
                 fontSize: 14,
@@ -637,6 +659,7 @@ export function ClaimHandleModal({
               disabled={isSubmitting}
               className="w-full transition-colors duration-150 disabled:opacity-50"
               style={{
+                minHeight: isMobile ? 46 : undefined,
                 padding: "13px 18px",
                 borderRadius: 9999,
                 fontSize: 14,

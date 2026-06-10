@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { ManagedLink } from "../user-admin/components/types";
 import { LinkStatus } from "@/app/constants/linkStatus";
 
@@ -12,6 +13,11 @@ interface DeleteConfirmDialogProps {
 }
 
 export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading = false }: DeleteConfirmDialogProps) {
+  const [isMobile] = useState(() =>
+    typeof window !== "undefined" && !!window.matchMedia &&
+    window.matchMedia("(max-width: 1023px)").matches
+  );
+
   if (!open || !link) return null;
 
   const isDraft = link.status === LinkStatus.DRAFT;
@@ -25,21 +31,29 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
 
   return (
     <div
-      className="fixed inset-0 z-[150] flex items-center justify-center p-6"
+      className={`fixed inset-0 z-[150] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}
       style={{ background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)" }}
       onClick={e => { if (e.target === e.currentTarget && !isLoading) onClose(); }}
     >
       <div
         className="relative w-full flex flex-col"
         style={{
-          maxWidth: 420,
-          background: "white",
-          borderRadius: 20,
+          maxWidth:     isMobile ? undefined : 420,
+          background:   "white",
+          borderRadius: isMobile ? "24px 24px 0 0" : 20,
           boxShadow: "0 40px 80px -20px rgba(15,23,42,0.4), 0 16px 32px -16px rgba(15,23,42,0.2)",
-          animation: "dlgIn 0.25s cubic-bezier(0.16,1,0.3,1)",
-          padding: "28px 28px 24px",
+          animation:    isMobile
+            ? "lhSheetIn 0.35s cubic-bezier(0.32,0.72,0,1)"
+            : "dlgIn 0.25s cubic-bezier(0.16,1,0.3,1)",
+          padding: isMobile ? "0 28px calc(24px + env(safe-area-inset-bottom,0px))" : "28px 28px 24px",
         }}
       >
+        {isMobile && (
+          <div className="flex justify-center pt-3 pb-4 shrink-0">
+            <div style={{ width: 36, height: 4, borderRadius: 99, background: "#d6dae9" }} />
+          </div>
+        )}
+
         <div
           className="flex items-center justify-center mb-5 shrink-0"
           style={{
@@ -69,6 +83,7 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
             disabled={isLoading}
             className="flex-1 transition-all"
             style={{
+              minHeight: isMobile ? 46 : undefined,
               padding: "10px 0",
               borderRadius: 99,
               border: 0,
@@ -91,6 +106,7 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
             disabled={isLoading}
             className="flex-1 transition-all"
             style={{
+              minHeight: isMobile ? 46 : undefined,
               padding: "10px 0",
               borderRadius: 99,
               border: 0,
