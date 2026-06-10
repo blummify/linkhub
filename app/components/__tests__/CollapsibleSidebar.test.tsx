@@ -22,9 +22,10 @@ describe("CollapsibleSidebar", () => {
         <main>Dashboard content</main>
       </CollapsibleSidebar>
     );
-    expect(screen.getByText("Links")).toBeInTheDocument();
-    expect(screen.getByText("Branding")).toBeInTheDocument();
-    expect(screen.getByText("Analytics")).toBeInTheDocument();
+    // Each label appears in both the sidebar and the mobile bottom nav
+    expect(screen.getAllByText("Links").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Branding").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Analytics").length).toBeGreaterThan(0);
     expect(screen.getByText("Dashboard content")).toBeInTheDocument();
     // link count comes from useLinksStore mock which returns links: []
     expect(screen.getByText("0")).toBeInTheDocument();
