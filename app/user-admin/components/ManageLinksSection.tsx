@@ -361,7 +361,7 @@ export function ManageLinksSection({
           <button
             type="button"
             onClick={onAddLink}
-            className="inline-flex shrink-0 items-center gap-2 text-white cursor-pointer transition-all duration-150 active:scale-[0.98]"
+            className="hidden sm:inline-flex shrink-0 items-center gap-2 text-white cursor-pointer transition-all duration-150 active:scale-[0.98]"
             style={{
               borderRadius: 99,
               padding: "11px 18px 11px 14px",

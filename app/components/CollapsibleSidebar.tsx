@@ -33,9 +33,11 @@ const ACCOUNT_ITEMS = [
 
 export default function CollapsibleSidebar({
   children,
+  mobileHeaderExtra,
 }: {
   children: React.ReactNode;
   isAdmin?: boolean;
+  mobileHeaderExtra?: React.ReactNode;
 }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const toggleSidebar = useSidebarStore((s) => s.toggle);
@@ -63,7 +65,7 @@ export default function CollapsibleSidebar({
 
   return (
     <>
-      <MobileTopBar />
+      <MobileTopBar extra={mobileHeaderExtra} />
 
       <aside
         id="sidebar"
