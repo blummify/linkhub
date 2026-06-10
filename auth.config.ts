@@ -32,7 +32,14 @@ export default {
       }
       return session;
     },
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user, account, profile, trigger, session }) {
+      // Propagate client-initiated session updates (e.g. name/email changed on
+      // the account page via useSession().update(...)) into the token.
+      if (trigger === "update" && session) {
+        const patch = session as { name?: unknown; email?: unknown };
+        if (typeof patch.name === "string") token.name = patch.name;
+        if (typeof patch.email === "string") token.email = patch.email;
+      }
       if (user) {
         token.role = user.role ?? "USER";
         token.name = user.name ?? null;
