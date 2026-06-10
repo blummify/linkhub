@@ -194,6 +194,12 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
     onError: (msg) => setUploadError(msg),
   });
 
+  const [isDirty, setIsDirty] = useState(false);
+  const [isMobile] = useState(() =>
+    typeof window !== "undefined" && !!window.matchMedia &&
+    window.matchMedia("(max-width: 1023px)").matches
+  );
+
   const isEdit  = !!initialLink;
   const canSave = title.trim().length > 0 && isValidURL(url.trim()) && !isSaving && !isUploadingThumb;
 
@@ -227,7 +233,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   useEffect(() => {
     if (!open) return;
     function handler(e: KeyboardEvent) {
-      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Escape") { if (!isMobile || !isDirty) onClose(); return; }
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey || (document.activeElement as HTMLElement)?.tagName !== "TEXTAREA")) {
         if (canSave) handleSave();
       }
@@ -238,6 +244,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
 
   // Debounced URL validation
   function handleUrlChange(val: string) {
+    setIsDirty(true);
     setUrl(val);
     setUrlError(false);
     setUrlValidState("none");
@@ -267,6 +274,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   }
 
   function handlePresetSelect(presetId: PresetId) {
+    setIsDirty(true);
     const defaults = PRESET_DEFAULTS[presetId];
     setSelectedPreset(presetId);
     if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
@@ -284,6 +292,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setIsDirty(true);
     e.target.value = "";
     if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
     const blobUrl = URL.createObjectURL(file);
@@ -295,6 +304,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   }
 
   function handleRemoveThumb() {
+    setIsDirty(true);
     if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
     setPendingFile(null);
     setThumbImage(null);
@@ -308,21 +318,32 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-6"
+      className={`fixed inset-0 z-[100] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}
       style={{ background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)", animation: "fadeIn 0.25s ease" }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={e => {
+        if (e.target !== e.currentTarget) return;
+        if (isMobile && isDirty) return;
+        onClose();
+      }}
     >
       <div
         className="relative w-full flex flex-col overflow-hidden"
         style={{
-          maxWidth: 540,
-          maxHeight: "calc(100vh - 48px)",
-          background: "white",
-          borderRadius: 22,
+          maxWidth:     isMobile ? undefined : 540,
+          maxHeight:    isMobile ? "min(90dvh, 90vh)" : "calc(100vh - 48px)",
+          background:   "white",
+          borderRadius: isMobile ? "24px 24px 0 0" : 22,
           boxShadow: "0 40px 80px -20px rgba(15,23,42,0.4), 0 16px 32px -16px rgba(15,23,42,0.2)",
-          animation: "lhModalIn 0.35s cubic-bezier(0.16,1,0.3,1)",
+          animation:    isMobile
+            ? "lhSheetIn 0.35s cubic-bezier(0.32, 0.72, 0, 1)"
+            : "lhModalIn 0.35s cubic-bezier(0.16,1,0.3,1)",
         }}
       >
+        {isMobile && (
+          <div className="flex justify-center pt-3 pb-1 shrink-0">
+            <div style={{ width: 36, height: 4, borderRadius: 99, background: "#d6dae9" }} />
+          </div>
+        )}
 
         <div className="flex items-start justify-between gap-4" style={{ padding: "24px 28px 0" }}>
           <div className="flex-1">
@@ -370,7 +391,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
           </button>
         </div>
 
-        <div className="overflow-y-auto flex flex-col" style={{ padding: "22px 28px 0", gap: 18 }}>
+        <div className="overflow-y-auto flex-1 min-h-0 flex flex-col" style={{ padding: "22px 28px 0", gap: 18 }}>
 
           <div className="flex flex-col" style={{ gap: 7 }}>
             <div className="flex items-center justify-between">
@@ -525,7 +546,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               id="m-title"
               type="text"
               value={title}
-              onChange={e => { setTitle(e.target.value); setTitleLen(e.target.value.length); }}
+              onChange={e => { setIsDirty(true); setTitle(e.target.value); setTitleLen(e.target.value.length); }}
               placeholder="e.g. Latest Portfolio Drop"
               maxLength={50}
               className="w-full outline-none transition-all"
@@ -666,7 +687,17 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               onChange={handleFileChange}
             />
 
-            <div className="flex flex-wrap" style={{ marginTop: 10, gap: 6 }}>
+            <div
+              className="flex"
+              style={{
+                marginTop: 10,
+                gap: 6,
+                flexWrap: isMobile ? "nowrap" : "wrap",
+                overflowX: isMobile ? "auto" : undefined,
+                WebkitOverflowScrolling: "touch",
+                paddingBottom: isMobile ? 4 : undefined,
+              }}
+            >
               {PRESET_ICONS.map(p => (
                 <button
                   key={p.id}
@@ -748,7 +779,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
               type="button"
               role="switch"
               aria-checked={status === LinkStatus.PUBLISHED}
-              onClick={() => setStatus(current => {
+              onClick={() => { setIsDirty(true); setStatus(current => {
                   if (!isEdit) {
                     return current === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
                   }
@@ -756,7 +787,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                     return current === LinkStatus.DRAFT ? LinkStatus.PUBLISHED : LinkStatus.DRAFT;
                   }
                   return current === LinkStatus.PUBLISHED ? LinkStatus.UNPUBLISHED : LinkStatus.PUBLISHED;
-                      })}
+                      })}}
               className="relative shrink-0 outline-none"
               style={{
                 width: 42,
@@ -786,95 +817,85 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
         </div>{/* end body */}
 
         <div
-          className="flex items-center justify-between gap-3 shrink-0"
+          className="flex items-center shrink-0"
           style={{
-            padding: "20px 28px 22px",
-            marginTop: 22,
+            gap: 8,
+            padding: isMobile
+              ? "14px 16px calc(14px + env(safe-area-inset-bottom, 0px))"
+              : "20px 28px 22px",
+            marginTop: isMobile ? 0 : 22,
             borderTop: "1px solid #eef0f7",
             background: "linear-gradient(180deg, transparent, rgba(241,243,255,0.4))",
           }}
         >
-          <div className="flex items-center" style={{ fontSize: 11.5, color: "#6b75a3", gap: 6 }}>
-            <kbd style={{
-              fontFamily: "monospace",
-              fontSize: 10.5,
-              padding: "2px 6px",
-              background: "white",
-              border: "1px solid #d6dae9",
-              borderBottomWidth: 2,
-              borderRadius: 5,
-              color: "#1a2244",
-            }}>↵</kbd>
-            to save,{" "}
-            <kbd style={{
-              fontFamily: "monospace",
-              fontSize: 10.5,
-              padding: "2px 6px",
-              background: "white",
-              border: "1px solid #d6dae9",
-              borderBottomWidth: 2,
-              borderRadius: 5,
-              color: "#1a2244",
-            }}>esc</kbd>
-            to close
-          </div>
+          {!isMobile && (
+            <div className="flex items-center mr-auto" style={{ fontSize: 11.5, color: "#6b75a3", gap: 6 }}>
+              <kbd style={{ fontFamily: "monospace", fontSize: 10.5, padding: "2px 6px", background: "white", border: "1px solid #d6dae9", borderBottomWidth: 2, borderRadius: 5, color: "#1a2244" }}>↵</kbd>
+              to save,{" "}
+              <kbd style={{ fontFamily: "monospace", fontSize: 10.5, padding: "2px 6px", background: "white", border: "1px solid #d6dae9", borderBottomWidth: 2, borderRadius: 5, color: "#1a2244" }}>esc</kbd>
+              to close
+            </div>
+          )}
 
-          <div className="flex" style={{ gap: 8 }}>
-            <button
-              type="button"
-              onClick={onClose}
-              className="transition-all"
-              style={{
-                padding: "10px 18px",
-                borderRadius: 99,
-                border: 0,
-                background: "transparent",
-                color: "#3a4474",
-                fontSize: 13.5,
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = "#eef0f7"; e.currentTarget.style.color = "#0b1020"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#3a4474"; }}
-            >
-              Cancel
-            </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="transition-all"
+            style={{
+              flex: isMobile ? 1 : undefined,
+              minHeight: isMobile ? 46 : undefined,
+              padding: "10px 18px",
+              borderRadius: 99,
+              border: isMobile ? "1.5px solid #d6dae9" : 0,
+              background: "transparent",
+              color: "#3a4474",
+              fontSize: 13.5,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#eef0f7"; e.currentTarget.style.color = "#0b1020"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#3a4474"; }}
+          >
+            Cancel
+          </button>
 
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!canSave}
-              className="inline-flex items-center gap-1.5 transition-all"
-              style={{
-                padding: "10px 18px",
-                borderRadius: 99,
-                border: 0,
-                background: canSave ? "linear-gradient(180deg,#3b46e0,#2a37c0)" : "#d6dae9",
-                color: canSave ? "white" : "#a8aecb",
-                fontSize: 13.5,
-                fontWeight: 600,
-                cursor: canSave ? "pointer" : "not-allowed",
-                boxShadow: canSave
-                  ? "0 6px 18px -6px rgba(59,70,224,0.55), inset 0 1px 0 rgba(255,255,255,0.15)"
-                  : "none",
-                fontFamily: "inherit",
-              }}
-              onMouseEnter={e => { if (canSave) e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
-            >
-              {isSaving || isUploadingThumb ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 0.8s linear infinite" }}>
-                  <path strokeLinecap="round" d="M12 2a10 10 0 010 20"/>
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/>
-                </svg>
-              )}
-              {isSaving || isUploadingThumb ? "Uploading…" : isEdit ? "Save changes" : "Add link"}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!canSave}
+            className="inline-flex items-center gap-1.5 transition-all"
+            style={{
+              flex: isMobile ? 2 : undefined,
+              minHeight: isMobile ? 46 : undefined,
+              justifyContent: isMobile ? "center" : undefined,
+              padding: "10px 18px",
+              borderRadius: 99,
+              border: 0,
+              background: canSave ? "linear-gradient(180deg,#3b46e0,#2a37c0)" : "#d6dae9",
+              color: canSave ? "white" : "#a8aecb",
+              fontSize: 13.5,
+              fontWeight: 600,
+              cursor: canSave ? "pointer" : "not-allowed",
+              boxShadow: canSave
+                ? "0 6px 18px -6px rgba(59,70,224,0.55), inset 0 1px 0 rgba(255,255,255,0.15)"
+                : "none",
+              fontFamily: "inherit",
+            }}
+            onMouseEnter={e => { if (canSave) e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            {isSaving || isUploadingThumb ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 0.8s linear infinite" }}>
+                <path strokeLinecap="round" d="M12 2a10 10 0 010 20"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/>
+              </svg>
+            )}
+            {isSaving || isUploadingThumb ? "Uploading…" : isEdit ? "Save changes" : "Add link"}
+          </button>
         </div>
 
       </div>
