@@ -247,7 +247,7 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
           } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
         >
           <div className="flex flex-col min-h-screen">
-            <div className="flex-1 min-w-0 px-4 pt-[22px] pb-14 sm:px-6 lg:px-8">
+            <div className="flex-1 min-w-0 px-4 pt-[22px] pb-24 lg:pb-14 sm:px-6 lg:px-8">
 
               <DashboardTopBar searchPlaceholder="Search billing…" />
 

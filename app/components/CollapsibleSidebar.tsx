@@ -18,6 +18,7 @@ import {
   BillingIcon,
 } from "./icons/SidebarIcons";
 import UpgradeCard from "./UpgradeCard";
+import { MobileTopBar, MobileBottomNav } from "./MobileNav";
 
 const NAV_ITEMS = [
   { label: "Links",     href: "/user-dashboard", Icon: LinksIcon,      showBadge: true },
@@ -62,19 +63,14 @@ export default function CollapsibleSidebar({
 
   return (
     <>
-      {!isCollapsed && (
-        <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
+      <MobileTopBar />
 
       <aside
         id="sidebar"
-        className={`h-screen bg-white border-r z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 flex flex-col overflow-hidden ${
+        className={`h-screen bg-white border-r z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 hidden lg:flex flex-col overflow-hidden ${
           isCollapsed
-            ? "w-[76px] px-[10px] py-6 -translate-x-full lg:translate-x-0"
-            : "w-[264px] px-[18px] py-7 translate-x-0"
+            ? "w-[76px] px-[10px] py-6"
+            : "w-[264px] px-[18px] py-7"
         }`}
         style={{ borderColor: "#eef0f7" }}
       >
@@ -379,9 +375,11 @@ export default function CollapsibleSidebar({
         </div>
       </aside>
 
-      <div className="flex-1 h-screen overflow-hidden relative flex flex-col">
+      <div className="flex-1 h-screen overflow-hidden relative flex flex-col pt-14 lg:pt-0">
         {children}
       </div>
+
+      <MobileBottomNav />
     </>
   );
 }

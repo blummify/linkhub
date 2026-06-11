@@ -119,7 +119,7 @@ export function DashboardTopBar({
         <button
           type="button"
           onClick={toggleSidebar}
-          className="shrink-0 flex items-center justify-center transition-all active:scale-90"
+          className="shrink-0 hidden lg:flex items-center justify-center transition-all active:scale-90"
           style={{
             width: 38,
             height: 38,

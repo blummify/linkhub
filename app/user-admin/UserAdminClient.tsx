@@ -45,6 +45,7 @@ export default function UserAdminClient() {
   const patchState = useBrandingStore((s) => s.patchState);
 
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [profileReady, setProfileReady] = useState(() => useProfileStore.getState().fetched);
   const [profileDataReady, setProfileDataReady] = useState(false);
@@ -295,7 +296,7 @@ export default function UserAdminClient() {
               } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
             >
               <div className="flex flex-col lg:flex-row min-h-screen">
-                <div className="flex-1 min-w-0 px-4 pt-[22px] pb-10 sm:px-6 lg:px-8">
+                <div className="flex-1 min-w-0 px-4 pt-[22px] pb-24 lg:pb-10 sm:px-6 lg:px-8">
                   <ManageLinksSection
                     links={links}
                     isLoadingLinks={isLoadingLinks}
@@ -313,7 +314,7 @@ export default function UserAdminClient() {
                   />
                 </div>
 
-                <div className="hidden lg:block">
+                <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto bg-white p-4 lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:block" : "hidden lg:block"}>
                   <DashboardPreviewPanel onPickHandle={() => setClaimOpen(true)} />
                 </div>
               </div>
@@ -321,6 +322,35 @@ export default function UserAdminClient() {
           </div>
         </CollapsibleSidebar>
       </div>
+
+      {!previewOpen && (
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          className="fixed flex items-center gap-2 text-white text-sm font-semibold rounded-[24px] lg:hidden"
+          style={{ right: 16, bottom: 78, zIndex: 85, background: "#3b46e0", padding: "11px 18px", boxShadow: "0 4px 20px rgba(59,70,224,0.4)" }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Preview
+        </button>
+      )}
+
+      {previewOpen && (
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(false)}
+          className="fixed flex items-center gap-1.5 bg-white rounded-[22px] text-[13px] font-semibold lg:hidden"
+          style={{ top: 12, right: 16, zIndex: 95, color: "#3a4474", padding: "8px 14px 8px 12px", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+          Close
+        </button>
+      )}
 
       <AddEditLinkModal
         key={`${editingLink?.link.id ?? "new"}-${showLinkModal}`}

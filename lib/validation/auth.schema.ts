@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-const emailSchema = z.email("Enter a valid email address");
+export const emailSchema = z.email("Enter a valid email address");
 
-const passwordSchema = z
+export const passwordSchema = z
   .string()
   .min(6, "Minimum 6 characters")
   .regex(/[A-Z]/, "Must include an uppercase letter")
