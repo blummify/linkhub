@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useUIStore } from "@/store/uiStore";
 import {
   DndContext,
@@ -24,8 +24,8 @@ import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
 import { AnalyticsCards } from "./AnalyticsCards";
 import { DashboardTopBar } from "./DashboardTopBar";
-import { usePrefersReducedMotion } from "@/app/components/hooks/usePrefersReducedMotion";
-import { useLinkListMotion } from "../hooks/useLinkListMotion";
+
+const PAGE_SIZE = 5;
 
 function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
   return (
@@ -198,7 +198,7 @@ const LH_SHIMMER = [
 const shimmerBase: React.CSSProperties = {
   background: LH_SHIMMER,
   backgroundSize: "300% 100%",
-  animation: "lhShimmer var(--motion-shimmer) linear infinite",
+  animation: "lhShimmer 1.8s cubic-bezier(0.4,0,0.6,1) infinite",
   borderRadius: 6,
 };
 
@@ -254,10 +254,8 @@ type CardPassthroughProps = Omit<ManagedLinkCardProps, "link" | "dragHandleListe
 
 function SortableCardWrapper({
   link,
-  entering = false,
   ...cardProps
-}: { link: ManagedLink; entering?: boolean } & CardPassthroughProps) {
-  const reduced = usePrefersReducedMotion();
+}: { link: ManagedLink } & CardPassthroughProps) {
   const {
     attributes,
     listeners,
@@ -267,17 +265,10 @@ function SortableCardWrapper({
     isDragging,
   } = useSortable({ id: getLinkId(link) });
 
-  const layoutTransition = reduced
-    ? undefined
-    : transition ?? "transform var(--motion-base) var(--ease-out)";
-
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition: layoutTransition,
-    opacity: isDragging ? 0.4 : 1,
-    ...(entering && !reduced
-      ? { animation: "lhItemIn var(--motion-base) var(--ease-out) both" }
-      : {}),
+    transition,
+    opacity: isDragging ? 0 : 1,
   };
 
   return (
@@ -288,23 +279,6 @@ function SortableCardWrapper({
         dragHandleAttributes={attributes}
         {...cardProps}
       />
-    </div>
-  );
-}
-
-function ExitingLinkCard({ link }: { link: ManagedLink }) {
-  const reduced = usePrefersReducedMotion();
-
-  return (
-    <div
-      className="overflow-hidden"
-      style={
-        reduced
-          ? { display: "none" }
-          : { animation: "lhItemOut var(--motion-base) var(--ease-in) both" }
-      }
-    >
-      <ManagedLinkCard link={link} />
     </div>
   );
 }
@@ -323,27 +297,38 @@ export function ManageLinksSection({
   const openPalette = useUIStore((s) => s.openPalette);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [visibleLinks, setVisibleLinks] = useState(PAGE_SIZE);
+  const prevLinksLengthRef = useRef(links.length);
+
+  useEffect(() => {
+    const prev = prevLinksLengthRef.current;
+    prevLinksLengthRef.current = links.length;
+
+    if (links.length === prev + 1) {
+      setVisibleLinks(c => c + 1);
+    }
+  }, [links.length]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const filteredLinks = useMemo(() => {
-    return links.filter((link) => {
-      if (activeTab === "all") return true;
-      const status = link.status ?? 0;
-      if (activeTab === "published") return status === 1;
-      if (activeTab === "unpublished") return status === 2;
-      if (activeTab === "draft") return status === 0;
-      return true;
-    });
-  }, [links, activeTab]);
+  const filteredLinks = useMemo(() => links.filter((link) => {
+    if (activeTab === "all") return true;
+    const status = link.status ?? 0;
+    if (activeTab === "published") return status === 1;
+    if (activeTab === "unpublished") return status === 2;
+    if (activeTab === "draft") return status === 0;
+    return true;
+  }), [links, activeTab]);
 
-  const motionItems = useLinkListMotion(filteredLinks);
-  const sortableLinks = motionItems.filter((item) => !item.exiting);
+  const visibleLinkSlides = filteredLinks.slice(0, visibleLinks);
+  const remainingLinks = filteredLinks.length - visibleLinks;
+  const nextBatch = Math.min(PAGE_SIZE, remainingLinks);
+  const showControls = remainingLinks > 0;
 
   const activeLink = activeId
-    ? sortableLinks.find((item) => getLinkId(item.link) === activeId)?.link ?? null
+    ? filteredLinks.find((l) => getLinkId(l) === activeId) ?? null
     : null;
 
   const handleDragStart = ({ active }: DragStartEvent) => {
@@ -395,7 +380,7 @@ export function ManageLinksSection({
           <button
             type="button"
             onClick={onAddLink}
-            className="hidden sm:inline-flex shrink-0 items-center gap-2 text-white cursor-pointer transition-all duration-150 active:scale-[0.98]"
+            className="inline-flex shrink-0 items-center gap-2 text-white cursor-pointer transition-all duration-150 active:scale-[0.98]"
             style={{
               borderRadius: 99,
               padding: "11px 18px 11px 14px",
@@ -434,7 +419,7 @@ export function ManageLinksSection({
             <button
               key={key}
               type="button"
-              onClick={() => setActiveTab(key)}
+              onClick={() => { setActiveTab(key); setVisibleLinks(PAGE_SIZE); }}
               className="shrink-0 cursor-pointer transition-all duration-150"
               style={{
                 borderRadius: 99,
@@ -470,32 +455,24 @@ export function ManageLinksSection({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
         >
           <SortableContext
-            items={sortableLinks.map((item) => getLinkId(item.link))}
+            items={filteredLinks.map(getLinkId)}
             strategy={verticalListSortingStrategy}
           >
             <div
               className="space-y-3 lg:pb-0"
               style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom, 0px))" }}
             >
-              {motionItems.map((item) => {
-                const link = item.link;
+              {visibleLinkSlides.map((link) => {
                 const originalIndex = links.indexOf(link);
-                const id = getLinkId(link);
-
-                if (item.exiting) {
-                  return <ExitingLinkCard key={`exit-${id}`} link={link} />;
-                }
-
                 return (
                   <SortableCardWrapper
-                    key={id}
+                    key={getLinkId(link)}
                     link={link}
-                    entering={item.entering}
                     onEdit={onEditLink ? () => onEditLink(link, originalIndex) : undefined}
                     onDelete={onRequestDelete ? () => onRequestDelete(link, originalIndex) : (onDeleteLink ? () => onDeleteLink(link, originalIndex) : undefined)}
                     onToggle={onToggleLink ? () => onToggleLink(link, originalIndex) : undefined}
@@ -509,6 +486,79 @@ export function ManageLinksSection({
               })}
             </div>
           </SortableContext>
+
+          {showControls && (
+            <div
+              className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-center sm:gap-6"
+              style={{ marginTop: 8 }}
+            >
+              <span style={{ fontSize: 13.5, color: "#6b75a3" }}>
+                Showing{" "}
+                <b style={{ color: "#0b1020", fontWeight: 600 }}>{visibleLinks}</b>
+                {" "}of{" "}
+                <b style={{ color: "#0b1020", fontWeight: 600 }}>{filteredLinks.length}</b>
+                {" "}links
+              </span>
+
+              <div
+                className="inline-flex items-center"
+                style={{
+                  background: "white",
+                  border: "1px solid #eef0f7",
+                  borderRadius: 99,
+                  padding: "4px 6px",
+                  gap: 4,
+                  boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+                }}
+              >
+                <button
+                  type="button"
+                  aria-label="Show fewer links"
+                  disabled={visibleLinks <= PAGE_SIZE}
+                  onClick={() => setVisibleLinks(c => Math.max(PAGE_SIZE, c - PAGE_SIZE))}
+                  className="flex items-center justify-center cursor-pointer transition-all duration-150"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 99,
+                    border: 0,
+                    background: "transparent",
+                    color: visibleLinks <= PAGE_SIZE ? "#c5c9e8" : "#3a4474",
+                    cursor: visibleLinks <= PAGE_SIZE ? "not-allowed" : "pointer",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/>
+                  </svg>
+                </button>
+
+                <span style={{ fontSize: 13, color: "#0b1020", padding: "0 8px", fontFamily: "inherit" }}>
+                  <b style={{ fontWeight: 600 }}>{Math.ceil(visibleLinks / PAGE_SIZE)}</b>
+                  <span style={{ color: "#6b75a3", margin: "0 6px" }}>of</span>
+                  <b style={{ fontWeight: 600 }}>{Math.ceil(filteredLinks.length / PAGE_SIZE)}</b>
+                </span>
+
+                <button
+                  type="button"
+                  aria-label={`Show ${nextBatch} more links`}
+                  onClick={() => setVisibleLinks(c => Math.min(c + PAGE_SIZE, filteredLinks.length))}
+                  className="flex items-center justify-center cursor-pointer transition-all duration-150"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 99,
+                    border: 0,
+                    background: "transparent",
+                    color: "#3a4474",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
 
           <DragOverlay dropAnimation={null}>
             {activeLink ? (
