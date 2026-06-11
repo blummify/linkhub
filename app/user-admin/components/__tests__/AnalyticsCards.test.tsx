@@ -9,8 +9,9 @@ vi.mock("react-country-flag", () => ({
 describe("AnalyticsCards", () => {
   it("renders default stat cards", () => {
     render(<AnalyticsCards />);
-    expect(screen.getByText("TOTAL CLICKS")).toBeInTheDocument();
-    expect(screen.getByText("2,096")).toBeInTheDocument();
+    // label + value appear in both mobile strip and desktop grid
+    expect(screen.getAllByText("TOTAL CLICKS").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("2,096").length).toBeGreaterThan(0);
     expect(screen.getByText("TOP REGION")).toBeInTheDocument();
     expect(screen.getByText("Accra")).toBeInTheDocument();
   });
@@ -21,7 +22,8 @@ describe("AnalyticsCards", () => {
         cards={[{ label: "CUSTOM", value: "99", change: "+1%", changeType: "green" }]}
       />
     );
-    expect(screen.getByText("CUSTOM")).toBeInTheDocument();
-    expect(screen.getByText("99")).toBeInTheDocument();
+    // label + value appear in both mobile strip and desktop grid
+    expect(screen.getAllByText("CUSTOM").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("99").length).toBeGreaterThan(0);
   });
 });
