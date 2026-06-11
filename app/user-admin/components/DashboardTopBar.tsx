@@ -189,7 +189,7 @@ export function DashboardTopBar({
           </div>
         </div>
 
-        <div className="flex items-center" style={{ gap: 8 }}>
+        <div className="hidden lg:flex items-center" style={{ gap: 8 }}>
 
           <div ref={notifRef} style={{ position: "relative" }}>
             <IconBtn aria-label="Notifications" active={showNotif} onClick={handleOpenNotif}>
