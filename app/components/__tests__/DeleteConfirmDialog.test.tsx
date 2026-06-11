@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { DeleteConfirmDialog } from "../DeleteConfirmDialog";
 import type { ManagedLink } from "@/app/user-admin/components/types";
 
@@ -35,8 +35,8 @@ describe("DeleteConfirmDialog", () => {
   it("calls onClose when Cancel is clicked", () => {
     const onClose = vi.fn();
     render(<DeleteConfirmDialog open link={link} onClose={onClose} onConfirm={vi.fn()} />);
-    fireEvent.click(screen.getByText("Cancel"));
-    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
+    act(() => { fireEvent.click(screen.getByText("Cancel")); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

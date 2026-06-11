@@ -205,11 +205,14 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
 
   function requestClose() { setIsClosing(true); }
 
-  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
-    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
-      onClose();
-    }
-  }
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !isClosing) return;
+    const handler = (e: AnimationEvent) => { if (e.target === panel) onClose(); };
+    panel.addEventListener('animationend', handler);
+    return () => panel.removeEventListener('animationend', handler);
+  }, [isClosing, onClose]);
 
   const isEdit  = !!initialLink;
   const canSave = title.trim().length > 0 && isValidURL(url.trim()) && !isSaving && !isUploadingThumb;
@@ -355,7 +358,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
             ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
             : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
         }}
-        onAnimationEnd={handlePanelAnimEnd}
+        ref={panelRef}
       >
         {isMobile && (
           <div className="flex justify-center pt-3 pb-1 shrink-0">

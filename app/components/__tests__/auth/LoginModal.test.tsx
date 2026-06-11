@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { LoginModal } from "../../auth/LoginModal";
 
 describe("LoginModal", () => {
@@ -20,8 +20,8 @@ describe("LoginModal", () => {
   it("calls onClose when the close button is clicked", () => {
     const onClose = vi.fn();
     render(<LoginModal onClose={onClose}><span /></LoginModal>);
-    fireEvent.click(screen.getByLabelText("Close"));
-    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
+    act(() => { fireEvent.click(screen.getByLabelText("Close")); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -29,8 +29,8 @@ describe("LoginModal", () => {
     const onClose = vi.fn();
     render(<LoginModal onClose={onClose}><span /></LoginModal>);
     const backdrop = document.querySelector(".fixed.inset-0") as HTMLElement;
-    fireEvent.click(backdrop);
-    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
+    act(() => { fireEvent.click(backdrop); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

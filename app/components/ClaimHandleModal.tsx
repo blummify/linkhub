@@ -121,6 +121,7 @@ export function ClaimHandleModal({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkIdRef = useRef(0);
   const seenRef = useRef<Map<string, boolean>>(new Map());
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Reset on close / pre-fill on open — done during render (not in an effect) per the
   // React "storing information from previous renders" pattern. This avoids the
@@ -273,11 +274,13 @@ export function ClaimHandleModal({
     setIsClosing(true);
   };
 
-  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
-    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
-      onClose();
-    }
-  }
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !isClosing) return;
+    const handler = (e: AnimationEvent) => { if (e.target === panel) onClose(); };
+    panel.addEventListener('animationend', handler);
+    return () => panel.removeEventListener('animationend', handler);
+  }, [isClosing, onClose]);
 
   if (!open) return null;
 
@@ -346,10 +349,10 @@ export function ClaimHandleModal({
               ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
               : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
           }}
+          ref={panelRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby="claimTitle"
-          onAnimationEnd={handlePanelAnimEnd}
         >
           {isMobile && (
             <div className="flex justify-center pt-3 pb-2 shrink-0">

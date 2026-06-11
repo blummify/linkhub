@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { BrandingConfirmModal } from "../BrandingConfirmModal";
 
 describe("BrandingConfirmModal", () => {
@@ -43,8 +43,8 @@ describe("BrandingConfirmModal", () => {
         body="Are you sure?"
       />
     );
-    fireEvent.click(screen.getByText("Confirm"));
-    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
+    act(() => { fireEvent.click(screen.getByText("Confirm")); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onConfirm).toHaveBeenCalledOnce();
     expect(onClose).toHaveBeenCalledOnce();
   });

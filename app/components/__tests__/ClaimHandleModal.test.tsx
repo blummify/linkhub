@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { ClaimHandleModal } from "../ClaimHandleModal";
 
 describe("ClaimHandleModal", () => {
@@ -72,16 +72,16 @@ describe("ClaimHandleModal", () => {
   it("calls onClose when 'I'll do this later' is clicked", () => {
     const onClose = vi.fn();
     render(<ClaimHandleModal open onClose={onClose} onClaim={vi.fn()} />);
-    fireEvent.click(screen.getByText("I'll do this later"));
-    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
+    act(() => { fireEvent.click(screen.getByText("I'll do this later")); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("calls onClose when the X close button is clicked", () => {
     const onClose = vi.fn();
     render(<ClaimHandleModal open onClose={onClose} onClaim={vi.fn()} />);
-    fireEvent.click(screen.getByLabelText("Close"));
-    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
+    act(() => { fireEvent.click(screen.getByLabelText("Close")); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

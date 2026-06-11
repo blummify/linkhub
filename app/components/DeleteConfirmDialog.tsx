@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { ManagedLink } from "../user-admin/components/types";
 import { LinkStatus } from "@/app/constants/linkStatus";
 
@@ -18,16 +18,19 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
     window.matchMedia("(max-width: 1023px)").matches
   );
   const [isClosing, setIsClosing] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (open) setIsClosing(false); }, [open]);
 
   function requestClose() { if (!isLoading) setIsClosing(true); }
 
-  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
-    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
-      onClose();
-    }
-  }
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !isClosing) return;
+    const handler = (e: AnimationEvent) => { if (e.target === panel) onClose(); };
+    panel.addEventListener('animationend', handler);
+    return () => panel.removeEventListener('animationend', handler);
+  }, [isClosing, onClose]);
 
   if (!open || !link) return null;
 
@@ -64,7 +67,7 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
             : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
           padding: isMobile ? "0 28px calc(24px + env(safe-area-inset-bottom,0px))" : "28px 28px 24px",
         }}
-        onAnimationEnd={handlePanelAnimEnd}
+        ref={panelRef}
       >
         {isMobile && (
           <div className="flex justify-center pt-3 pb-4 shrink-0">

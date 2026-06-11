@@ -50,17 +50,23 @@ export function BrandingConfirmModal({
   );
   const [isClosing, setIsClosing] = useState(false);
   const pendingConfirmRef = useRef(false);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (open) setIsClosing(false); }, [open]);
 
   function requestClose() { setIsClosing(true); }
 
-  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
-    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !isClosing) return;
+    const handler = (e: AnimationEvent) => {
+      if (e.target !== panel) return;
       if (pendingConfirmRef.current) { pendingConfirmRef.current = false; onConfirm?.(); }
       onClose();
-    }
-  }
+    };
+    panel.addEventListener('animationend', handler);
+    return () => panel.removeEventListener('animationend', handler);
+  }, [isClosing, onClose, onConfirm]);
 
   useEffect(() => {
     if (!open) return;
@@ -130,8 +136,8 @@ export function BrandingConfirmModal({
             ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
             : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
         }}
+        ref={panelRef}
         onClick={(e) => e.stopPropagation()}
-        onAnimationEnd={handlePanelAnimEnd}
       >
         {isMobile && (
           <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 16 }}>

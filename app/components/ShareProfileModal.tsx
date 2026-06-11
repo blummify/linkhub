@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 export interface ShareProfileModalProps {
   open: boolean;
@@ -22,16 +22,19 @@ export function ShareProfileModal({
     typeof window !== "undefined" && !!window.matchMedia &&
     window.matchMedia("(max-width: 1023px)").matches
   );
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (open) setIsClosing(false); }, [open]);
 
   function requestClose() { setIsClosing(true); }
 
-  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
-    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
-      onClose();
-    }
-  }
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !isClosing) return;
+    const handler = (e: AnimationEvent) => { if (e.target === panel) onClose(); };
+    panel.addEventListener('animationend', handler);
+    return () => panel.removeEventListener('animationend', handler);
+  }, [isClosing, onClose]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(profileUrl);
@@ -64,8 +67,8 @@ export function ShareProfileModal({
             ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
             : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
         }}
+        ref={panelRef}
         onClick={(e) => e.stopPropagation()}
-        onAnimationEnd={handlePanelAnimEnd}
       >
         {isMobile && (
           <div className="flex justify-center pt-3 pb-4">
