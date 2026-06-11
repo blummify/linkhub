@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image"
+import { LinkhubLogo } from "./icons/LinkhubLogo";
 import { signOut, useSession } from "next-auth/react";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { useLinksStore } from "@/store/linksStore";
@@ -33,12 +33,14 @@ const ACCOUNT_ITEMS = [
 
 export default function CollapsibleSidebar({
   children,
+  mobileHeaderExtra,
 }: {
   children: React.ReactNode;
   isAdmin?: boolean;
+  mobileHeaderExtra?: React.ReactNode;
 }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
-  const toggleSidebar = useSidebarStore((s) => s.toggle);
+
   const linkCount = useLinksStore((s) => s.links.length);
   const pathname = usePathname();
   const { data: session, status, update } = useSession();
@@ -63,30 +65,25 @@ export default function CollapsibleSidebar({
 
   return (
     <>
-      <MobileTopBar />
+      <MobileTopBar extra={mobileHeaderExtra} />
 
       <aside
         id="sidebar"
-        className={`h-screen bg-white border-r z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 hidden lg:flex flex-col overflow-hidden ${
+        className={`h-screen bg-white border-r z-50 fixed left-0 top-0 hidden lg:flex flex-col overflow-hidden ${
           isCollapsed
             ? "w-[76px] px-[10px] py-6"
             : "w-[264px] px-[18px] py-7"
         }`}
-        style={{ borderColor: "#eef0f7" }}
+        style={{ borderColor: "#eef0f7", transition: "width var(--motion-base) var(--ease-standard)" }}
       >
 
-      <div className={`flex items-center justify-center ${isCollapsed ? 'mb-6 pt-1' : 'mb-8 pt-2'}`} >
-        <Link href="/user-dashboard">
-          <Image
-            src="/link_hub_logo.png"
-            alt="LinkHub Logo"
-            width={128}
-            height={128}
-            style={isCollapsed ? undefined : { height: "auto" }}
-            className={`object-contain transition-all duration-300 cursor-pointer hover:opacity-80 ${
-              isCollapsed ? "h-8 w-8" : "h-auto w-32"
-            }`}
-          />
+      <div className={`flex items-center justify-center ${isCollapsed ? 'mb-6 pt-1' : 'mb-8 pt-2'}`}>
+        <Link href="/user-dashboard" className="hover:opacity-80 transition-opacity">
+          {isCollapsed ? (
+            <LinkhubLogo markOnly size="md" />
+          ) : (
+            <LinkhubLogo size="md" />
+          )}
         </Link>
       </div>
 

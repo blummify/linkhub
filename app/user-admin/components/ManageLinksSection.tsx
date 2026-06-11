@@ -195,7 +195,7 @@ const LH_SHIMMER = [
 const shimmerBase: React.CSSProperties = {
   background: LH_SHIMMER,
   backgroundSize: "300% 100%",
-  animation: "lhShimmer 1.8s cubic-bezier(0.4,0,0.6,1) infinite",
+  animation: "lhShimmer var(--motion-shimmer) linear infinite",
   borderRadius: 6,
 };
 
@@ -268,8 +268,12 @@ function SortableCardWrapper({
     opacity: isDragging ? 0 : 1,
   };
 
+  const mountAnimation: React.CSSProperties = style.transform || style.transition
+    ? {}
+    : { animation: "lhItemIn var(--motion-base) var(--ease-out) both" };
+
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={{ ...style, ...mountAnimation }}>
       <ManagedLinkCard
         link={link}
         dragHandleListeners={listeners}
@@ -361,7 +365,7 @@ export function ManageLinksSection({
           <button
             type="button"
             onClick={onAddLink}
-            className="inline-flex shrink-0 items-center gap-2 text-white cursor-pointer transition-all duration-150 active:scale-[0.98]"
+            className="hidden sm:inline-flex shrink-0 items-center gap-2 text-white cursor-pointer transition-all duration-150 active:scale-[0.98]"
             style={{
               borderRadius: 99,
               padding: "11px 18px 11px 14px",

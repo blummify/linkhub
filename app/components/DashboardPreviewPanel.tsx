@@ -308,7 +308,7 @@ export function PhoneScreenContent({
                   top: 0, left: 0,
                   width: "40%", height: "100%",
                   background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
-                  animation: `lhShimmer ${1.8 + i * 0.15}s cubic-bezier(0.4,0,0.6,1) ${i * 0.2}s infinite`,
+                  animation: `lhShimmer var(--motion-shimmer) linear ${i * 0.2}s infinite`,
                   pointerEvents: "none",
                   zIndex: 1,
                 }}
@@ -1200,11 +1200,11 @@ function SocialConfirmDialog({
 }
 
 // ── Skeleton shown before the branding store hydrates from localStorage ────────
-function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number }) {
+function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number | string }) {
   const shimmer: React.CSSProperties = {
     background: "linear-gradient(100deg, #e4e8f7 0%, #f0f3fc 50%, #e4e8f7 100%)",
     backgroundSize: "200% 100%",
-    animation: "lhShimmer 1.8s cubic-bezier(0.4,0,0.6,1) infinite",
+    animation: "lhShimmer var(--motion-shimmer) linear infinite",
     borderRadius: 8,
   };
   return (
@@ -1253,8 +1253,8 @@ function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number }) {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export interface DashboardPreviewPanelProps {
-  /** Panel width (default 420) */
-  width?: number;
+  /** Panel width — number for px (default 420) or CSS string e.g. "100%" for sheet mode */
+  width?: number | string;
   /** Show the "Current theme" footer with random-theme button (branding page only) */
   showThemeFooter?: boolean;
   /** Called when user clicks "Pick a handle" — only shown when handle is unset */
@@ -1345,14 +1345,15 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
 
   if (!hydrated) return <DashboardPreviewPanelSkeleton width={width} />;
 
+  const isSheet = typeof width === "string";
   return (
     <div
       style={{
         width,
         background: "linear-gradient(180deg, #f0f2fb 0%, #e9ecf8 100%)",
-        borderLeft: "1px solid #eef0f7",
-        padding: "28px 24px",
-        position: "sticky",
+        borderLeft: isSheet ? "none" : "1px solid #eef0f7",
+        padding: isSheet ? "60px 24px 28px" : "28px 24px",
+        position: isSheet ? "relative" : "sticky",
         top: 0,
         height: "100vh",
         display: "flex",

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LinkhubLogo } from "@/app/components/icons/LinkhubLogo";
 
 type AuthFeature = {
   icon: string;
@@ -51,14 +52,7 @@ export function AuthShell({
 
           <div className="mb-8">
             <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
-              <Image
-                src="/link_hub_logo.png"
-                alt="LinkHub"
-                width={256}
-                height={256}
-                style={{ height: "auto" }}
-                className="h-auto w-32 max-w-full object-contain"
-              />
+              <LinkhubLogo size="md" />
             </Link>
           </div>
 

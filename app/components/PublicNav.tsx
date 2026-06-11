@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import UserAvatar from "./UserAvatar";
+import { LinkhubLogo } from "./icons/LinkhubLogo";
 
 type PublicNavProps = {
   activePage?: "features" | "pricing";
@@ -23,18 +23,7 @@ export function PublicNav({ activePage }: PublicNavProps) {
           href="/"
           className="text-2xl font-bold text-indigo-900 dark:text-indigo-100 font-headline tracking-tight hover:scale-105 transition-transform"
         >
-          <span className="flex items-center">
-            <span className="sr-only">LinkHub</span>
-            <Image
-              src="/link_hub_logo.png"
-              alt="LinkHub logo"
-              width={256}
-              height={256}
-              priority
-              style={{ height: "auto" }}
-              className="h-auto w-32 max-w-full object-contain"
-            />
-          </span>
+          <LinkhubLogo size="md" />
         </Link>
         <div className="hidden md:flex items-center gap-8 font-headline font-semibold tracking-tight">
           <Link

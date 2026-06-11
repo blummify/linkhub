@@ -13,6 +13,7 @@ import {
   HelpIcon,
   LogoutIcon,
 } from "./icons/SidebarIcons";
+import { LinkhubLogo } from "./icons/LinkhubLogo";
 
 const TABS = [
   {
@@ -47,7 +48,7 @@ const TABS = [
   },
 ];
 
-export function MobileTopBar() {
+export function MobileTopBar({ extra }: { extra?: React.ReactNode }) {
   const { data: session } = useSession();
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -59,33 +60,12 @@ export function MobileTopBar() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-[80] h-14 flex items-center justify-between px-4 bg-white border-b border-[#eef0f7] lg:hidden">
-        <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
-          <span
-            style={{
-              fontFamily: "var(--font-instrument-serif)",
-              fontStyle: "italic",
-              fontSize: 25,
-              color: "#1e2a8a",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Linkhub
-          </span>
-          <span
-            style={{
-              width: 5,
-              height: 5,
-              borderRadius: "50%",
-              background: "#3b46e0",
-              display: "inline-block",
-              alignSelf: "flex-end",
-              marginBottom: 6,
-              boxShadow: "0 0 0 3px #f1f3ff",
-            }}
-          />
-        </div>
+        <Link href="/user-dashboard" style={{ textDecoration: "none" }}>
+          <LinkhubLogo size="sm" />
+        </Link>
 
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {extra}
           <button
             type="button"
             className="relative flex items-center justify-center"
@@ -282,6 +262,7 @@ export function MobileBottomNav() {
               fontSize: 11,
               fontWeight: 500,
               textDecoration: "none",
+              transition: "color var(--motion-fast) var(--ease-standard)",
             }}
           >
             <Icon className="w-[22px] h-[22px]" />

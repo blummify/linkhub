@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { AddEditLinkModal } from "../AddEditLinkModal";
 import type { ManagedLink } from "../types";
 
@@ -53,7 +53,7 @@ describe("AddEditLinkModal", () => {
     expect(screen.getByRole("button", { name: /add link/i })).not.toBeDisabled();
   });
 
-  it("calls onSave with correct data and then onClose", () => {
+  it("calls onSave with correct data and then onClose", async () => {
     const onSave = vi.fn();
     const onClose = vi.fn();
     render(<AddEditLinkModal open onClose={onClose} onSave={onSave} />);
@@ -63,10 +63,13 @@ describe("AddEditLinkModal", () => {
     fireEvent.change(screen.getByPlaceholderText("https://example.com"), {
       target: { value: "https://blog.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /add link/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /add link/i }));
+    });
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ title: "My Blog", url: "https://blog.com" })
     );
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -80,7 +83,8 @@ describe("AddEditLinkModal", () => {
   it("calls onClose when Cancel is clicked", () => {
     const onClose = vi.fn();
     render(<AddEditLinkModal open onClose={onClose} onSave={noop} />);
-    fireEvent.click(screen.getByText("Cancel"));
+    act(() => { fireEvent.click(screen.getByText("Cancel")); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

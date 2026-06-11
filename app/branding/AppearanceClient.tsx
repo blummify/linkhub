@@ -318,9 +318,10 @@ export default function AppearanceClient({
     <div className="bg-[#f7f8fc] min-h-screen antialiased flex overflow-hidden">
       <CollapsibleSidebar>
         <main
-          className={`flex-1 transition-all duration-500 ease-in-out ${
+          className={`flex-1 ml-0 overflow-y-auto bg-[#f7f8fc] h-screen ${
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
-          } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
+          }`}
+          style={{ transition: "margin-left var(--motion-base) var(--ease-standard)" }}
         >
           <div className="flex flex-col lg:flex-row min-h-screen">
             <div
@@ -332,13 +333,8 @@ export default function AppearanceClient({
               />
 
               <div
-                style={{
-                  display: "flex",
-                  alignItems: "end",
-                  justifyContent: "space-between",
-                  gap: 24,
-                  marginBottom: 28,
-                }}
+                className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6"
+                style={{ marginBottom: 28 }}
               >
                 <div>
                   <div
@@ -389,7 +385,7 @@ export default function AppearanceClient({
                   </p>
                 </div>
 
-                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                <div className="hidden lg:flex" style={{ gap: 8, flexShrink: 0 }}>
                   <button
                     type="button"
                     onClick={reset}
@@ -402,6 +398,7 @@ export default function AppearanceClient({
                       color: "#1a2244",
                       padding: "10px 14px",
                       borderRadius: 99,
+                      minHeight: 44,
                       fontFamily: "inherit",
                       fontSize: 13,
                       fontWeight: 500,
@@ -425,6 +422,7 @@ export default function AppearanceClient({
                       border: 0,
                       padding: "11px 18px",
                       borderRadius: 99,
+                      minHeight: 44,
                       fontFamily: "inherit",
                       fontSize: 13.5,
                       fontWeight: 600,
@@ -513,7 +511,9 @@ export default function AppearanceClient({
             </div>
 
             <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto bg-white p-4 lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:block" : "hidden lg:block"}>
-              <DashboardPreviewPanel showThemeFooter onPickHandle={() => setShowClaimModal(true)} />
+              <div key={themeId} style={{ animation: "lhItemIn var(--motion-base) var(--ease-out) both" }}>
+                <DashboardPreviewPanel width={previewOpen ? "100%" : 420} showThemeFooter onPickHandle={() => setShowClaimModal(true)} />
+              </div>
             </div>
           </div>
         </main>
@@ -525,7 +525,15 @@ export default function AppearanceClient({
         type="button"
         onClick={() => setPreviewOpen(true)}
         className="fixed flex items-center gap-2 text-white text-sm font-semibold rounded-[24px] lg:hidden"
-        style={{ right: 16, bottom: 78, zIndex: 85, background: "#3b46e0", padding: "11px 18px", boxShadow: "0 4px 20px rgba(59,70,224,0.4)" }}
+        style={{
+          right: 16,
+          bottom: isDirtyOrPending ? "max(78px, calc(72px + env(safe-area-inset-bottom, 0px)))" : "78px",
+          zIndex: 85,
+          background: "#3b46e0",
+          padding: "11px 18px",
+          boxShadow: "0 4px 20px rgba(59,70,224,0.4)",
+          transition: "bottom var(--motion-base) var(--ease-out)",
+        }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -548,6 +556,88 @@ export default function AppearanceClient({
         Close
       </button>
     )}
+
+    {/* ── Mobile sticky save bar — slides up above the bottom nav when dirty ── */}
+    <div
+      className="fixed left-0 right-0 lg:hidden"
+      style={{
+        bottom: 0,
+        zIndex: 84,
+        transform: isDirtyOrPending ? "translateY(0)" : "translateY(110%)",
+        transition: "transform var(--motion-base) var(--ease-out)",
+        pointerEvents: isDirtyOrPending ? "auto" : "none",
+        background: "white",
+        borderTop: "1px solid #eef0f7",
+        boxShadow: "0 -4px 20px rgba(11,16,32,0.08)",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "10px 16px",
+        paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))",
+      }}
+    >
+      <span
+        style={{
+          flex: 1,
+          fontSize: 12.5,
+          fontWeight: 500,
+          color: "#6b75a3",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        Unsaved changes
+      </span>
+      <button
+        type="button"
+        onClick={reset}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          background: "white",
+          border: "1px solid #d6dae9",
+          color: "#1a2244",
+          padding: "0 14px",
+          borderRadius: 99,
+          minHeight: 40,
+          fontFamily: "inherit",
+          fontSize: 13,
+          fontWeight: 500,
+          cursor: "pointer",
+          flexShrink: 0,
+        }}
+      >
+        Reset
+      </button>
+      <button
+        type="button"
+        onClick={handleSave}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 7,
+          background: "linear-gradient(180deg, #3b46e0, #2a37c0)",
+          color: "white",
+          border: 0,
+          padding: "0 16px",
+          borderRadius: 99,
+          minHeight: 40,
+          fontFamily: "inherit",
+          fontSize: 13.5,
+          fontWeight: 600,
+          cursor: "pointer",
+          flexShrink: 0,
+          boxShadow: "0 4px 14px -4px rgba(59,70,224,0.5)",
+        }}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Save
+      </button>
+    </div>
 
     {cropFile && (
       <AvatarCropModal

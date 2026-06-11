@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { UnverifiedEmailModal } from "../../auth/UnverifiedEmailModal";
 
 describe("UnverifiedEmailModal", () => {
@@ -55,7 +55,8 @@ describe("UnverifiedEmailModal", () => {
     render(
       <UnverifiedEmailModal email="x@x.com" isResending={false} onClose={onClose} onVerify={vi.fn()} />
     );
-    fireEvent.click(screen.getByLabelText("Close"));
+    act(() => { fireEvent.click(screen.getByLabelText("Close")); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 });

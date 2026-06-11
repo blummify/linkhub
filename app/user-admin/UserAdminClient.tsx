@@ -287,7 +287,25 @@ export default function UserAdminClient() {
   return (
     <>
       <div className="bg-[#f7f8fc] text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
-        <CollapsibleSidebar isAdmin={true}>
+        <CollapsibleSidebar
+          isAdmin={true}
+          mobileHeaderExtra={
+            !previewOpen ? (
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+                className="flex items-center gap-1.5 font-semibold"
+                style={{ padding: "6px 12px 6px 10px", borderRadius: 99, border: "1.5px solid #3b46e0", color: "#3b46e0", background: "transparent", fontSize: 13 }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Preview
+              </button>
+            ) : undefined
+          }
+        >
           <div className="flex-1 flex flex-col min-h-screen relative">
             <main
               id="mainContent"
@@ -296,7 +314,7 @@ export default function UserAdminClient() {
               } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
             >
               <div className="flex flex-col lg:flex-row min-h-screen">
-                <div className="flex-1 min-w-0 px-4 pt-[22px] pb-24 lg:pb-10 sm:px-6 lg:px-8">
+                <div className="flex-1 min-w-0 px-4 pt-[22px] pb-36 lg:pb-10 sm:px-6 lg:px-8">
                   <ManageLinksSection
                     links={links}
                     isLoadingLinks={isLoadingLinks}
@@ -315,7 +333,7 @@ export default function UserAdminClient() {
                 </div>
 
                 <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto bg-white p-4 lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:block" : "hidden lg:block"}>
-                  <DashboardPreviewPanel onPickHandle={() => setClaimOpen(true)} />
+                  <DashboardPreviewPanel width={previewOpen ? "100%" : 420} onPickHandle={() => setClaimOpen(true)} />
                 </div>
               </div>
             </main>
@@ -326,15 +344,14 @@ export default function UserAdminClient() {
       {!previewOpen && (
         <button
           type="button"
-          onClick={() => setPreviewOpen(true)}
-          className="fixed flex items-center gap-2 text-white text-sm font-semibold rounded-[24px] lg:hidden"
-          style={{ right: 16, bottom: 78, zIndex: 85, background: "#3b46e0", padding: "11px 18px", boxShadow: "0 4px 20px rgba(59,70,224,0.4)" }}
+          onClick={openAddLink}
+          className="fixed flex items-center gap-2 text-white font-semibold rounded-[24px] lg:hidden"
+          style={{ right: 16, bottom: 78, zIndex: 85, fontSize: 14, padding: "12px 20px 12px 16px", background: "linear-gradient(180deg,#3b46e0,#2a37c0)", boxShadow: "0 4px 20px rgba(59,70,224,0.4)" }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12h14"/>
           </svg>
-          Preview
+          Add link
         </button>
       )}
 

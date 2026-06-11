@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ShareProfileModal } from "../ShareProfileModal";
 
 beforeEach(() => {
@@ -50,7 +50,8 @@ describe("ShareProfileModal", () => {
   it("calls onClose when the close button is clicked", () => {
     const onClose = vi.fn();
     render(<ShareProfileModal open onClose={onClose} profileUrl="x" />);
-    fireEvent.click(screen.getByLabelText("Close"));
+    act(() => { fireEvent.click(screen.getByLabelText("Close")); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 });
