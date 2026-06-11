@@ -3,13 +3,15 @@
 type GoogleAuthButtonProps = {
   onClick: () => void;
   label: string;
+  disabled?: boolean;
 };
 
-export function GoogleAuthButton({ onClick, label }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ onClick, label, disabled = false }: GoogleAuthButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 dark:border-outline-variant rounded-lg hover:bg-gray-50 dark:hover:bg-surface-container-low transition-colors group cursor-pointer"
+      disabled={disabled}
+      className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 dark:border-outline-variant rounded-lg hover:bg-gray-50 dark:hover:bg-surface-container-low transition-colors group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       type="button"
     >
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">

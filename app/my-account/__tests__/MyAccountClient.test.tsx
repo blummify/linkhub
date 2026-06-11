@@ -33,6 +33,22 @@ vi.mock("@/app/actions/profile", () => ({ updateBranding }));
 vi.mock("sonner", () => ({
   toast: { success: toastSuccess, error: toastError },
 }));
+vi.mock("@/app/actions/twoFactor", () => ({
+  setup2FA: vi.fn(),
+  enable2FA: vi.fn(),
+  disable2FA: vi.fn(),
+  verifyTotpLogin: vi.fn(),
+}));
+vi.mock("../components/TwoFactorSetupModal", () => ({
+  TwoFactorSetupModal: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="setup-modal"><button onClick={onClose}>Close</button></div>
+  ),
+}));
+vi.mock("../components/TwoFactorDisableModal", () => ({
+  TwoFactorDisableModal: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="disable-modal"><button onClick={onClose}>Close</button></div>
+  ),
+}));
 
 describe("MyAccountClient", () => {
   beforeEach(() => {
@@ -43,7 +59,7 @@ describe("MyAccountClient", () => {
   });
 
   it("renders the account page with its sections", () => {
-    render(<MyAccountClient />);
+    render(<MyAccountClient twoFactorEnabled={false} />);
     expect(screen.getByRole("main")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /my account/i })).toBeInTheDocument();
     expect(screen.getByText("Profile")).toBeInTheDocument();
@@ -53,14 +69,14 @@ describe("MyAccountClient", () => {
   });
 
   it("hydrates the profile fields from the session", () => {
-    render(<MyAccountClient />);
+    render(<MyAccountClient twoFactorEnabled={false} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[0]);
     expect(screen.getByLabelText("Full name")).toHaveValue("Joel Osei Acquah");
     expect(screen.getByLabelText("Email")).toHaveValue("joel@linkhub.co");
   });
 
   it("enables Save only when the profile is dirty and persists the name", async () => {
-    render(<MyAccountClient />);
+    render(<MyAccountClient twoFactorEnabled={false} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[0]);
 
     const save = screen.getByRole("button", { name: /save changes/i });
@@ -77,7 +93,7 @@ describe("MyAccountClient", () => {
   });
 
   it("reverts edits with Cancel", () => {
-    render(<MyAccountClient />);
+    render(<MyAccountClient twoFactorEnabled={false} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[0]);
 
     fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Changed" } });
@@ -89,7 +105,7 @@ describe("MyAccountClient", () => {
   });
 
   it("gates the password update until the form is valid", () => {
-    render(<MyAccountClient />);
+    render(<MyAccountClient twoFactorEnabled={false} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[1]);
 
     const update = screen.getByRole("button", { name: /update password/i });
@@ -107,13 +123,19 @@ describe("MyAccountClient", () => {
     expect(toastSuccess).toHaveBeenCalledWith("Password updated — signed out on other devices");
   });
 
-  it("toggles a security factor between set-up and active", () => {
-    render(<MyAccountClient />);
+  it("opens setup modal when 2FA is not enabled and Set up is clicked", () => {
+    render(<MyAccountClient twoFactorEnabled={false} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[2]);
 
-    const setUpButtons = screen.getAllByRole("button", { name: /set up/i });
-    fireEvent.click(setUpButtons[0]);
-    expect(toastSuccess).toHaveBeenCalledWith("Second factor enabled");
-    expect(screen.getByRole("button", { name: /manage/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /set up/i }));
+    expect(screen.getByTestId("setup-modal")).toBeInTheDocument();
+  });
+
+  it("opens disable modal when 2FA is enabled and Manage is clicked", () => {
+    render(<MyAccountClient twoFactorEnabled={true} />);
+    fireEvent.click(screen.getAllByLabelText("Edit")[2]);
+
+    fireEvent.click(screen.getByRole("button", { name: /manage/i }));
+    expect(screen.getByTestId("disable-modal")).toBeInTheDocument();
   });
 });

@@ -1,8 +1,5 @@
 "use client";
 
-// My account settings page. Styled with Tailwind utilities + ink/indigo/paper
-// theme tokens. Password/2FA sections are UI-only.
-
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ReactNode } from "react";
@@ -15,6 +12,8 @@ import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { updateBranding } from "@/app/actions/profile";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { scorePassword, passwordsMatch, PASSWORD_STRENGTH_LABELS } from "@/lib/validation/auth.schema";
+import { TwoFactorSetupModal } from "./components/TwoFactorSetupModal";
+import { TwoFactorDisableModal } from "./components/TwoFactorDisableModal";
 
 /* ───────────────── Section card primitives ───────────────── */
 function Section({ children, danger }: { children: ReactNode; danger?: boolean }) {
@@ -218,9 +217,7 @@ function PassField({
   );
 }
 
-/* ───────────────── Security row (2FA factor, demo state) ───────────────── */
-type SecFactor = { title: string; recommended?: boolean; offDesc: string; onDesc: string; icon: ReactNode };
-
+/* ───────────────── Badge ───────────────── */
 const BADGE_BASE = "inline-flex items-center gap-1 rounded-full px-[7px] py-0.5 text-[10px] font-semibold tracking-[0.04em]";
 const BADGE_VARIANTS: Record<"on" | "off" | "recommended", string> = {
   on: "bg-success-50 text-green-600",
@@ -239,69 +236,37 @@ function Badge({ kind, children }: { kind: "on" | "off" | "recommended"; childre
   );
 }
 
-function SecRow({ factor }: { factor: SecFactor }) {
-  // Demo-only: enrollment state is local, not persisted.
-  const [enabled, setEnabled] = useState(false);
-  const toggle = () => {
-    setEnabled((prev) => {
-      const next = !prev;
-      toast.success(next ? "Second factor enabled" : "Second factor removed");
-      return next;
-    });
-  };
+/* ───────────────── TwoFactorRow ───────────────── */
+function TwoFactorRow({ enabled, onSetup, onManage }: { enabled: boolean; onSetup: () => void; onManage: () => void }) {
   return (
     <div className="mb-2.5 flex items-center gap-4 rounded-[12px] border border-ink-100 bg-paper p-4 last:mb-0">
       <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] border border-ink-100 bg-white text-ink-500 [&_svg]:size-[18px]">
-        {factor.icon}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="5" y="2" width="14" height="20" rx="2" />
+          <path strokeLinecap="round" d="M11 18h2" />
+        </svg>
       </div>
       <div className="min-w-0 flex-1">
         <div className="mb-0.5 flex flex-wrap items-center gap-2 text-[14px] font-medium text-ink-900">
-          {factor.title}
-          {factor.recommended && <Badge kind="recommended">Recommended</Badge>}
+          Authenticator app
+          <Badge kind="recommended">Recommended</Badge>
           <Badge kind={enabled ? "on" : "off"}>{enabled ? "Active" : "Not set up"}</Badge>
         </div>
-        <div className="text-xs leading-[1.45] text-ink-400">{enabled ? factor.onDesc : factor.offDesc}</div>
+        <div className="text-xs leading-[1.45] text-ink-400">
+          {enabled
+            ? "Connected to your authenticator app. Use a recovery code if you lose access."
+            : "Use Google Authenticator, 1Password, or Authy to generate one-time codes."}
+        </div>
       </div>
-      <Button variant={enabled ? "secondary" : "ghost"} onClick={toggle}>
+      <Button variant={enabled ? "secondary" : "ghost"} onClick={enabled ? onManage : onSetup}>
         {enabled ? "Manage" : "Set up"}
       </Button>
     </div>
   );
 }
 
-const SECURITY_FACTORS: SecFactor[] = [
-  {
-    title: "Authenticator app",
-    recommended: true,
-    offDesc: "Use Google Authenticator, 1Password, or Authy to generate one-time codes.",
-    onDesc:
-      "Connected to your authenticator app. Recovery codes are stored — view them in your downloaded backup.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="5" y="2" width="14" height="20" rx="2" />
-        <path strokeLinecap="round" d="M11 18h2" />
-      </svg>
-    ),
-  },
-  {
-    title: "SMS",
-    offDesc:
-      "Receive codes by text message. Less secure than an authenticator app, but still better than no second factor.",
-    onDesc: "Codes will be sent to ••• ••• 4729. Update your number from Profile.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-        />
-      </svg>
-    ),
-  },
-];
-
 /* ───────────────────────────── Page ───────────────────────────── */
-export default function MyAccountClient() {
+export default function MyAccountClient({ twoFactorEnabled: initialTwoFactorEnabled }: { twoFactorEnabled: boolean }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const { data: session } = useSession();
   const [showPalette, setShowPalette] = useState(false);
@@ -310,6 +275,11 @@ export default function MyAccountClient() {
   const [editingProfile,  setEditingProfile]  = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
   const [editingSecurity, setEditingSecurity] = useState(false);
+
+  /* ── 2FA state ── */
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(initialTwoFactorEnabled);
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const [showDisableModal, setShowDisableModal] = useState(false);
 
   /* ── Profile (name + email) ── */
   const [name, setName] = useState("");
@@ -530,17 +500,41 @@ export default function MyAccountClient() {
                 />
                 {editingSecurity ? (
                   <div className="px-6 pt-4 pb-6">
-                    {SECURITY_FACTORS.map((factor) => (
-                      <SecRow key={factor.title} factor={factor} />
-                    ))}
+                    <TwoFactorRow
+                      enabled={twoFactorEnabled}
+                      onSetup={() => setShowSetupModal(true)}
+                      onManage={() => setShowDisableModal(true)}
+                    />
                   </div>
                 ) : (
                   <div className="px-6 pb-5 pt-1">
                     <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Two-factor authentication</div>
-                    <div className="text-[13.5px] text-ink-400">No second factors active</div>
+                    <div className="text-[13.5px] text-ink-400">
+                      {twoFactorEnabled ? "Authenticator app active" : "No second factors active"}
+                    </div>
                   </div>
                 )}
               </Section>
+
+              {showSetupModal && (
+                <TwoFactorSetupModal
+                  onClose={() => setShowSetupModal(false)}
+                  onEnabled={() => {
+                    setTwoFactorEnabled(true);
+                    toast.success("Two-factor authentication enabled");
+                  }}
+                />
+              )}
+
+              {showDisableModal && (
+                <TwoFactorDisableModal
+                  onClose={() => setShowDisableModal(false)}
+                  onDisabled={() => {
+                    setTwoFactorEnabled(false);
+                    toast.success("Two-factor authentication disabled");
+                  }}
+                />
+              )}
 
               {/* ── Danger zone ── */}
               <Section danger>

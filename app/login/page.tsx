@@ -14,10 +14,12 @@ import {
   resendVerificationCode,
   sendVerificationCode,
 } from "@/app/actions/auth";
+import { verifyTotpLogin } from "@/app/actions/twoFactor";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { GoogleAuthButton } from "@/app/components/auth/GoogleAuthButton";
 import { PasswordField } from "@/app/components/auth/PasswordField";
+import { TotpCodeInput } from "@/app/components/auth/TotpCodeInput";
 import { validateEmail, validatePassword, validatePasswordMatch } from "@/lib/validation/auth.schema";
 
 type SignupErrors = { name: string; password: string; confirmPassword: string };
@@ -26,13 +28,21 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const oauthError = searchParams.get("error");
+  const oauthPendingToken = searchParams.get("2fa");
   const { update: updateSession } = useSession();
   const [email, setEmail] = useState("");
   const [signupName, setSignupName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [stage, setStage] = useState<"email" | "password" | "signup">("email");
+  const [stage, setStage] = useState<"email" | "password" | "signup" | "totp">(
+    oauthPendingToken ? "totp" : "email"
+  );
+  const [pendingToken, setPendingToken] = useState(oauthPendingToken ?? "");
+  const [totpCode, setTotpCode] = useState("");
+  const [totpError, setTotpError] = useState("");
+  const [useBackupCode, setUseBackupCode] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -86,17 +96,21 @@ export default function LoginPage() {
       const recaptchaToken = await executeRecaptcha("login");
       const result = await loginWithCredentials({ email, password, recaptchaToken });
 
-      if (result?.error === "email_not_verified") {
-        setShowUnverifiedModal(true);
+      if (result && "requiresTwoFactor" in result) {
+        setPendingToken(result.pendingToken);
+        setStage("totp");
         return;
       }
 
-      if (result?.error === "oauth_account_no_password") {
-        setShowOauthNoPasswordBanner(true);
-        return;
-      }
-
-      if (result?.error) {
+      if (result && "error" in result) {
+        if (result.error === "email_not_verified") {
+          setShowUnverifiedModal(true);
+          return;
+        }
+        if (result.error === "oauth_account_no_password") {
+          setShowOauthNoPasswordBanner(true);
+          return;
+        }
         setPasswordError("Incorrect password. Please try again.");
       } else {
         await updateSession();
@@ -119,6 +133,49 @@ export default function LoginPage() {
   const handleEditEmail = () => {
     setStage("email");
     setPasswordError("");
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await signIn("google", { callbackUrl: "/user-dashboard" });
+    } catch {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleTotpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = totpCode.trim();
+    if (!code) {
+      setTotpError("Please enter a code.");
+      return;
+    }
+    setTotpError("");
+    setIsValidating(true);
+    try {
+      const result = await verifyTotpLogin(pendingToken, code);
+      if ("error" in result) {
+        setTotpError("Invalid code.");
+        return;
+      }
+      const signResult = await signIn("credentials", {
+        email: result.email,
+        autoLoginToken: result.autoLoginToken,
+        redirect: false,
+      });
+      if (signResult?.error) {
+        toast.error("Sign-in failed. Please try again.");
+        return;
+      }
+      await updateSession();
+      router.push("/user-dashboard");
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) return;
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const handleResendVerification = async () => {
@@ -220,6 +277,8 @@ export default function LoginPage() {
           ? "Welcome to LinkHub"
           : stage === "password"
           ? "Welcome Back"
+          : stage === "totp"
+          ? "Two-factor verification"
           : "Join LinkHub"
       }
       subheading={
@@ -227,6 +286,8 @@ export default function LoginPage() {
           ? "Enter your email to get started."
           : stage === "password"
           ? "Please enter your password to continue."
+          : stage === "totp"
+          ? "Enter the code from your authenticator app to continue."
           : "Start your creative journey with LinkHub."
       }
       panelTitle="Connect Your World"
@@ -467,29 +528,100 @@ export default function LoginPage() {
           </form>
         )}
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant font-semibold tracking-wide">
-              OR
-            </span>
-          </div>
-        </div>
+        {stage === "totp" && (
+          <form onSubmit={handleTotpSubmit} className="space-y-5 animate-stage-in" noValidate>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-on-surface mb-2" htmlFor="totp-code">
+                {useBackupCode ? "Recovery code" : "Authenticator code"}
+              </label>
+              {useBackupCode ? (
+                <input
+                  id="totp-code"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="one-time-code"
+                  placeholder="XXXXX-XXXXX"
+                  value={totpCode}
+                  onChange={(e) => {
+                    setTotpCode(e.target.value);
+                    if (totpError) setTotpError("");
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-surface-container-low dark:text-on-surface text-center text-lg tracking-widest ${
+                    totpError
+                      ? "border-red-400 dark:border-red-400"
+                      : "border-gray-300 dark:border-outline-variant"
+                  }`}
+                />
+              ) : (
+                <TotpCodeInput
+                  id="totp-code"
+                  value={totpCode}
+                  onChange={(value) => {
+                    setTotpCode(value);
+                    if (totpError) setTotpError("");
+                  }}
+                  error={!!totpError}
+                  autoFocus
+                  boxClassName="border-gray-300 dark:border-outline-variant dark:bg-surface-container-low dark:text-on-surface focus:ring-primary"
+                  errorBoxClassName="border-red-400 dark:border-red-400 dark:bg-surface-container-low dark:text-on-surface focus:ring-primary"
+                />
+              )}
+              {totpError && (
+                <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {totpError}
+                </p>
+              )}
+            </div>
+            <button
+              disabled={isValidating || !totpCode.trim()}
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              type="submit"
+            >
+              {isValidating ? "Verifying…" : "Verify"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUseBackupCode((v) => !v);
+                setTotpCode("");
+                setTotpError("");
+              }}
+              className="w-full text-sm text-primary hover:underline cursor-pointer"
+            >
+              {useBackupCode ? "Use authenticator code instead" : "Use a recovery code instead"}
+            </button>
+          </form>
+        )}
 
-        <GoogleAuthButton
-          onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
-          label="Continue with Google"
-        />
+        {stage !== "totp" && (
+          <>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-outline-variant" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-surface text-gray-500 dark:text-on-surface-variant font-semibold tracking-wide">
+                  OR
+                </span>
+              </div>
+            </div>
 
-        {stage !== "signup" && (
-          <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-medium text-primary hover:underline">
-              Sign up
-            </Link>
-          </p>
+            <GoogleAuthButton
+              onClick={handleGoogleSignIn}
+              label="Continue with Google"
+              disabled={isGoogleLoading}
+            />
+
+            {stage !== "signup" && (
+              <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">
+                Don&apos;t have an account?{" "}
+                <Link href="/signup" className="font-medium text-primary hover:underline">
+                  Sign up
+                </Link>
+              </p>
+            )}
+          </>
         )}
       </div>
     </AuthShell>
