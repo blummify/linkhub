@@ -73,6 +73,7 @@ describe("ClaimHandleModal", () => {
     const onClose = vi.fn();
     render(<ClaimHandleModal open onClose={onClose} onClaim={vi.fn()} />);
     fireEvent.click(screen.getByText("I'll do this later"));
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -80,6 +81,7 @@ describe("ClaimHandleModal", () => {
     const onClose = vi.fn();
     render(<ClaimHandleModal open onClose={onClose} onClaim={vi.fn()} />);
     fireEvent.click(screen.getByLabelText("Close"));
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 

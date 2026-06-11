@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 export interface ShareProfileModalProps {
   open: boolean;
@@ -17,10 +17,21 @@ export function ShareProfileModal({
   title = "Share Profile",
 }: ShareProfileModalProps) {
   const [copied, setCopied] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [isMobile] = useState(() =>
     typeof window !== "undefined" && !!window.matchMedia &&
     window.matchMedia("(max-width: 1023px)").matches
   );
+
+  useEffect(() => { if (open) setIsClosing(false); }, [open]);
+
+  function requestClose() { setIsClosing(true); }
+
+  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
+    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
+      onClose();
+    }
+  }
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(profileUrl);
@@ -33,10 +44,15 @@ export function ShareProfileModal({
   return (
     <div
       className={`fixed inset-0 z-[100] flex ${isMobile ? "items-end" : "items-center justify-center p-4"}`}
-      onClick={onClose}
+      style={{
+        opacity: isClosing ? 0 : 1,
+        transition: `opacity ${isClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
+      }}
+      onClick={requestClose}
     >
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" aria-hidden />
       <div
+        data-testid="modal-panel"
         className="relative w-full bg-surface shadow-2xl border border-outline-variant/40"
         style={{
           borderRadius: isMobile ? "24px 24px 0 0" : "2.5rem",
@@ -44,11 +60,12 @@ export function ShareProfileModal({
           padding: isMobile
             ? `0 2.5rem calc(2rem + env(safe-area-inset-bottom,0px))`
             : "2.5rem",
-          animation: isMobile
-            ? "lhSheetIn 0.35s cubic-bezier(0.32,0.72,0,1)"
-            : "zoom-in-95 0.3s",
+          animation: isClosing
+            ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
+            : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
         }}
         onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={handlePanelAnimEnd}
       >
         {isMobile && (
           <div className="flex justify-center pt-3 pb-4">
@@ -60,7 +77,7 @@ export function ShareProfileModal({
           <h3 className="text-xl font-black">{title}</h3>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center"
             style={{ minHeight: isMobile ? 46 : undefined, minWidth: isMobile ? 46 : undefined }}
             aria-label="Close"

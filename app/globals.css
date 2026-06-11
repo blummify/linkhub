@@ -59,6 +59,18 @@
   --lh-mint-500: #86aff8;
   --lh-glass-nav-bg: rgba(251, 248, 255, 0.7);
   --lh-glass-card-bg: rgba(255, 255, 255, 0.7);
+
+  /* ── Motion tokens ──────────────────────────────────────────── */
+  --motion-fast:      150ms;   /* press, hover, color/bg changes  */
+  --motion-base:      220ms;   /* fades, save bar, list items      */
+  --motion-sheet-in:  280ms;   /* sheet/modal entrance             */
+  --motion-sheet-out: 200ms;   /* sheet/modal exit (snappier)      */
+  --motion-shimmer:  1400ms;   /* skeleton loop (only looping anim)*/
+
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:       cubic-bezier(0.4, 0, 1, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
   color-scheme: light;
 }
 
@@ -205,12 +217,6 @@
 
 html {
   scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
 }
 
 body {
@@ -610,20 +616,12 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .headline-pop,
-  .headline-accent,
-  .headline-hero-sweep,
-  .reveal-up,
-  .animate-float,
-  .pulse-primary,
-  .bg-orb,
-  .shimmer-button,
-  .phone-link-1,
-  .phone-link-2,
-  .phone-link-3,
-  .phone-link-4 {
-    animation: none !important;
+  *, *::before, *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
   }
+  html { scroll-behavior: auto; }
 
   .headline-pop {
     opacity: 1;
@@ -634,11 +632,9 @@ body {
     background: none;
     -webkit-text-fill-color: var(--lh-primary);
     color: var(--lh-primary);
-    animation: none;
   }
 
   .hero-scroll-hint {
-    animation: none;
     opacity: 0.55;
   }
 }
@@ -692,13 +688,38 @@ body {
 }
 
 @keyframes lhModalIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes lhSheetIn {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
+}
+
+@keyframes lhSheetOut {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+@keyframes lhModalOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+@keyframes lhBackdropOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes lhItemIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes lhItemOut {
+  from { opacity: 1; max-height: 120px; padding-block: 12px; }
+  to   { opacity: 0; max-height: 0;     padding-block: 0; }
 }
 
 @keyframes brandingModalIn {
@@ -725,4 +746,12 @@ body {
   .billing-bento { grid-template-columns: 1fr !important; }
   .billing-bento > div { grid-column: span 1 !important; }
   .inv-desc-col { display: none; }
+}
+
+/* ── Sonner toast motion override ────────────────────────────────────────────── */
+[data-sonner-toast] {
+  animation: lhItemIn var(--motion-base) var(--ease-out) both;
+}
+[data-sonner-toast][data-removed="true"] {
+  animation: lhItemOut var(--motion-base) var(--ease-in) both;
 }

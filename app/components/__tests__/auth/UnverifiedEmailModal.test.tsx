@@ -56,6 +56,7 @@ describe("UnverifiedEmailModal", () => {
       <UnverifiedEmailModal email="x@x.com" isResending={false} onClose={onClose} onVerify={vi.fn()} />
     );
     fireEvent.click(screen.getByLabelText("Close"));
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 });

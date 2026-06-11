@@ -304,10 +304,20 @@ export function ThemesSection({
   const [proModalTheme, setProModalTheme] = useState<BrandingTheme | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [showHandoffSheet, setShowHandoffSheet] = useState(false);
+  const [isHandoffClosing, setIsHandoffClosing] = useState(false);
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  function requestCloseHandoffSheet() { setIsHandoffClosing(true); }
+
+  function handleHandoffSheetAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
+    if (isHandoffClosing && e.animationName === "lhSheetOut") {
+      setShowHandoffSheet(false);
+      setIsHandoffClosing(false);
+    }
+  }
 
   const handleThemeClick = (theme: BrandingTheme) => {
     if (theme.isPro) {
@@ -847,18 +857,25 @@ export function ThemesSection({
       {mounted && showHandoffSheet && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-end"
-          onClick={() => setShowHandoffSheet(false)}
+          style={{
+            opacity: isHandoffClosing ? 0 : 1,
+            transition: `opacity ${isHandoffClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
+          }}
+          onClick={requestCloseHandoffSheet}
         >
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div
             className="relative w-full bg-white"
             style={{
               borderRadius: "24px 24px 0 0",
-              animation: "lhSheetIn 0.35s cubic-bezier(0.32,0.72,0,1)",
+              animation: isHandoffClosing
+                ? "lhSheetOut var(--motion-sheet-out) var(--ease-in) forwards"
+                : "lhSheetIn var(--motion-sheet-in) var(--ease-out) both",
               maxHeight: "min(90dvh, 90vh)",
               overflow: "auto",
             }}
             onClick={(e) => e.stopPropagation()}
+            onAnimationEnd={handleHandoffSheetAnimEnd}
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1 shrink-0">
@@ -1025,7 +1042,7 @@ export function ThemesSection({
               {/* Dismiss */}
               <button
                 type="button"
-                onClick={() => setShowHandoffSheet(false)}
+                onClick={requestCloseHandoffSheet}
                 style={{
                   background: "none",
                   border: 0,

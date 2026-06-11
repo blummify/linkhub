@@ -51,6 +51,7 @@ describe("ShareProfileModal", () => {
     const onClose = vi.fn();
     render(<ShareProfileModal open onClose={onClose} profileUrl="x" />);
     fireEvent.click(screen.getByLabelText("Close"));
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 });

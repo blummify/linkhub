@@ -36,6 +36,7 @@ describe("DeleteConfirmDialog", () => {
     const onClose = vi.fn();
     render(<DeleteConfirmDialog open link={link} onClose={onClose} onConfirm={vi.fn()} />);
     fireEvent.click(screen.getByText("Cancel"));
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 

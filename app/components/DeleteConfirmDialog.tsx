@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ManagedLink } from "../user-admin/components/types";
 import { LinkStatus } from "@/app/constants/linkStatus";
 
@@ -17,6 +17,17 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
     typeof window !== "undefined" && !!window.matchMedia &&
     window.matchMedia("(max-width: 1023px)").matches
   );
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => { if (open) setIsClosing(false); }, [open]);
+
+  function requestClose() { if (!isLoading) setIsClosing(true); }
+
+  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
+    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
+      onClose();
+    }
+  }
 
   if (!open || !link) return null;
 
@@ -32,21 +43,28 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
   return (
     <div
       className={`fixed inset-0 z-[150] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}
-      style={{ background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)" }}
-      onClick={e => { if (e.target === e.currentTarget && !isLoading) onClose(); }}
+      style={{
+        background: "rgba(11,16,32,0.55)",
+        backdropFilter: "blur(8px)",
+        opacity: isClosing ? 0 : 1,
+        transition: `opacity ${isClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
+      }}
+      onClick={e => { if (e.target === e.currentTarget) requestClose(); }}
     >
       <div
+        data-testid="modal-panel"
         className="relative w-full flex flex-col"
         style={{
           maxWidth:     isMobile ? undefined : 420,
           background:   "white",
           borderRadius: isMobile ? "24px 24px 0 0" : 20,
           boxShadow: "0 40px 80px -20px rgba(15,23,42,0.4), 0 16px 32px -16px rgba(15,23,42,0.2)",
-          animation:    isMobile
-            ? "lhSheetIn 0.35s cubic-bezier(0.32,0.72,0,1)"
-            : "dlgIn 0.25s cubic-bezier(0.16,1,0.3,1)",
+          animation: isClosing
+            ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
+            : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
           padding: isMobile ? "0 28px calc(24px + env(safe-area-inset-bottom,0px))" : "28px 28px 24px",
         }}
+        onAnimationEnd={handlePanelAnimEnd}
       >
         {isMobile && (
           <div className="flex justify-center pt-3 pb-4 shrink-0">
@@ -79,7 +97,7 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
         <div className="flex items-center gap-3 mt-6">
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             disabled={isLoading}
             className="flex-1 transition-all"
             style={{

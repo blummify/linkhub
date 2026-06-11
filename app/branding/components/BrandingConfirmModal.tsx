@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
 import { createPortal } from "react-dom";
 
@@ -48,6 +48,19 @@ export function BrandingConfirmModal({
     typeof window !== "undefined" && !!window.matchMedia &&
     window.matchMedia("(max-width: 1023px)").matches
   );
+  const [isClosing, setIsClosing] = useState(false);
+  const pendingConfirmRef = useRef(false);
+
+  useEffect(() => { if (open) setIsClosing(false); }, [open]);
+
+  function requestClose() { setIsClosing(true); }
+
+  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
+    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
+      if (pendingConfirmRef.current) { pendingConfirmRef.current = false; onConfirm?.(); }
+      onClose();
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -95,12 +108,15 @@ export function BrandingConfirmModal({
         zIndex: 9999,
         padding: isMobile ? 0 : 20,
         boxSizing: "border-box",
+        opacity: isClosing ? 0 : 1,
+        transition: `opacity ${isClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
       <div
+        data-testid="modal-panel"
         style={{
           background: "white",
           borderRadius: isMobile ? "24px 24px 0 0" : 18,
@@ -110,11 +126,12 @@ export function BrandingConfirmModal({
           width: isMobile ? "100%" : 420,
           maxWidth: isMobile ? undefined : "calc(100vw - 40px)",
           boxShadow: "0 40px 80px -20px rgba(15,23,42,0.4)",
-          animation: isMobile
-            ? "lhSheetIn 0.35s cubic-bezier(0.32,0.72,0,1)"
-            : "brandingModalIn 0.25s cubic-bezier(0.16,1,0.3,1)",
+          animation: isClosing
+            ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
+            : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
         }}
         onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={handlePanelAnimEnd}
       >
         {isMobile && (
           <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 16 }}>
@@ -166,7 +183,7 @@ export function BrandingConfirmModal({
         <div style={{ display: "flex", gap: 8, justifyContent: isMobile ? undefined : "flex-end" }}>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             style={{
               flex: isMobile ? 1 : undefined,
               minHeight: isMobile ? 46 : undefined,
@@ -186,8 +203,8 @@ export function BrandingConfirmModal({
           <button
             type="button"
             onClick={() => {
-              onConfirm?.();
-              onClose();
+              pendingConfirmRef.current = true;
+              requestClose();
             }}
             style={{
               flex: isMobile ? 2 : undefined,

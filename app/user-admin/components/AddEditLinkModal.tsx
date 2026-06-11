@@ -195,10 +195,21 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   });
 
   const [isDirty, setIsDirty] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [isMobile] = useState(() =>
     typeof window !== "undefined" && !!window.matchMedia &&
     window.matchMedia("(max-width: 1023px)").matches
   );
+
+  useEffect(() => { if (open) setIsClosing(false); }, [open]);
+
+  function requestClose() { setIsClosing(true); }
+
+  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
+    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
+      onClose();
+    }
+  }
 
   const isEdit  = !!initialLink;
   const canSave = title.trim().length > 0 && isValidURL(url.trim()) && !isSaving && !isUploadingThumb;
@@ -226,14 +237,14 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
       clicks: initialLink?.clicks ?? "0",
       status,
     });
-    onClose();
+    requestClose();
   }, [canSave, pendingFile, thumbImage, thumbKey, title, url, selectedPreset, status, initialLink, onSave, onClose, uploadThumb]);
 
   // Keyboard shortcuts
   useEffect(() => {
     if (!open) return;
     function handler(e: KeyboardEvent) {
-      if (e.key === "Escape") { if (!isMobile || !isDirty) onClose(); return; }
+      if (e.key === "Escape") { if (!isMobile || !isDirty) requestClose(); return; }
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey || (document.activeElement as HTMLElement)?.tagName !== "TEXTAREA")) {
         if (canSave) handleSave();
       }
@@ -319,14 +330,20 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   return (
     <div
       className={`fixed inset-0 z-[100] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}
-      style={{ background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)", animation: "fadeIn 0.25s ease" }}
+      style={{
+        background: "rgba(11,16,32,0.55)",
+        backdropFilter: "blur(8px)",
+        opacity: isClosing ? 0 : 1,
+        transition: `opacity ${isClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
+      }}
       onClick={e => {
         if (e.target !== e.currentTarget) return;
         if (isMobile && isDirty) return;
-        onClose();
+        requestClose();
       }}
     >
       <div
+        data-testid="modal-panel"
         className="relative w-full flex flex-col overflow-hidden"
         style={{
           maxWidth:     isMobile ? undefined : 540,
@@ -334,10 +351,11 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
           background:   "white",
           borderRadius: isMobile ? "24px 24px 0 0" : 22,
           boxShadow: "0 40px 80px -20px rgba(15,23,42,0.4), 0 16px 32px -16px rgba(15,23,42,0.2)",
-          animation:    isMobile
-            ? "lhSheetIn 0.35s cubic-bezier(0.32, 0.72, 0, 1)"
-            : "lhModalIn 0.35s cubic-bezier(0.16,1,0.3,1)",
+          animation: isClosing
+            ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
+            : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
         }}
+        onAnimationEnd={handlePanelAnimEnd}
       >
         {isMobile && (
           <div className="flex justify-center pt-3 pb-1 shrink-0">
@@ -368,7 +386,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Close"
             className="flex items-center justify-center transition-all shrink-0"
             style={{ width: 34, height: 34, borderRadius: "50%", border: 0, background: "#eef0f7", color: "#3a4474", cursor: "pointer" }}
@@ -747,7 +765,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                 color:      status === LinkStatus.DRAFT ? "#a8aecb"
                           : status === LinkStatus.PUBLISHED ? "#16a34a"
                           : "#d97706",
-                transition: "all 0.2s ease",
+                transition: "all var(--motion-fast) var(--ease-standard)",
               }}
             >
               {status === LinkStatus.DRAFT ? (
@@ -796,7 +814,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                 background: status === LinkStatus.PUBLISHED ? "#3b46e0" : "#d6dae9",
                 border: 0,
                 cursor: "pointer",
-                transition: "background 0.2s ease",
+                transition: "background var(--motion-fast) var(--ease-standard)",
               }}
             >
               <span
@@ -807,7 +825,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   top: 2,
                   left: 2,
                   boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
-                  transition: "transform 0.2s ease",
+                  transition: "transform var(--motion-fast) var(--ease-out)",
                   transform: status === LinkStatus.PUBLISHED ? "translateX(18px)" : "translateX(0)",
                 }}
               />
@@ -839,7 +857,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             className="transition-all"
             style={{
               flex: isMobile ? 1 : undefined,

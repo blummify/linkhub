@@ -44,6 +44,7 @@ describe("BrandingConfirmModal", () => {
       />
     );
     fireEvent.click(screen.getByText("Confirm"));
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onConfirm).toHaveBeenCalledOnce();
     expect(onClose).toHaveBeenCalledOnce();
   });

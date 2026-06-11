@@ -31,6 +31,7 @@ describe("AccountNotFoundModal", () => {
     const onClose = vi.fn();
     render(<AccountNotFoundModal email="x@x.com" onClose={onClose} />);
     fireEvent.click(screen.getByLabelText("Close"));
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 });

@@ -69,12 +69,12 @@ export default function CollapsibleSidebar({
 
       <aside
         id="sidebar"
-        className={`h-screen bg-white border-r z-50 transition-all duration-300 ease-in-out fixed left-0 top-0 hidden lg:flex flex-col overflow-hidden ${
+        className={`h-screen bg-white border-r z-50 fixed left-0 top-0 hidden lg:flex flex-col overflow-hidden ${
           isCollapsed
             ? "w-[76px] px-[10px] py-6"
             : "w-[264px] px-[18px] py-7"
         }`}
-        style={{ borderColor: "#eef0f7" }}
+        style={{ borderColor: "#eef0f7", transition: "width var(--motion-base) var(--ease-standard)" }}
       >
 
       <div className={`flex items-center justify-center ${isCollapsed ? 'mb-6 pt-1' : 'mb-8 pt-2'}`}>

@@ -67,6 +67,8 @@ describe("AddEditLinkModal", () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ title: "My Blog", url: "https://blog.com" })
     );
+    // Simulate exit animation ending (jsdom doesn't run CSS animations)
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -81,6 +83,7 @@ describe("AddEditLinkModal", () => {
     const onClose = vi.fn();
     render(<AddEditLinkModal open onClose={onClose} onSave={noop} />);
     fireEvent.click(screen.getByText("Cancel"));
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 

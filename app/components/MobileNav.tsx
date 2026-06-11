@@ -111,6 +111,7 @@ export function MobileBottomNav() {
               fontSize: 11,
               fontWeight: 500,
               textDecoration: "none",
+              transition: "color var(--motion-fast) var(--ease-standard)",
             }}
           >
             <Icon className="w-[22px] h-[22px]" />

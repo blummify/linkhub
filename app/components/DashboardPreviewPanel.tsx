@@ -308,7 +308,7 @@ export function PhoneScreenContent({
                   top: 0, left: 0,
                   width: "40%", height: "100%",
                   background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
-                  animation: `lhShimmer ${1.8 + i * 0.15}s cubic-bezier(0.4,0,0.6,1) ${i * 0.2}s infinite`,
+                  animation: `lhShimmer var(--motion-shimmer) linear ${i * 0.2}s infinite`,
                   pointerEvents: "none",
                   zIndex: 1,
                 }}
@@ -1204,7 +1204,7 @@ function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number | strin
   const shimmer: React.CSSProperties = {
     background: "linear-gradient(100deg, #e4e8f7 0%, #f0f3fc 50%, #e4e8f7 100%)",
     backgroundSize: "200% 100%",
-    animation: "lhShimmer 1.8s cubic-bezier(0.4,0,0.6,1) infinite",
+    animation: "lhShimmer var(--motion-shimmer) linear infinite",
     borderRadius: 8,
   };
   return (

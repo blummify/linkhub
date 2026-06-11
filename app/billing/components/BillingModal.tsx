@@ -16,13 +16,22 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
     typeof window !== "undefined" && !!window.matchMedia &&
     window.matchMedia("(max-width: 1023px)").matches
   );
+  const [isClosing, setIsClosing] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
+  function requestClose() { setIsClosing(true); }
+
+  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
+    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
+      onClose();
+    }
+  }
+
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") requestClose(); };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, []);
 
   useEffect(() => {
     const modal = overlayRef.current?.querySelector<HTMLElement>("dialog, [role='dialog']");
@@ -35,7 +44,7 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
   const content = (
     <div
       ref={overlayRef}
-      onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
+      onClick={(e) => { if (e.target === overlayRef.current) requestClose(); }}
       style={{
         position: "fixed", inset: 0, zIndex: 200,
         background: "rgba(11,16,32,0.55)",
@@ -44,7 +53,8 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
         alignItems: isMobile ? "flex-end" : "center",
         justifyContent: isMobile ? undefined : "center",
         padding: isMobile ? 0 : 20,
-        animation: "fadeIn 0.18s ease",
+        opacity: isClosing ? 0 : 1,
+        transition: `opacity ${isClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
       }}
     >
       <div
@@ -59,10 +69,11 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
           maxWidth: isMobile ? undefined : 460,
           maxHeight: isMobile ? "min(90dvh, 90vh)" : "calc(100vh - 40px)",
           overflow: "auto",
-          animation: isMobile
-            ? "lhSheetIn 0.35s cubic-bezier(0.32,0.72,0,1)"
-            : "modalIn 0.22s cubic-bezier(0.16,1,0.3,1)",
+          animation: isClosing
+            ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
+            : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
         }}
+        onAnimationEnd={handlePanelAnimEnd}
       >
         {isMobile && (
           <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 8 }}>
@@ -83,7 +94,7 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
             )}
           </div>
           <button
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Close dialog"
             style={{
               width: 30, height: 30, borderRadius: 8, flexShrink: 0,
@@ -114,10 +125,6 @@ export function BillingModal({ title, subtitle, children, footer, onClose }: Bil
         </div>
       </div>
 
-      <style>{`
-        @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(.99) } to { opacity: 1; transform: none } }
-      `}</style>
     </div>
   );
 

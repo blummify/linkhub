@@ -21,15 +21,16 @@ describe("LoginModal", () => {
     const onClose = vi.fn();
     render(<LoginModal onClose={onClose}><span /></LoginModal>);
     fireEvent.click(screen.getByLabelText("Close"));
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("calls onClose when the backdrop is clicked", () => {
     const onClose = vi.fn();
     render(<LoginModal onClose={onClose}><span /></LoginModal>);
-    // The backdrop is the outermost fixed div (rendered in portal, lives in document.body)
     const backdrop = document.querySelector(".fixed.inset-0") as HTMLElement;
     fireEvent.click(backdrop);
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"), { animationName: "lhModalOut", bubbles: true });
     expect(onClose).toHaveBeenCalledOnce();
   });
 

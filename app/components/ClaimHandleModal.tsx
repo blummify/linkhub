@@ -111,6 +111,7 @@ export function ClaimHandleModal({
   const [state, setState] = useState<ModalState>(INITIAL_STATE);
   const { handle, inputState, helperMsg, helperKind, continueEnabled, isSubmitting, suggestions } = state;
   const [isFocused, setIsFocused] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
   const [isMobile] = useState(() =>
     typeof window !== "undefined" && !!window.matchMedia &&
@@ -128,6 +129,7 @@ export function ClaimHandleModal({
     setPrevOpen(open);
     if (!open) {
       setState(INITIAL_STATE);
+      setIsClosing(false);
     } else if (currentHandle) {
       setState({
         handle: currentHandle,
@@ -268,8 +270,14 @@ export function ClaimHandleModal({
 
   const handleClose = (): void => {
     if (isSubmitting) return;
-    onClose();
+    setIsClosing(true);
   };
+
+  function handlePanelAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
+    if (isClosing && (e.animationName === "lhSheetOut" || e.animationName === "lhModalOut")) {
+      onClose();
+    }
+  }
 
   if (!open) return null;
 
@@ -301,42 +309,32 @@ export function ClaimHandleModal({
   return (
     <>
       <style>{`
-        @keyframes lhModalIn {
-          from { opacity: 0; transform: translateY(20px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0)    scale(1);    }
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        .lh-modal-in {
-          animation: lhModalIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .lh-close-btn:hover {
-          transform: rotate(90deg);
-        }
+        .lh-close-btn:hover { transform: rotate(90deg); }
         .lh-primary-btn:not(:disabled):hover {
           transform: translateY(-1px);
           box-shadow: 0 8px 22px -6px rgba(59, 70, 224, 0.55) !important;
         }
-        .lh-suggestion-chip:hover {
-          border-color: #3b46e0;
-          color: #3b46e0;
-          background: #f1f3ff;
-        }
+        .lh-suggestion-chip:hover { border-color: #3b46e0; color: #3b46e0; background: #f1f3ff; }
       `}</style>
 
       <div className={`fixed inset-0 z-[100] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}>
         {/* Backdrop */}
         <div
           className="absolute inset-0"
-          style={{ background: "rgba(11, 16, 32, 0.6)", backdropFilter: "blur(8px)" }}
+          style={{
+            background: "rgba(11, 16, 32, 0.6)",
+            backdropFilter: "blur(8px)",
+            opacity: isClosing ? 0 : 1,
+            transition: `opacity ${isClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
+          }}
           onClick={() => { if (!isMobile || handle.length === 0) handleClose(); }}
           aria-hidden
         />
 
         {/* Modal */}
         <div
-          className={`${!isMobile ? "lh-modal-in" : ""} relative w-full bg-white`}
+          data-testid="modal-panel"
+          className="relative w-full bg-white"
           style={{
             maxWidth: isMobile ? undefined : 460,
             maxHeight: isMobile ? "min(90dvh, 90vh)" : undefined,
@@ -344,11 +342,14 @@ export function ClaimHandleModal({
             borderRadius: isMobile ? "24px 24px 0 0" : 22,
             boxShadow:
               "0 40px 80px -20px rgba(15, 23, 42, 0.25), 0 16px 32px -16px rgba(15, 23, 42, 0.12)",
-            animation: isMobile ? "lhSheetIn 0.35s cubic-bezier(0.32,0.72,0,1)" : undefined,
+            animation: isClosing
+              ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
+              : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
           }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="claimTitle"
+          onAnimationEnd={handlePanelAnimEnd}
         >
           {isMobile && (
             <div className="flex justify-center pt-3 pb-2 shrink-0">

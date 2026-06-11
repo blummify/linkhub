@@ -318,9 +318,10 @@ export default function AppearanceClient({
     <div className="bg-[#f7f8fc] min-h-screen antialiased flex overflow-hidden">
       <CollapsibleSidebar>
         <main
-          className={`flex-1 transition-all duration-500 ease-in-out ${
+          className={`flex-1 ml-0 overflow-y-auto bg-[#f7f8fc] h-screen ${
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
-          } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
+          }`}
+          style={{ transition: "margin-left var(--motion-base) var(--ease-standard)" }}
         >
           <div className="flex flex-col lg:flex-row min-h-screen">
             <div
@@ -510,7 +511,9 @@ export default function AppearanceClient({
             </div>
 
             <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:block" : "hidden lg:block"}>
-              <DashboardPreviewPanel width={previewOpen ? "100%" : 420} showThemeFooter onPickHandle={() => setShowClaimModal(true)} />
+              <div key={themeId} style={{ animation: "lhItemIn var(--motion-base) var(--ease-out) both" }}>
+                <DashboardPreviewPanel width={previewOpen ? "100%" : 420} showThemeFooter onPickHandle={() => setShowClaimModal(true)} />
+              </div>
             </div>
           </div>
         </main>
@@ -529,7 +532,7 @@ export default function AppearanceClient({
           background: "#3b46e0",
           padding: "11px 18px",
           boxShadow: "0 4px 20px rgba(59,70,224,0.4)",
-          transition: "bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+          transition: "bottom var(--motion-base) var(--ease-out)",
         }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -561,7 +564,7 @@ export default function AppearanceClient({
         bottom: 0,
         zIndex: 84,
         transform: isDirtyOrPending ? "translateY(0)" : "translateY(110%)",
-        transition: "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+        transition: "transform var(--motion-base) var(--ease-out)",
         pointerEvents: isDirtyOrPending ? "auto" : "none",
         background: "white",
         borderTop: "1px solid #eef0f7",
