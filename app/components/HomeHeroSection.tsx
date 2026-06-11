@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { LinkhubLogo } from "./icons/LinkhubLogo";
 import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
 
 export function HomeHeroSection() {
@@ -125,14 +125,7 @@ export function HomeHeroSection() {
                   </svg>
                 </div>
                 <div className="mt-6 opacity-50 dark:opacity-70">
-                  <Image
-                    src="/link_hub_logo.png"
-                    alt="LinkHub"
-                    width={256}
-                    height={256}
-                    style={{ height: "auto" }}
-                    className="h-auto w-20 max-w-full object-contain"
-                  />
+                  <LinkhubLogo size="sm" />
                 </div>
               </div>
               <div className="absolute top-4 left-1/2 -translate-x-1/2 w-1/3 h-6 bg-slate-900 rounded-full" />

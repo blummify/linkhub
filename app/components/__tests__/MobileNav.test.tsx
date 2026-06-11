@@ -3,9 +3,9 @@ import { render, screen } from "@testing-library/react";
 import { MobileTopBar, MobileBottomNav } from "../MobileNav";
 
 describe("MobileTopBar", () => {
-  it("renders the Linkhub brand wordmark", () => {
+  it("renders the linkhub brand wordmark", () => {
     render(<MobileTopBar />);
-    expect(screen.getByText("Linkhub")).toBeInTheDocument();
+    expect(screen.getByText("linkhub")).toBeInTheDocument();
   });
 
   it("renders the notification bell button", () => {
