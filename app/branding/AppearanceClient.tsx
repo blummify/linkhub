@@ -332,13 +332,8 @@ export default function AppearanceClient({
               />
 
               <div
-                style={{
-                  display: "flex",
-                  alignItems: "end",
-                  justifyContent: "space-between",
-                  gap: 24,
-                  marginBottom: 28,
-                }}
+                className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6"
+                style={{ marginBottom: 28 }}
               >
                 <div>
                   <div
@@ -402,6 +397,7 @@ export default function AppearanceClient({
                       color: "#1a2244",
                       padding: "10px 14px",
                       borderRadius: 99,
+                      minHeight: 44,
                       fontFamily: "inherit",
                       fontSize: 13,
                       fontWeight: 500,
@@ -425,6 +421,7 @@ export default function AppearanceClient({
                       border: 0,
                       padding: "11px 18px",
                       borderRadius: 99,
+                      minHeight: 44,
                       fontFamily: "inherit",
                       fontSize: 13.5,
                       fontWeight: 600,

@@ -758,6 +758,7 @@ export function ThemesSection({
           {/* CTA */}
           <Link
             href="/branding/editor"
+            className="w-full lg:w-fit"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -770,7 +771,6 @@ export function ThemesSection({
               fontSize: 13,
               fontWeight: 600,
               textDecoration: "none",
-              width: "fit-content",
               boxShadow: "0 4px 16px -4px rgba(0,0,0,0.35)",
             }}
           >
