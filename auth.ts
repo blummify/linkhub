@@ -5,11 +5,30 @@ import bcrypt from "bcryptjs";
 import { createHash } from "crypto";
 import authConfig from "./auth.config";
 import { db } from "@/lib/db";
+import { createPendingTwoFactorToken } from "@/lib/twoFactorChallenge";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   trustHost: true,
   adapter: PrismaAdapter(db),
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user, account }) {
+      if (account?.provider === "google" && user.id) {
+        const dbUser = await db.user.findUnique({
+          where: { id: user.id },
+          select: { twoFactorEnabled: true, twoFactorSecret: true },
+        });
+
+        if (dbUser?.twoFactorEnabled && dbUser.twoFactorSecret) {
+          const pendingToken = await createPendingTwoFactorToken(user.id);
+          return `/login?2fa=${pendingToken}`;
+        }
+      }
+
+      return true;
+    },
+  },
   events: {
     async createUser({ user }) {
       const id = user.id;
@@ -63,9 +82,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const isValid = await bcrypt.compare(credentials.password as string, user.passwordHash);
         if (!isValid) return null;
 
-        // ✅ Block unverified users
         if (!user.emailVerified) {
           throw new Error("email_not_verified");
+        }
+
+        if (user.twoFactorEnabled && user.twoFactorSecret) {
+          const pendingToken = await createPendingTwoFactorToken(user.id);
+          throw new Error(`2fa_required:${pendingToken}`);
         }
 
         return {

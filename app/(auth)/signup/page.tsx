@@ -25,6 +25,7 @@ function SignupPageContent() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [formData, setFormData] = useState({
@@ -57,6 +58,15 @@ function SignupPageContent() {
       ...prev,
       [field]: getFieldError(field, formData[field]),
     }));
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await signIn("google", { callbackUrl: "/user-dashboard" });
+    } catch {
+      setIsGoogleLoading(false);
+    }
   };
 
   const handleEmailBlur = async () => {
@@ -292,8 +302,9 @@ function SignupPageContent() {
         </div>
 
         <GoogleAuthButton
-          onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
+          onClick={handleGoogleSignIn}
           label="Sign up with Google"
+          disabled={isGoogleLoading}
         />
 
         <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">

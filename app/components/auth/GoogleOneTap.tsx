@@ -29,6 +29,10 @@ export function GoogleOneTap({ clientId }: { clientId: string }) {
         console.error("[OneTap]", result.error);
         return;
       }
+      if ("requiresTwoFactor" in result) {
+        router.push(`/login?2fa=${result.pendingToken}`);
+        return;
+      }
       await signIn("credentials", {
         email: result.email,
         autoLoginToken: result.autoLoginToken,
