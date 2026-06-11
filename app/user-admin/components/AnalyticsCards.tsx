@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import Link from "next/link";
 import ReactCountryFlag from "react-country-flag";
 
 interface StatCardData {
@@ -152,9 +153,72 @@ function DeltaBadge({ change }: { change: string }) {
 
 // ── Card grid ─────────────────────────────────────────────────────────────────
 export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
+  // headline metrics are always the first two cards (Total Clicks, Profile Views)
+  const glanceCards = cards.slice(0, 2).filter((c) => !c.countryCode);
+
   return (
     <>
-      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-4 gap-3" style={{ marginBottom: 24 }}>
+      {/* ── Mobile glance strip (< lg) — 2 headline cards + analytics link ── */}
+      <div className="lg:hidden" style={{ marginBottom: 16 }}>
+        <div className="grid grid-cols-2 gap-3" style={{ marginBottom: 8 }}>
+          {glanceCards.map((card, idx) => (
+            <div
+              key={card.label}
+              style={{
+                background: "white",
+                border: "1px solid #eef0f7",
+                borderRadius: 14,
+                padding: "12px 14px",
+                animation: "acCardUp 0.55s cubic-bezier(0.16,1,0.3,1) both",
+                animationDelay: `${idx * 70}ms`,
+              }}
+            >
+              <p
+                className="uppercase"
+                style={{ fontSize: 10.5, fontWeight: 500, color: "#6b75a3", letterSpacing: "0.07em", marginBottom: 6 }}
+              >
+                {card.label}
+              </p>
+              <p
+                className="leading-none"
+                style={{
+                  fontSize: 22,
+                  fontWeight: 400,
+                  fontStyle: "italic",
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  color: "#0b1020",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {card.value}
+              </p>
+              {card.change && <DeltaBadge change={card.change} />}
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Link
+            href="/user-analytics"
+            style={{
+              fontSize: 12.5,
+              fontWeight: 500,
+              color: "#3b46e0",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            View analytics
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Desktop full 4-card grid (≥ lg) ── */}
+      <div className="hidden lg:grid grid-cols-4 gap-3" style={{ marginBottom: 24 }}>
         {cards.map((card, idx) => {
           const isTopRegion = !!card.countryCode;
 

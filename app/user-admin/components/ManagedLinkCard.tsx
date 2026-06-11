@@ -344,17 +344,18 @@ export function ManagedLinkCard({
                     type="button"
                     onClick={onToggle}
                     title={visualStatus === "published" ? "Unpublish" : "Publish"}
-                    className="relative shrink-0 cursor-pointer outline-none transition-colors duration-200 mr-2"
+                    className="relative shrink-0 cursor-pointer outline-none mr-2"
                     style={{
                       width: 38,
                       height: 22,
                       borderRadius: 99,
                       background: visualStatus === "published" ? "#3b46e0" : "#d6dae9",
                       border: 0,
+                      transition: "background var(--motion-fast) var(--ease-standard)",
                     }}
                   >
                     <span
-                      className="absolute rounded-full bg-white transition-transform duration-200"
+                      className="absolute rounded-full bg-white"
                       style={{
                         width: 18,
                         height: 18,
@@ -362,6 +363,7 @@ export function ManagedLinkCard({
                         left: 2,
                         boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
                         transform: visualStatus === "published" ? "translateX(16px)" : "translateX(0)",
+                        transition: "transform var(--motion-fast) var(--ease-out)",
                       }}
                     />
                   </button>

@@ -11,14 +11,19 @@ vi.mock("next-auth/react", () => ({
 }));
 
 describe("MobileTopBar", () => {
-  it("renders the Linkhub brand wordmark", () => {
+  it("renders the linkhub brand wordmark", () => {
     render(<MobileTopBar />);
-    expect(screen.getByText("Linkhub")).toBeInTheDocument();
+    expect(screen.getByText("linkhub")).toBeInTheDocument();
   });
 
   it("renders the notification bell button", () => {
     render(<MobileTopBar />);
     expect(screen.getByRole("button", { name: /notifications/i })).toBeInTheDocument();
+  });
+
+  it("renders extra slot content when provided", () => {
+    render(<MobileTopBar extra={<button type="button">Preview</button>} />);
+    expect(screen.getByRole("button", { name: /preview/i })).toBeInTheDocument();
   });
 
   it("renders the avatar with the user initial", () => {

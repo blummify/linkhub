@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Manrope, Instrument_Serif } from "next/font/google";
+import { Inter, Manrope, Instrument_Serif, Caveat } from "next/font/google";
 import "./globals.css";
 import { ThemeToggle } from "./ThemeToggle";
 import { Toaster } from "sonner";
@@ -8,6 +8,13 @@ import { BrandingHydrator } from "./components/BrandingHydrator";
 import { MaterialSymbols } from "./components/MaterialSymbols";
 import { GoogleOneTap } from "./components/auth/GoogleOneTap";
 import { auth } from "@/auth";
+
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["700"],
+  display: "swap",
+});
 
 const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
@@ -60,7 +67,7 @@ export default async function RootLayout({
       lang="en"
       suppressHydrationWarning
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${inter.variable} ${instrumentSerif.variable} antialiased scroll-smooth`}
+      className={`${manrope.variable} ${inter.variable} ${instrumentSerif.variable} ${caveat.variable} antialiased scroll-smooth`}
     >
       <head>
         {/* fonts.gstatic.com hosts the Material Symbols woff2 — prefetch the DNS early */}
