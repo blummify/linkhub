@@ -510,7 +510,7 @@ export default function AppearanceClient({
               </div>
             </div>
 
-            <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:block" : "hidden lg:block"}>
+            <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto bg-white p-4 lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:block" : "hidden lg:block"}>
               <div key={themeId} style={{ animation: "lhItemIn var(--motion-base) var(--ease-out) both" }}>
                 <DashboardPreviewPanel width={previewOpen ? "100%" : 420} showThemeFooter onPickHandle={() => setShowClaimModal(true)} />
               </div>

@@ -1,20 +1,40 @@
 "use client";
 
 // My account settings page. Styled with Tailwind utilities + ink/indigo/paper
-// theme tokens. Password/2FA sections are UI-only.
+// theme tokens. Personal info, email change (code-verified), password, and
+// account deletion are wired to server actions in app/actions/account.ts.
+// The Security/2FA section remains a demo (UI-only, not persisted).
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { CommandPalette } from "../components/CommandPalette";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
-import { updateBranding } from "@/app/actions/profile";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { scorePassword, passwordsMatch, PASSWORD_STRENGTH_LABELS } from "@/lib/validation/auth.schema";
+import {
+  updateName,
+  requestEmailChange,
+  confirmEmailChange,
+  cancelEmailChange,
+  resendEmailChangeCode,
+  changePassword,
+  setPassword as setPasswordAction,
+  armOAuthDeletion,
+  deleteAccount,
+} from "@/app/actions/account";
+
+type AccountInitial = {
+  name: string;
+  email: string;
+  pendingEmail: string | null;
+  hasPassword: boolean;
+};
 
 /* ───────────────── Section card primitives ───────────────── */
 function Section({ children, danger }: { children: ReactNode; danger?: boolean }) {
@@ -126,14 +146,16 @@ function Button({
   children,
   onClick,
   disabled,
+  type = "button",
 }: {
   variant: BtnVariant;
   children: ReactNode;
   onClick?: () => void;
   disabled?: boolean;
+  type?: "button" | "submit";
 }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={`${BTN_BASE} ${BTN_VARIANTS[variant]}`}>
+    <button type={type} onClick={onClick} disabled={disabled} className={`${BTN_BASE} ${BTN_VARIANTS[variant]}`}>
       {children}
     </button>
   );
@@ -300,66 +322,285 @@ const SECURITY_FACTORS: SecFactor[] = [
   },
 ];
 
+/* ───────────────── Delete account dialog ───────────────── */
+function DeleteAccountDialog({
+  open,
+  email,
+  hasPassword,
+  reauthReady,
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  email: string;
+  hasPassword: boolean;
+  /** True once an OAuth user has returned from the Google re-prompt with a nonce. */
+  reauthReady: boolean;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (typedEmail: string, password: string) => void;
+}) {
+  // Fields reset on open via a `key` remount from the parent — no effect needed.
+  const [typedEmail, setTypedEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  if (!open) return null;
+
+  const emailMatches = typedEmail.trim() === email;
+  // Credential users always confirm in one step (email + password).
+  // OAuth users: first step starts the Google re-prompt (email only); after
+  // returning (reauthReady) the same button finalises the deletion.
+  const armed = emailMatches && (hasPassword ? password.length > 0 : true);
+
+  const confirmLabel = hasPassword
+    ? "Delete account"
+    : reauthReady
+    ? "Delete account"
+    : "Continue with Google";
+
+  return (
+    <div
+      className="fixed inset-0 z-[150] flex items-center justify-center p-6"
+      style={{ background: "rgba(11,16,32,0.55)", backdropFilter: "blur(8px)" }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !busy) onClose();
+      }}
+    >
+      <div
+        className="relative flex w-full flex-col"
+        style={{
+          maxWidth: 440,
+          background: "white",
+          borderRadius: 20,
+          boxShadow: "0 40px 80px -20px rgba(15,23,42,0.4), 0 16px 32px -16px rgba(15,23,42,0.2)",
+          animation: "dlgIn 0.25s cubic-bezier(0.16,1,0.3,1)",
+          padding: "28px 28px 24px",
+        }}
+      >
+        <div
+          className="mb-5 flex shrink-0 items-center justify-center"
+          style={{ width: 44, height: 44, borderRadius: "50%", background: "#fde8ec", color: "#e11d48" }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+            />
+          </svg>
+        </div>
+
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: "#0b1020", marginBottom: 8, letterSpacing: "-0.01em" }}>
+          Delete your account?
+        </h2>
+        <p style={{ fontSize: 14, color: "#6b75a3", lineHeight: 1.55, marginBottom: 18 }}>
+          This permanently deletes your linkhub, all your links, profile, billing, and account data. This cannot be
+          undone.
+        </p>
+
+        <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-ink-500" htmlFor="del-email">
+              Type your email <span className="text-ink-700">{email}</span> to confirm
+            </label>
+            <input
+              id="del-email"
+              type="email"
+              autoComplete="off"
+              value={typedEmail}
+              onChange={(e) => setTypedEmail(e.target.value)}
+              className={INPUT_CLASS}
+              placeholder={email}
+            />
+          </div>
+
+          {hasPassword && (
+            <PassField
+              id="del-password"
+              label="Enter your current password"
+              value={password}
+              onChange={setPassword}
+              autoComplete="current-password"
+            />
+          )}
+
+          {!hasPassword && !reauthReady && (
+            <p className="text-[11.5px] text-ink-400">
+              You&apos;ll be asked to re-confirm with Google before the account is deleted.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-6 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="flex-1 transition-all"
+            style={{
+              padding: "10px 0",
+              borderRadius: 99,
+              border: 0,
+              background: "#eef0f7",
+              color: "#1a2244",
+              fontSize: 13.5,
+              fontWeight: 600,
+              cursor: busy ? "not-allowed" : "pointer",
+              opacity: busy ? 0.5 : 1,
+              fontFamily: "inherit",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm(typedEmail, password)}
+            disabled={busy || !armed}
+            className="flex-1 transition-all"
+            style={{
+              padding: "10px 0",
+              borderRadius: 99,
+              border: 0,
+              background: "linear-gradient(180deg, #e11d48, #be123c)",
+              color: "white",
+              fontSize: 13.5,
+              fontWeight: 600,
+              cursor: busy || !armed ? "not-allowed" : "pointer",
+              opacity: busy || !armed ? 0.5 : 1,
+              boxShadow: "0 4px 14px -4px rgba(225,29,72,0.5)",
+              fontFamily: "inherit",
+            }}
+          >
+            {busy ? "Working…" : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ───────────────────────────── Page ───────────────────────────── */
-export default function MyAccountClient() {
+export default function MyAccountClient({ initial }: { initial: AccountInitial }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
-  const { data: session } = useSession();
+  const { update } = useSession();
+  const router = useRouter();
   const [showPalette, setShowPalette] = useState(false);
 
   /* ── Per-section editing state ── */
-  const [editingProfile,  setEditingProfile]  = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
   const [editingSecurity, setEditingSecurity] = useState(false);
 
-  /* ── Profile (name + email) ── */
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  /* ── Name ── */
+  const [name, setName] = useState(initial.name);
   const [savingProfile, setSavingProfile] = useState(false);
-  // Last-saved baseline — dirty is computed against it so reverting clears the flag.
-  const [baseline, setBaseline] = useState({ name: "", email: "" });
-  // Hydrate from session once, so refreshes don't clobber edits.
-  const hydrated = useRef(false);
+  const nameDirty = name.trim() !== initial.name.trim();
 
-  useEffect(() => {
-    if (hydrated.current || !session?.user) return;
-    const u = session.user;
-    const nextName = u.name ?? "";
-    const nextEmail = u.email ?? "";
-    setName(nextName);
-    setEmail(nextEmail);
-    setBaseline({ name: nextName, email: nextEmail });
-    hydrated.current = true;
-  }, [session]);
-
-  const profileDirty = name !== baseline.name || email !== baseline.email;
-
-  const handleProfileSave = async () => {
+  const handleNameSave = async () => {
     setSavingProfile(true);
     try {
-      // Only the name is persisted; email change needs a verify flow (not built).
-      const result = await updateBranding({ displayName: name });
+      const result = await updateName(name);
       if ("error" in result) {
         toast.error(result.error);
         return;
       }
-      setBaseline({ name, email });
+      await update({ name: name.trim() });
       setEditingProfile(false);
-      toast.success("Profile updated");
+      router.refresh();
+      toast.success("Name updated");
     } finally {
       setSavingProfile(false);
     }
   };
 
-  const handleProfileCancel = () => {
-    setName(baseline.name);
-    setEmail(baseline.email);
+  const handleNameCancel = () => {
+    setName(initial.name);
     setEditingProfile(false);
   };
 
-  /* ── Change password (UI-only — no backend yet) ── */
+  /* ── Email change ── */
+  type EmailMode = "view" | "enterNew" | "enterCode";
+  const [emailMode, setEmailMode] = useState<EmailMode>(initial.pendingEmail ? "enterCode" : "view");
+  const [pendingEmail, setPendingEmail] = useState<string | null>(initial.pendingEmail);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailCode, setEmailCode] = useState("");
+  const [emailBusy, setEmailBusy] = useState(false);
+
+  const handleRequestEmail = async () => {
+    setEmailBusy(true);
+    try {
+      const result = await requestEmailChange(newEmail);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      setPendingEmail(newEmail.trim());
+      setNewEmail("");
+      setEmailCode("");
+      setEmailMode("enterCode");
+      toast.success("We sent a 6-digit code to your new email");
+    } finally {
+      setEmailBusy(false);
+    }
+  };
+
+  const handleConfirmEmail = async () => {
+    setEmailBusy(true);
+    try {
+      const result = await confirmEmailChange(emailCode);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      await update({ email: result.email });
+      setPendingEmail(null);
+      setEmailCode("");
+      setEmailMode("view");
+      router.refresh();
+      toast.success("Email updated");
+    } finally {
+      setEmailBusy(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    setEmailBusy(true);
+    try {
+      const result = await resendEmailChangeCode();
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("New code sent");
+    } finally {
+      setEmailBusy(false);
+    }
+  };
+
+  const handleCancelEmail = async () => {
+    setEmailBusy(true);
+    try {
+      const result = await cancelEmailChange();
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      setPendingEmail(null);
+      setNewEmail("");
+      setEmailCode("");
+      setEmailMode("view");
+      toast.success("Email change cancelled");
+    } finally {
+      setEmailBusy(false);
+    }
+  };
+
+  /* ── Password (branch on initial.hasPassword from the server) ── */
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
+  const [savingPw, setSavingPw] = useState(false);
 
   const score = useMemo(() => scorePassword(newPw), [newPw]);
 
@@ -369,26 +610,97 @@ export default function MyAccountClient() {
     return { cls: "text-danger-400", text: "Passwords don't match yet." };
   }, [newPw, confirmPw]);
 
-  const pwValid =
-    currentPw.length >= 1 &&
-    newPw.length >= 8 &&
-    score >= 2 &&
-    passwordsMatch(newPw, confirmPw) &&
-    newPw !== currentPw;
+  const baseValid = newPw.length >= 8 && score >= 2 && passwordsMatch(newPw, confirmPw);
+  const pwValid = initial.hasPassword
+    ? currentPw.length >= 1 && baseValid && newPw !== currentPw
+    : baseValid;
 
-  const handlePasswordSave = () => {
+  const clearPwFields = () => {
     setCurrentPw("");
     setNewPw("");
     setConfirmPw("");
-    setEditingPassword(false);
-    toast.success("Password updated — signed out on other devices");
+  };
+
+  const handlePasswordSave = async () => {
+    setSavingPw(true);
+    try {
+      const result = initial.hasPassword
+        ? await changePassword(currentPw, newPw)
+        : await setPasswordAction(newPw);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      clearPwFields();
+      setEditingPassword(false);
+      router.refresh(); // flips hasPassword for OAuth users who just set one
+      toast.success(initial.hasPassword ? "Password updated" : "Password set");
+    } finally {
+      setSavingPw(false);
+    }
   };
 
   const handlePasswordCancel = () => {
-    setCurrentPw("");
-    setNewPw("");
-    setConfirmPw("");
+    clearPwFields();
     setEditingPassword(false);
+  };
+
+  /* ── Account deletion ── */
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [reauthNonce, setReauthNonce] = useState<string | null>(null);
+
+  // OAuth users return here from the Google re-prompt with ?del=<nonce>.
+  // Re-open the dialog (state was lost across the redirect) and clean the URL.
+  useEffect(() => {
+    const nonce = new URLSearchParams(window.location.search).get("del");
+    if (nonce) {
+      window.history.replaceState(null, "", "/my-account");
+      // Defer the state writes out of the effect body (matches the codebase's
+      // queueMicrotask convention; avoids cascading-render lint).
+      queueMicrotask(() => {
+        setReauthNonce(nonce);
+        setDeleteOpen(true);
+      });
+    }
+  }, []);
+
+  const handleDeleteConfirm = async (typedEmail: string, password: string) => {
+    setDeleting(true);
+    try {
+      if (!initial.hasPassword && !reauthNonce) {
+        // OAuth user, first step: start a fresh Google re-prompt bound to a
+        // server-side nonce. Force the account picker + consent.
+        const armed = await armOAuthDeletion();
+        if ("error" in armed) {
+          toast.error(armed.error);
+          setDeleting(false);
+          return;
+        }
+        await signIn(
+          "google",
+          { callbackUrl: `/my-account?del=${armed.nonce}` },
+          { prompt: "consent select_account" }
+        );
+        return; // redirecting away
+      }
+
+      const result = initial.hasPassword
+        ? await deleteAccount({ typedEmail, password })
+        : await deleteAccount({ typedEmail, nonce: reauthNonce ?? undefined });
+
+      if ("error" in result) {
+        toast.error(result.error);
+        setDeleting(false);
+        return;
+      }
+
+      toast.success("Your account has been deleted");
+      await signOut({ callbackUrl: "/login" });
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+      setDeleting(false);
+    }
   };
 
   return (
@@ -418,72 +730,165 @@ export default function MyAccountClient() {
                 Manage your personal details, password, and security settings.
               </p>
 
-              {/* ── Profile ── */}
+              {/* ── Personal info ── */}
               <Section>
                 <SectionHead
-                  title="Profile"
+                  title="Personal info"
                   desc="Your name and contact email. This stays private — not shown on your public page."
-                  actions={<EditIconBtn editing={editingProfile} onClick={editingProfile ? handleProfileCancel : () => setEditingProfile(true)} />}
+                  actions={
+                    <EditIconBtn
+                      editing={editingProfile}
+                      onClick={editingProfile ? handleNameCancel : () => setEditingProfile(true)}
+                    />
+                  }
                 />
+
+                {/* Name */}
                 {editingProfile ? (
                   <>
-                    <div className="px-6 pt-4 pb-6">
+                    <div className="px-6 pt-4 pb-2">
                       <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
                         <Field id="acc-name" label="Full name" value={name} onChange={setName} />
-                        <Field
-                          id="acc-email"
-                          label="Email"
-                          type="email"
-                          value={email}
-                          onChange={setEmail}
-                          hint="We'll send a confirmation link to verify any new email."
-                        />
                       </div>
                     </div>
                     <div className="flex items-center justify-end gap-2.5 border-t border-ink-100 bg-paper px-6 py-3.5">
-                      <span className="mr-auto text-xs text-ink-400">{profileDirty ? "Unsaved changes" : ""}</span>
-                      <Button variant="ghost" onClick={handleProfileCancel} disabled={savingProfile}>
+                      <span className="mr-auto text-xs text-ink-400">{nameDirty ? "Unsaved changes" : ""}</span>
+                      <Button variant="ghost" onClick={handleNameCancel} disabled={savingProfile}>
                         Cancel
                       </Button>
-                      <Button variant="primary" onClick={handleProfileSave} disabled={!profileDirty || savingProfile}>
+                      <Button variant="primary" onClick={handleNameSave} disabled={!nameDirty || savingProfile}>
                         {savingProfile ? "Saving…" : "Save changes"}
                       </Button>
                     </div>
                   </>
                 ) : (
-                  <div className="px-6 pb-5 pt-1 flex gap-5">
-                    <div>
-                      <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Name</div>
-                      <div className="text-[13.5px] text-ink-900">{name || "—"}</div>
-                    </div>
-                    <div>
-                      <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Email</div>
-                      <div className="text-[13.5px] text-ink-900">{email || "—"}</div>
-                    </div>
+                  <div className="px-6 pb-4 pt-1">
+                    <div className="text-[11px] font-medium uppercase tracking-[0.07em] text-ink-400 mb-0.5">Name</div>
+                    <div className="text-[13.5px] text-ink-900">{name || "—"}</div>
                   </div>
                 )}
+
+                {/* Email */}
+                <div className="border-t border-ink-100 px-6 py-5">
+                  <div className="text-[11px] font-medium uppercase tracking-[0.07em] text-ink-400 mb-0.5">Email</div>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="text-[13.5px] text-ink-900">{initial.email || "—"}</div>
+                    {emailMode === "view" && !pendingEmail && (
+                      <Button variant="ghost" onClick={() => setEmailMode("enterNew")}>
+                        Change email
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Enter a new address */}
+                  {emailMode === "enterNew" && (
+                    <div className="mt-4 flex flex-col gap-3">
+                      <Field
+                        id="acc-new-email"
+                        label="New email address"
+                        type="email"
+                        value={newEmail}
+                        onChange={setNewEmail}
+                        hint="Your current email stays active until you confirm the new one."
+                      />
+                      <div className="flex items-center justify-end gap-2.5">
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setNewEmail("");
+                            setEmailMode("view");
+                          }}
+                          disabled={emailBusy}
+                        >
+                          Cancel
+                        </Button>
+                        <Button variant="primary" onClick={handleRequestEmail} disabled={emailBusy || !newEmail.trim()}>
+                          {emailBusy ? "Sending…" : "Send code"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pending confirmation banner + code entry */}
+                  {pendingEmail && emailMode === "enterCode" && (
+                    <div className="mt-4 rounded-[12px] border border-amber-500/25 bg-amber-50 p-4">
+                      <div className="text-[12.5px] text-amber-700">
+                        Confirm <span className="font-semibold">{pendingEmail}</span> — we sent a 6-digit code to that
+                        inbox. It expires in 1 hour.
+                      </div>
+                      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div className="flex flex-1 flex-col gap-1.5">
+                          <label className="text-xs font-medium text-ink-500" htmlFor="acc-email-code">
+                            Verification code
+                          </label>
+                          <input
+                            id="acc-email-code"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={emailCode}
+                            onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            className={`${INPUT_CLASS} tracking-[0.3em]`}
+                            placeholder="••••••"
+                          />
+                        </div>
+                        <Button variant="primary" onClick={handleConfirmEmail} disabled={emailBusy || emailCode.length !== 6}>
+                          {emailBusy ? "Confirming…" : "Confirm"}
+                        </Button>
+                      </div>
+                      <div className="mt-3 flex items-center gap-4 text-[12px]">
+                        <button
+                          type="button"
+                          onClick={handleResendEmail}
+                          disabled={emailBusy}
+                          className="font-medium text-indigo-600 hover:underline disabled:opacity-40"
+                        >
+                          Resend code
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEmail}
+                          disabled={emailBusy}
+                          className="font-medium text-ink-500 hover:text-ink-700 disabled:opacity-40"
+                        >
+                          Cancel change
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </Section>
 
-              {/* ── Change password ── */}
+              {/* ── Password ── */}
               <Section>
                 <SectionHead
-                  title="Change password"
-                  desc="Use a strong, unique password. We'll sign you out of other sessions after you change it."
-                  actions={<EditIconBtn editing={editingPassword} onClick={editingPassword ? handlePasswordCancel : () => setEditingPassword(true)} />}
+                  title={initial.hasPassword ? "Change password" : "Set a password"}
+                  desc={
+                    initial.hasPassword
+                      ? "Use a strong, unique password. We'll sign you out of other sessions after you change it."
+                      : "You sign in with Google. Set a password to also be able to sign in with your email."
+                  }
+                  actions={
+                    <EditIconBtn
+                      editing={editingPassword}
+                      onClick={editingPassword ? handlePasswordCancel : () => setEditingPassword(true)}
+                    />
+                  }
                 />
                 {editingPassword ? (
                   <>
                     <div className="px-6 pt-4 pb-6">
-                      <div className="grid grid-cols-1 gap-x-4 gap-y-3.5">
-                        <PassField
-                          id="pw-current"
-                          label="Current password"
-                          value={currentPw}
-                          onChange={setCurrentPw}
-                          autoComplete="current-password"
-                        />
-                      </div>
-                      <div className="mt-3.5 grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+                      {initial.hasPassword && (
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-3.5">
+                          <PassField
+                            id="pw-current"
+                            label="Current password"
+                            value={currentPw}
+                            onChange={setCurrentPw}
+                            autoComplete="current-password"
+                          />
+                        </div>
+                      )}
+                      <div className={`grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2 ${initial.hasPassword ? "mt-3.5" : ""}`}>
                         <PassField
                           id="pw-new"
                           label="New password"
@@ -505,23 +910,29 @@ export default function MyAccountClient() {
                       </div>
                     </div>
                     <div className="flex items-center justify-end gap-2.5 border-t border-ink-100 bg-paper px-6 py-3.5">
-                      <Button variant="ghost" onClick={handlePasswordCancel}>
+                      <Button variant="ghost" onClick={handlePasswordCancel} disabled={savingPw}>
                         Cancel
                       </Button>
-                      <Button variant="primary" onClick={handlePasswordSave} disabled={!pwValid}>
-                        Update password
+                      <Button variant="primary" onClick={handlePasswordSave} disabled={!pwValid || savingPw}>
+                        {savingPw ? "Saving…" : initial.hasPassword ? "Update password" : "Set password"}
                       </Button>
                     </div>
                   </>
                 ) : (
                   <div className="px-6 pb-5 pt-1">
-                    <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Password</div>
-                    <div className="text-[18px] tracking-[0.18em] text-ink-300 leading-none">••••••••••</div>
+                    <div className="text-[11px] font-medium uppercase tracking-[0.07em] text-ink-400 mb-0.5">
+                      Password
+                    </div>
+                    {initial.hasPassword ? (
+                      <div className="text-[18px] leading-none tracking-[0.18em] text-ink-300">••••••••••</div>
+                    ) : (
+                      <div className="text-[13.5px] text-ink-400">No password set — you sign in with Google.</div>
+                    )}
                   </div>
                 )}
               </Section>
 
-              {/* ── Security ── */}
+              {/* ── Security (demo only) ── */}
               <Section>
                 <SectionHead
                   title="Security"
@@ -536,7 +947,9 @@ export default function MyAccountClient() {
                   </div>
                 ) : (
                   <div className="px-6 pb-5 pt-1">
-                    <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Two-factor authentication</div>
+                    <div className="text-[11px] font-medium uppercase tracking-[0.07em] text-ink-400 mb-0.5">
+                      Two-factor authentication
+                    </div>
                     <div className="text-[13.5px] text-ink-400">No second factors active</div>
                   </div>
                 )}
@@ -553,7 +966,7 @@ export default function MyAccountClient() {
                         Permanently delete your linkhub, all your links, and your account data.
                       </div>
                     </div>
-                    <Button variant="danger" onClick={() => toast.error("Delete account is not enabled yet")}>
+                    <Button variant="danger" onClick={() => setDeleteOpen(true)}>
                       Delete account
                     </Button>
                   </div>
@@ -565,6 +978,21 @@ export default function MyAccountClient() {
       </CollapsibleSidebar>
 
       <CommandPalette open={showPalette} onClose={() => setShowPalette(false)} searchPlaceholder="Search settings…" />
+
+      <DeleteAccountDialog
+        key={deleteOpen ? "delete-open" : "delete-closed"}
+        open={deleteOpen}
+        email={initial.email}
+        hasPassword={initial.hasPassword}
+        reauthReady={reauthNonce != null}
+        busy={deleting}
+        onClose={() => {
+          if (deleting) return;
+          setDeleteOpen(false);
+          setReauthNonce(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }
