@@ -20,7 +20,8 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
   const [isClosing, setIsClosing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { if (open) setIsClosing(false); }, [open]);
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) { setPrevOpen(open); if (open) setIsClosing(false); }
 
   function requestClose() { if (!isLoading) setIsClosing(true); }
 

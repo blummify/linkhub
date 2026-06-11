@@ -24,7 +24,8 @@ export function ShareProfileModal({
   );
   const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { if (open) setIsClosing(false); }, [open]);
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) { setPrevOpen(open); if (open) setIsClosing(false); }
 
   function requestClose() { setIsClosing(true); }
 

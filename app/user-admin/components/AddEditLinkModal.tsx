@@ -201,7 +201,8 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
     window.matchMedia("(max-width: 1023px)").matches
   );
 
-  useEffect(() => { if (open) setIsClosing(false); }, [open]);
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) { setPrevOpen(open); if (open) setIsClosing(false); }
 
   function requestClose() { setIsClosing(true); }
 
@@ -241,7 +242,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
       status,
     });
     requestClose();
-  }, [canSave, pendingFile, thumbImage, thumbKey, title, url, selectedPreset, status, initialLink, onSave, onClose, uploadThumb]);
+  }, [canSave, pendingFile, thumbImage, thumbKey, title, url, selectedPreset, status, initialLink, onSave, uploadThumb]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -254,7 +255,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
     }
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [open, canSave, handleSave, onClose]);
+  }, [open, canSave, handleSave, isDirty, isMobile]);
 
   // Debounced URL validation
   function handleUrlChange(val: string) {

@@ -40,7 +40,7 @@ export default function CollapsibleSidebar({
   mobileHeaderExtra?: React.ReactNode;
 }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
-  const toggleSidebar = useSidebarStore((s) => s.toggle);
+
   const linkCount = useLinksStore((s) => s.links.length);
   const pathname = usePathname();
   const { data: session, status, update } = useSession();
