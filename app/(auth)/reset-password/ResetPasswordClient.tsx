@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { PasswordField } from "@/app/components/auth/PasswordField";
 import { validatePassword, validatePasswordMatch } from "@/lib/validation/auth.schema";
 import { resetPassword } from "@/app/actions/auth";
+import { executeRecaptcha, RecaptchaError } from "@/lib/recaptcha.client";
 
 type TokenState = "valid" | "invalid" | "used" | "expired";
 
@@ -51,14 +52,19 @@ export function ResetPasswordClient({ token, initialState, tokenError }: Props) 
 
     setIsLoading(true);
     try {
-      const result = await resetPassword(token, newPassword);
+      const recaptchaToken = await executeRecaptcha("reset_password");
+      const result = await resetPassword(token, newPassword, recaptchaToken);
       if ("error" in result) {
         setError(result.error);
       } else {
         setSuccess(true);
         setTimeout(() => router.push("/login"), 2500);
       }
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        setError("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       setError("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);

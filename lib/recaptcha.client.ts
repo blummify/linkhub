@@ -3,7 +3,10 @@ export type RecaptchaAction =
   | "login"
   | "forgot_password"
   | "verify_email"
-  | "resend_verification";
+  | "resend_verification"
+  | "reset_password"
+  | "check_email"
+  | "send_verification";
 
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 const SCRIPT_LOAD_TIMEOUT_MS = 3000;
