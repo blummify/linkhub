@@ -2,18 +2,18 @@
 
 import Link from "next/link";
 import { LinkhubLogo } from "./icons/LinkhubLogo";
-import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
+import { useSyncExternalStore, type CSSProperties, type PointerEvent } from "react";
+
+const mqSubscribe = (cb: () => void) => {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const mqSnapshot = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const mqServerSnapshot = () => false;
 
 export function HomeHeroSection() {
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduceMotion(mq.matches);
-    const onChange = () => setReduceMotion(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
+  const reduceMotion = useSyncExternalStore(mqSubscribe, mqSnapshot, mqServerSnapshot);
 
   const onHeroPointerMove = (e: PointerEvent<HTMLElement>) => {
     if (reduceMotion) return;
