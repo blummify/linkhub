@@ -42,6 +42,12 @@ describe("ManageLinksSection", () => {
   it("renders an empty state gracefully with no links", () => {
     const { container } = render(<ManageLinksSection links={[]} />);
     expect(container).toBeInTheDocument();
+    expect(screen.getByText(/your page is empty/i)).toBeInTheDocument();
+  });
+
+  it("renders an inline empty-state CTA when onAddLink is provided", () => {
+    render(<ManageLinksSection links={[]} onAddLink={vi.fn()} />);
+    expect(screen.getByRole("button", { name: /add your first link/i })).toBeInTheDocument();
   });
 
   it("calls onDeleteLink when a link card's delete button is clicked", () => {

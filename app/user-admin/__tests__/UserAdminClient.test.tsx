@@ -3,6 +3,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import UserAdminClient from "../UserAdminClient";
 import { renderWithSidebarAndBranding } from "@/app/test-utils/renderWithProviders";
 import { useUIStore } from "@/store/uiStore";
+import { useLinksStore } from "@/store/linksStore";
 
 // Override the global fixed-state uiStore mock with a real Zustand store so the
 // shortcut handler (uses getState) and these tests (use setState/getState) work.
@@ -67,6 +68,8 @@ describe("UserAdminClient", () => {
       pendingDelete: null,
       showPalette: false,
     });
+    useLinksStore.getState().links = [];
+    useLinksStore.getState().isLoading = false;
   });
 
   it("renders manage links section after load", async () => {
@@ -77,6 +80,27 @@ describe("UserAdminClient", () => {
       ).toBeInTheDocument();
     });
     expect(screen.getByTestId("preview-panel")).toBeInTheDocument();
+  });
+
+  it("hides the mobile Add link FAB when there are no links", async () => {
+    renderWithSidebarAndBranding(<UserAdminClient />);
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Manage and organize your digital presence/i)
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: /^add link$/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the mobile Add link FAB when links exist", async () => {
+    useLinksStore.getState().links = [
+      { id: "1", title: "Site", url: "https://example.com", clicks: "0" },
+    ];
+    renderWithSidebarAndBranding(<UserAdminClient />);
+    await waitFor(() => {
+      expect(screen.getByText("Site")).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /^add link$/i })).toBeInTheDocument();
   });
 
   describe('"N" keyboard shortcut', () => {

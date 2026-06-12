@@ -13,6 +13,7 @@ vi.mock("@/store/sidebarStore", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/billing",
 }));
 
 vi.mock("sonner", () => ({

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useUIStore } from "@/store/uiStore";
 import {
   DndContext,
   DragOverlay,
+  MeasuringStrategy,
   PointerSensor,
   useSensor,
   useSensors,
@@ -23,6 +24,8 @@ import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
 import { AnalyticsCards } from "./AnalyticsCards";
 import { DashboardTopBar } from "./DashboardTopBar";
+import { usePrefersReducedMotion } from "@/app/components/hooks/usePrefersReducedMotion";
+import { useLinkListMotion } from "../hooks/useLinkListMotion";
 
 function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
   return (
@@ -251,8 +254,10 @@ type CardPassthroughProps = Omit<ManagedLinkCardProps, "link" | "dragHandleListe
 
 function SortableCardWrapper({
   link,
+  entering = false,
   ...cardProps
-}: { link: ManagedLink } & CardPassthroughProps) {
+}: { link: ManagedLink; entering?: boolean } & CardPassthroughProps) {
+  const reduced = usePrefersReducedMotion();
   const {
     attributes,
     listeners,
@@ -262,24 +267,44 @@ function SortableCardWrapper({
     isDragging,
   } = useSortable({ id: getLinkId(link) });
 
+  const layoutTransition = reduced
+    ? undefined
+    : transition ?? "transform var(--motion-base) var(--ease-out)";
+
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0 : 1,
+    transition: layoutTransition,
+    opacity: isDragging ? 0.4 : 1,
+    ...(entering && !reduced
+      ? { animation: "lhItemIn var(--motion-base) var(--ease-out) both" }
+      : {}),
   };
 
-  const mountAnimation: React.CSSProperties = style.transform || style.transition
-    ? {}
-    : { animation: "lhItemIn var(--motion-base) var(--ease-out) both" };
-
   return (
-    <div ref={setNodeRef} style={{ ...style, ...mountAnimation }}>
+    <div ref={setNodeRef} style={style}>
       <ManagedLinkCard
         link={link}
         dragHandleListeners={listeners}
         dragHandleAttributes={attributes}
         {...cardProps}
       />
+    </div>
+  );
+}
+
+function ExitingLinkCard({ link }: { link: ManagedLink }) {
+  const reduced = usePrefersReducedMotion();
+
+  return (
+    <div
+      className="overflow-hidden"
+      style={
+        reduced
+          ? { display: "none" }
+          : { animation: "lhItemOut var(--motion-base) var(--ease-in) both" }
+      }
+    >
+      <ManagedLinkCard link={link} />
     </div>
   );
 }
@@ -303,17 +328,22 @@ export function ManageLinksSection({
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const filteredLinks = links.filter((link) => {
-    if (activeTab === "all") return true;
-    const status = link.status ?? 0;
-    if (activeTab === "published") return status === 1;
-    if (activeTab === "unpublished") return status === 2;
-    if (activeTab === "draft") return status === 0;
-    return true;
-  });
+  const filteredLinks = useMemo(() => {
+    return links.filter((link) => {
+      if (activeTab === "all") return true;
+      const status = link.status ?? 0;
+      if (activeTab === "published") return status === 1;
+      if (activeTab === "unpublished") return status === 2;
+      if (activeTab === "draft") return status === 0;
+      return true;
+    });
+  }, [links, activeTab]);
+
+  const motionItems = useLinkListMotion(filteredLinks);
+  const sortableLinks = motionItems.filter((item) => !item.exiting);
 
   const activeLink = activeId
-    ? filteredLinks.find((l) => getLinkId(l) === activeId) ?? null
+    ? sortableLinks.find((item) => getLinkId(item.link) === activeId)?.link ?? null
     : null;
 
   const handleDragStart = ({ active }: DragStartEvent) => {
@@ -440,20 +470,32 @@ export function ManageLinksSection({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
+          measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={filteredLinks.map(getLinkId)}
+            items={sortableLinks.map((item) => getLinkId(item.link))}
             strategy={verticalListSortingStrategy}
           >
-            <div className="space-y-3">
-              {filteredLinks.map((link, idx) => {
+            <div
+              className="space-y-3 lg:pb-0"
+              style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom, 0px))" }}
+            >
+              {motionItems.map((item) => {
+                const link = item.link;
                 const originalIndex = links.indexOf(link);
+                const id = getLinkId(link);
+
+                if (item.exiting) {
+                  return <ExitingLinkCard key={`exit-${id}`} link={link} />;
+                }
+
                 return (
                   <SortableCardWrapper
-                    key={getLinkId(link) + idx}
+                    key={id}
                     link={link}
+                    entering={item.entering}
                     onEdit={onEditLink ? () => onEditLink(link, originalIndex) : undefined}
                     onDelete={onRequestDelete ? () => onRequestDelete(link, originalIndex) : (onDeleteLink ? () => onDeleteLink(link, originalIndex) : undefined)}
                     onToggle={onToggleLink ? () => onToggleLink(link, originalIndex) : undefined}
