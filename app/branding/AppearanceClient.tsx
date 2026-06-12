@@ -7,6 +7,7 @@ import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { DashboardPageTransition } from "../components/DashboardPageTransition";
 import { DirtyStateSaveBar } from "../components/DirtyStateSaveBar";
+import { DirtyStateSaveToolbar } from "../components/DirtyStateSaveToolbar";
 import { BrandingConfirmModal } from "./components/BrandingConfirmModal";
 import { CommandPalette } from "../components/CommandPalette";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
@@ -166,6 +167,11 @@ export default function AppearanceClient({
   }, [hydrated, profileFetched, initialState, initialAvatarUrl]);
 
   const isDirtyOrPending = isDirty || !!pendingAvatarBlob;
+
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-dirty-save-visible", isDirtyOrPending);
+    return () => document.documentElement.removeAttribute("data-dirty-save-visible");
+  }, [isDirtyOrPending]);
 
   // Guard 1 — browser refresh / tab close
   useEffect(() => {
@@ -348,64 +354,73 @@ export default function AppearanceClient({
               className="flex-1 min-w-0 px-4 pt-[22px] pb-24 lg:pb-14 sm:px-6 lg:px-8"
             >
               <DashboardPageTransition>
-              <DashboardTopBar
-                searchPlaceholder="Search themes, fonts, colors…"
-                onSearchClick={() => setShowPalette(true)}
-              />
-
-              <div
-                className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6"
-                style={{ marginBottom: 28 }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 12.5,
-                      color: "#6b75a3",
-                      marginBottom: 6,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    <Link
-                      href="/user-dashboard"
-                      style={{ color: "#6b75a3", textDecoration: "none" }}
-                    >
-                      Dashboard
-                    </Link>
-                    <span style={{ color: "#d6dae9" }}>/</span>
-                    <span style={{ color: "#0b1020", fontWeight: 500 }}>
-                      Branding
-                    </span>
-                  </div>
-                  <h1
-                    style={{
-                      fontSize: 38,
-                      fontWeight: 400,
-                      letterSpacing: "-0.02em",
-                      color: "#0b1020",
-                      fontFamily: BRANDING_FONT_SERIF,
-                      fontStyle: "italic",
-                      lineHeight: 1.05,
-                    }}
-                  >
-                    Make it <em style={{ color: "#3b46e0" }}>yours</em>.
-                  </h1>
-                  <p
-                    style={{
-                      fontSize: 13.5,
-                      color: "#6b75a3",
-                      marginTop: 6,
-                      maxWidth: 480,
-                    }}
-                  >
-                    Pick a theme that matches your vibe. Each one is fully
-                    customizable — change colors, fonts, and buttons after you
-                    select.
-                  </p>
+              <div className="mb-7 lg:sticky lg:top-0 lg:z-40 lg:-mx-8 lg:px-8 lg:-mt-[22px] lg:pt-[22px] lg:pb-3 lg:mb-7 lg:bg-[#f7f8fc]">
+                <div className="max-lg:sticky max-lg:top-0 max-lg:z-40 max-lg:-mx-4 max-lg:px-4 max-lg:sm:-mx-6 max-lg:sm:px-6 max-lg:-mt-[22px] max-lg:pt-[22px] max-lg:pb-3 max-lg:mb-7 max-lg:bg-[#f7f8fc]">
+                  <DashboardTopBar
+                    sticky={false}
+                    searchPlaceholder="Search themes, fonts, colors…"
+                    onSearchClick={() => setShowPalette(true)}
+                  />
                 </div>
 
+                <div
+                  className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6"
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 12.5,
+                        color: "#6b75a3",
+                        marginBottom: 6,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <Link
+                        href="/user-dashboard"
+                        style={{ color: "#6b75a3", textDecoration: "none" }}
+                      >
+                        Dashboard
+                      </Link>
+                      <span style={{ color: "#d6dae9" }}>/</span>
+                      <span style={{ color: "#0b1020", fontWeight: 500 }}>
+                        Branding
+                      </span>
+                    </div>
+                    <h1
+                      style={{
+                        fontSize: 38,
+                        fontWeight: 400,
+                        letterSpacing: "-0.02em",
+                        color: "#0b1020",
+                        fontFamily: BRANDING_FONT_SERIF,
+                        fontStyle: "italic",
+                        lineHeight: 1.05,
+                      }}
+                    >
+                      Make it <em style={{ color: "#3b46e0" }}>yours</em>.
+                    </h1>
+                    <p
+                      style={{
+                        fontSize: 13.5,
+                        color: "#6b75a3",
+                        marginTop: 6,
+                        maxWidth: 480,
+                      }}
+                    >
+                      Pick a theme that matches your vibe. Each one is fully
+                      customizable — change colors, fonts, and buttons after you
+                      select.
+                    </p>
+                  </div>
+
+                  <DirtyStateSaveToolbar
+                    dirty={isDirtyOrPending}
+                    onReset={handleResetRequest}
+                    onSave={handleSave}
+                  />
+                </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
@@ -520,19 +535,6 @@ export default function AppearanceClient({
       saveLabel="Save"
       className="fixed left-0 right-0 lg:hidden"
       style={{ bottom: 0, paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))" }}
-    />
-
-    <DirtyStateSaveBar
-      visible={isDirtyOrPending}
-      onReset={handleResetRequest}
-      onSave={handleSave}
-      className="fixed bottom-0 hidden lg:flex"
-      style={{
-        left: isCollapsed ? 80 : 256,
-        right: 420,
-        transition:
-          "left var(--motion-base) var(--ease-standard), right var(--motion-base) var(--ease-standard)",
-      }}
     />
 
     <BrandingConfirmModal

@@ -775,4 +775,13 @@ body {
   html[data-mobile-preview-open] [data-next-badge-root] {
     display: none !important;
   }
+
+}
+
+/* Hide dev overlay when a dirty-state save bar is visible (mobile bottom bar) */
+html[data-dirty-save-visible] nextjs-portal,
+html[data-dirty-save-visible] #__next-build-watcher,
+html[data-dirty-save-visible] [data-nextjs-dev-tools-button],
+html[data-dirty-save-visible] [data-next-badge-root] {
+  display: none !important;
 }

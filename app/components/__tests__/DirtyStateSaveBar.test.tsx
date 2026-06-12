@@ -40,6 +40,20 @@ describe("DirtyStateSaveBar", () => {
     expect(bar).toHaveStyle({ transition: "transform var(--motion-base) var(--ease-in)" });
   });
 
+  it("does not set inline display so responsive hide classes work", () => {
+    render(
+      <DirtyStateSaveBar
+        visible
+        onReset={vi.fn()}
+        onSave={vi.fn()}
+        className="lg:hidden"
+      />
+    );
+    const bar = screen.getByTestId("dirty-save-bar");
+    expect(bar.className).toContain("lg:hidden");
+    expect(bar.style.display).toBe("");
+  });
+
   it("merges layout transition with slide transition", () => {
     render(
       <DirtyStateSaveBar

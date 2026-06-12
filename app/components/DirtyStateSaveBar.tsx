@@ -39,7 +39,7 @@ export function DirtyStateSaveBar({
       aria-label="Unsaved changes"
       aria-hidden={!visible}
       data-testid="dirty-save-bar"
-      className={className}
+      className={`flex items-center gap-2 ${className}`.trim()}
       style={{
         zIndex: 84,
         transform: visible ? "translateY(0)" : "translateY(110%)",
@@ -47,9 +47,6 @@ export function DirtyStateSaveBar({
         background: "white",
         borderTop: "1px solid #eef0f7",
         boxShadow: "0 -4px 20px rgba(11,16,32,0.08)",
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
         padding: "10px 16px",
         ...restStyle,
         transition,

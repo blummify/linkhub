@@ -99,6 +99,7 @@ describe("AppearanceClient", () => {
   beforeEach(() => {
     resetBrandingState();
     vi.clearAllMocks();
+    document.documentElement.removeAttribute("data-dirty-save-visible");
   });
 
   it("renders branding page heading and sections", () => {
@@ -111,50 +112,57 @@ describe("AppearanceClient", () => {
     expect(screen.getByTestId("preview-panel")).toBeInTheDocument();
   });
 
-  it("does not show save controls in the page header", () => {
+  it("renders a single desktop save toolbar in the page header", () => {
+    renderWithSidebarAndBranding(<AppearanceClient />);
+    expect(screen.getAllByTestId("dirty-save-toolbar")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: /Save changes/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reset" })).toBeInTheDocument();
+  });
+
+  it("does not render a desktop bottom save bar", () => {
     brandingState.displayName = "Edited name";
     renderWithSidebarAndBranding(<AppearanceClient />);
-
-    const heading = screen.getByRole("heading", { name: /Make it/i });
-    const headerSection = heading.closest("div")?.parentElement;
-    expect(headerSection).toBeTruthy();
-    expect(within(headerSection!).queryByRole("button", { name: /save/i })).not.toBeInTheDocument();
-    expect(within(headerSection!).queryByRole("button", { name: /reset/i })).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("dirty-save-bar")).toHaveLength(1);
+    expect(screen.getByTestId("dirty-save-bar").className).toContain("lg:hidden");
   });
 
-  it("hides dirty save bars when the form is clean", () => {
+  it("hides mobile dirty save bar when the form is clean", () => {
     renderWithSidebarAndBranding(<AppearanceClient />);
-    const bars = screen.getAllByTestId("dirty-save-bar");
-    expect(bars).toHaveLength(2);
-    bars.forEach((bar) => expect(bar).toHaveAttribute("aria-hidden", "true"));
+    expect(screen.getByTestId("dirty-save-bar")).toHaveAttribute("aria-hidden", "true");
   });
 
-  it("shows dirty save bars when the form is dirty", () => {
+  it("shows mobile dirty save bar when the form is dirty", () => {
     brandingState.displayName = "New name";
     renderWithSidebarAndBranding(<AppearanceClient />);
-
-    const bars = screen.getAllByTestId("dirty-save-bar");
-    expect(bars).toHaveLength(2);
-    bars.forEach((bar) => expect(bar).toHaveAttribute("aria-hidden", "false"));
+    expect(screen.getByTestId("dirty-save-bar")).toHaveAttribute("aria-hidden", "false");
   });
 
-  it("pins the desktop save bar to the center column", () => {
-    brandingState.displayName = "Edited name";
+  it("shows unsaved indicator in desktop toolbar when dirty", () => {
+    brandingState.displayName = "New name";
     renderWithSidebarAndBranding(<AppearanceClient />);
+    expect(screen.getByTestId("dirty-save-toolbar")).toHaveTextContent("Unsaved changes");
+    expect(screen.getByRole("button", { name: /Save changes/i })).toBeEnabled();
+  });
 
-    const desktopBar = screen
-      .getAllByTestId("dirty-save-bar")
-      .find((el) => el.className.includes("lg:flex"));
-    expect(desktopBar?.style.left).toBe("256px");
-    expect(desktopBar?.style.right).toBe("420px");
+  it("disables desktop save controls when clean", () => {
+    renderWithSidebarAndBranding(<AppearanceClient />);
+    expect(screen.getByTestId("dirty-save-toolbar")).not.toHaveTextContent("Unsaved changes");
+    expect(screen.getByRole("button", { name: /Save changes/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Reset" })).toBeDisabled();
+  });
+
+  it("sets data-dirty-save-visible on the document when dirty", () => {
+    brandingState.displayName = "New name";
+    renderWithSidebarAndBranding(<AppearanceClient />);
+    expect(document.documentElement.hasAttribute("data-dirty-save-visible")).toBe(true);
   });
 
   it("confirms before resetting unsaved changes", () => {
     brandingState.displayName = "Edited name";
     renderWithSidebarAndBranding(<AppearanceClient />);
 
-    const resetButtons = screen.getAllByRole("button", { name: "Reset" });
-    fireEvent.click(resetButtons[0]);
+    const toolbar = screen.getByTestId("dirty-save-toolbar");
+    fireEvent.click(within(toolbar).getByRole("button", { name: "Reset" }));
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("Discard changes?")).toBeInTheDocument();
