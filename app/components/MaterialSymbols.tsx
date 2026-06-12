@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 const HREF =
-  "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap";
+  "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap";
 
 export function MaterialSymbols() {
   useEffect(() => {

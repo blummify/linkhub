@@ -484,9 +484,22 @@ function DeleteAccountDialog({
 /* ───────────────────────────── Page ───────────────────────────── */
 export default function MyAccountClient({ initial }: { initial: AccountInitial }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
-  const { update } = useSession();
+  const { update, data: session } = useSession();
   const router = useRouter();
   const [showPalette, setShowPalette] = useState(false);
+
+  const sessionUser = session?.user;
+  const displayName =
+    sessionUser?.name?.trim() ||
+    sessionUser?.email?.split("@")[0] ||
+    "Account";
+  const displayEmail = sessionUser?.email ?? "";
+
+  const handleSignOut = () => {
+    localStorage.removeItem("linkhub-branding-v2");
+    localStorage.removeItem("linkhub-branding-v1");
+    void signOut({ callbackUrl: "/login" });
+  };
 
   /* ── Per-section editing state ── */
   const [editingProfile, setEditingProfile] = useState(false);
@@ -957,7 +970,85 @@ export default function MyAccountClient({ initial }: { initial: AccountInitial }
                 )}
               </Section>
 
-              {/* ── Danger zone ── */}
+              {/* ── Mobile-only: sidebar actions that have no home on small screens ── */}
+              <div className="lg:hidden mt-6 border-t border-ink-100 pt-6 flex flex-col gap-2">
+                {/* User info */}
+                <div className="flex items-center gap-3 px-1 mb-2">
+                  <div
+                    className="flex items-center justify-center text-white font-semibold shrink-0"
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
+                      fontSize: 14,
+                    }}
+                  >
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ink-900 truncate">{displayName}</p>
+                    <p className="text-[11.5px] text-ink-400 truncate">{displayEmail}</p>
+                  </div>
+                </div>
+
+                {/* Help & support */}
+                <Link
+                  href="/help"
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-ink-100 bg-white"
+                  style={{ textDecoration: "none" }}
+                >
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-ink-100 bg-paper text-ink-500">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                      <circle cx="12" cy="12" r="10" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
+                    </svg>
+                  </div>
+                  <span className="flex-1 text-[14px] font-medium text-ink-900">Help &amp; support</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#9ba4c7" strokeWidth="2" width="16" height="16">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+                  </svg>
+                </Link>
+
+                {/* Upgrade to Pro */}
+                <Link
+                  href="/billing"
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white"
+                  style={{
+                    textDecoration: "none",
+                    background: "linear-gradient(135deg, #3b46e0 0%, #5e3eb5 100%)",
+                  }}
+                >
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/15 text-white">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold leading-tight">Upgrade to Pro</p>
+                    <p className="text-[11.5px] opacity-75 leading-tight mt-0.5">Unlock analytics &amp; more</p>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" width="16" height="16">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+                  </svg>
+                </Link>
+
+                {/* Log out — neutral, not destructive */}
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-ink-100 bg-white text-ink-700"
+                >
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-ink-100 bg-paper text-ink-500">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </div>
+                  <span className="flex-1 text-left text-[14px] font-medium">Log out</span>
+                </button>
+              </div>
+
+              {/* ── Danger zone — last, most deliberate action ── */}
               <Section danger>
                 <SectionHead danger title="Danger zone" desc="Permanent actions. Once done, they cannot be undone." />
                 <div className="px-6 pt-5 pb-6">

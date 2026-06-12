@@ -1,9 +1,9 @@
-/* Branding font stacks — faces loaded via @import in globals.css */
+/* Branding font stacks — faces loaded via next/font in app/layout.tsx */
 :root {
-  --branding-font-sans: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
-  --branding-font-mono: "Geist Mono", ui-monospace, "Courier New", monospace;
-  --branding-font-serif: var(--font-instrument-serif, "Instrument Serif"), Georgia, serif;
-  --branding-font-playfair: "Playfair Display", Georgia, serif;
-  --branding-font-dm-serif: "DM Serif Display", Georgia, serif;
-  --branding-font-space: "Space Grotesk", sans-serif;
+  --branding-font-sans: var(--font-geist), -apple-system, BlinkMacSystemFont, sans-serif;
+  --branding-font-mono: var(--font-geist-mono), ui-monospace, "Courier New", monospace;
+  --branding-font-serif: var(--font-instrument-serif), Georgia, serif;
+  --branding-font-playfair: var(--font-playfair-display), Georgia, serif;
+  --branding-font-dm-serif: var(--font-dm-serif-display), Georgia, serif;
+  --branding-font-space: var(--font-space-grotesk), sans-serif;
 }

@@ -11,6 +11,7 @@ type SessionUser = NonNullable<DefaultSession["user"]> & {
 };
 
 export default {
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,

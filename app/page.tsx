@@ -16,6 +16,7 @@ export default function Home() {
 
       <HomeScrollReveal />
       <PublicNav />
+      <main>
       <HomeHeroSection />
 
       <section
@@ -130,6 +131,7 @@ export default function Home() {
         </div>
       </section>
 
+      </main>
       <SiteFooter />
     </div>
   );
