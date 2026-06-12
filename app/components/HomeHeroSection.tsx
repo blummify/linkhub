@@ -2,20 +2,18 @@
 
 import Link from "next/link";
 import { LinkhubLogo } from "./icons/LinkhubLogo";
-import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
+import { useSyncExternalStore, type CSSProperties, type PointerEvent } from "react";
+
+const mqSubscribe = (cb: () => void) => {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const mqSnapshot = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const mqServerSnapshot = () => false;
 
 export function HomeHeroSection() {
-  const [reduceMotion, setReduceMotion] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  });
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = () => setReduceMotion(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
+  const reduceMotion = useSyncExternalStore(mqSubscribe, mqSnapshot, mqServerSnapshot);
 
   const onHeroPointerMove = (e: PointerEvent<HTMLElement>) => {
     if (reduceMotion) return;
@@ -85,7 +83,7 @@ export function HomeHeroSection() {
                   <div className="w-20 h-20 rounded-full border-4 border-white shadow-md mb-3 overflow-hidden bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
                     <span className="material-symbols-outlined text-primary text-4xl">person</span>
                   </div>
-                  <h3 className="font-headline font-bold text-lg text-on-surface">@alex_creative</h3>
+                  <p className="font-headline font-bold text-lg text-on-surface">@alex_creative</p>
                   <p className="text-xs text-on-surface-variant font-medium">Digital Curator &amp; Designer</p>
                 </div>
                 <div className="w-full space-y-3 relative">
@@ -139,7 +137,6 @@ export function HomeHeroSection() {
         <a
           href="#trusted-creators"
           className="group flex flex-col items-center gap-1.5 text-on-surface-variant/50 hover:text-primary transition-colors"
-          aria-label="Scroll to next section"
         >
           <span className="text-[10px] font-label font-bold uppercase tracking-[0.25em]">Explore</span>
           <span
