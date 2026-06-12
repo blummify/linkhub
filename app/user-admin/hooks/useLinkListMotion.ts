@@ -17,7 +17,10 @@ function getLinkId(link: ManagedLink): string {
 export function useLinkListMotion(links: ManagedLink[]): LinkMotionItem[] {
   const reduced = usePrefersReducedMotion();
   const linksRef = useRef(links);
-  linksRef.current = links;
+
+  useEffect(() => {
+    linksRef.current = links;
+  }, [links]);
 
   const [items, setItems] = useState<LinkMotionItem[]>(() =>
     links.map((link) => ({ link, exiting: false, entering: false })),
