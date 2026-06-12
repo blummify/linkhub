@@ -101,10 +101,20 @@ const emailFromParam = searchParams.get("email");
   useEffect(() => {
     if (!fromLogin || !email || autoSentRef.current) return;
     autoSentRef.current = true;
-    void sendVerificationCode(email).then((result) => {
-      if ("error" in result) setError(result.error);
-      else startCooldown(60);
-    });
+    void (async () => {
+      try {
+        const recaptchaToken = await executeRecaptcha("send_verification");
+        const result = await sendVerificationCode(email, recaptchaToken);
+        if ("error" in result) setError(result.error);
+        else startCooldown(60);
+      } catch (error: unknown) {
+        if (error instanceof RecaptchaError) {
+          setError("Security check couldn't complete. Please refresh the page and try again.");
+          return;
+        }
+        setError("Something went wrong. Please try again.");
+      }
+    })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

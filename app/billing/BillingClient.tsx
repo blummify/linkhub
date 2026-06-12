@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
+import { DashboardPageTransition } from "../components/DashboardPageTransition";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
 import { PlanCard } from "./components/PlanCard";
@@ -248,6 +249,7 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
         >
           <div className="flex flex-col min-h-screen">
             <div className="flex-1 min-w-0 px-4 pt-[22px] pb-24 lg:pb-14 sm:px-6 lg:px-8">
+              <DashboardPageTransition>
 
               <DashboardTopBar searchPlaceholder="Search billing…" />
 
@@ -333,6 +335,7 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
                 </div>
               </div>
 
+              </DashboardPageTransition>
             </div>
           </div>
         </main>

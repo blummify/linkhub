@@ -5,6 +5,10 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
+import { DashboardPageTransition } from "../components/DashboardPageTransition";
+import { DirtyStateSaveBar } from "../components/DirtyStateSaveBar";
+import { DirtyStateSaveToolbar } from "../components/DirtyStateSaveToolbar";
+import { BrandingConfirmModal } from "./components/BrandingConfirmModal";
 import { CommandPalette } from "../components/CommandPalette";
 import { ClaimHandleModal } from "../components/ClaimHandleModal";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
@@ -125,6 +129,7 @@ export default function AppearanceClient({
   const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Deferred avatar upload state
   const [cropFile, setCropFile] = useState<File | null>(null);
@@ -134,6 +139,11 @@ export default function AppearanceClient({
   useEffect(() => {
     queueMicrotask(() => setMounted(true));
   }, []);
+
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
+    return () => document.documentElement.removeAttribute("data-mobile-preview-open");
+  }, [previewOpen]);
 
   // Track whether we've applied the server-provided initial state yet.
   // We wait for the Zustand store to finish its localStorage hydration (hydrated===true)
@@ -157,6 +167,11 @@ export default function AppearanceClient({
   }, [hydrated, profileFetched, initialState, initialAvatarUrl]);
 
   const isDirtyOrPending = isDirty || !!pendingAvatarBlob;
+
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-dirty-save-visible", isDirtyOrPending);
+    return () => document.documentElement.removeAttribute("data-dirty-save-visible");
+  }, [isDirtyOrPending]);
 
   // Guard 1 — browser refresh / tab close
   useEffect(() => {
@@ -297,6 +312,17 @@ export default function AppearanceClient({
     markSaved();
   }, [pendingAvatarBlob, upload, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
 
+  const handleResetRequest = useCallback(() => {
+    setShowResetConfirm(true);
+  }, []);
+
+  const handleResetConfirm = useCallback(() => {
+    reset();
+    setPendingAvatarBlob(null);
+    setPendingAvatarPreview(null);
+    setShowResetConfirm(false);
+  }, [reset]);
+
   const handleLeaveAnyway = useCallback(() => {
     setShowLeaveModal(false);
     useBrandingStore.getState().reset();
@@ -327,127 +353,73 @@ export default function AppearanceClient({
             <div
               className="flex-1 min-w-0 px-4 pt-[22px] pb-24 lg:pb-14 sm:px-6 lg:px-8"
             >
-              <DashboardTopBar
-                searchPlaceholder="Search themes, fonts, colors…"
-                onSearchClick={() => setShowPalette(true)}
-              />
-
-              <div
-                className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6"
-                style={{ marginBottom: 28 }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 12.5,
-                      color: "#6b75a3",
-                      marginBottom: 6,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    <Link
-                      href="/user-dashboard"
-                      style={{ color: "#6b75a3", textDecoration: "none" }}
-                    >
-                      Dashboard
-                    </Link>
-                    <span style={{ color: "#d6dae9" }}>/</span>
-                    <span style={{ color: "#0b1020", fontWeight: 500 }}>
-                      Branding
-                    </span>
-                  </div>
-                  <h1
-                    style={{
-                      fontSize: 38,
-                      fontWeight: 400,
-                      letterSpacing: "-0.02em",
-                      color: "#0b1020",
-                      fontFamily: BRANDING_FONT_SERIF,
-                      fontStyle: "italic",
-                      lineHeight: 1.05,
-                    }}
-                  >
-                    Make it <em style={{ color: "#3b46e0" }}>yours</em>.
-                  </h1>
-                  <p
-                    style={{
-                      fontSize: 13.5,
-                      color: "#6b75a3",
-                      marginTop: 6,
-                      maxWidth: 480,
-                    }}
-                  >
-                    Pick a theme that matches your vibe. Each one is fully
-                    customizable — change colors, fonts, and buttons after you
-                    select.
-                  </p>
+              <DashboardPageTransition>
+              <div className="mb-7 lg:sticky lg:top-0 lg:z-40 lg:-mx-8 lg:px-8 lg:-mt-[22px] lg:pt-[22px] lg:pb-3 lg:mb-7 lg:bg-[#f7f8fc]">
+                <div className="max-lg:sticky max-lg:top-0 max-lg:z-40 max-lg:-mx-4 max-lg:px-4 max-lg:sm:-mx-6 max-lg:sm:px-6 max-lg:-mt-[22px] max-lg:pt-[22px] max-lg:pb-3 max-lg:mb-7 max-lg:bg-[#f7f8fc]">
+                  <DashboardTopBar
+                    sticky={false}
+                    searchPlaceholder="Search themes, fonts, colors…"
+                    onSearchClick={() => setShowPalette(true)}
+                  />
                 </div>
 
-                <div className="hidden lg:flex" style={{ gap: 8, flexShrink: 0 }}>
-                  <button
-                    type="button"
-                    onClick={reset}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 7,
-                      background: "white",
-                      border: "1px solid #eef0f7",
-                      color: "#1a2244",
-                      padding: "10px 14px",
-                      borderRadius: 99,
-                      minHeight: 44,
-                      fontFamily: "inherit",
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12a9 9 0 0115-6.7l3-3v9h-9l3.7-3.7M21 12a9 9 0 01-15 6.7l-3 3v-9h9l-3.7 3.7"/>
-                    </svg>
-                    Reset
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      background: "linear-gradient(180deg, #3b46e0, #2a37c0)",
-                      color: "white",
-                      border: 0,
-                      padding: "11px 18px",
-                      borderRadius: 99,
-                      minHeight: 44,
-                      fontFamily: "inherit",
-                      fontSize: 13.5,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      boxShadow:
-                        "0 6px 18px -6px rgba(59,70,224,0.55), inset 0 1px 0 rgba(255,255,255,0.15)",
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    Save changes
-                    {isDirtyOrPending && (
-                      <span
-                        style={{
-                          width: 8,
-                          height: 8,
-                          background: "#f59e0b",
-                          borderRadius: "50%",
-                          flexShrink: 0,
-                          animation: "dot-blink 1.2s ease-in-out infinite",
-                        }}
-                      />
-                    )}
-                  </button>
+                <div
+                  className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6"
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 12.5,
+                        color: "#6b75a3",
+                        marginBottom: 6,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <Link
+                        href="/user-dashboard"
+                        style={{ color: "#6b75a3", textDecoration: "none" }}
+                      >
+                        Dashboard
+                      </Link>
+                      <span style={{ color: "#d6dae9" }}>/</span>
+                      <span style={{ color: "#0b1020", fontWeight: 500 }}>
+                        Branding
+                      </span>
+                    </div>
+                    <h1
+                      style={{
+                        fontSize: 38,
+                        fontWeight: 400,
+                        letterSpacing: "-0.02em",
+                        color: "#0b1020",
+                        fontFamily: BRANDING_FONT_SERIF,
+                        fontStyle: "italic",
+                        lineHeight: 1.05,
+                      }}
+                    >
+                      Make it <em style={{ color: "#3b46e0" }}>yours</em>.
+                    </h1>
+                    <p
+                      style={{
+                        fontSize: 13.5,
+                        color: "#6b75a3",
+                        marginTop: 6,
+                        maxWidth: 480,
+                      }}
+                    >
+                      Pick a theme that matches your vibe. Each one is fully
+                      customizable — change colors, fonts, and buttons after you
+                      select.
+                    </p>
+                  </div>
+
+                  <DirtyStateSaveToolbar
+                    dirty={isDirtyOrPending}
+                    onReset={handleResetRequest}
+                    onSave={handleSave}
+                  />
                 </div>
               </div>
 
@@ -508,12 +480,11 @@ export default function AppearanceClient({
                   />
                 </section>
               </div>
+              </DashboardPageTransition>
             </div>
 
-            <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto bg-white p-4 lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:block" : "hidden lg:block"}>
-              <div key={themeId} style={{ animation: "lhItemIn var(--motion-base) var(--ease-out) both" }}>
+            <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto bg-white p-0 lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:block" : "hidden lg:block"}>
                 <DashboardPreviewPanel width={previewOpen ? "100%" : 420} showThemeFooter onPickHandle={() => setShowClaimModal(true)} />
-              </div>
             </div>
           </div>
         </main>
@@ -557,87 +528,24 @@ export default function AppearanceClient({
       </button>
     )}
 
-    {/* ── Mobile sticky save bar — slides up above the bottom nav when dirty ── */}
-    <div
+    <DirtyStateSaveBar
+      visible={isDirtyOrPending}
+      onReset={handleResetRequest}
+      onSave={handleSave}
+      saveLabel="Save"
       className="fixed left-0 right-0 lg:hidden"
-      style={{
-        bottom: 0,
-        zIndex: 84,
-        transform: isDirtyOrPending ? "translateY(0)" : "translateY(110%)",
-        transition: "transform var(--motion-base) var(--ease-out)",
-        pointerEvents: isDirtyOrPending ? "auto" : "none",
-        background: "white",
-        borderTop: "1px solid #eef0f7",
-        boxShadow: "0 -4px 20px rgba(11,16,32,0.08)",
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "10px 16px",
-        paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))",
-      }}
-    >
-      <span
-        style={{
-          flex: 1,
-          fontSize: 12.5,
-          fontWeight: 500,
-          color: "#6b75a3",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        Unsaved changes
-      </span>
-      <button
-        type="button"
-        onClick={reset}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          background: "white",
-          border: "1px solid #d6dae9",
-          color: "#1a2244",
-          padding: "0 14px",
-          borderRadius: 99,
-          minHeight: 40,
-          fontFamily: "inherit",
-          fontSize: 13,
-          fontWeight: 500,
-          cursor: "pointer",
-          flexShrink: 0,
-        }}
-      >
-        Reset
-      </button>
-      <button
-        type="button"
-        onClick={handleSave}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 7,
-          background: "linear-gradient(180deg, #3b46e0, #2a37c0)",
-          color: "white",
-          border: 0,
-          padding: "0 16px",
-          borderRadius: 99,
-          minHeight: 40,
-          fontFamily: "inherit",
-          fontSize: 13.5,
-          fontWeight: 600,
-          cursor: "pointer",
-          flexShrink: 0,
-          boxShadow: "0 4px 14px -4px rgba(59,70,224,0.5)",
-        }}
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Save
-      </button>
-    </div>
+      style={{ bottom: 0, paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))" }}
+    />
+
+    <BrandingConfirmModal
+      open={showResetConfirm}
+      onClose={() => setShowResetConfirm(false)}
+      title="Discard changes?"
+      body="This will restore your branding to the last saved version. Unsaved edits will be lost."
+      confirmText="Discard changes"
+      confirmStyle="danger"
+      onConfirm={handleResetConfirm}
+    />
 
     {cropFile && (
       <AvatarCropModal

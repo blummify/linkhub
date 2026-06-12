@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
+import { DashboardPageTransition } from "../components/DashboardPageTransition";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
@@ -46,6 +47,12 @@ export default function UserAdminClient() {
 
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
+    return () => document.documentElement.removeAttribute("data-mobile-preview-open");
+  }, [previewOpen]);
+
   const [claimOpen, setClaimOpen] = useState(false);
   const [profileReady, setProfileReady] = useState(() => useProfileStore.getState().fetched);
   const [profileDataReady, setProfileDataReady] = useState(false);
@@ -314,7 +321,8 @@ export default function UserAdminClient() {
               } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
             >
               <div className="flex flex-col lg:flex-row min-h-screen">
-                <div className="flex-1 min-w-0 px-4 pt-[22px] pb-36 lg:pb-10 sm:px-6 lg:px-8">
+                <div className={`flex-1 min-w-0 px-4 pt-[22px] sm:px-6 lg:px-8 lg:pb-10 ${links.length > 0 ? "pb-40" : "pb-36"}`}>
+                  <DashboardPageTransition>
                   <ManageLinksSection
                     links={links}
                     isLoadingLinks={isLoadingLinks}
@@ -330,9 +338,10 @@ export default function UserAdminClient() {
                       void reorderLinks(ids);
                     }}
                   />
+                  </DashboardPageTransition>
                 </div>
 
-                <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto bg-white p-4 lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:block" : "hidden lg:block"}>
+                <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto bg-white p-0 lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:block" : "hidden lg:block"}>
                   <DashboardPreviewPanel width={previewOpen ? "100%" : 420} onPickHandle={() => setClaimOpen(true)} />
                 </div>
               </div>
@@ -341,12 +350,12 @@ export default function UserAdminClient() {
         </CollapsibleSidebar>
       </div>
 
-      {!previewOpen && (
+      {!previewOpen && links.length > 0 && (
         <button
           type="button"
           onClick={openAddLink}
           className="fixed flex items-center gap-2 text-white font-semibold rounded-[24px] lg:hidden"
-          style={{ right: 16, bottom: 78, zIndex: 85, fontSize: 14, padding: "12px 20px 12px 16px", background: "linear-gradient(180deg,#3b46e0,#2a37c0)", boxShadow: "0 4px 20px rgba(59,70,224,0.4)" }}
+          style={{ right: 16, bottom: "max(78px, calc(72px + env(safe-area-inset-bottom, 0px)))", zIndex: 85, fontSize: 14, padding: "12px 20px 12px 16px", background: "linear-gradient(180deg,#3b46e0,#2a37c0)", boxShadow: "0 4px 20px rgba(59,70,224,0.4)" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14"/>

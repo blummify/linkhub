@@ -712,14 +712,19 @@ body {
   to   { opacity: 0; }
 }
 
+@keyframes lhPageIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
 @keyframes lhItemIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: none; }
 }
 
 @keyframes lhItemOut {
-  from { opacity: 1; max-height: 120px; padding-block: 12px; }
-  to   { opacity: 0; max-height: 0;     padding-block: 0; }
+  from { opacity: 1; transform: translateY(0); max-height: 200px; margin-bottom: 0; }
+  to   { opacity: 0; transform: translateY(-6px); max-height: 0; margin-bottom: -12px; overflow: hidden; }
 }
 
 @keyframes brandingModalIn {
@@ -754,4 +759,29 @@ body {
 }
 [data-sonner-toast][data-removed="true"] {
   animation: lhItemOut var(--motion-base) var(--ease-in) both;
+}
+
+/* ── Mobile live preview sheet — suppress overlapping fixed UI ─────────────── */
+@media (max-width: 1023px) {
+  html[data-mobile-preview-open] [data-mobile-bottom-nav] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Next.js dev indicator and similar fixed bottom-right overlays */
+  html[data-mobile-preview-open] nextjs-portal,
+  html[data-mobile-preview-open] #__next-build-watcher,
+  html[data-mobile-preview-open] [data-nextjs-dev-tools-button],
+  html[data-mobile-preview-open] [data-next-badge-root] {
+    display: none !important;
+  }
+
+}
+
+/* Hide dev overlay when a dirty-state save bar is visible (mobile bottom bar) */
+html[data-dirty-save-visible] nextjs-portal,
+html[data-dirty-save-visible] #__next-build-watcher,
+html[data-dirty-save-visible] [data-nextjs-dev-tools-button],
+html[data-dirty-save-visible] [data-next-badge-root] {
+  display: none !important;
 }

@@ -67,12 +67,15 @@ function SignupPageContent() {
     }
     setIsCheckingEmail(true);
     try {
-      const exists = await checkUserExists(formData.email);
+      const recaptchaToken = await executeRecaptcha("check_email");
+      const result = await checkUserExists(formData.email, recaptchaToken);
+      if ("error" in result) return;
       setFieldErrors((prev) => ({
         ...prev,
-        email: exists ? "An account with this email already exists." : "",
+        email: result.exists ? "An account with this email already exists." : "",
       }));
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) return;
       // silently ignore — full validation still runs on submit
     } finally {
       setIsCheckingEmail(false);
@@ -119,9 +122,8 @@ function SignupPageContent() {
         setError(result.error);
       } else {
         const verifyUrl = `/verify-email?email=${encodeURIComponent(formData.email)}`;
-        // Fire email in background — user goes to verify page immediately
-        // If delivery fails they can resend from that page
-        sendVerificationCode(formData.email).catch(() => {});
+        const sendToken = await executeRecaptcha("send_verification");
+        sendVerificationCode(formData.email, sendToken).catch(() => {});
         router.push(verifyUrl);
       }
     } catch (error: unknown) {
