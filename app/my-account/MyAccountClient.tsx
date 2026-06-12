@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
+import { DashboardPageTransition } from "../components/DashboardPageTransition";
 import { CommandPalette } from "../components/CommandPalette";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { useSidebarStore } from "@/store/sidebarStore";
@@ -712,6 +713,7 @@ export default function MyAccountClient({ initial }: { initial: AccountInitial }
           } ml-0`}
         >
           <div className="px-4 pt-[22px] pb-24 lg:pb-14 sm:px-6 lg:px-8">
+            <DashboardPageTransition>
             <DashboardTopBar searchPlaceholder="Search settings…" onSearchClick={() => setShowPalette(true)} />
 
             <div className="max-w-[920px] tracking-[-0.01em] text-ink-900">
@@ -973,6 +975,7 @@ export default function MyAccountClient({ initial }: { initial: AccountInitial }
                 </div>
               </Section>
             </div>
+            </DashboardPageTransition>
           </div>
         </main>
       </CollapsibleSidebar>

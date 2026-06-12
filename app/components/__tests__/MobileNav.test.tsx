@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MobileTopBar, MobileBottomNav } from "../MobileNav";
 
 vi.mock("next-auth/react", () => ({
@@ -26,24 +26,9 @@ describe("MobileTopBar", () => {
     expect(screen.getByRole("button", { name: /preview/i })).toBeInTheDocument();
   });
 
-  it("renders the avatar with the user initial", () => {
+  it("does not render a profile avatar (Account tab covers profile)", () => {
     render(<MobileTopBar />);
-    expect(screen.getByRole("button", { name: /profile/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /profile/i }).textContent).toBe("J");
-  });
-
-  it("opens the profile sheet when avatar is clicked", () => {
-    render(<MobileTopBar />);
-    fireEvent.click(screen.getByRole("button", { name: /profile/i }));
-    expect(screen.getByText("joel@example.com")).toBeInTheDocument();
-    expect(screen.getByText("My Account")).toBeInTheDocument();
-    expect(screen.getByText("Log out")).toBeInTheDocument();
-  });
-
-  it("shows email verified badge when verified", () => {
-    render(<MobileTopBar />);
-    fireEvent.click(screen.getByRole("button", { name: /profile/i }));
-    expect(screen.getByText("Email verified")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /profile/i })).not.toBeInTheDocument();
   });
 });
 

@@ -33,6 +33,7 @@ vi.mock("next-auth/react", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: routerRefresh }),
+  usePathname: () => "/my-account",
 }));
 
 const actions = vi.hoisted(() => ({

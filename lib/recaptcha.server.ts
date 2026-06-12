@@ -3,7 +3,10 @@ export type RecaptchaAction =
   | "login"
   | "forgot_password"
   | "verify_email"
-  | "resend_verification";
+  | "resend_verification"
+  | "reset_password"
+  | "check_email"
+  | "send_verification";
 
 interface RecaptchaVerifyResponse {
   success: boolean;

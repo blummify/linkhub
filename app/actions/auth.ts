@@ -29,15 +29,25 @@ export async function checkEmailVerified(email: string): Promise<boolean> {
   }
 }
 
-export async function checkUserExists(email: string) {
+export async function checkUserExists(
+  email: string,
+  recaptchaToken: string
+): Promise<{ exists: boolean } | { error: string }> {
+  try {
+    await verifyRecaptcha(recaptchaToken, "check_email");
+  } catch (error) {
+    console.error("[checkUserExists] reCAPTCHA failed", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+
   try {
     const user = await db.user.findUnique({
       where: { email },
     });
-    return !!user;
+    return { exists: !!user };
   } catch (error) {
     console.error("Error checking user:", error);
-    return false;
+    return { error: "Something went wrong. Please try again." };
   }
 }
 
@@ -115,7 +125,17 @@ async function createAndSendCode(email: string): Promise<{ success: true } | { e
   return { success: true };
 }
 
-export async function sendVerificationCode(email: string): Promise<{ success: true } | { error: string }> {
+export async function sendVerificationCode(
+  email: string,
+  recaptchaToken: string
+): Promise<{ success: true } | { error: string }> {
+  try {
+    await verifyRecaptcha(recaptchaToken, "send_verification");
+  } catch (error) {
+    console.error("[sendVerificationCode] reCAPTCHA failed", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+
   try {
     const rateLimitKey = `verifycode:${email.toLowerCase()}`;
     try {
@@ -400,8 +420,16 @@ export async function validateResetToken(token: string): Promise<{ valid: true }
 
 export async function resetPassword(
   token: string,
-  newPassword: string
+  newPassword: string,
+  recaptchaToken: string
 ): Promise<{ success: true } | { error: string }> {
+  try {
+    await verifyRecaptcha(recaptchaToken, "reset_password");
+  } catch (error) {
+    console.error("[resetPassword] reCAPTCHA failed", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+
   try {
     const tokenHash = createHash("sha256").update(token).digest("hex");
 
