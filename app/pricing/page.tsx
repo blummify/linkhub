@@ -9,6 +9,17 @@ import { detectCurrencyFromHeaders } from "@/lib/geo";
 
 export const metadata: Metadata = {
   title: "Pricing",
+  description: "Simple, transparent pricing. Start free and upgrade when you're ready to grow.",
+  openGraph: {
+    title: "Pricing — LinkHub",
+    description: "Simple, transparent pricing. Start free and upgrade when you're ready to grow.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pricing — LinkHub",
+    description: "Simple, transparent pricing. Start free and upgrade when you're ready to grow.",
+  },
 };
 
 

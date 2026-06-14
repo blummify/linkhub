@@ -7,6 +7,7 @@ import { LinkhubLogo } from "./icons/LinkhubLogo";
 import { signOut, useSession } from "next-auth/react";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { useLinksStore } from "@/store/linksStore";
+import { usePrefersReducedMotion } from "./hooks/usePrefersReducedMotion";
 import {
   LinksIcon,
   AppearanceIcon,
@@ -40,6 +41,7 @@ export default function CollapsibleSidebar({
   mobileHeaderExtra?: React.ReactNode;
 }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+  const reduced = usePrefersReducedMotion();
 
   const linkCount = useLinksStore((s) => s.links.length);
   const pathname = usePathname();
@@ -74,7 +76,7 @@ export default function CollapsibleSidebar({
             ? "w-[76px] px-[10px] py-6"
             : "w-[264px] px-[18px] py-7"
         }`}
-        style={{ borderColor: "#eef0f7", transition: "width var(--motion-base) var(--ease-standard)" }}
+        style={{ borderColor: "#eef0f7", willChange: "width", transition: reduced ? "none" : "width var(--motion-base) var(--ease-standard)" }}
       >
 
       <div className={`flex items-center justify-center ${isCollapsed ? 'mb-6 pt-1' : 'mb-8 pt-2'}`}>

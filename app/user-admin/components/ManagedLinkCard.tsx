@@ -230,7 +230,7 @@ export function ManagedLinkCard({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={link.thumbnailUrl}
-              alt=""
+              alt={`Thumbnail for ${link.title}`}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             />
           ) : iconEntry ? (
