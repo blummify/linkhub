@@ -123,6 +123,7 @@ export default function AppearanceClient({
   const [activeCustomThemeId, setActiveCustomThemeId] = useState<string | null>(initialActiveCustomThemeId ?? null);
   const [applyingThemeId, setApplyingThemeId] = useState<string | null>(null);
 
+  const [isSaving, setIsSaving] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -298,19 +299,25 @@ export default function AppearanceClient({
   }, [router]);
 
   const handleSave = useCallback(async () => {
-    if (pendingAvatarBlob) {
-      const file = new File([pendingAvatarBlob], "avatar.jpg", { type: "image/jpeg" });
-      await upload(file);
-      setPendingAvatarBlob(null);
-      setPendingAvatarPreview(null);
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      if (pendingAvatarBlob) {
+        const file = new File([pendingAvatarBlob], "avatar.jpg", { type: "image/jpeg" });
+        await upload(file);
+        setPendingAvatarBlob(null);
+        setPendingAvatarPreview(null);
+      }
+      const result = await updateBranding({ displayName, bio, themeId, accentColor, buttonStyle, fontFamily });
+      if ("error" in result) {
+        console.error("[handleSave] updateBranding error:", result.error);
+        return;
+      }
+      markSaved();
+    } finally {
+      setIsSaving(false);
     }
-    const result = await updateBranding({ displayName, bio, themeId, accentColor, buttonStyle, fontFamily });
-    if ("error" in result) {
-      console.error("[handleSave] updateBranding error:", result.error);
-      return;
-    }
-    markSaved();
-  }, [pendingAvatarBlob, upload, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
+  }, [isSaving, pendingAvatarBlob, upload, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
 
   const handleResetRequest = useCallback(() => {
     setShowResetConfirm(true);
@@ -419,6 +426,7 @@ export default function AppearanceClient({
                     dirty={isDirtyOrPending}
                     onReset={handleResetRequest}
                     onSave={handleSave}
+                    saving={isSaving}
                   />
                 </div>
               </div>
@@ -532,6 +540,7 @@ export default function AppearanceClient({
       visible={isDirtyOrPending}
       onReset={handleResetRequest}
       onSave={handleSave}
+      saving={isSaving}
       saveLabel="Save"
       className="fixed left-0 right-0 lg:hidden"
       style={{ bottom: 0, paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))" }}

@@ -47,6 +47,7 @@ export default function UserAdminClient() {
 
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
@@ -248,6 +249,7 @@ export default function UserAdminClient() {
   const handleDeleteLink = async (link: ManagedLink) => {
     if (!link.id) return;
     const snapshot = useLinksStore.getState().links;
+    setDeletingId(link.id);
     setPendingDelete(null);
     useLinksStore.getState().removeLink(link.id);
     try {
@@ -260,6 +262,8 @@ export default function UserAdminClient() {
       console.error("Failed to delete link:", err);
       useLinksStore.getState().setLinks(snapshot);
       toast.error("Failed to delete link. Please try again.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -326,6 +330,7 @@ export default function UserAdminClient() {
                   <ManageLinksSection
                     links={links}
                     isLoadingLinks={isLoadingLinks}
+                    deletingId={deletingId}
                     onAddLink={openAddLink}
                     onEditLink={openEditLink}
                     onRequestDelete={(link, index) => setPendingDelete({ link, index })}

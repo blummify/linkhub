@@ -338,7 +338,7 @@ export async function signInWithGoogleOneTap(
 
     if (!user) {
       user = await db.user.create({
-        data: { email, name, image: picture, emailVerified: new Date(), profile: { create: {} } },
+        data: { email, name, image: picture, emailVerified: new Date(), profile: { create: {} }, subscription: { create: {} } },
       });
     } else if (!user.emailVerified) {
       await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });

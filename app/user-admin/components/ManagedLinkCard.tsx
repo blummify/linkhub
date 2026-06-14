@@ -12,6 +12,7 @@ export interface ManagedLinkCardProps {
   dragHandleListeners?: DraggableSyntheticListeners;
   dragHandleAttributes?: DraggableAttributes;
   isOverlay?: boolean;
+  isDeleting?: boolean;
 }
 
 function IconGlobe() {
@@ -84,11 +85,13 @@ function RowBtn({
   children,
   title,
   danger,
+  disabled,
   onClick,
 }: {
   children: React.ReactNode;
   title?: string;
   danger?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -97,15 +100,18 @@ function RowBtn({
       type="button"
       title={title}
       aria-label={title}
-      onClick={onClick}
-      className="flex items-center justify-center cursor-pointer transition-all duration-150"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className="flex items-center justify-center transition-all duration-150"
       style={{
         width: 32,
         height: 32,
         borderRadius: 8,
         border: 0,
-        background: hovered ? (danger ? "#fde8ec" : "#eef0f7") : "transparent",
-        color: hovered ? (danger ? "#e11d48" : "#0b1020") : "#6b75a3",
+        background: hovered && !disabled ? (danger ? "#fde8ec" : "#eef0f7") : "transparent",
+        color: disabled ? "#c5c9e8" : hovered ? (danger ? "#e11d48" : "#0b1020") : "#6b75a3",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -124,6 +130,7 @@ export function ManagedLinkCard({
   dragHandleListeners,
   dragHandleAttributes,
   isOverlay = false,
+  isDeleting = false,
 }: ManagedLinkCardProps) {
   const { title, url, clicks, trendLabel, createdAt } = link;
   const visualStatus = link.status === 1 ? "published" 
@@ -382,6 +389,7 @@ export function ManagedLinkCard({
               <RowBtn
                 title={`Delete ${title}`}
                 danger
+                disabled={isDeleting}
                 onClick={() => onDelete?.()}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
