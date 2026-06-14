@@ -233,7 +233,7 @@ export async function claimHandle(handle: string) {
   }
 
   try {
-    const taken = await db.profile.findFirst({ where: { handle } });
+    const taken = await db.profile.findFirst({ where: { handle }, select: { userId: true } });
     if (taken && taken.userId !== session.user.id) {
       return { error: "That handle is already taken. Try another." };
     }

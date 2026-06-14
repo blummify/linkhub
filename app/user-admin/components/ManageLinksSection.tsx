@@ -228,6 +228,7 @@ function SkeletonLinkCard({ delay = 0 }: { delay?: number }) {
 export interface ManageLinksSectionProps {
   links: ManagedLink[];
   isLoadingLinks?: boolean;
+  deletingId?: string | null;
   onAddLink?: () => void;
   onEditLink?: (link: ManagedLink, index: number) => void;
   onDeleteLink?: (link: ManagedLink, index: number) => void;
@@ -286,6 +287,7 @@ function SortableCardWrapper({
 export function ManageLinksSection({
   links,
   isLoadingLinks = false,
+  deletingId = null,
   onAddLink,
   onEditLink,
   onDeleteLink,
@@ -473,6 +475,7 @@ export function ManageLinksSection({
                   <SortableCardWrapper
                     key={getLinkId(link)}
                     link={link}
+                    isDeleting={deletingId === getLinkId(link)}
                     onEdit={onEditLink ? () => onEditLink(link, originalIndex) : undefined}
                     onDelete={onRequestDelete ? () => onRequestDelete(link, originalIndex) : (onDeleteLink ? () => onDeleteLink(link, originalIndex) : undefined)}
                     onToggle={onToggleLink ? () => onToggleLink(link, originalIndex) : undefined}
