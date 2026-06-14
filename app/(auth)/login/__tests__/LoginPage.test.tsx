@@ -14,6 +14,14 @@ vi.mock("next-auth/react", () => ({
   useSession: () => ({ update: vi.fn() }),
 }));
 
+vi.mock("@/app/actions/twoFactor", () => ({
+  verifyTotpLogin: vi.fn(),
+}));
+
+vi.mock("@/app/components/auth/TotpCodeInput", () => ({
+  TotpCodeInput: () => null,
+}));
+
 vi.mock("@/app/actions/auth", () => ({
   checkUserExists: vi.fn(),
   loginWithCredentials: vi.fn(),

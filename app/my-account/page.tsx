@@ -16,7 +16,7 @@ export default async function MyAccountPage() {
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, email: true, pendingEmail: true, passwordHash: true },
+    select: { name: true, email: true, pendingEmail: true, passwordHash: true, twoFactorEnabled: true },
   });
   if (!user) redirect("/login");
 
@@ -26,8 +26,9 @@ export default async function MyAccountPage() {
         name: user.name ?? "",
         email: user.email ?? "",
         pendingEmail: user.pendingEmail ?? null,
-        hasPassword: user.passwordHash != null, // never send the hash itself
+        hasPassword: user.passwordHash != null,
       }}
+      twoFactorEnabled={user.twoFactorEnabled}
     />
   );
 }
