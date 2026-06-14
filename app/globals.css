@@ -274,14 +274,19 @@ body {
 }
 
 @keyframes criteriaFadeOut {
-  0%   { opacity: 1; max-height: 120px; transform: translateY(0); }
+  0%   { opacity: 1; transform: scaleY(1); }
   60%  { opacity: 0; }
-  100% { opacity: 0; max-height: 0; transform: translateY(-6px); }
+  100% { opacity: 0; transform: scaleY(0); }
 }
 
 @keyframes criteriaFadeIn {
-  from { opacity: 0; max-height: 0; transform: translateY(-6px); }
-  to   { opacity: 1; max-height: 120px; transform: translateY(0); }
+  from { opacity: 0; transform: scaleY(0); }
+  to   { opacity: 1; transform: scaleY(1); }
+}
+
+.animate-criteria-out,
+.animate-criteria-in {
+  transform-origin: top;
 }
 
 .animate-criteria-out {
@@ -703,8 +708,8 @@ body {
 }
 
 @keyframes lhItemOut {
-  from { opacity: 1; transform: translateY(0); max-height: 200px; margin-bottom: 0; }
-  to   { opacity: 0; transform: translateY(-6px); max-height: 0; margin-bottom: -12px; overflow: hidden; }
+  from { opacity: 1; transform: translateY(0) scaleY(1); transform-origin: top; }
+  to   { opacity: 0; transform: translateY(-6px) scaleY(0.85); transform-origin: top; }
 }
 
 @keyframes brandingModalIn {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { LinkhubLogo } from "./icons/LinkhubLogo";
-import { useSyncExternalStore, type CSSProperties, type PointerEvent } from "react";
+import { useSyncExternalStore, useEffect, useRef, type CSSProperties } from "react";
 
 const mqSubscribe = (cb: () => void) => {
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -14,19 +14,30 @@ const mqServerSnapshot = () => false;
 
 export function HomeHeroSection() {
   const reduceMotion = useSyncExternalStore(mqSubscribe, mqSnapshot, mqServerSnapshot);
+  const heroRef = useRef<HTMLElement>(null);
 
-  const onHeroPointerMove = (e: PointerEvent<HTMLElement>) => {
-    if (reduceMotion) return;
-    const el = e.currentTarget;
-    const r = el.getBoundingClientRect();
-    el.style.setProperty("--hx", `${((e.clientX - r.left) / r.width) * 100}%`);
-    el.style.setProperty("--hy", `${((e.clientY - r.top) / r.height) * 100}%`);
-  };
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || reduceMotion) return;
+    let ticking = false;
+    const handler = (e: PointerEvent) => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--hx", `${((e.clientX - r.left) / r.width) * 100}%`);
+        el.style.setProperty("--hy", `${((e.clientY - r.top) / r.height) * 100}%`);
+        ticking = false;
+      });
+    };
+    el.addEventListener("pointermove", handler, { passive: true });
+    return () => el.removeEventListener("pointermove", handler);
+  }, [reduceMotion]);
 
   return (
     <section
+      ref={heroRef}
       className="hero-spotlight pt-32 pb-8 md:pb-12 px-6 max-w-7xl mx-auto relative"
-      onPointerMove={onHeroPointerMove}
     >
       {!reduceMotion && (
         <div className="hero-aurora pointer-events-none" aria-hidden />

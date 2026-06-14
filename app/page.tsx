@@ -1,9 +1,26 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { PublicNav } from "./components/PublicNav";
 import { SiteFooter } from "./components/SiteFooter";
 import { HomeHeroSection } from "./components/HomeHeroSection";
 import { HomeScrollReveal } from "./components/HomeScrollReveal";
+
+export const metadata: Metadata = {
+  title: "LinkHub — Your link in bio, elevated",
+  description:
+    "Consolidate your digital presence into a single, high-converting editorial stage. Designed for modern creators.",
+  openGraph: {
+    title: "LinkHub — Your link in bio, elevated",
+    description: "Consolidate your digital presence into a single, high-converting editorial stage.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LinkHub — Your link in bio, elevated",
+    description: "Consolidate your digital presence into a single, high-converting editorial stage.",
+  },
+};
 
 export default function Home() {
   return (
