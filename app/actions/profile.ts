@@ -326,16 +326,17 @@ export async function deleteCustomTheme(
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   try {
-    const theme = await db.customTheme.findUnique({
-      where: { id, userId: session.user.id },
-      select: { backgroundKey: true },
-    });
+    const [theme, profile] = await Promise.all([
+      db.customTheme.findUnique({
+        where: { id, userId: session.user.id },
+        select: { backgroundKey: true },
+      }),
+      db.profile.findUnique({
+        where: { userId: session.user.id },
+        select: { activeCustomThemeId: true, backgroundKey: true },
+      }),
+    ]);
     if (!theme) return { error: "Theme not found." };
-
-    const profile = await db.profile.findUnique({
-      where: { userId: session.user.id },
-      select: { activeCustomThemeId: true, backgroundKey: true },
-    });
 
     await db.customTheme.delete({ where: { id, userId: session.user.id } });
 

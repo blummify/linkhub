@@ -7,6 +7,7 @@ export interface DirtyStateSaveBarProps {
   visible: boolean;
   onReset: () => void;
   onSave: () => void;
+  saving?: boolean;
   saveLabel?: string;
   className?: string;
   style?: CSSProperties;
@@ -16,6 +17,7 @@ export function DirtyStateSaveBar({
   visible,
   onReset,
   onSave,
+  saving = false,
   saveLabel = "Save changes",
   className = "",
   style,
@@ -89,7 +91,8 @@ export function DirtyStateSaveBar({
       </button>
       <button
         type="button"
-        onClick={onSave}
+        onClick={saving ? undefined : onSave}
+        disabled={saving}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -103,15 +106,22 @@ export function DirtyStateSaveBar({
           fontFamily: "inherit",
           fontSize: 13.5,
           fontWeight: 600,
-          cursor: "pointer",
+          cursor: saving ? "not-allowed" : "pointer",
           flexShrink: 0,
           boxShadow: "0 4px 14px -4px rgba(59,70,224,0.5)",
+          opacity: saving ? 0.75 : 1,
         }}
       >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        {saveLabel}
+        {saving ? (
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 0.8s linear infinite" }}>
+            <path strokeLinecap="round" d="M12 2a10 10 0 0110 10"/>
+          </svg>
+        ) : (
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+        )}
+        {saving ? "Saving…" : saveLabel}
       </button>
     </div>
   );
