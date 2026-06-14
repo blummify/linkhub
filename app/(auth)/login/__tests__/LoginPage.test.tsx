@@ -9,6 +9,10 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+vi.mock("next-auth", () => ({
+  AuthError: class AuthError extends Error {},
+}));
+
 vi.mock("next-auth/react", () => ({
   signIn: vi.fn(),
   useSession: () => ({ update: vi.fn() }),
