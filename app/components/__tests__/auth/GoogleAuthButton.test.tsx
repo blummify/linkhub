@@ -24,4 +24,18 @@ describe("GoogleAuthButton", () => {
     render(<GoogleAuthButton onClick={vi.fn()} label="Sign up with Google" />);
     expect(screen.getByRole("button")).toHaveAttribute("type", "button");
   });
+
+  it("is not disabled by default", () => {
+    render(<GoogleAuthButton onClick={vi.fn()} label="Sign in with Google" />);
+    expect(screen.getByRole("button")).toBeEnabled();
+  });
+
+  it("does not call onClick when disabled", () => {
+    const onClick = vi.fn();
+    render(<GoogleAuthButton onClick={onClick} label="Sign in with Google" disabled />);
+    const button = screen.getByRole("button");
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+  });
 });
