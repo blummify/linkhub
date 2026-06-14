@@ -6,6 +6,7 @@ import {
   DndContext,
   DragOverlay,
   MeasuringStrategy,
+  KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
@@ -15,6 +16,7 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
   arrayMove,
@@ -312,7 +314,8 @@ export function ManageLinksSection({
   }, [links.length]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const filteredLinks = useMemo(() => links.filter((link) => {

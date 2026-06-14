@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Inter,
   Manrope,
@@ -98,6 +98,26 @@ export const metadata: Metadata = {
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
+  openGraph: {
+    title: "LinkHub — Your link in bio, elevated",
+    description: "Consolidate your digital presence into a single, high-converting editorial stage.",
+    url: "https://linkhub.app",
+    siteName: "LinkHub",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LinkHub — Your link in bio, elevated",
+    description: "Consolidate your digital presence into a single, high-converting editorial stage.",
+    images: ["/og-image.png"],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#3b46e0",
 };
 
 export default async function RootLayout({
@@ -124,6 +144,12 @@ export default async function RootLayout({
         />
       </head>
       <body className="bg-surface font-body text-on-surface antialiased">
+        <a
+          href="#mainContent"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:top-4 focus:left-4 focus:bg-white focus:text-primary focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:font-semibold focus:text-sm"
+        >
+          Skip to main content
+        </a>
         <MaterialSymbols />
         <BrandingHydrator />
         <AuthSessionProvider session={session}>
