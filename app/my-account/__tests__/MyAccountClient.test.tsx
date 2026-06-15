@@ -127,7 +127,9 @@ describe("MyAccountClient", () => {
     render(<MyAccountClient twoFactorEnabled={false} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[2]);
 
-    fireEvent.click(screen.getByRole("button", { name: /set up/i }));
+    // The Authenticator app row's "Set up" button is first; the SMS row (design
+    // parity placeholder, non-functional) has its own "Set up" button after it.
+    fireEvent.click(screen.getAllByRole("button", { name: /set up/i })[0]);
     expect(screen.getByTestId("setup-modal")).toBeInTheDocument();
   });
 
