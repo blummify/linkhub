@@ -3,6 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemesSection } from "../ThemesSection";
 import { BRANDING_THEMES } from "@/app/constants/brandingThemes";
 
+vi.mock("@/app/actions/profile", () => ({
+  sendEditorLink: vi.fn().mockResolvedValue({ success: true }),
+}));
+
 describe("ThemesSection", () => {
   it("renders theme cards and category chips", () => {
     render(

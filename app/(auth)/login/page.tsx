@@ -70,13 +70,22 @@ export default function LoginPage() {
     setIsValidating(true);
 
     try {
-      const exists = await checkUserExists(email);
-      if (exists) {
+      const recaptchaToken = await executeRecaptcha("check_email");
+      const result = await checkUserExists(email, recaptchaToken);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.exists) {
         setStage("password");
       } else {
         setShowNoAccountModal(true);
       }
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) {
+        toast.error("Security check couldn't complete. Please refresh the page and try again.");
+        return;
+      }
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsValidating(false);
@@ -250,7 +259,8 @@ export default function LoginPage() {
         toast.error(result.error);
         return;
       }
-      sendVerificationCode(email).catch(() => {});
+      const sendToken = await executeRecaptcha("send_verification");
+      sendVerificationCode(email, sendToken).catch(() => {});
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (error: unknown) {
       if (error instanceof RecaptchaError) {

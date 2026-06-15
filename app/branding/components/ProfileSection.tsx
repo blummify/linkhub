@@ -85,15 +85,12 @@ export function ProfileSection({
 
   return (
     <div
+      className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr] lg:gap-7 lg:items-start"
       style={{
         background: "white",
         border: "1px solid #eef0f7",
         borderRadius: 18,
         padding: "24px 26px",
-        display: "grid",
-        gridTemplateColumns: "auto 1fr",
-        gap: 28,
-        alignItems: "start",
       }}
     >
       <div
@@ -260,13 +257,7 @@ export function ProfileSection({
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 14,
-          }}
-        >
+        <div className="grid grid-cols-1 gap-[14px] lg:grid-cols-2">
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
             <label style={fieldLabel}>Display name</label>
             <input

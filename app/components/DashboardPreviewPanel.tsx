@@ -308,7 +308,7 @@ export function PhoneScreenContent({
                   top: 0, left: 0,
                   width: "40%", height: "100%",
                   background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)",
-                  animation: `lhShimmer ${1.8 + i * 0.15}s cubic-bezier(0.4,0,0.6,1) ${i * 0.2}s infinite`,
+                  animation: `lhShimmer var(--motion-shimmer) linear ${i * 0.2}s infinite`,
                   pointerEvents: "none",
                   zIndex: 1,
                 }}
@@ -861,6 +861,122 @@ function EffectsOverlay({ effects }: { effects?: string[] }) {
   );
 }
 
+function PhoneScreenFrame({
+  children,
+  bgStyle,
+  showGlow = false,
+  effects,
+  videoUrl,
+  imageUrl,
+  edgeToEdge = false,
+}: {
+  children: React.ReactNode;
+  bgStyle?: string;
+  showGlow?: boolean;
+  effects?: string[];
+  videoUrl?: string;
+  imageUrl?: string;
+  edgeToEdge?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        borderRadius: edgeToEdge ? 0 : 34,
+        overflow: "hidden",
+        position: "relative",
+        background: (videoUrl || imageUrl) ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
+        padding: edgeToEdge
+          ? "max(16px, env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px))"
+          : "44px 22px 22px",
+        display: "flex",
+        flexDirection: "column",
+        boxShadow: edgeToEdge ? "inset 0 0 0 1px #eef0f7" : undefined,
+      }}
+    >
+      {imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageUrl}
+          alt=""
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+        />
+      )}
+      {videoUrl && (
+        <video
+          src={videoUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+        />
+      )}
+      {showGlow && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: 0, left: 0, right: 0,
+            height: 140,
+            background: "radial-gradient(circle at 50% -20%, rgba(104,115,255,0.22), transparent 70%)",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
+      )}
+      <EffectsOverlay effects={effects} />
+      <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Edge-to-edge mobile preview — no device bezel (real phone is the frame). */
+export function PhoneEdgeShell({
+  children,
+  bgStyle,
+  showGlow = false,
+  effects,
+  videoUrl,
+  imageUrl,
+}: {
+  children: React.ReactNode;
+  bgStyle?: string;
+  showGlow?: boolean;
+  effects?: string[];
+  videoUrl?: string;
+  imageUrl?: string;
+}) {
+  return (
+    <div
+      data-preview-frame="edge"
+      style={{
+        position: "relative",
+        flex: 1,
+        width: "100%",
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <PhoneScreenFrame
+        bgStyle={bgStyle}
+        showGlow={showGlow}
+        effects={effects}
+        videoUrl={videoUrl}
+        imageUrl={imageUrl}
+        edgeToEdge
+      >
+        {children}
+      </PhoneScreenFrame>
+    </div>
+  );
+}
+
 export function PhoneShell({
   children,
   bgStyle,
@@ -878,6 +994,7 @@ export function PhoneShell({
 }) {
   return (
     <div
+      data-preview-frame="device"
       style={{
         position: "relative",
         width: 260, height: 530,
@@ -889,6 +1006,7 @@ export function PhoneShell({
       }}
     >
       <div
+        data-preview-notch
         aria-hidden
         style={{
           position: "absolute",
@@ -900,55 +1018,15 @@ export function PhoneShell({
           zIndex: 20,
         }}
       />
-      <div
-        style={{
-          width: "100%", height: "100%",
-          borderRadius: 34,
-          overflow: "hidden",
-          position: "relative",
-          background: (videoUrl || imageUrl) ? "#0b1020" : (bgStyle ?? "linear-gradient(180deg, #fafbff 0%, #f0f2fb 100%)"),
-          padding: "44px 22px 22px",
-          display: "flex",
-          flexDirection: "column",
-        }}
+      <PhoneScreenFrame
+        bgStyle={bgStyle}
+        showGlow={showGlow}
+        effects={effects}
+        videoUrl={videoUrl}
+        imageUrl={imageUrl}
       >
-        {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt=""
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
-          />
-        )}
-        {videoUrl && (
-          <video
-            src={videoUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
-          />
-        )}
-        {showGlow && (
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              top: 0, left: 0, right: 0,
-              height: 140,
-              background: "radial-gradient(circle at 50% -20%, rgba(104,115,255,0.22), transparent 70%)",
-              pointerEvents: "none",
-              zIndex: 1,
-            }}
-          />
-        )}
-        <EffectsOverlay effects={effects} />
-        <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
-          {children}
-        </div>
-      </div>
+        {children}
+      </PhoneScreenFrame>
     </div>
   );
 }
@@ -1200,11 +1278,11 @@ function SocialConfirmDialog({
 }
 
 // ── Skeleton shown before the branding store hydrates from localStorage ────────
-function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number }) {
+function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number | string }) {
   const shimmer: React.CSSProperties = {
     background: "linear-gradient(100deg, #e4e8f7 0%, #f0f3fc 50%, #e4e8f7 100%)",
     backgroundSize: "200% 100%",
-    animation: "lhShimmer 1.8s cubic-bezier(0.4,0,0.6,1) infinite",
+    animation: "lhShimmer var(--motion-shimmer) linear infinite",
     borderRadius: 8,
   };
   return (
@@ -1253,8 +1331,8 @@ function DashboardPreviewPanelSkeleton({ width = 420 }: { width?: number }) {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export interface DashboardPreviewPanelProps {
-  /** Panel width (default 420) */
-  width?: number;
+  /** Panel width — number for px (default 420) or CSS string e.g. "100%" for sheet mode */
+  width?: number | string;
   /** Show the "Current theme" footer with random-theme button (branding page only) */
   showThemeFooter?: boolean;
   /** Called when user clicks "Pick a handle" — only shown when handle is unset */
@@ -1309,6 +1387,19 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
     } catch { /* clipboard not available */ }
   };
 
+  const handleNativeShare = async () => {
+    if (!handle) return;
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({ url: fullUrl, title: displayName || "My LinkHub" });
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
+      }
+    }
+    await handleCopyUrl();
+  };
+
   const handleSocialClick = (net: ShareNetwork) => {
     setShowSharePop(false);
     setShareConfirm(net);
@@ -1345,14 +1436,25 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
 
   if (!hydrated) return <DashboardPreviewPanelSkeleton width={width} />;
 
+  const isSheet = typeof width === "string";
+  const screenContent = (
+    <PhoneScreenContent
+      displayName={displayName}
+      bio={bio}
+      links={links}
+      avatarSize={device === "desktop" ? 76 : undefined}
+      appearance={appearance}
+    />
+  );
+
   return (
     <div
       style={{
         width,
-        background: "linear-gradient(180deg, #f0f2fb 0%, #e9ecf8 100%)",
-        borderLeft: "1px solid #eef0f7",
-        padding: "28px 24px",
-        position: "sticky",
+        background: isSheet ? "white" : "linear-gradient(180deg, #f0f2fb 0%, #e9ecf8 100%)",
+        borderLeft: isSheet ? "none" : "1px solid #eef0f7",
+        padding: isSheet ? "52px 16px 0" : "28px 24px",
+        position: isSheet ? "relative" : "sticky",
         top: 0,
         height: "100vh",
         display: "flex",
@@ -1361,16 +1463,18 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
         flexShrink: 0,
       }}
     >
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "radial-gradient(circle at 20% 10%, rgba(104,115,255,0.12), transparent 50%), radial-gradient(circle at 80% 80%, rgba(59,70,224,0.10), transparent 50%)",
-          pointerEvents: "none",
-        }}
-      />
+      {!isSheet ? (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage:
+              "radial-gradient(circle at 20% 10%, rgba(104,115,255,0.12), transparent 50%), radial-gradient(circle at 80% 80%, rgba(59,70,224,0.10), transparent 50%)",
+            pointerEvents: "none",
+          }}
+        />
+      ) : null}
 
       <div
         style={{
@@ -1427,6 +1531,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
           </div>
         </div>
 
+        {!isSheet ? (
         <div style={{ display: "flex", gap: 6 }}>
           <div ref={shareRef} style={{ position: "relative" }}>
             <PreviewActionBtn
@@ -1577,6 +1682,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
             </svg>
           </PreviewActionBtn>
         </div>
+        ) : null}
       </div>
 
       <div
@@ -1584,7 +1690,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
+          alignItems: isSheet ? "stretch" : "center",
           minHeight: 0,
           position: "relative",
           zIndex: 10,
@@ -1602,6 +1708,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
             flexShrink: 0,
             position: "relative",
             zIndex: 10,
+            alignSelf: isSheet ? "center" : undefined,
           }}
         >
           {(["mobile", "desktop"] as const).map((d) => (
@@ -1634,36 +1741,30 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
           style={{
             flex: 1,
             display: "flex",
-            alignItems: "center",
+            alignItems: isSheet && device === "mobile" ? "stretch" : "center",
             justifyContent: "center",
             width: "100%",
             minHeight: 0,
+            overflow: isSheet && device === "desktop" ? "auto" : undefined,
           }}
         >
           {device === "desktop" ? (
             <BrowserShell bgStyle={screenBg} imageUrl={imageUrl} videoUrl={videoUrl} effects={appearance?.effects}>
-              <PhoneScreenContent
-                displayName={displayName}
-                bio={bio}
-                links={links}
-                avatarSize={76}
-                appearance={appearance}
-              />
+              {screenContent}
             </BrowserShell>
+          ) : isSheet ? (
+            <PhoneEdgeShell bgStyle={screenBg} showGlow={screenDark} imageUrl={imageUrl} videoUrl={videoUrl} effects={appearance?.effects}>
+              {screenContent}
+            </PhoneEdgeShell>
           ) : (
             <PhoneShell bgStyle={screenBg} showGlow={screenDark} imageUrl={imageUrl} videoUrl={videoUrl} effects={appearance?.effects}>
-              <PhoneScreenContent
-                displayName={displayName}
-                bio={bio}
-                links={links}
-                appearance={appearance}
-              />
+              {screenContent}
             </PhoneShell>
           )}
         </div>
       </div>
 
-      {showThemeFooter && themeLabel ? (
+      {showThemeFooter && themeLabel && !isSheet ? (
         <div
           style={{
             marginTop: 10,
@@ -1736,6 +1837,40 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
               </svg>
             </button>
           )}
+        </div>
+      ) : null}
+
+      {isSheet ? (
+        <div
+          style={{
+            flexShrink: 0,
+            padding: "12px 0",
+            paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
+            position: "relative",
+            zIndex: 50,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => void handleNativeShare()}
+            disabled={!handle}
+            style={{
+              width: "100%",
+              minHeight: 44,
+              background: copied ? "#16a34a" : "#3b46e0",
+              color: "white",
+              borderRadius: 12,
+              fontWeight: 600,
+              fontSize: 14,
+              border: 0,
+              cursor: handle ? "pointer" : "not-allowed",
+              opacity: handle ? 1 : 0.5,
+              fontFamily: "inherit",
+              transition: "background 0.15s",
+            }}
+          >
+            {copied ? "Link copied!" : "Share my page"}
+          </button>
         </div>
       ) : null}
 

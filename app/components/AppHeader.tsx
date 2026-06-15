@@ -27,10 +27,10 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
   return (
     <header
       id="header"
-      className={`fixed top-0 right-0 z-40 bg-white/80 backdrop-blur-2xl border-b flex justify-between items-center h-16 px-4 sm:px-8 transition-all duration-300 ease-in-out ${
+      className={`fixed top-0 right-0 z-40 bg-white/80 backdrop-blur-2xl border-b hidden lg:flex justify-between items-center h-16 px-4 sm:px-8 ${
         isCollapsed ? 'lg:w-[calc(100%-5rem)] w-full' : 'lg:w-[calc(100%-12rem)] sm:lg:w-[calc(100%-16rem)] w-full'
       }`}
-      style={{ borderBottomColor: '#eef0f7' }}
+      style={{ borderBottomColor: '#eef0f7', transition: "width var(--motion-base) var(--ease-standard)" }}
     >
       <div className="flex items-center gap-4 sm:gap-6 flex-1 min-w-0">
         <button

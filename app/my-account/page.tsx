@@ -9,13 +9,26 @@ export const metadata: Metadata = {
 };
 
 export default async function MyAccountPage() {
+  // Defense-in-depth beyond middleware. Also lets us read passwordHash/pendingEmail
+  // server-side — account type is decided here, never on the client.
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { twoFactorEnabled: true },
+    select: { name: true, email: true, pendingEmail: true, passwordHash: true, twoFactorEnabled: true },
   });
+  if (!user) redirect("/login");
 
-  return <MyAccountClient twoFactorEnabled={user?.twoFactorEnabled ?? false} />;
+  return (
+    <MyAccountClient
+      initial={{
+        name: user.name ?? "",
+        email: user.email ?? "",
+        pendingEmail: user.pendingEmail ?? null,
+        hasPassword: user.passwordHash != null,
+      }}
+      twoFactorEnabled={user.twoFactorEnabled}
+    />
+  );
 }

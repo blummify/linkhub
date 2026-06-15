@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { LinkhubLogo } from "./icons/LinkhubLogo";
 
 export function SiteFooter() {
   return (
@@ -7,15 +7,7 @@ export function SiteFooter() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-7xl mx-auto px-6">
         <div className="col-span-2 md:col-span-1">
           <div className="flex items-center justify-center mb-4">
-            <Image
-              src="/link_hub_logo.png"
-              alt="LinkHub logo"
-              width={256}
-              height={256}
-              loading="eager"
-              style={{ height: "auto" }}
-              className="mx-auto h-auto w-32 max-w-full object-contain"
-            />
+            <LinkhubLogo size="md" />
           </div>
           <p className="text-slate-500 text-sm max-w-xs">
             The world&apos;s premier platform for editorial link curation and

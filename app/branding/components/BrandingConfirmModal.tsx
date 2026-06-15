@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
 import { createPortal } from "react-dom";
 
@@ -44,6 +44,31 @@ export function BrandingConfirmModal({
   confirmStyle = "danger",
   onConfirm,
 }: BrandingConfirmModalProps) {
+  const [isMobile] = useState(() =>
+    typeof window !== "undefined" && !!window.matchMedia &&
+    window.matchMedia("(max-width: 1023px)").matches
+  );
+  const [isClosing, setIsClosing] = useState(false);
+  const pendingConfirmRef = useRef(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) { setPrevOpen(open); if (open) setIsClosing(false); }
+
+  function requestClose() { setIsClosing(true); }
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !isClosing) return;
+    const handler = (e: AnimationEvent) => {
+      if (e.target !== panel) return;
+      if (pendingConfirmRef.current) { pendingConfirmRef.current = false; onConfirm?.(); }
+      onClose();
+    };
+    panel.addEventListener('animationend', handler);
+    return () => panel.removeEventListener('animationend', handler);
+  }, [isClosing, onClose, onConfirm]);
+
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -78,37 +103,49 @@ export function BrandingConfirmModal({
       aria-labelledby="branding-modal-title"
       style={{
         position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        top: 0, left: 0, right: 0, bottom: 0,
         width: "100vw",
         height: "100vh",
         background: "rgba(11,16,32,0.6)",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
-        display: "grid",
-        placeItems: "center",
+        display: "flex",
+        alignItems: isMobile ? "flex-end" : "center",
+        justifyContent: isMobile ? undefined : "center",
         zIndex: 9999,
-        padding: 20,
+        padding: isMobile ? 0 : 20,
         boxSizing: "border-box",
+        opacity: isClosing ? 0 : 1,
+        transition: `opacity ${isClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
       <div
+        data-testid="modal-panel"
         style={{
           background: "white",
-          borderRadius: 18,
-          padding: 28,
-          width: 420,
-          maxWidth: "calc(100vw - 40px)",
+          borderRadius: isMobile ? "24px 24px 0 0" : 18,
+          padding: isMobile
+            ? "0 28px calc(24px + env(safe-area-inset-bottom,0px))"
+            : 28,
+          width: isMobile ? "100%" : 420,
+          maxWidth: isMobile ? undefined : "calc(100vw - 40px)",
           boxShadow: "0 40px 80px -20px rgba(15,23,42,0.4)",
-          animation: "brandingModalIn 0.25s cubic-bezier(0.16,1,0.3,1)",
+          animation: isClosing
+            ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
+            : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
         }}
+        ref={panelRef}
         onClick={(e) => e.stopPropagation()}
       >
+        {isMobile && (
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 16 }}>
+            <div style={{ width: 36, height: 4, borderRadius: 99, background: "#d6dae9" }} />
+          </div>
+        )}
+
         <div
           style={{
             width: 48,
@@ -150,11 +187,13 @@ export function BrandingConfirmModal({
           {body}
         </p>
 
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", gap: 8, justifyContent: isMobile ? undefined : "flex-end" }}>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             style={{
+              flex: isMobile ? 1 : undefined,
+              minHeight: isMobile ? 46 : undefined,
               padding: "10px 18px",
               borderRadius: 99,
               fontFamily: "inherit",
@@ -171,10 +210,12 @@ export function BrandingConfirmModal({
           <button
             type="button"
             onClick={() => {
-              onConfirm?.();
-              onClose();
+              pendingConfirmRef.current = true;
+              requestClose();
             }}
             style={{
+              flex: isMobile ? 2 : undefined,
+              minHeight: isMobile ? 46 : undefined,
               padding: "10px 18px",
               borderRadius: 99,
               fontFamily: "inherit",

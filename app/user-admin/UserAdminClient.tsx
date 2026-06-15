@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
+import { DashboardPageTransition } from "../components/DashboardPageTransition";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import { AddEditLinkModal } from "./components/AddEditLinkModal";
@@ -45,6 +46,14 @@ export default function UserAdminClient() {
   const patchState = useBrandingStore((s) => s.patchState);
 
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
+    return () => document.documentElement.removeAttribute("data-mobile-preview-open");
+  }, [previewOpen]);
+
   const [claimOpen, setClaimOpen] = useState(false);
   const [profileReady, setProfileReady] = useState(() => useProfileStore.getState().fetched);
   const [profileDataReady, setProfileDataReady] = useState(false);
@@ -240,6 +249,7 @@ export default function UserAdminClient() {
   const handleDeleteLink = async (link: ManagedLink) => {
     if (!link.id) return;
     const snapshot = useLinksStore.getState().links;
+    setDeletingId(link.id);
     setPendingDelete(null);
     useLinksStore.getState().removeLink(link.id);
     try {
@@ -252,6 +262,8 @@ export default function UserAdminClient() {
       console.error("Failed to delete link:", err);
       useLinksStore.getState().setLinks(snapshot);
       toast.error("Failed to delete link. Please try again.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -286,7 +298,25 @@ export default function UserAdminClient() {
   return (
     <>
       <div className="bg-[#f7f8fc] text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
-        <CollapsibleSidebar isAdmin={true}>
+        <CollapsibleSidebar
+          isAdmin={true}
+          mobileHeaderExtra={
+            !previewOpen ? (
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+                className="flex items-center gap-1.5 font-semibold"
+                style={{ padding: "6px 12px 6px 10px", borderRadius: 99, border: "1.5px solid #3b46e0", color: "#3b46e0", background: "transparent", fontSize: 13 }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Preview
+              </button>
+            ) : undefined
+          }
+        >
           <div className="flex-1 flex flex-col min-h-screen relative">
             <main
               id="mainContent"
@@ -295,10 +325,12 @@ export default function UserAdminClient() {
               } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
             >
               <div className="flex flex-col lg:flex-row min-h-screen">
-                <div className="flex-1 min-w-0 px-4 pt-[22px] pb-10 sm:px-6 lg:px-8">
+                <div className={`flex-1 min-w-0 px-4 pt-[22px] sm:px-6 lg:px-8 lg:pb-10 ${links.length > 0 ? "pb-40" : "pb-36"}`}>
+                  <DashboardPageTransition>
                   <ManageLinksSection
                     links={links}
                     isLoadingLinks={isLoadingLinks}
+                    deletingId={deletingId}
                     onAddLink={openAddLink}
                     onEditLink={openEditLink}
                     onRequestDelete={(link, index) => setPendingDelete({ link, index })}
@@ -311,16 +343,45 @@ export default function UserAdminClient() {
                       void reorderLinks(ids);
                     }}
                   />
+                  </DashboardPageTransition>
                 </div>
 
-                <div className="hidden lg:block">
-                  <DashboardPreviewPanel onPickHandle={() => setClaimOpen(true)} />
+                <div className={previewOpen ? "fixed inset-0 z-[90] overflow-y-auto bg-white p-0 lg:relative lg:inset-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:block" : "hidden lg:block"}>
+                  <DashboardPreviewPanel width={previewOpen ? "100%" : 420} onPickHandle={() => setClaimOpen(true)} />
                 </div>
               </div>
             </main>
           </div>
         </CollapsibleSidebar>
       </div>
+
+      {!previewOpen && links.length > 0 && (
+        <button
+          type="button"
+          onClick={openAddLink}
+          className="fixed flex items-center gap-2 text-white font-semibold rounded-[24px] lg:hidden"
+          style={{ right: 16, bottom: "max(78px, calc(72px + env(safe-area-inset-bottom, 0px)))", zIndex: 85, fontSize: 14, padding: "12px 20px 12px 16px", background: "linear-gradient(180deg,#3b46e0,#2a37c0)", boxShadow: "0 4px 20px rgba(59,70,224,0.4)" }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Add link
+        </button>
+      )}
+
+      {previewOpen && (
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(false)}
+          className="fixed flex items-center gap-1.5 bg-white rounded-[22px] text-[13px] font-semibold lg:hidden"
+          style={{ top: 12, right: 16, zIndex: 95, color: "#3a4474", padding: "8px 14px 8px 12px", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+          Close
+        </button>
+      )}
 
       <AddEditLinkModal
         key={`${editingLink?.link.id ?? "new"}-${showLinkModal}`}

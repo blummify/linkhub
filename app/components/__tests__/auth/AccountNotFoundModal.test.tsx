@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { AccountNotFoundModal } from "../../auth/AccountNotFoundModal";
 
 describe("AccountNotFoundModal", () => {
@@ -30,7 +30,8 @@ describe("AccountNotFoundModal", () => {
   it("calls onClose when the close button is clicked", () => {
     const onClose = vi.fn();
     render(<AccountNotFoundModal email="x@x.com" onClose={onClose} />);
-    fireEvent.click(screen.getByLabelText("Close"));
+    act(() => { fireEvent.click(screen.getByLabelText("Close")); });
+    fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 });

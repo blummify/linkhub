@@ -1,34 +1,43 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
+import { LinkhubLogo } from "./icons/LinkhubLogo";
+import { useSyncExternalStore, useEffect, useRef, type CSSProperties } from "react";
+
+const mqSubscribe = (cb: () => void) => {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const mqSnapshot = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const mqServerSnapshot = () => false;
 
 export function HomeHeroSection() {
-  const [reduceMotion, setReduceMotion] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  });
+  const reduceMotion = useSyncExternalStore(mqSubscribe, mqSnapshot, mqServerSnapshot);
+  const heroRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = () => setReduceMotion(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  const onHeroPointerMove = (e: PointerEvent<HTMLElement>) => {
-    if (reduceMotion) return;
-    const el = e.currentTarget;
-    const r = el.getBoundingClientRect();
-    el.style.setProperty("--hx", `${((e.clientX - r.left) / r.width) * 100}%`);
-    el.style.setProperty("--hy", `${((e.clientY - r.top) / r.height) * 100}%`);
-  };
+    const el = heroRef.current;
+    if (!el || reduceMotion) return;
+    let ticking = false;
+    const handler = (e: PointerEvent) => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--hx", `${((e.clientX - r.left) / r.width) * 100}%`);
+        el.style.setProperty("--hy", `${((e.clientY - r.top) / r.height) * 100}%`);
+        ticking = false;
+      });
+    };
+    el.addEventListener("pointermove", handler, { passive: true });
+    return () => el.removeEventListener("pointermove", handler);
+  }, [reduceMotion]);
 
   return (
     <section
+      ref={heroRef}
       className="hero-spotlight pt-32 pb-8 md:pb-12 px-6 max-w-7xl mx-auto relative"
-      onPointerMove={onHeroPointerMove}
     >
       {!reduceMotion && (
         <div className="hero-aurora pointer-events-none" aria-hidden />
@@ -85,7 +94,7 @@ export function HomeHeroSection() {
                   <div className="w-20 h-20 rounded-full border-4 border-white shadow-md mb-3 overflow-hidden bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
                     <span className="material-symbols-outlined text-primary text-4xl">person</span>
                   </div>
-                  <h3 className="font-headline font-bold text-lg text-on-surface">@alex_creative</h3>
+                  <p className="font-headline font-bold text-lg text-on-surface">@alex_creative</p>
                   <p className="text-xs text-on-surface-variant font-medium">Digital Curator &amp; Designer</p>
                 </div>
                 <div className="w-full space-y-3 relative">
@@ -125,14 +134,7 @@ export function HomeHeroSection() {
                   </svg>
                 </div>
                 <div className="mt-6 opacity-50 dark:opacity-70">
-                  <Image
-                    src="/link_hub_logo.png"
-                    alt="LinkHub"
-                    width={256}
-                    height={256}
-                    style={{ height: "auto" }}
-                    className="h-auto w-20 max-w-full object-contain"
-                  />
+                  <LinkhubLogo size="sm" />
                 </div>
               </div>
               <div className="absolute top-4 left-1/2 -translate-x-1/2 w-1/3 h-6 bg-slate-900 rounded-full" />
@@ -146,7 +148,6 @@ export function HomeHeroSection() {
         <a
           href="#trusted-creators"
           className="group flex flex-col items-center gap-1.5 text-on-surface-variant/50 hover:text-primary transition-colors"
-          aria-label="Scroll to next section"
         >
           <span className="text-[10px] font-label font-bold uppercase tracking-[0.25em]">Explore</span>
           <span
