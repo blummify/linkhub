@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AccountNotFoundModal } from "@/app/components/auth/AccountNotFoundModal";
 import { UnverifiedEmailModal } from "@/app/components/auth/UnverifiedEmailModal";
 import Link from "next/link";
@@ -51,12 +51,10 @@ export default function LoginPage() {
   const [showNoAccountModal, setShowNoAccountModal] = useState(false);
   const [showOauthNoPasswordBanner, setShowOauthNoPasswordBanner] = useState(false);
 
-  const [lastUsed, setLastUsed] = useState<"google" | "email" | null>(null);
-
-  useEffect(() => {
+  const [lastUsed] = useState<"google" | "email" | null>(() => {
     const saved = localStorage.getItem("lh_last_auth");
-    if (saved === "google" || saved === "email") setLastUsed(saved);
-  }, []);
+    return saved === "google" || saved === "email" ? saved : null;
+  });
 
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
