@@ -5,7 +5,11 @@ import CollapsibleSidebar from "../components/CollapsibleSidebar";
 import { DashboardPageTransition } from "../components/DashboardPageTransition";
 import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
-import { AddEditLinkModal } from "./components/AddEditLinkModal";
+import dynamic from "next/dynamic";
+const AddEditLinkModal = dynamic(
+  () => import("./components/AddEditLinkModal").then((m) => ({ default: m.AddEditLinkModal })),
+  { ssr: false }
+);
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, checkHandleAvailability, reorderLinks } from "../actions/links";

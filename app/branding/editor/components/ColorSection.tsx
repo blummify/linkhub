@@ -1,6 +1,7 @@
 "use client";
 
 import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
 
 const ACCENT_PRESETS: { color: string; gradient: string }[] = [
   { color: "#3b46e0", gradient: "linear-gradient(135deg, #3b46e0, #6873ff)" },
@@ -30,8 +31,15 @@ const subsLabel: React.CSSProperties = {
 };
 
 export function ColorSection() {
-  const store = useBrandingStore();
-  const isAccentPreset = ACCENT_PRESETS.some((p) => p.color === store.accentColor);
+  const { accentColor, setAccentColor, textColor, setTextColor } = useBrandingStore(
+    useShallow((s) => ({
+      accentColor: s.accentColor,
+      setAccentColor: s.setAccentColor,
+      textColor: s.textColor,
+      setTextColor: s.setTextColor,
+    }))
+  );
+  const isAccentPreset = ACCENT_PRESETS.some((p) => p.color === accentColor);
 
   return (
     <div>
@@ -39,12 +47,12 @@ export function ColorSection() {
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 12 }}>
         {ACCENT_PRESETS.map(({ color, gradient }) => {
-          const active = store.accentColor === color;
+          const active = accentColor === color;
           return (
             <button
               key={color}
               type="button"
-              onClick={() => store.setAccentColor(color)}
+              onClick={() => setAccentColor(color)}
               aria-label={`Accent color ${color}${active ? " (selected)" : ""}`}
               aria-pressed={active}
               title={color}
@@ -69,7 +77,7 @@ export function ColorSection() {
               width: 32,
               height: 32,
               borderRadius: 9,
-              background: isAccentPreset ? "transparent" : store.accentColor,
+              background: isAccentPreset ? "transparent" : accentColor,
               border: isAccentPreset ? "2px dashed #d6dae9" : "2.5px solid #0b1020",
               boxShadow: !isAccentPreset ? "0 0 0 2px white inset" : undefined,
               display: "flex",
@@ -87,8 +95,8 @@ export function ColorSection() {
           </div>
           <input
             type="color"
-            value={store.accentColor}
-            onChange={(e) => store.setAccentColor(e.target.value)}
+            value={accentColor}
+            onChange={(e) => setAccentColor(e.target.value)}
             style={{ position: "absolute", inset: 0, opacity: 0, width: "100%", height: "100%", cursor: "pointer" }}
           />
         </label>
@@ -111,13 +119,13 @@ export function ColorSection() {
             width: 14,
             height: 14,
             borderRadius: 4,
-            background: store.accentColor,
+            background: accentColor,
             flexShrink: 0,
             border: "1px solid rgba(0,0,0,0.1)",
           }}
         />
         <span style={{ fontSize: 12, color: "#6b75a3", fontFamily: "var(--branding-font-mono, ui-monospace, monospace)" }}>
-          {store.accentColor.toUpperCase()}
+          {accentColor.toUpperCase()}
         </span>
       </div>
 
@@ -125,7 +133,7 @@ export function ColorSection() {
 
       <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
         {TEXT_PRESETS.map((p) => {
-          const active = store.textColor === p.value;
+          const active = textColor === p.value;
           return (
             <button
               key={String(p.value)}
@@ -133,7 +141,7 @@ export function ColorSection() {
               aria-label={`Text color: ${p.label}${active ? " (selected)" : ""}`}
               aria-pressed={active}
               title={p.label}
-              onClick={() => store.setTextColor(p.value)}
+              onClick={() => setTextColor(p.value)}
               style={{
                 flex: 1,
                 display: "flex",
@@ -199,8 +207,8 @@ export function ColorSection() {
           </div>
           <input
             type="color"
-            value={store.textColor ?? "#ffffff"}
-            onChange={(e) => store.setTextColor(e.target.value)}
+            value={textColor ?? "#ffffff"}
+            onChange={(e) => setTextColor(e.target.value)}
             style={{ position: "absolute", inset: 0, opacity: 0, width: "100%", height: "100%", cursor: "pointer" }}
           />
         </label>

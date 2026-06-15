@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import FocusTrap from "focus-trap-react";
 import { APP_DOMAIN } from "@/lib/appConfig";
 
 export interface ClaimHandleModalProps {
@@ -320,6 +321,7 @@ export function ClaimHandleModal({
         .lh-suggestion-chip:hover { border-color: #3b46e0; color: #3b46e0; background: #f1f3ff; }
       `}</style>
 
+      <FocusTrap active={!isClosing} focusTrapOptions={{ allowOutsideClick: true, returnFocusOnDeactivate: true }}>
       <div className={`fixed inset-0 z-[100] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}>
         {/* Backdrop */}
         <div
@@ -684,6 +686,7 @@ export function ClaimHandleModal({
           </div>
         </div>
       </div>
+      </FocusTrap>
     </>
   );
 }
