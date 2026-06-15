@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AccountNotFoundModal } from "@/app/components/auth/AccountNotFoundModal";
 import { UnverifiedEmailModal } from "@/app/components/auth/UnverifiedEmailModal";
 import Link from "next/link";
@@ -50,6 +50,13 @@ export default function LoginPage() {
   const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
   const [showNoAccountModal, setShowNoAccountModal] = useState(false);
   const [showOauthNoPasswordBanner, setShowOauthNoPasswordBanner] = useState(false);
+
+  const [lastUsed, setLastUsed] = useState<"google" | "email" | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("lh_last_auth");
+    if (saved === "google" || saved === "email") setLastUsed(saved);
+  }, []);
 
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -122,6 +129,7 @@ export default function LoginPage() {
         }
         setPasswordError("Incorrect password. Please try again.");
       } else {
+        localStorage.setItem("lh_last_auth", "email");
         await updateSession();
         router.push("/user-dashboard");
       }
@@ -146,6 +154,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
+    localStorage.setItem("lh_last_auth", "google");
     try {
       await signIn("google", { callbackUrl: "/user-dashboard" });
     } catch {
@@ -177,6 +186,7 @@ export default function LoginPage() {
         toast.error("Sign-in failed. Please try again.");
         return;
       }
+      localStorage.setItem("lh_last_auth", "email");
       await updateSession();
       router.push("/user-dashboard");
     } catch (err: unknown) {
@@ -365,7 +375,7 @@ export default function LoginPage() {
             </div>
             <button
               disabled={isValidating || !email.trim() || !!validateEmail(email)}
-              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 relative"
               type="submit"
             >
               {isValidating ? (
@@ -375,6 +385,11 @@ export default function LoginPage() {
                   Continue
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </>
+              )}
+              {lastUsed === "email" && !isValidating && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-white/70 border border-white/30 px-2 py-0.5 rounded-full">
+                  Last used
+                </span>
               )}
             </button>
           </form>
@@ -621,6 +636,7 @@ export default function LoginPage() {
               onClick={handleGoogleSignIn}
               label="Continue with Google"
               disabled={isGoogleLoading}
+              showLastUsed={lastUsed === "google"}
             />
 
             {stage !== "signup" && (
