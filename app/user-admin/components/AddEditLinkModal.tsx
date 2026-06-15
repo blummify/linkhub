@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import FocusTrap from "focus-trap-react";
 import type { ManagedLink } from "./types";
 import { LinkStatus, type LinkStatusValue } from "@/app/constants/linkStatus";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
@@ -332,6 +333,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   if (!open) return null;
 
   return (
+    <FocusTrap active={!isClosing} focusTrapOptions={{ allowOutsideClick: true, returnFocusOnDeactivate: true }}>
     <div
       className={`fixed inset-0 z-[100] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}
       style={{
@@ -922,5 +924,6 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
 
       </div>
     </div>
+    </FocusTrap>
   );
 }

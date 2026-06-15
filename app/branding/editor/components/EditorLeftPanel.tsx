@@ -1,6 +1,7 @@
 "use client";
 
 import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
 import { BackgroundSection } from "./BackgroundSection";
 import { OverlaySection } from "./OverlaySection";
 import { LayoutSection } from "./LayoutSection";
@@ -10,8 +11,14 @@ function Divider() {
 }
 
 export function EditorLeftPanel() {
-  const store = useBrandingStore();
-  const showOverlay = store.backgroundType === "image" || store.backgroundType === "video";
+  const { backgroundType, backgroundValue, setBackground } = useBrandingStore(
+    useShallow((s) => ({
+      backgroundType: s.backgroundType,
+      backgroundValue: s.backgroundValue,
+      setBackground: s.setBackground,
+    }))
+  );
+  const showOverlay = backgroundType === "image" || backgroundType === "video";
 
   return (
     <div
@@ -27,19 +34,19 @@ export function EditorLeftPanel() {
       {/* Background */}
       <section style={{ padding: "20px 20px 24px" }}>
         <BackgroundSection
-          backgroundType={store.backgroundType}
-          backgroundValue={store.backgroundValue}
+          backgroundType={backgroundType}
+          backgroundValue={backgroundValue}
           onTabSwitch={(type) => {
-            if (type === "gradient") store.setBackground("gradient", "midnight", null);
-            else if (type === "image") store.setBackground("image", "", null);
-            else if (type === "video") store.setBackground("video", "", null);
+            if (type === "gradient") setBackground("gradient", "midnight", null);
+            else if (type === "image") setBackground("image", "", null);
+            else if (type === "video") setBackground("video", "", null);
           }}
-          onGradientSelect={(id) => store.setBackground("gradient", id, null)}
-          onSolidSelect={(color) => store.setBackground("gradient", `solid:${color}`, null)}
-          onImageUpload={(url, key) => store.setBackground("image", url, key)}
-          onVideoUpload={(url, key) => store.setBackground("video", url, key)}
-          onTemplateImage={(url) => store.setBackground("image", url, null)}
-          onTemplateVideo={(url) => store.setBackground("video", url, null)}
+          onGradientSelect={(id) => setBackground("gradient", id, null)}
+          onSolidSelect={(color) => setBackground("gradient", `solid:${color}`, null)}
+          onImageUpload={(url, key) => setBackground("image", url, key)}
+          onVideoUpload={(url, key) => setBackground("video", url, key)}
+          onTemplateImage={(url) => setBackground("image", url, null)}
+          onTemplateVideo={(url) => setBackground("video", url, null)}
         />
       </section>
 

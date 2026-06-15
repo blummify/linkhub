@@ -1,6 +1,7 @@
 "use client";
 
 import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
 
 const PRESETS = [
   { label: "None",     color: "#000000", opacity: 0   },
@@ -24,8 +25,14 @@ const sectionLabel: React.CSSProperties = {
 };
 
 export function OverlaySection() {
-  const store = useBrandingStore();
-  const { overlayColor, overlayOpacity, accentColor } = store;
+  const { overlayColor, overlayOpacity, accentColor, setOverlay } = useBrandingStore(
+    useShallow((s) => ({
+      overlayColor: s.overlayColor,
+      overlayOpacity: s.overlayOpacity,
+      accentColor: s.accentColor,
+      setOverlay: s.setOverlay,
+    }))
+  );
 
   const tintColors = [
     ...TINT_COLORS,
@@ -44,7 +51,7 @@ export function OverlaySection() {
             <button
               key={p.label}
               type="button"
-              onClick={() => store.setOverlay(p.color, p.opacity)}
+              onClick={() => setOverlay(p.color, p.opacity)}
               style={{
                 fontSize: 11,
                 fontWeight: 500,
@@ -76,7 +83,7 @@ export function OverlaySection() {
           max={100}
           step={5}
           value={overlayOpacity}
-          onChange={(e) => store.setOverlay(overlayColor, Number(e.target.value))}
+          onChange={(e) => setOverlay(overlayColor, Number(e.target.value))}
           style={{ width: "100%", accentColor: "#3b46e0" }}
         />
       </div>
@@ -92,7 +99,7 @@ export function OverlaySection() {
                 key={c.value}
                 type="button"
                 title={c.label}
-                onClick={() => store.setOverlay(c.value, overlayOpacity === 0 ? 30 : overlayOpacity)}
+                onClick={() => setOverlay(c.value, overlayOpacity === 0 ? 30 : overlayOpacity)}
                 style={{
                   width: 30,
                   height: 30,
@@ -130,7 +137,7 @@ export function OverlaySection() {
             <input
               type="color"
               value={overlayColor}
-              onChange={(e) => store.setOverlay(e.target.value, overlayOpacity === 0 ? 30 : overlayOpacity)}
+              onChange={(e) => setOverlay(e.target.value, overlayOpacity === 0 ? 30 : overlayOpacity)}
               style={{ position: "absolute", inset: 0, opacity: 0, width: "100%", height: "100%", cursor: "pointer" }}
             />
           </label>
