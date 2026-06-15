@@ -2,6 +2,9 @@ import "@testing-library/jest-dom";
 import "./vitest.d.ts";
 import { vi } from "vitest";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+vi.mock("focus-trap-react", () => ({ default: ({ children }: any) => children }));
+
 vi.mock("@upstash/redis", () => ({
   Redis: vi.fn().mockImplementation(() => ({
     get: vi.fn().mockResolvedValue(null),

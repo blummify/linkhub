@@ -19,7 +19,11 @@ import { BRANDING_FONT_SERIF } from "../constants/brandingFonts";
 import { ProfileSection } from "./components/ProfileSection";
 import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
-import { AvatarCropModal } from "./components/AvatarCropModal";
+import dynamic from "next/dynamic";
+const AvatarCropModal = dynamic(
+  () => import("./components/AvatarCropModal").then((m) => ({ default: m.AvatarCropModal })),
+  { ssr: false }
+);
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { updateAvatarUrl, removeAvatar, updateBranding, applyCustomTheme, deleteCustomTheme } from "@/app/actions/profile";
 import { claimHandle, checkHandleAvailability } from "@/app/actions/links";

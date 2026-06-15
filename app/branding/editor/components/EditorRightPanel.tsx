@@ -1,6 +1,7 @@
 "use client";
 
 import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
 import { BRANDING_BUTTON_SHAPES } from "@/app/constants/brandingButtonShapes";
 import { EDITOR_EFFECTS } from "@/app/constants/editorEffects";
 import { ColorSection } from "./ColorSection";
@@ -21,7 +22,14 @@ function Divider() {
 }
 
 export function EditorRightPanel() {
-  const store = useBrandingStore();
+  const { buttonStyle, setButtonStyle, effects, toggleEffect } = useBrandingStore(
+    useShallow((s) => ({
+      buttonStyle: s.buttonStyle,
+      setButtonStyle: s.setButtonStyle,
+      effects: s.effects,
+      toggleEffect: s.toggleEffect,
+    }))
+  );
 
   return (
     <div
@@ -48,12 +56,12 @@ export function EditorRightPanel() {
         <p style={sectionLabel}>Button shape</p>
         <div style={{ display: "flex", gap: 8 }}>
           {BRANDING_BUTTON_SHAPES.map(({ id, label, radiusPx }) => {
-            const active = store.buttonStyle === id;
+            const active = buttonStyle === id;
             return (
               <button
                 key={id}
                 type="button"
-                onClick={() => store.setButtonStyle(id)}
+                onClick={() => setButtonStyle(id)}
                 style={{
                   flex: 1,
                   padding: "13px 8px 11px",
@@ -107,14 +115,14 @@ export function EditorRightPanel() {
         <p style={sectionLabel}>Effects</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
           {EDITOR_EFFECTS.map((effect) => {
-            const enabled = store.effects.includes(effect.id);
+            const enabled = effects.includes(effect.id);
             return (
               <div
                 key={effect.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => store.toggleEffect(effect.id)}
-                onKeyDown={(e) => e.key === "Enter" && store.toggleEffect(effect.id)}
+                onClick={() => toggleEffect(effect.id)}
+                onKeyDown={(e) => e.key === "Enter" && toggleEffect(effect.id)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -138,7 +146,7 @@ export function EditorRightPanel() {
                   type="button"
                   role="switch"
                   aria-checked={enabled}
-                  onClick={(e) => { e.stopPropagation(); store.toggleEffect(effect.id); }}
+                  onClick={(e) => { e.stopPropagation(); toggleEffect(effect.id); }}
                   style={{
                     width: 38,
                     height: 21,

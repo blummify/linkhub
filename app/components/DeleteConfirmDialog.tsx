@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import FocusTrap from "focus-trap-react";
 import type { ManagedLink } from "../user-admin/components/types";
 import { LinkStatus } from "@/app/constants/linkStatus";
 
@@ -45,6 +46,7 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
     : "This link will be permanently removed from your public page.";
 
   return (
+    <FocusTrap active={!isClosing} focusTrapOptions={{ allowOutsideClick: true, returnFocusOnDeactivate: true }}>
     <div
       className={`fixed inset-0 z-[150] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}
       style={{
@@ -157,5 +159,6 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
         </div>
       </div>
     </div>
+    </FocusTrap>
   );
 }
