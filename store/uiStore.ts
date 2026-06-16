@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ManagedLink } from "@/app/user-admin/components/types";
+import type { ManagedLink } from "@/app/(dashboard)/user-admin/components/types";
 
 interface UIStore {
   showLinkModal: boolean;

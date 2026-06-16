@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useSidebarStore } from "@/store/sidebarStore";
-import { useShortKey } from "../../components/hooks/useShortKey";
+import { useShortKey } from "../../../components/hooks/useShortKey";
 
 const DEMO_NOTIFICATIONS: {
   id: number;

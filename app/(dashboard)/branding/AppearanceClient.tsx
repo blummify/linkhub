@@ -4,18 +4,17 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import { DashboardPageTransition } from "../components/DashboardPageTransition";
-import { DirtyStateSaveBar } from "../components/DirtyStateSaveBar";
-import { DirtyStateSaveToolbar } from "../components/DirtyStateSaveToolbar";
+import { DashboardPageTransition } from "../../components/DashboardPageTransition";
+import { DirtyStateSaveBar } from "../../components/DirtyStateSaveBar";
+import { DirtyStateSaveToolbar } from "../../components/DirtyStateSaveToolbar";
 import { BrandingConfirmModal } from "./components/BrandingConfirmModal";
-import { CommandPalette } from "../components/CommandPalette";
-import { ClaimHandleModal } from "../components/ClaimHandleModal";
-import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
+import { CommandPalette } from "../../components/CommandPalette";
+import { ClaimHandleModal } from "../../components/ClaimHandleModal";
+import { DashboardPreviewPanel } from "../../components/DashboardPreviewPanel";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
-import { BRANDING_THEMES } from "../constants/brandingThemes";
+import { BRANDING_THEMES } from "../../constants/brandingThemes";
 import { getBrandingThemeById, type BrandingAppearanceState } from "@/lib/brandingState";
-import { BRANDING_FONT_SERIF } from "../constants/brandingFonts";
+import { BRANDING_FONT_SERIF } from "../../constants/brandingFonts";
 import { ProfileSection } from "./components/ProfileSection";
 import { ThemesSection } from "./components/ThemesSection";
 import { QuickTuneSection } from "./components/QuickTuneSection";
@@ -352,9 +351,7 @@ export default function AppearanceClient({
 
   return (
     <>
-    <div className="bg-[#f7f8fc] min-h-screen antialiased flex overflow-hidden">
-      <CollapsibleSidebar>
-        <main
+      <main
           className={`flex-1 ml-0 overflow-y-auto bg-[#f7f8fc] h-screen ${
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           }`}
@@ -500,8 +497,6 @@ export default function AppearanceClient({
             </div>
           </div>
         </main>
-      </CollapsibleSidebar>
-    </div>
 
     {!previewOpen && (
       <button

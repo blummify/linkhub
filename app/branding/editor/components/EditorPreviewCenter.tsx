@@ -14,7 +14,7 @@ import {
   PhoneScreenContent,
   type AppearanceTheme,
 } from "@/app/components/DashboardPreviewPanel";
-import type { ManagedLink } from "@/app/user-admin/components/types";
+import type { ManagedLink } from "@/app/(dashboard)/user-admin/components/types";
 
 const SAMPLE_LINKS: ManagedLink[] = [
   { id: "s1", title: "My Website",      url: "#", icon: "website",   clicks: "0", status: 1 },

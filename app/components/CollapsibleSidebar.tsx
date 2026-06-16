@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 
-let _sessionRefreshed = false;
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { LinkhubLogo } from "./icons/LinkhubLogo";
@@ -50,12 +49,7 @@ export default function CollapsibleSidebar({
   const { data: session, status, update } = useSession();
   const user = session?.user;
 
-  // Refresh session once per full page load (covers every sign-in path).
-  // Module-level flag prevents this firing again on client-side navigations
-  // where the sidebar re-mounts because each page embeds it independently.
   useEffect(() => {
-    if (_sessionRefreshed) return;
-    _sessionRefreshed = true;
     void update();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { HELP_ONBOARDING_STEPS } from "../../constants/helpLinks";
-import { BRANDING_FONT_SERIF } from "../../constants/brandingFonts";
+import { HELP_ONBOARDING_STEPS } from "../../../constants/helpLinks";
+import { BRANDING_FONT_SERIF } from "../../../constants/brandingFonts";
 import { HELP_COLORS, CARD_STYLE } from "./helpTheme";
 import { CheckIcon, ChevronRightIcon } from "./helpIcons";
 

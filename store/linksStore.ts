@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { ManagedLink } from "@/app/user-admin/components/types";
+import type { ManagedLink } from "@/app/(dashboard)/user-admin/components/types";
 
 interface LinksStore {
   links: ManagedLink[];

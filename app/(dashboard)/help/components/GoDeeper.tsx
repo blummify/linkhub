@@ -4,7 +4,7 @@ import {
   HELP_CONTACT_CHANNELS,
   type DocLink,
   type ContactChannel,
-} from "../../constants/helpLinks";
+} from "../../../constants/helpLinks";
 import { HELP_COLORS, CARD_STYLE } from "./helpTheme";
 import { HelpIcon, ExternalIcon } from "./helpIcons";
 

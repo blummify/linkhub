@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import { DashboardPageTransition } from "../components/DashboardPageTransition";
-import { DashboardPreviewPanel } from "../components/DashboardPreviewPanel";
+import { DashboardPageTransition } from "../../components/DashboardPageTransition";
+import { DashboardPreviewPanel } from "../../components/DashboardPreviewPanel";
 import { ManageLinksSection } from "./components/ManageLinksSection";
 import dynamic from "next/dynamic";
 const AddEditLinkModal = dynamic(
@@ -12,13 +11,13 @@ const AddEditLinkModal = dynamic(
 );
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
-import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, checkHandleAvailability, reorderLinks } from "../actions/links";
+import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, checkHandleAvailability, reorderLinks } from "../../actions/links";
 import { toast } from "sonner";
 import { getBrandingThemeById, type BrandingAppearanceState } from "@/lib/brandingState";
-import { ClaimHandleModal } from "../components/ClaimHandleModal";
-import { DeleteConfirmDialog } from "../components/DeleteConfirmDialog";
-import { CommandPalette } from "../components/CommandPalette";
-import { LinkStatusValue } from "../constants/linkStatus";
+import { ClaimHandleModal } from "../../components/ClaimHandleModal";
+import { DeleteConfirmDialog } from "../../components/DeleteConfirmDialog";
+import { CommandPalette } from "../../components/CommandPalette";
+import { LinkStatusValue } from "../../constants/linkStatus";
 import { useLinksStore } from "@/store/linksStore";
 import { useBrandingStore } from "@/store/brandingStore";
 import { useProfileStore } from "@/store/profileStore";
@@ -301,28 +300,8 @@ export default function UserAdminClient() {
 
   return (
     <>
-      <div className="bg-[#f7f8fc] text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
-        <CollapsibleSidebar
-          isAdmin={true}
-          mobileHeaderExtra={
-            !previewOpen ? (
-              <button
-                type="button"
-                onClick={() => setPreviewOpen(true)}
-                className="flex items-center gap-1.5 font-semibold"
-                style={{ padding: "6px 12px 6px 10px", borderRadius: 99, border: "1.5px solid #3b46e0", color: "#3b46e0", background: "transparent", fontSize: 13 }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                Preview
-              </button>
-            ) : undefined
-          }
-        >
-          <div className="flex-1 flex flex-col min-h-screen relative">
-            <main
+      <div className="flex-1 flex flex-col min-h-screen relative">
+        <main
               id="mainContent"
               className={`flex-1 transition-all duration-500 ease-in-out ${
                 isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
@@ -355,8 +334,6 @@ export default function UserAdminClient() {
                 </div>
               </div>
             </main>
-          </div>
-        </CollapsibleSidebar>
       </div>
 
       {!previewOpen && links.length > 0 && (
