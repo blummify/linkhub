@@ -3,9 +3,9 @@ import { render, screen } from "@testing-library/react";
 import { SiteFooter } from "../SiteFooter";
 
 describe("SiteFooter", () => {
-  it("renders the LinkHub logo", () => {
+  it("renders the linkhub brand logo", () => {
     render(<SiteFooter />);
-    expect(screen.getByAltText("LinkHub logo")).toBeInTheDocument();
+    expect(screen.getByText("linkhub")).toBeInTheDocument();
   });
 
   it("renders Company section links", () => {

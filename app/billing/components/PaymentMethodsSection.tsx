@@ -24,7 +24,7 @@ const BRAND: Record<PaymentCard["brand"], { label: string; name: string; bg: str
 
 /* Tailwind hover/focus via CSS — no onMouseEnter/Leave DOM mutation */
 const iconBtnCls =
-  "w-8 h-8 rounded-lg border border-[#d6dae9] bg-transparent text-[#3a4474] grid place-items-center cursor-pointer transition-colors hover:bg-white hover:border-[#a8aecb] hover:text-[#0b1020]";
+  "w-11 h-11 lg:w-8 lg:h-8 rounded-lg border border-[#d6dae9] bg-transparent text-[#3a4474] grid place-items-center cursor-pointer transition-colors hover:bg-white hover:border-[#a8aecb] hover:text-[#0b1020]";
 
 function IconBtn({ title, onClick, children }: { title: string; onClick?: () => void; children: React.ReactNode }) {
   return (
@@ -64,11 +64,11 @@ export function PaymentMethodsSection({ cards, onAddCard, onMakeDefault, onEditC
             return (
               <div
                 key={card.id}
-                className="flex items-center gap-3.5 px-[15px] py-[13px] border border-[#eef0f7] rounded-xl bg-[#f7f8fc]"
+                className="flex items-start lg:items-center gap-3.5 px-[15px] py-[13px] border border-[#eef0f7] rounded-xl bg-[#f7f8fc]"
               >
-                {/* Brand chip */}
+                {/* Brand chip — nudge down slightly on mobile to align with first text line */}
                 <span
-                  className="shrink-0 grid place-items-center text-white rounded-[6px] shadow-sm"
+                  className="shrink-0 grid place-items-center text-white rounded-[6px] shadow-sm mt-[3px] lg:mt-0"
                   style={{
                     width: 44, height: 30,
                     background: b.bg,
@@ -79,36 +79,39 @@ export function PaymentMethodsSection({ cards, onAddCard, onMakeDefault, onEditC
                   {b.label}
                 </span>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 text-[13.5px] font-medium text-[#0b1020]">
-                    {b.name} ending in {card.last4}
-                    {card.isDefault && (
-                      <span className="text-[10px] font-semibold text-[#2a37c0] bg-[#e6e9ff] px-[7px] py-0.5 rounded-full tracking-[0.04em]">
-                        DEFAULT
-                      </span>
-                    )}
+                {/* Card info + actions: stacked on mobile, single row on desktop */}
+                <div className="flex-1 min-w-0 flex flex-col lg:flex-row lg:items-center lg:gap-3.5">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 text-[13.5px] font-medium text-[#0b1020] flex-wrap">
+                      {b.name} ending in {card.last4}
+                      {card.isDefault && (
+                        <span className="text-[10px] font-semibold text-[#2a37c0] bg-[#e6e9ff] px-[7px] py-0.5 rounded-full tracking-[0.04em]">
+                          DEFAULT
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11.5px] text-[#6b75a3] mt-0.5">Expires {card.expiry}</div>
                   </div>
-                  <div className="text-[11.5px] text-[#6b75a3] mt-0.5">Expires {card.expiry}</div>
-                </div>
 
-                <div className="flex gap-1.5">
-                  {!card.isDefault && (
-                    <IconBtn title={`Make ${b.name} ••• ${card.last4} default`} onClick={() => onMakeDefault(card.id)}>
+                  <div className="flex gap-1.5 mt-2 lg:mt-0 self-end lg:self-auto shrink-0">
+                    {!card.isDefault && (
+                      <IconBtn title={`Make ${b.name} ••• ${card.last4} default`} onClick={() => onMakeDefault(card.id)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </IconBtn>
+                    )}
+                    <IconBtn title="Edit card" onClick={() => onEditCard(card)}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4z" />
                       </svg>
                     </IconBtn>
-                  )}
-                  <IconBtn title="Edit card" onClick={() => onEditCard(card)}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4z" />
-                    </svg>
-                  </IconBtn>
-                  <IconBtn title="Remove card" onClick={() => onRemoveCard(card)}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                    </svg>
-                  </IconBtn>
+                    <IconBtn title="Remove card" onClick={() => onRemoveCard(card)}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                      </svg>
+                    </IconBtn>
+                  </div>
                 </div>
               </div>
             );

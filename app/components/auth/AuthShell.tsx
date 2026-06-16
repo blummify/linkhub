@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import Script from "next/script";
+import { useEffect, type ReactNode } from "react";
+import { LinkhubLogo } from "@/app/components/icons/LinkhubLogo";
 
 type AuthFeature = {
   icon: string;
@@ -33,8 +35,28 @@ export function AuthShell({
 }: AuthShellProps) {
   const backClass = "group inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-primary transition-colors mb-8";
 
+  // The reCAPTCHA script injects a floating `.grecaptcha-badge` directly into
+  // document.body, outside React's tree, and next/script never removes
+  // afterInteractive scripts on unmount — so without this, the badge stays
+  // visible after navigating away from auth pages until a full page reload.
+  useEffect(() => {
+    const badge = document.querySelector<HTMLElement>(".grecaptcha-badge");
+    if (badge) badge.style.display = "";
+
+    return () => {
+      const badge = document.querySelector<HTMLElement>(".grecaptcha-badge");
+      if (badge) badge.style.display = "none";
+    };
+  }, []);
+
   return (
     <div className="min-h-screen lg:h-screen bg-white dark:bg-surface flex overflow-x-hidden">
+      {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
+          strategy="afterInteractive"
+        />
+      ) : null}
       <div className="w-full lg:w-1/2 flex flex-col px-5 sm:px-10 lg:px-16 xl:px-20 py-6 sm:py-8 overflow-y-auto">
         <div className="max-w-md mx-auto w-full">
           {onBackClick ? (
@@ -51,14 +73,7 @@ export function AuthShell({
 
           <div className="mb-8">
             <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
-              <Image
-                src="/link_hub_logo.png"
-                alt="LinkHub"
-                width={256}
-                height={256}
-                style={{ height: "auto" }}
-                className="h-auto w-32 max-w-full object-contain"
-              />
+              <LinkhubLogo size="md" />
             </Link>
           </div>
 

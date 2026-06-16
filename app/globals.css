@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,500;1,500&family=Space+Grotesk:wght@500;700&family=DM+Serif+Display&display=swap");
 @import "./preview-branding-fonts.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -59,6 +57,18 @@
   --lh-mint-500: #86aff8;
   --lh-glass-nav-bg: rgba(251, 248, 255, 0.7);
   --lh-glass-card-bg: rgba(255, 255, 255, 0.7);
+
+  /* ── Motion tokens ──────────────────────────────────────────── */
+  --motion-fast:      150ms;   /* press, hover, color/bg changes  */
+  --motion-base:      220ms;   /* fades, save bar, list items      */
+  --motion-sheet-in:  280ms;   /* sheet/modal entrance             */
+  --motion-sheet-out: 200ms;   /* sheet/modal exit (snappier)      */
+  --motion-shimmer:  1400ms;   /* skeleton loop (only looping anim)*/
+
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:       cubic-bezier(0.4, 0, 1, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
   color-scheme: light;
 }
 
@@ -207,12 +217,6 @@ html {
   scroll-behavior: smooth;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-}
-
 body {
   margin: 0;
   background: var(--lh-surface);
@@ -270,14 +274,19 @@ body {
 }
 
 @keyframes criteriaFadeOut {
-  0%   { opacity: 1; max-height: 120px; transform: translateY(0); }
+  0%   { opacity: 1; transform: scaleY(1); }
   60%  { opacity: 0; }
-  100% { opacity: 0; max-height: 0; transform: translateY(-6px); }
+  100% { opacity: 0; transform: scaleY(0); }
 }
 
 @keyframes criteriaFadeIn {
-  from { opacity: 0; max-height: 0; transform: translateY(-6px); }
-  to   { opacity: 1; max-height: 120px; transform: translateY(0); }
+  from { opacity: 0; transform: scaleY(0); }
+  to   { opacity: 1; transform: scaleY(1); }
+}
+
+.animate-criteria-out,
+.animate-criteria-in {
+  transform-origin: top;
 }
 
 .animate-criteria-out {
@@ -393,43 +402,25 @@ body {
 }
 
 @keyframes revealUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { transform: translateY(40px); }
+  to   { transform: translateY(0); }
 }
 
 .reveal-up {
-  opacity: 0;
-  animation: revealUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: revealUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* No filter:blur here — it breaks plain text when mixed with
    background-clip (gradient) text, so only the gradient word looked animated. */
 @keyframes headline-pop {
-  0% {
-    opacity: 0;
-    transform: translateY(1.1em);
-  }
-  55% {
-    opacity: 1;
-    transform: translateY(0) scale(1.02);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { transform: translateY(0.8em); }
+  to   { transform: translateY(0); }
 }
 
 .headline-pop {
-  opacity: 0;
-  animation: headline-pop 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: headline-pop 1.05s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--d, 0ms);
-  will-change: transform, opacity;
+  will-change: transform;
 }
 
 @keyframes headline-accent-shift {
@@ -610,20 +601,12 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .headline-pop,
-  .headline-accent,
-  .headline-hero-sweep,
-  .reveal-up,
-  .animate-float,
-  .pulse-primary,
-  .bg-orb,
-  .shimmer-button,
-  .phone-link-1,
-  .phone-link-2,
-  .phone-link-3,
-  .phone-link-4 {
-    animation: none !important;
+  *, *::before, *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
   }
+  html { scroll-behavior: auto; }
 
   .headline-pop {
     opacity: 1;
@@ -634,11 +617,9 @@ body {
     background: none;
     -webkit-text-fill-color: var(--lh-primary);
     color: var(--lh-primary);
-    animation: none;
   }
 
   .hero-scroll-hint {
-    animation: none;
     opacity: 0.55;
   }
 }
@@ -692,8 +673,43 @@ body {
 }
 
 @keyframes lhModalIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes lhSheetIn {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes lhSheetOut {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+@keyframes lhModalOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+@keyframes lhBackdropOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes lhPageIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes lhItemIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes lhItemOut {
+  from { opacity: 1; transform: translateY(0) scaleY(1); transform-origin: top; }
+  to   { opacity: 0; transform: translateY(-6px) scaleY(0.85); transform-origin: top; }
 }
 
 @keyframes brandingModalIn {
@@ -720,4 +736,37 @@ body {
   .billing-bento { grid-template-columns: 1fr !important; }
   .billing-bento > div { grid-column: span 1 !important; }
   .inv-desc-col { display: none; }
+}
+
+/* ── Sonner toast motion override ────────────────────────────────────────────── */
+[data-sonner-toast] {
+  animation: lhItemIn var(--motion-base) var(--ease-out) both;
+}
+[data-sonner-toast][data-removed="true"] {
+  animation: lhItemOut var(--motion-base) var(--ease-in) both;
+}
+
+/* ── Mobile live preview sheet — suppress overlapping fixed UI ─────────────── */
+@media (max-width: 1023px) {
+  html[data-mobile-preview-open] [data-mobile-bottom-nav] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Next.js dev indicator and similar fixed bottom-right overlays */
+  html[data-mobile-preview-open] nextjs-portal,
+  html[data-mobile-preview-open] #__next-build-watcher,
+  html[data-mobile-preview-open] [data-nextjs-dev-tools-button],
+  html[data-mobile-preview-open] [data-next-badge-root] {
+    display: none !important;
+  }
+
+}
+
+/* Hide dev overlay when a dirty-state save bar is visible (mobile bottom bar) */
+html[data-dirty-save-visible] nextjs-portal,
+html[data-dirty-save-visible] #__next-build-watcher,
+html[data-dirty-save-visible] [data-nextjs-dev-tools-button],
+html[data-dirty-save-visible] [data-next-badge-root] {
+  display: none !important;
 }

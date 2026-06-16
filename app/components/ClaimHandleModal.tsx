@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import FocusTrap from "focus-trap-react";
 import { APP_DOMAIN } from "@/lib/appConfig";
 
 export interface ClaimHandleModalProps {
@@ -111,11 +112,17 @@ export function ClaimHandleModal({
   const [state, setState] = useState<ModalState>(INITIAL_STATE);
   const { handle, inputState, helperMsg, helperKind, continueEnabled, isSubmitting, suggestions } = state;
   const [isFocused, setIsFocused] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
+  const [isMobile] = useState(() =>
+    typeof window !== "undefined" && !!window.matchMedia &&
+    window.matchMedia("(max-width: 1023px)").matches
+  );
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkIdRef = useRef(0);
   const seenRef = useRef<Map<string, boolean>>(new Map());
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Reset on close / pre-fill on open — done during render (not in an effect) per the
   // React "storing information from previous renders" pattern. This avoids the
@@ -124,6 +131,7 @@ export function ClaimHandleModal({
     setPrevOpen(open);
     if (!open) {
       setState(INITIAL_STATE);
+      setIsClosing(false);
     } else if (currentHandle) {
       setState({
         handle: currentHandle,
@@ -264,8 +272,16 @@ export function ClaimHandleModal({
 
   const handleClose = (): void => {
     if (isSubmitting) return;
-    onClose();
+    setIsClosing(true);
   };
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !isClosing) return;
+    const handler = (e: AnimationEvent) => { if (e.target === panel) onClose(); };
+    panel.addEventListener('animationend', handler);
+    return () => panel.removeEventListener('animationend', handler);
+  }, [isClosing, onClose]);
 
   if (!open) return null;
 
@@ -297,52 +313,55 @@ export function ClaimHandleModal({
   return (
     <>
       <style>{`
-        @keyframes lhModalIn {
-          from { opacity: 0; transform: translateY(20px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0)    scale(1);    }
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        .lh-modal-in {
-          animation: lhModalIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .lh-close-btn:hover {
-          transform: rotate(90deg);
-        }
+        .lh-close-btn:hover { transform: rotate(90deg); }
         .lh-primary-btn:not(:disabled):hover {
           transform: translateY(-1px);
           box-shadow: 0 8px 22px -6px rgba(59, 70, 224, 0.55) !important;
         }
-        .lh-suggestion-chip:hover {
-          border-color: #3b46e0;
-          color: #3b46e0;
-          background: #f1f3ff;
-        }
+        .lh-suggestion-chip:hover { border-color: #3b46e0; color: #3b46e0; background: #f1f3ff; }
       `}</style>
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+      <FocusTrap active={!isClosing} focusTrapOptions={{ allowOutsideClick: true, returnFocusOnDeactivate: true }}>
+      <div className={`fixed inset-0 z-[100] flex ${isMobile ? "items-end" : "items-center justify-center p-6"}`}>
         {/* Backdrop */}
         <div
           className="absolute inset-0"
-          style={{ background: "rgba(11, 16, 32, 0.6)", backdropFilter: "blur(8px)" }}
-          onClick={handleClose}
+          style={{
+            background: "rgba(11, 16, 32, 0.6)",
+            backdropFilter: "blur(8px)",
+            opacity: isClosing ? 0 : 1,
+            transition: `opacity ${isClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
+          }}
+          onClick={() => { if (!isMobile || handle.length === 0) handleClose(); }}
           aria-hidden
         />
 
         {/* Modal */}
         <div
-          className="lh-modal-in relative w-full overflow-hidden bg-white"
+          data-testid="modal-panel"
+          className="relative w-full bg-white"
           style={{
-            maxWidth: 460,
-            borderRadius: 22,
+            maxWidth: isMobile ? undefined : 460,
+            maxHeight: isMobile ? "min(90dvh, 90vh)" : undefined,
+            overflow: isMobile ? "auto" : "hidden",
+            borderRadius: isMobile ? "24px 24px 0 0" : 22,
             boxShadow:
               "0 40px 80px -20px rgba(15, 23, 42, 0.25), 0 16px 32px -16px rgba(15, 23, 42, 0.12)",
+            animation: isClosing
+              ? `${isMobile ? "lhSheetOut" : "lhModalOut"} var(--motion-sheet-out) var(--ease-in) forwards`
+              : `${isMobile ? "lhSheetIn" : "lhModalIn"} var(--motion-sheet-in) var(--ease-out) both`,
           }}
+          ref={panelRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby="claimTitle"
         >
+          {isMobile && (
+            <div className="flex justify-center pt-3 pb-2 shrink-0">
+              <div style={{ width: 36, height: 4, borderRadius: 99, background: "#d6dae9" }} />
+            </div>
+          )}
+
           {/* Tinted top band */}
           <div
             aria-hidden
@@ -574,13 +593,22 @@ export function ClaimHandleModal({
           </div>
 
           {/* ── Footer ── */}
-          <div className="flex flex-col" style={{ padding: "24px 32px 28px", gap: 10 }}>
+          <div
+            className="flex flex-col"
+            style={{
+              padding: isMobile
+                ? `16px 28px calc(24px + env(safe-area-inset-bottom,0px))`
+                : "24px 32px 28px",
+              gap: 10,
+            }}
+          >
             <button
               type="button"
               onClick={handleSubmit}
               disabled={!continueEnabled || isSubmitting}
               className="lh-primary-btn w-full flex items-center justify-center transition-all duration-150 disabled:cursor-not-allowed"
               style={{
+                minHeight: isMobile ? 46 : undefined,
                 padding: "13px 18px",
                 borderRadius: 9999,
                 fontSize: 14,
@@ -637,6 +665,7 @@ export function ClaimHandleModal({
               disabled={isSubmitting}
               className="w-full transition-colors duration-150 disabled:opacity-50"
               style={{
+                minHeight: isMobile ? 46 : undefined,
                 padding: "13px 18px",
                 borderRadius: 9999,
                 fontSize: 14,
@@ -657,6 +686,7 @@ export function ClaimHandleModal({
           </div>
         </div>
       </div>
+      </FocusTrap>
     </>
   );
 }

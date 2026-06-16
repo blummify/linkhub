@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   BRANDING_THEMES,
@@ -9,6 +10,7 @@ import {
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
 import { BrandingConfirmModal } from "./BrandingConfirmModal";
 import { getGradientById } from "@/app/constants/editorBackgroundGradients";
+import { sendEditorLink } from "@/app/actions/profile";
 import type { CustomTheme as CustomThemeRecord } from "@prisma/client";
 
 function swatchStyle(theme: CustomThemeRecord): React.CSSProperties {
@@ -301,6 +303,20 @@ export function ThemesSection({
   const [category, setCategory] = useState<CategoryId>("all");
   const [proModalTheme, setProModalTheme] = useState<BrandingTheme | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [showHandoffSheet, setShowHandoffSheet] = useState(false);
+  const [isHandoffClosing, setIsHandoffClosing] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [copied, setCopied] = useState(false);
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+
+  function requestCloseHandoffSheet() { setIsHandoffClosing(true); }
+
+  function handleHandoffSheetAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
+    if (isHandoffClosing && e.animationName === "lhSheetOut") {
+      setShowHandoffSheet(false);
+      setIsHandoffClosing(false);
+    }
+  }
 
   const handleThemeClick = (theme: BrandingTheme) => {
     if (theme.isPro) {
@@ -719,10 +735,10 @@ export function ThemesSection({
           {/* Heading + subtext */}
           <div>
             <div
+              className="text-[17px] lg:text-[20px]"
               style={{
                 fontFamily: BRANDING_FONT_SERIF,
                 fontStyle: "italic",
-                fontSize: 20,
                 color: "white",
                 letterSpacing: "-0.02em",
                 lineHeight: 1.25,
@@ -755,37 +771,296 @@ export function ThemesSection({
             ))}
           </div>
 
-          {/* CTA */}
-          <Link
-            href="/branding/editor"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 7,
-              background: "white",
-              color: "#1a2244",
-              borderRadius: 10,
-              padding: "10px 18px",
-              fontSize: 13,
-              fontWeight: 600,
-              textDecoration: "none",
-              width: "fit-content",
-              boxShadow: "0 4px 16px -4px rgba(0,0,0,0.35)",
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l7-7 3 3-7 7-3-3z"/>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586"/>
-              <circle cx="11" cy="11" r="2"/>
-            </svg>
-            Open the Editor
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </Link>
+          {/* CTA — mobile: handoff sheet; desktop: open editor */}
+          <div>
+            {/* Mobile button */}
+            <button
+              type="button"
+              className="inline-flex items-center justify-center w-full lg:hidden"
+              onClick={() => setShowHandoffSheet(true)}
+              style={{
+                gap: 7,
+                background: "white",
+                color: "#1a2244",
+                borderRadius: 10,
+                padding: "10px 18px",
+                fontSize: 13,
+                fontWeight: 600,
+                border: 0,
+                fontFamily: "inherit",
+                cursor: "pointer",
+                boxShadow: "0 4px 16px -4px rgba(0,0,0,0.35)",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l7-7 3 3-7 7-3-3z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586"/>
+                <circle cx="11" cy="11" r="2"/>
+              </svg>
+              Design it on desktop
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+
+            {/* Mobile desktop hint */}
+            <p
+              className="flex items-center lg:hidden"
+              style={{
+                marginTop: 7,
+                gap: 5,
+                fontSize: 11,
+                color: "rgba(180,190,255,0.55)",
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <path strokeLinecap="round" d="M8 21h8M12 17v4"/>
+              </svg>
+              Best on desktop
+            </p>
+
+            {/* Desktop link */}
+            <Link
+              href="/branding/editor"
+              className="hidden lg:inline-flex w-fit"
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 7,
+                background: "white",
+                color: "#1a2244",
+                borderRadius: 10,
+                padding: "10px 18px",
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: "none",
+                boxShadow: "0 4px 16px -4px rgba(0,0,0,0.35)",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l7-7 3 3-7 7-3-3z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586"/>
+                <circle cx="11" cy="11" r="2"/>
+              </svg>
+              Open the Editor
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+          </div>
         </div>
       </div>
+
+      {/* ── Mobile handoff sheet — editor lives on desktop ── */}
+      {mounted && showHandoffSheet && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex items-end"
+          style={{
+            opacity: isHandoffClosing ? 0 : 1,
+            transition: `opacity ${isHandoffClosing ? "var(--motion-sheet-out) var(--ease-in)" : "var(--motion-base) var(--ease-standard)"}`,
+          }}
+          onClick={requestCloseHandoffSheet}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            className="relative w-full bg-white"
+            style={{
+              borderRadius: "24px 24px 0 0",
+              animation: isHandoffClosing
+                ? "lhSheetOut var(--motion-sheet-out) var(--ease-in) forwards"
+                : "lhSheetIn var(--motion-sheet-in) var(--ease-out) both",
+              maxHeight: "min(90dvh, 90vh)",
+              overflow: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onAnimationEnd={handleHandoffSheetAnimEnd}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div style={{ width: 36, height: 4, borderRadius: 99, background: "#d6dae9" }} />
+            </div>
+
+            {/* Content */}
+            <div
+              style={{
+                padding: "16px 24px",
+                paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))",
+                display: "flex",
+                flexDirection: "column",
+                gap: 0,
+              }}
+            >
+              {/* Icon */}
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  background: "linear-gradient(135deg, #0e1340 0%, #1b2580 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(180,190,255,0.9)" strokeWidth="1.75">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/>
+                  <path strokeLinecap="round" d="M8 21h8M12 17v4"/>
+                </svg>
+              </div>
+
+              {/* Title */}
+              <h2
+                style={{
+                  fontFamily: BRANDING_FONT_SERIF,
+                  fontStyle: "italic",
+                  fontSize: 22,
+                  color: "#0b1020",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.2,
+                  margin: 0,
+                  marginBottom: 10,
+                }}
+              >
+                Your theme studio lives on desktop
+              </h2>
+
+              {/* Body */}
+              <p
+                style={{
+                  fontSize: 14,
+                  color: "#6b75a3",
+                  lineHeight: 1.6,
+                  margin: 0,
+                  marginBottom: 24,
+                }}
+              >
+                The custom editor — backgrounds, effects, and full styling — needs a bigger canvas than a phone. Open Linkhub on a computer to build your custom theme.
+              </p>
+
+              {/* Primary: Email me the link */}
+              <button
+                type="button"
+                disabled={emailStatus === "sending" || emailStatus === "sent"}
+                onClick={async () => {
+                  if (emailStatus !== "idle" && emailStatus !== "error") return;
+                  setEmailStatus("sending");
+                  const result = await sendEditorLink();
+                  setEmailStatus("error" in result ? "error" : "sent");
+                }}
+                style={{
+                  width: "100%",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  background:
+                    emailStatus === "sent"
+                      ? "linear-gradient(180deg, #16a34a, #15803d)"
+                      : "linear-gradient(180deg, #3b46e0, #2a37c0)",
+                  color: "white",
+                  border: 0,
+                  borderRadius: 12,
+                  padding: "13px 18px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                  cursor: emailStatus === "sent" || emailStatus === "sending" ? "default" : "pointer",
+                  opacity: emailStatus === "sending" ? 0.8 : 1,
+                  boxShadow: "0 4px 18px -4px rgba(59,70,224,0.45)",
+                  transition: "background 0.2s",
+                  marginBottom: 10,
+                }}
+              >
+                {emailStatus === "sending" ? (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="animate-spin">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                  </svg>
+                ) : emailStatus === "sent" ? (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                ) : (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                )}
+                {emailStatus === "sent"
+                  ? "Email sent!"
+                  : emailStatus === "error"
+                  ? "Couldn't send — tap to retry"
+                  : "Email me the link"}
+              </button>
+
+              {/* Secondary: Copy link */}
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(
+                      `${window.location.origin}/branding/editor`
+                    );
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  } catch {}
+                }}
+                style={{
+                  width: "100%",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  background: "white",
+                  color: copied ? "#16a34a" : "#1a2244",
+                  border: `1px solid ${copied ? "#bbf7d0" : "#d6dae9"}`,
+                  borderRadius: 12,
+                  padding: "13px 18px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                  transition: "color 0.2s, border-color 0.2s",
+                  marginBottom: 16,
+                }}
+              >
+                {copied ? (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                ) : (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                  </svg>
+                )}
+                {copied ? "Copied!" : "Copy link"}
+              </button>
+
+              {/* Dismiss */}
+              <button
+                type="button"
+                onClick={requestCloseHandoffSheet}
+                style={{
+                  background: "none",
+                  border: 0,
+                  fontSize: 13.5,
+                  color: "#9ba3c0",
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                  padding: "6px 0",
+                  textAlign: "center",
+                  width: "100%",
+                }}
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

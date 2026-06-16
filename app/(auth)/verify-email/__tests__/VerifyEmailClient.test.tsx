@@ -1,8 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import VerifyEmailClient from "../VerifyEmailClient";
-import { verifyEmailCode } from "@/app/actions/auth";
+import { sendVerificationCode, verifyEmailCode } from "@/app/actions/auth";
+import { executeRecaptcha } from "@/lib/recaptcha.client";
 import { signIn } from "next-auth/react";
+
+const { mockSearchParams } = vi.hoisted(() => ({
+  mockSearchParams: vi.fn(() => new URLSearchParams("email=test@example.com")),
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -13,7 +18,7 @@ vi.mock("next/navigation", () => ({
     prefetch: vi.fn(),
   }),
   usePathname: () => "/verify-email",
-  useSearchParams: () => new URLSearchParams("email=test@example.com"),
+  useSearchParams: mockSearchParams,
 }));
 
 vi.mock("next-auth/react", () => ({
@@ -62,6 +67,7 @@ function fillDigits(value: string) {
 describe("VerifyEmailClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSearchParams.mockReturnValue(new URLSearchParams("email=test@example.com"));
   });
 
   it("renders verification form for email from search params", () => {
@@ -90,5 +96,18 @@ describe("VerifyEmailClient", () => {
     fireEvent.keyDown(inputs[2], { key: "Enter" });
 
     expect(verifyEmailCode).not.toHaveBeenCalled();
+  });
+
+  it("auto-sends verification code with recaptcha when redirected from login", async () => {
+    mockSearchParams.mockReturnValue(
+      new URLSearchParams("email=test@example.com&source=login")
+    );
+
+    render(<VerifyEmailClient />);
+
+    await waitFor(() => {
+      expect(executeRecaptcha).toHaveBeenCalledWith("send_verification");
+      expect(sendVerificationCode).toHaveBeenCalledWith("test@example.com", "recaptcha-token");
+    });
   });
 });

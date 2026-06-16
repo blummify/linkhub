@@ -2,6 +2,7 @@
 
 import { memo, useMemo, useState } from "react";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
+import { DashboardPageTransition } from "../components/DashboardPageTransition";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { CommandPalette } from "../components/CommandPalette";
@@ -355,6 +356,7 @@ export default function UserAnalyticsClient() {
           } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
         >
           <div className="flex-1 min-w-0 px-4 pt-[22px] pb-24 lg:pb-14 sm:px-6 lg:px-8">
+            <DashboardPageTransition>
             <DashboardTopBar
               searchPlaceholder="Search metrics, date ranges, actions…"
               onSearchClick={() => setShowPalette(true)}
@@ -731,6 +733,7 @@ export default function UserAnalyticsClient() {
                 </div>
               </div>
             </div>
+            </DashboardPageTransition>
           </div>
         </main>
       </CollapsibleSidebar>

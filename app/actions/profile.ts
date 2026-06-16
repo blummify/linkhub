@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { redis } from "@/lib/redis";
 import { deleteFromR2 } from "@/lib/r2";
+import { postly } from "@/lib/postly";
 import { VALID_FONT_VALUES } from "@/app/constants/editorFonts";
 import { BACKGROUND_GRADIENTS } from "@/app/constants/editorBackgroundGradients";
 
@@ -325,16 +326,17 @@ export async function deleteCustomTheme(
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   try {
-    const theme = await db.customTheme.findUnique({
-      where: { id, userId: session.user.id },
-      select: { backgroundKey: true },
-    });
+    const [theme, profile] = await Promise.all([
+      db.customTheme.findUnique({
+        where: { id, userId: session.user.id },
+        select: { backgroundKey: true },
+      }),
+      db.profile.findUnique({
+        where: { userId: session.user.id },
+        select: { activeCustomThemeId: true, backgroundKey: true },
+      }),
+    ]);
     if (!theme) return { error: "Theme not found." };
-
-    const profile = await db.profile.findUnique({
-      where: { userId: session.user.id },
-      select: { activeCustomThemeId: true, backgroundKey: true },
-    });
 
     await db.customTheme.delete({ where: { id, userId: session.user.id } });
 
@@ -430,5 +432,46 @@ export async function applyCustomTheme(
   } catch (err) {
     console.error("[applyCustomTheme] failed:", err);
     return { error: "Failed to apply theme. Please try again." };
+  }
+}
+
+export async function sendEditorLink(): Promise<{ success: true } | { error: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "Unauthorized" };
+
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true, name: true },
+    });
+    if (!user?.email) return { error: "No email on file." };
+
+    const baseUrl =
+      process.env.NEXTAUTH_URL ??
+      (process.env.NEXT_PUBLIC_APP_DOMAIN
+        ? `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}`
+        : "http://localhost:3000");
+    const editorUrl = `${baseUrl}/branding/editor`;
+
+    // Intent signal for PRO funnel — wire to your analytics pipeline here
+    after(async () => {
+      try {
+        await db.user.update({
+          where: { id: session.user.id },
+          data: { updatedAt: new Date() },
+        });
+      } catch {}
+    });
+
+    await postly.send({
+      template: "linkhub-editor-link",
+      to: [user.email],
+      data: { name: user.name ?? "there", editorUrl },
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("[sendEditorLink]", err);
+    return { error: "Couldn't send the email right now. Please try again." };
   }
 }

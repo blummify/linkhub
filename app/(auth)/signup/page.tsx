@@ -25,6 +25,7 @@ function SignupPageContent() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [formData, setFormData] = useState({
@@ -59,6 +60,15 @@ function SignupPageContent() {
     }));
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await signIn("google", { callbackUrl: "/user-dashboard" });
+    } catch {
+      setIsGoogleLoading(false);
+    }
+  };
+
   const handleEmailBlur = async () => {
     const formatError = validateEmail(formData.email);
     if (formatError) {
@@ -67,12 +77,15 @@ function SignupPageContent() {
     }
     setIsCheckingEmail(true);
     try {
-      const exists = await checkUserExists(formData.email);
+      const recaptchaToken = await executeRecaptcha("check_email");
+      const result = await checkUserExists(formData.email, recaptchaToken);
+      if ("error" in result) return;
       setFieldErrors((prev) => ({
         ...prev,
-        email: exists ? "An account with this email already exists." : "",
+        email: result.exists ? "An account with this email already exists." : "",
       }));
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof RecaptchaError) return;
       // silently ignore — full validation still runs on submit
     } finally {
       setIsCheckingEmail(false);
@@ -119,9 +132,8 @@ function SignupPageContent() {
         setError(result.error);
       } else {
         const verifyUrl = `/verify-email?email=${encodeURIComponent(formData.email)}`;
-        // Fire email in background — user goes to verify page immediately
-        // If delivery fails they can resend from that page
-        sendVerificationCode(formData.email).catch(() => {});
+        const sendToken = await executeRecaptcha("send_verification");
+        sendVerificationCode(formData.email, sendToken).catch(() => {});
         router.push(verifyUrl);
       }
     } catch (error: unknown) {
@@ -290,8 +302,9 @@ function SignupPageContent() {
         </div>
 
         <GoogleAuthButton
-          onClick={() => signIn("google", { callbackUrl: "/user-dashboard" })}
+          onClick={handleGoogleSignIn}
           label="Sign up with Google"
+          disabled={isGoogleLoading}
         />
 
         <p className="text-center text-sm text-gray-600 dark:text-on-surface-variant">

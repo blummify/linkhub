@@ -1,6 +1,7 @@
 "use client";
 
 import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
 
 const PROFILE_LAYOUTS = [
   { id: "classic",  label: "Classic",  desc: "Avatar top, name, bio, links" },
@@ -24,7 +25,14 @@ const sectionLabel: React.CSSProperties = {
 };
 
 export function LayoutSection() {
-  const store = useBrandingStore();
+  const { profileLayout, setProfileLayout, linkDensity, setLinkDensity } = useBrandingStore(
+    useShallow((s) => ({
+      profileLayout: s.profileLayout,
+      setProfileLayout: s.setProfileLayout,
+      linkDensity: s.linkDensity,
+      setLinkDensity: s.setLinkDensity,
+    }))
+  );
 
   return (
     <div>
@@ -37,12 +45,12 @@ export function LayoutSection() {
         </span>
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
           {PROFILE_LAYOUTS.map((layout) => {
-            const active = store.profileLayout === layout.id;
+            const active = profileLayout === layout.id;
             return (
               <button
                 key={layout.id}
                 type="button"
-                onClick={() => store.setProfileLayout(layout.id)}
+                onClick={() => setProfileLayout(layout.id)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -80,12 +88,12 @@ export function LayoutSection() {
         </span>
         <div style={{ display: "flex", background: "#f0f1f7", borderRadius: 10, padding: 3, gap: 2 }}>
           {LINK_DENSITIES.map((d) => {
-            const active = store.linkDensity === d.id;
+            const active = linkDensity === d.id;
             return (
               <button
                 key={d.id}
                 type="button"
-                onClick={() => store.setLinkDensity(d.id)}
+                onClick={() => setLinkDensity(d.id)}
                 style={{
                   flex: 1,
                   padding: "6px 0",

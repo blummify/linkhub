@@ -1,6 +1,7 @@
 "use client";
 
 import { useBrandingStore } from "@/store/brandingStore";
+import { useShallow } from "zustand/react/shallow";
 
 const CARD_STYLES = [
   {
@@ -35,19 +36,21 @@ const sectionLabel: React.CSSProperties = {
 };
 
 export function CardStyleSection() {
-  const store = useBrandingStore();
+  const { cardStyle, setCardStyle } = useBrandingStore(
+    useShallow((s) => ({ cardStyle: s.cardStyle, setCardStyle: s.setCardStyle }))
+  );
 
   return (
     <div>
       <p style={sectionLabel}>Card style</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {CARD_STYLES.map((style) => {
-          const active = store.cardStyle === style.id;
+          const active = cardStyle === style.id;
           return (
             <button
               key={style.id}
               type="button"
-              onClick={() => store.setCardStyle(style.id)}
+              onClick={() => setCardStyle(style.id)}
               style={{
                 padding: "14px 10px 11px",
                 border: `1.5px solid ${active ? "#3b46e0" : "#eef0f7"}`,

@@ -33,6 +33,7 @@ vi.mock("next-auth/react", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: routerRefresh }),
+  usePathname: () => "/my-account",
 }));
 
 const actions = vi.hoisted(() => ({
@@ -53,6 +54,22 @@ const { toastSuccess, toastError } = vi.hoisted(() => ({
   toastError: vi.fn(),
 }));
 vi.mock("sonner", () => ({ toast: { success: toastSuccess, error: toastError } }));
+vi.mock("@/app/actions/twoFactor", () => ({
+  setup2FA: vi.fn(),
+  enable2FA: vi.fn(),
+  disable2FA: vi.fn(),
+  verifyTotpLogin: vi.fn(),
+}));
+vi.mock("../components/TwoFactorSetupModal", () => ({
+  TwoFactorSetupModal: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="setup-modal"><button onClick={onClose}>Close</button></div>
+  ),
+}));
+vi.mock("../components/TwoFactorDisableModal", () => ({
+  TwoFactorDisableModal: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="disable-modal"><button onClick={onClose}>Close</button></div>
+  ),
+}));
 
 const credentialInitial = {
   name: "Joel Osei Acquah",
@@ -69,7 +86,7 @@ describe("MyAccountClient", () => {
   });
 
   it("renders the account page with its sections", () => {
-    render(<MyAccountClient initial={credentialInitial} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
     expect(screen.getByRole("main")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /my account/i })).toBeInTheDocument();
     expect(screen.getByText("Personal info")).toBeInTheDocument();
@@ -82,7 +99,7 @@ describe("MyAccountClient", () => {
 
   it("saves the name via updateName and refreshes the session", async () => {
     actions.updateName.mockResolvedValue({ success: true });
-    render(<MyAccountClient initial={credentialInitial} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[0]);
 
     const save = screen.getByRole("button", { name: /save changes/i });
@@ -100,7 +117,7 @@ describe("MyAccountClient", () => {
   it("runs the email-change code flow", async () => {
     actions.requestEmailChange.mockResolvedValue({ success: true });
     actions.confirmEmailChange.mockResolvedValue({ success: true, email: "new@linkhub.co" });
-    render(<MyAccountClient initial={credentialInitial} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
 
     fireEvent.click(screen.getByRole("button", { name: /change email/i }));
     fireEvent.change(screen.getByLabelText("New email address"), { target: { value: "new@linkhub.co" } });
@@ -117,14 +134,14 @@ describe("MyAccountClient", () => {
   });
 
   it("shows the pending banner immediately when initial.pendingEmail is set", () => {
-    render(<MyAccountClient initial={{ ...credentialInitial, pendingEmail: "pending@linkhub.co" }} />);
+    render(<MyAccountClient initial={{ ...credentialInitial, pendingEmail: "pending@linkhub.co" }} twoFactorEnabled={false} />);
     expect(screen.getByText(/pending@linkhub.co/)).toBeInTheDocument();
     expect(screen.getByLabelText("Verification code")).toBeInTheDocument();
   });
 
   it("gates and submits the change-password form", async () => {
     actions.changePassword.mockResolvedValue({ success: true });
-    render(<MyAccountClient initial={credentialInitial} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[1]);
 
     const update_ = screen.getByRole("button", { name: /update password/i });
@@ -142,7 +159,7 @@ describe("MyAccountClient", () => {
 
   it("shows a set-password form for OAuth-only users", async () => {
     actions.setPassword.mockResolvedValue({ success: true });
-    render(<MyAccountClient initial={{ ...credentialInitial, hasPassword: false }} />);
+    render(<MyAccountClient initial={{ ...credentialInitial, hasPassword: false }} twoFactorEnabled={false} />);
     expect(screen.getByText("Set a password")).toBeInTheDocument();
     expect(screen.getByText(/No password set/i)).toBeInTheDocument();
 
@@ -157,7 +174,7 @@ describe("MyAccountClient", () => {
 
   it("arms and runs credential account deletion, then signs out", async () => {
     actions.deleteAccount.mockResolvedValue({ success: true });
-    render(<MyAccountClient initial={credentialInitial} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
 
     fireEvent.click(screen.getByRole("button", { name: /^delete account$/i }));
     // Once open, both the danger-zone trigger and the dialog confirm read
@@ -179,7 +196,7 @@ describe("MyAccountClient", () => {
 
   it("starts a Google re-prompt for OAuth-only account deletion", async () => {
     actions.armOAuthDeletion.mockResolvedValue({ nonce: "abc123" });
-    render(<MyAccountClient initial={{ ...credentialInitial, hasPassword: false }} />);
+    render(<MyAccountClient initial={{ ...credentialInitial, hasPassword: false }} twoFactorEnabled={false} />);
 
     fireEvent.click(screen.getByRole("button", { name: /^delete account$/i }));
     fireEvent.change(screen.getByLabelText(/type your email/i), { target: { value: "joel@linkhub.co" } });
@@ -196,13 +213,19 @@ describe("MyAccountClient", () => {
     expect(actions.deleteAccount).not.toHaveBeenCalled();
   });
 
-  it("toggles a security factor between set-up and active", () => {
-    render(<MyAccountClient initial={credentialInitial} />);
+  it("opens setup modal when 2FA is not enabled and Set up is clicked", () => {
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[2]);
 
-    const setUpButtons = screen.getAllByRole("button", { name: /set up/i });
-    fireEvent.click(setUpButtons[0]);
-    expect(toastSuccess).toHaveBeenCalledWith("Second factor enabled");
-    expect(screen.getByRole("button", { name: /manage/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /set up/i }));
+    expect(screen.getByTestId("setup-modal")).toBeInTheDocument();
+  });
+
+  it("opens disable modal when 2FA is enabled and Manage is clicked", () => {
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={true} />);
+    fireEvent.click(screen.getAllByLabelText("Edit")[2]);
+
+    fireEvent.click(screen.getByRole("button", { name: /manage/i }));
+    expect(screen.getByTestId("disable-modal")).toBeInTheDocument();
   });
 });

@@ -36,9 +36,9 @@ describe("PublicNav", () => {
     expect(pricingLink.className).toContain("border-primary");
   });
 
-  it("renders the logo image", () => {
+  it("renders the linkhub brand logo", () => {
     render(<PublicNav />);
-    expect(screen.getByAltText("LinkHub logo")).toBeInTheDocument();
+    expect(screen.getByText("linkhub")).toBeInTheDocument();
   });
 
   it("shows profile avatar instead of auth buttons when authenticated", () => {

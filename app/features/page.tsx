@@ -5,6 +5,17 @@ import { SiteFooter } from "../components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Features",
+  description: "Everything you need to build a stunning link in bio. Custom branding, deep analytics, and more.",
+  openGraph: {
+    title: "Features — LinkHub",
+    description: "Everything you need to build a stunning link in bio. Custom branding, deep analytics, and more.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Features — LinkHub",
+    description: "Everything you need to build a stunning link in bio. Custom branding, deep analytics, and more.",
+  },
 };
 
 export default function FeaturesPage() {

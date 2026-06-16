@@ -12,6 +12,7 @@ export interface ManagedLinkCardProps {
   dragHandleListeners?: DraggableSyntheticListeners;
   dragHandleAttributes?: DraggableAttributes;
   isOverlay?: boolean;
+  isDeleting?: boolean;
 }
 
 function IconGlobe() {
@@ -84,11 +85,13 @@ function RowBtn({
   children,
   title,
   danger,
+  disabled,
   onClick,
 }: {
   children: React.ReactNode;
   title?: string;
   danger?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -97,15 +100,18 @@ function RowBtn({
       type="button"
       title={title}
       aria-label={title}
-      onClick={onClick}
-      className="flex items-center justify-center cursor-pointer transition-all duration-150"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className="flex items-center justify-center transition-all duration-150"
       style={{
         width: 32,
         height: 32,
         borderRadius: 8,
         border: 0,
-        background: hovered ? (danger ? "#fde8ec" : "#eef0f7") : "transparent",
-        color: hovered ? (danger ? "#e11d48" : "#0b1020") : "#6b75a3",
+        background: hovered && !disabled ? (danger ? "#fde8ec" : "#eef0f7") : "transparent",
+        color: disabled ? "#c5c9e8" : hovered ? (danger ? "#e11d48" : "#0b1020") : "#6b75a3",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -124,6 +130,7 @@ export function ManagedLinkCard({
   dragHandleListeners,
   dragHandleAttributes,
   isOverlay = false,
+  isDeleting = false,
 }: ManagedLinkCardProps) {
   const { title, url, clicks, trendLabel, createdAt } = link;
   const visualStatus = link.status === 1 ? "published" 
@@ -223,7 +230,7 @@ export function ManagedLinkCard({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={link.thumbnailUrl}
-              alt=""
+              alt={`Thumbnail for ${link.title}`}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             />
           ) : iconEntry ? (
@@ -344,17 +351,18 @@ export function ManagedLinkCard({
                     type="button"
                     onClick={onToggle}
                     title={visualStatus === "published" ? "Unpublish" : "Publish"}
-                    className="relative shrink-0 cursor-pointer outline-none transition-colors duration-200 mr-2"
+                    className="relative shrink-0 cursor-pointer outline-none mr-2"
                     style={{
                       width: 38,
                       height: 22,
                       borderRadius: 99,
                       background: visualStatus === "published" ? "#3b46e0" : "#d6dae9",
                       border: 0,
+                      transition: "background var(--motion-fast) var(--ease-standard)",
                     }}
                   >
                     <span
-                      className="absolute rounded-full bg-white transition-transform duration-200"
+                      className="absolute rounded-full bg-white"
                       style={{
                         width: 18,
                         height: 18,
@@ -362,6 +370,7 @@ export function ManagedLinkCard({
                         left: 2,
                         boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
                         transform: visualStatus === "published" ? "translateX(16px)" : "translateX(0)",
+                        transition: "transform var(--motion-fast) var(--ease-out)",
                       }}
                     />
                   </button>
@@ -380,6 +389,7 @@ export function ManagedLinkCard({
               <RowBtn
                 title={`Delete ${title}`}
                 danger
+                disabled={isDeleting}
                 onClick={() => onDelete?.()}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

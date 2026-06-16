@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
+import FocusTrap from "focus-trap-react";
 import { useRouter } from "next/navigation";
 import type { ManagedLink } from "../user-admin/components/types";
 
@@ -349,6 +350,7 @@ export function CommandPalette({
       : "Search links, pages, actions…");
 
   return createPortal(
+    <FocusTrap focusTrapOptions={{ allowOutsideClick: true, returnFocusOnDeactivate: true }}>
     <div
       className="flex items-start justify-center"
       style={{
@@ -531,7 +533,8 @@ export function CommandPalette({
           </span>
         </div>
       </div>
-    </div>,
+    </div>
+    </FocusTrap>,
     document.body
   );
 }

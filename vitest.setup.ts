@@ -2,6 +2,9 @@ import "@testing-library/jest-dom";
 import "./vitest.d.ts";
 import { vi } from "vitest";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+vi.mock("focus-trap-react", () => ({ default: ({ children }: any) => children }));
+
 vi.mock("@upstash/redis", () => ({
   Redis: vi.fn().mockImplementation(() => ({
     get: vi.fn().mockResolvedValue(null),
@@ -40,6 +43,20 @@ const sessionStorageMock = (() => {
   };
 })();
 Object.defineProperty(window, "sessionStorage", { value: sessionStorageMock, writable: true });
+
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }),
+});
 
 // Reset Zustand stores between tests so state doesn't leak
 vi.mock("@/store/linksStore", () => {

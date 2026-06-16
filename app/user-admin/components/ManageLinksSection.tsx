@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useUIStore } from "@/store/uiStore";
 import {
   DndContext,
   DragOverlay,
+  MeasuringStrategy,
+  KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
@@ -14,6 +16,7 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
   arrayMove,
@@ -23,7 +26,6 @@ import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
 import { AnalyticsCards } from "./AnalyticsCards";
 import { DashboardTopBar } from "./DashboardTopBar";
-const PAGE_SIZE = 5;
 
 function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
   return (
@@ -226,6 +228,7 @@ function SkeletonLinkCard({ delay = 0 }: { delay?: number }) {
 export interface ManageLinksSectionProps {
   links: ManagedLink[];
   isLoadingLinks?: boolean;
+  deletingId?: string | null;
   onAddLink?: () => void;
   onEditLink?: (link: ManagedLink, index: number) => void;
   onDeleteLink?: (link: ManagedLink, index: number) => void;
@@ -284,6 +287,7 @@ function SortableCardWrapper({
 export function ManageLinksSection({
   links,
   isLoadingLinks = false,
+  deletingId = null,
   onAddLink,
   onEditLink,
   onDeleteLink,
@@ -295,23 +299,13 @@ export function ManageLinksSection({
   const openPalette = useUIStore((s) => s.openPalette);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [visibleLinks, setVisibleLinks] = useState(PAGE_SIZE);
-  const prevLinksLengthRef = useRef(links.length);
-
-  useEffect(() => {
-  const prev = prevLinksLengthRef.current;
-  prevLinksLengthRef.current = links.length;
-
-  if (links.length === prev + 1) {
-    setVisibleLinks(c => c + 1);
-  }
-}, [links.length]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const filteredLinks = links.filter((link) => {
+  const filteredLinks = useMemo(() => links.filter((link) => {
     if (activeTab === "all") return true;
     const status = link.status ?? 0;
     if (activeTab === "published") return status === 1;
@@ -319,11 +313,6 @@ export function ManageLinksSection({
     if (activeTab === "draft") return status === 0;
     return true;
   });
-
-  const visibleLinkSlides = filteredLinks.slice(0, visibleLinks);
-  const remainingLinks = filteredLinks.length - visibleLinks;
-  const nextBatch = Math.min(PAGE_SIZE, remainingLinks);
-  const showControls = remainingLinks > 0;
 
   const activeLink = activeId
     ? filteredLinks.find((l) => getLinkId(l) === activeId) ?? null
@@ -417,8 +406,7 @@ export function ManageLinksSection({
             <button
               key={key}
               type="button"
-              onClick={() => {
-                setActiveTab(key); setVisibleLinks(PAGE_SIZE); }} // reset pagination when switching tabs
+              onClick={() => setActiveTab(key)}
               className="shrink-0 cursor-pointer transition-all duration-150"
               style={{
                 borderRadius: 99,
@@ -456,18 +444,20 @@ export function ManageLinksSection({
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
         >
           <SortableContext
             items={filteredLinks.map(getLinkId)}
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-3">
-              {visibleLinkSlides.map((link, idx) => {
+              {filteredLinks.map((link, idx) => {
                 const originalIndex = links.indexOf(link);
                 return (
                   <SortableCardWrapper
-                    key={getLinkId(link) + idx}
+                    key={getLinkId(link)}
                     link={link}
+                    isDeleting={deletingId === getLinkId(link)}
                     onEdit={onEditLink ? () => onEditLink(link, originalIndex) : undefined}
                     onDelete={onRequestDelete ? () => onRequestDelete(link, originalIndex) : (onDeleteLink ? () => onDeleteLink(link, originalIndex) : undefined)}
                     onToggle={onToggleLink ? () => onToggleLink(link, originalIndex) : undefined}
@@ -481,84 +471,6 @@ export function ManageLinksSection({
               })}
             </div>
           </SortableContext>
-
-          {showControls && (
-            <div
-              className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-center sm:gap-6"
-              style={{ marginTop: 8 }}
-            >
-              {/* Summary */}
-              <span style={{ fontSize: 13.5, color: "#6b75a3" }}>
-                Showing{" "}
-                <b style={{ color: "#0b1020", fontWeight: 600 }}>{visibleLinks}</b>
-                {" "}of{" "}
-                <b style={{ color: "#0b1020", fontWeight: 600 }}>{filteredLinks.length}</b>
-                {" "}links
-              </span>
-          
-              {/* right arrow */}
-              <div
-                className="inline-flex items-center"
-                style={{
-                  background: "white",
-                  border: "1px solid #eef0f7",
-                  borderRadius: 99,
-                  padding: "4px 6px",
-                  gap: 4,
-                  boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
-                }}
-              >
-                {/* Previous */}
-                <button
-                  type="button"
-                  aria-label="Show fewer links"
-                  disabled={visibleLinks <= PAGE_SIZE}
-                  onClick={() => setVisibleLinks(c => Math.max(PAGE_SIZE, c - PAGE_SIZE))}
-                  className="flex items-center justify-center cursor-pointer transition-all duration-150"
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 99,
-                    border: 0,
-                    background: "transparent",
-                    color: visibleLinks <= PAGE_SIZE ? "#c5c9e8" : "#3a4474",
-                    cursor: visibleLinks <= PAGE_SIZE ? "not-allowed" : "pointer",
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/>
-                  </svg>
-                </button>
-                
-                {/* Page indicator */}
-                <span style={{ fontSize: 13, color: "#0b1020", padding: "0 8px", fontFamily: "inherit" }}>
-                  <b style={{ fontWeight: 600 }}>{Math.ceil(visibleLinks / PAGE_SIZE)}</b>
-                  <span style={{ color: "#6b75a3", margin: "0 6px" }}>of</span>
-                  <b style={{ fontWeight: 600 }}>{Math.ceil(filteredLinks.length / PAGE_SIZE)}</b>
-                </span>
-                
-                {/* Next */}
-                <button
-                  type="button"
-                  aria-label={`Show ${nextBatch} more links`}
-                  onClick={() => setVisibleLinks(c => Math.min(c + PAGE_SIZE, filteredLinks.length))}
-                  className="flex items-center justify-center cursor-pointer transition-all duration-150"
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 99,
-                    border: 0,
-                    background: "transparent",
-                    color: "#3a4474",
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
 
           <DragOverlay dropAnimation={null}>
             {activeLink ? (

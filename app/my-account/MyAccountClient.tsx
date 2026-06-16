@@ -1,10 +1,5 @@
 "use client";
 
-// My account settings page. Styled with Tailwind utilities + ink/indigo/paper
-// theme tokens. Personal info, email change (code-verified), password, and
-// account deletion are wired to server actions in app/actions/account.ts.
-// The Security/2FA section remains a demo (UI-only, not persisted).
-
 import { useEffect, useMemo, useState } from "react";
 
 import type { ReactNode } from "react";
@@ -13,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import CollapsibleSidebar from "../components/CollapsibleSidebar";
+import { DashboardPageTransition } from "../components/DashboardPageTransition";
 import { CommandPalette } from "../components/CommandPalette";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { useSidebarStore } from "@/store/sidebarStore";
@@ -28,6 +24,8 @@ import {
   armOAuthDeletion,
   deleteAccount,
 } from "@/app/actions/account";
+import { TwoFactorSetupModal } from "./components/TwoFactorSetupModal";
+import { TwoFactorDisableModal } from "./components/TwoFactorDisableModal";
 
 type AccountInitial = {
   name: string;
@@ -112,7 +110,7 @@ function EditIconBtn({ editing, onClick }: { editing: boolean; onClick: () => vo
       type="button"
       onClick={onClick}
       aria-label={editing ? "Close" : "Edit"}
-      className="w-8 h-8 rounded-lg border border-ink-100 text-ink-400 grid place-items-center transition-colors hover:bg-paper hover:border-ink-200 hover:text-ink-700"
+      className="w-9 h-9 shrink-0 self-center rounded-full border border-ink-100 text-ink-400 grid place-items-center transition-colors hover:bg-paper hover:border-ink-200 hover:text-ink-700"
     >
       {editing ? (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -240,9 +238,7 @@ function PassField({
   );
 }
 
-/* ───────────────── Security row (2FA factor, demo state) ───────────────── */
-type SecFactor = { title: string; recommended?: boolean; offDesc: string; onDesc: string; icon: ReactNode };
-
+/* ───────────────── Badge ───────────────── */
 const BADGE_BASE = "inline-flex items-center gap-1 rounded-full px-[7px] py-0.5 text-[10px] font-semibold tracking-[0.04em]";
 const BADGE_VARIANTS: Record<"on" | "off" | "recommended", string> = {
   on: "bg-success-50 text-green-600",
@@ -261,66 +257,34 @@ function Badge({ kind, children }: { kind: "on" | "off" | "recommended"; childre
   );
 }
 
-function SecRow({ factor }: { factor: SecFactor }) {
-  // Demo-only: enrollment state is local, not persisted.
-  const [enabled, setEnabled] = useState(false);
-  const toggle = () => {
-    setEnabled((prev) => {
-      const next = !prev;
-      toast.success(next ? "Second factor enabled" : "Second factor removed");
-      return next;
-    });
-  };
+/* ───────────────── TwoFactorRow ───────────────── */
+function TwoFactorRow({ enabled, onSetup, onManage }: { enabled: boolean; onSetup: () => void; onManage: () => void }) {
   return (
     <div className="mb-2.5 flex items-center gap-4 rounded-[12px] border border-ink-100 bg-paper p-4 last:mb-0">
       <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] border border-ink-100 bg-white text-ink-500 [&_svg]:size-[18px]">
-        {factor.icon}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="5" y="2" width="14" height="20" rx="2" />
+          <path strokeLinecap="round" d="M11 18h2" />
+        </svg>
       </div>
       <div className="min-w-0 flex-1">
         <div className="mb-0.5 flex flex-wrap items-center gap-2 text-[14px] font-medium text-ink-900">
-          {factor.title}
-          {factor.recommended && <Badge kind="recommended">Recommended</Badge>}
+          Authenticator app
+          <Badge kind="recommended">Recommended</Badge>
           <Badge kind={enabled ? "on" : "off"}>{enabled ? "Active" : "Not set up"}</Badge>
         </div>
-        <div className="text-xs leading-[1.45] text-ink-400">{enabled ? factor.onDesc : factor.offDesc}</div>
+        <div className="text-xs leading-[1.45] text-ink-400">
+          {enabled
+            ? "Connected to your authenticator app. Use a recovery code if you lose access."
+            : "Use Google Authenticator, 1Password, or Authy to generate one-time codes."}
+        </div>
       </div>
-      <Button variant={enabled ? "secondary" : "ghost"} onClick={toggle}>
+      <Button variant={enabled ? "secondary" : "ghost"} onClick={enabled ? onManage : onSetup}>
         {enabled ? "Manage" : "Set up"}
       </Button>
     </div>
   );
 }
-
-const SECURITY_FACTORS: SecFactor[] = [
-  {
-    title: "Authenticator app",
-    recommended: true,
-    offDesc: "Use Google Authenticator, 1Password, or Authy to generate one-time codes.",
-    onDesc:
-      "Connected to your authenticator app. Recovery codes are stored — view them in your downloaded backup.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="5" y="2" width="14" height="20" rx="2" />
-        <path strokeLinecap="round" d="M11 18h2" />
-      </svg>
-    ),
-  },
-  {
-    title: "SMS",
-    offDesc:
-      "Receive codes by text message. Less secure than an authenticator app, but still better than no second factor.",
-    onDesc: "Codes will be sent to ••• ••• 4729. Update your number from Profile.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-        />
-      </svg>
-    ),
-  },
-];
 
 /* ───────────────── Delete account dialog ───────────────── */
 function DeleteAccountDialog({
@@ -481,16 +445,40 @@ function DeleteAccountDialog({
 }
 
 /* ───────────────────────────── Page ───────────────────────────── */
-export default function MyAccountClient({ initial }: { initial: AccountInitial }) {
+export default function MyAccountClient({
+  initial,
+  twoFactorEnabled: initialTwoFactorEnabled,
+}: {
+  initial: AccountInitial;
+  twoFactorEnabled: boolean;
+}) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
-  const { update } = useSession();
+  const { update, data: session } = useSession();
   const router = useRouter();
   const [showPalette, setShowPalette] = useState(false);
+
+  const sessionUser = session?.user;
+  const displayName =
+    sessionUser?.name?.trim() ||
+    sessionUser?.email?.split("@")[0] ||
+    "Account";
+  const displayEmail = sessionUser?.email ?? "";
+
+  const handleSignOut = () => {
+    localStorage.removeItem("linkhub-branding-v2");
+    localStorage.removeItem("linkhub-branding-v1");
+    void signOut({ callbackUrl: "/login" });
+  };
 
   /* ── Per-section editing state ── */
   const [editingProfile, setEditingProfile] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
   const [editingSecurity, setEditingSecurity] = useState(false);
+
+  /* ── 2FA state ── */
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(initialTwoFactorEnabled);
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const [showDisableModal, setShowDisableModal] = useState(false);
 
   /* ── Name ── */
   const [name, setName] = useState(initial.name);
@@ -712,6 +700,7 @@ export default function MyAccountClient({ initial }: { initial: AccountInitial }
           } ml-0`}
         >
           <div className="px-4 pt-[22px] pb-24 lg:pb-14 sm:px-6 lg:px-8">
+            <DashboardPageTransition>
             <DashboardTopBar searchPlaceholder="Search settings…" onSearchClick={() => setShowPalette(true)} />
 
             <div className="max-w-[920px] tracking-[-0.01em] text-ink-900">
@@ -941,21 +930,121 @@ export default function MyAccountClient({ initial }: { initial: AccountInitial }
                 />
                 {editingSecurity ? (
                   <div className="px-6 pt-4 pb-6">
-                    {SECURITY_FACTORS.map((factor) => (
-                      <SecRow key={factor.title} factor={factor} />
-                    ))}
+                    <TwoFactorRow
+                      enabled={twoFactorEnabled}
+                      onSetup={() => setShowSetupModal(true)}
+                      onManage={() => setShowDisableModal(true)}
+                    />
                   </div>
                 ) : (
                   <div className="px-6 pb-5 pt-1">
-                    <div className="text-[11px] font-medium uppercase tracking-[0.07em] text-ink-400 mb-0.5">
-                      Two-factor authentication
+                    <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.07em] mb-0.5">Two-factor authentication</div>
+                    <div className="text-[13.5px] text-ink-400">
+                      {twoFactorEnabled ? "Authenticator app active" : "No second factors active"}
                     </div>
-                    <div className="text-[13.5px] text-ink-400">No second factors active</div>
                   </div>
                 )}
               </Section>
 
-              {/* ── Danger zone ── */}
+              {/* ── Mobile-only: sidebar actions that have no home on small screens ── */}
+              <div className="lg:hidden mt-6 border-t border-ink-100 pt-6 flex flex-col gap-2">
+                {/* User info */}
+                <div className="flex items-center gap-3 px-1 mb-2">
+                  <div
+                    className="flex items-center justify-center text-white font-semibold shrink-0"
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
+                      fontSize: 14,
+                    }}
+                  >
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ink-900 truncate">{displayName}</p>
+                    <p className="text-[11.5px] text-ink-400 truncate">{displayEmail}</p>
+                  </div>
+                </div>
+
+                {/* Help & support */}
+                <Link
+                  href="/help"
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-ink-100 bg-white"
+                  style={{ textDecoration: "none" }}
+                >
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-ink-100 bg-paper text-ink-500">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                      <circle cx="12" cy="12" r="10" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
+                    </svg>
+                  </div>
+                  <span className="flex-1 text-[14px] font-medium text-ink-900">Help &amp; support</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#9ba4c7" strokeWidth="2" width="16" height="16">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+                  </svg>
+                </Link>
+
+                {/* Upgrade to Pro */}
+                <Link
+                  href="/billing"
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white"
+                  style={{
+                    textDecoration: "none",
+                    background: "linear-gradient(135deg, #3b46e0 0%, #5e3eb5 100%)",
+                  }}
+                >
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/15 text-white">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold leading-tight">Upgrade to Pro</p>
+                    <p className="text-[11.5px] opacity-75 leading-tight mt-0.5">Unlock analytics &amp; more</p>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" width="16" height="16">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+                  </svg>
+                </Link>
+
+                {/* Log out — neutral, not destructive */}
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-ink-100 bg-white text-ink-700"
+                >
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-ink-100 bg-paper text-ink-500">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </div>
+                  <span className="flex-1 text-left text-[14px] font-medium">Log out</span>
+                </button>
+              </div>
+
+              {showSetupModal && (
+                <TwoFactorSetupModal
+                  onClose={() => setShowSetupModal(false)}
+                  onEnabled={() => {
+                    setTwoFactorEnabled(true);
+                    toast.success("Two-factor authentication enabled");
+                  }}
+                />
+              )}
+
+              {showDisableModal && (
+                <TwoFactorDisableModal
+                  onClose={() => setShowDisableModal(false)}
+                  onDisabled={() => {
+                    setTwoFactorEnabled(false);
+                    toast.success("Two-factor authentication disabled");
+                  }}
+                />
+              )}
+
+              {/* ── Danger zone — last, most deliberate action ── */}
               <Section danger>
                 <SectionHead danger title="Danger zone" desc="Permanent actions. Once done, they cannot be undone." />
                 <div className="px-6 pt-5 pb-6">
@@ -973,6 +1062,7 @@ export default function MyAccountClient({ initial }: { initial: AccountInitial }
                 </div>
               </Section>
             </div>
+            </DashboardPageTransition>
           </div>
         </main>
       </CollapsibleSidebar>

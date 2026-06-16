@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const DASHBOARD_PREFIXES = [
@@ -23,12 +23,18 @@ function setThemeMode(mode: ThemeMode) {
 
 export function ThemeToggle() {
   const pathname = usePathname();
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    if (typeof document === "undefined") return "light";
-    return document.documentElement.classList.contains("dark") ? "dark" : "light";
-  });
+  const [mode, setMode] = useState<ThemeMode>("light");
+  const isMounted = useRef(false);
 
   useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      // Sync from DOM (already set by the flash-prevention inline script) without
+      // re-applying setThemeMode, which would briefly flash the wrong theme.
+      const dom: ThemeMode = document.documentElement.classList.contains("dark") ? "dark" : "light";
+      setMode(dom);
+      return;
+    }
     try {
       setThemeMode(mode);
     } catch {}
