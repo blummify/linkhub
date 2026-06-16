@@ -18,6 +18,7 @@ import { BrandingHydrator } from "./components/BrandingHydrator";
 import { MaterialSymbols } from "./components/MaterialSymbols";
 import { GoogleOneTap } from "./components/auth/GoogleOneTap";
 import { auth } from "@/auth";
+import NextTopLoader from "nextjs-toploader";
 
 const caveat = Caveat({
   variable: "--font-caveat",
@@ -150,6 +151,7 @@ export default async function RootLayout({
         >
           Skip to main content
         </a>
+        <NextTopLoader color="#3b46e0" height={3} showSpinner={false} />
         <MaterialSymbols />
         <BrandingHydrator />
         <AuthSessionProvider session={session}>
