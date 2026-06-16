@@ -80,7 +80,9 @@ export async function enable2FA(
   }
 
   const plaintextCodes = Array.from({ length: 8 }, generateBackupCode);
-  const codeHashes = await Promise.all(plaintextCodes.map((c) => bcrypt.hash(c, 10)));
+  // Hash the normalized form (no hyphen) since verification normalizes user input
+  // before comparing; codes are still displayed to the user with the hyphen.
+  const codeHashes = await Promise.all(plaintextCodes.map((c) => bcrypt.hash(normalizeCode(c), 10)));
   const encryptedSecret = encryptTotpSecret(secret);
 
   await db.$transaction([

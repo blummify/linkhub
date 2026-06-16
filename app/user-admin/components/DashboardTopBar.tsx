@@ -65,13 +65,20 @@ const NOTIF_ICON_STYLES: Record<string, { bg: string; color: string }> = {
 export function DashboardTopBar({
   onSearchClick,
   searchPlaceholder = "Search links, pages, analytics…",
+  searchValue,
+  onSearchChange,
   sticky = true,
 }: {
   onSearchClick?: () => void;
   searchPlaceholder?: string;
+  /** Controlled value for the search input. Provide with onSearchChange to filter on-page. */
+  searchValue?: string;
+  /** When provided (and no onSearchClick), the search input becomes an editable, controlled field. */
+  onSearchChange?: (value: string) => void;
   /** Pin the bar to the top of the scroll area (default on dashboard pages) */
   sticky?: boolean;
 }) {
+  const controlledSearch = !onSearchClick && !!onSearchChange;
   const toggleSidebar = useSidebarStore((s) => s.toggle);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { modifier } = useShortKey(() => {
@@ -154,6 +161,8 @@ export function DashboardTopBar({
             type="text"
             readOnly={!!onSearchClick}
             placeholder={searchPlaceholder}
+            value={controlledSearch ? searchValue ?? "" : undefined}
+            onChange={controlledSearch ? (e) => onSearchChange?.(e.target.value) : undefined}
             className="w-full h-full pl-[42px] pr-4 lg:pr-[90px] text-[14px] text-[#0b1020] placeholder:text-[#6b75a3] outline-none transition-all"
             style={{
               borderRadius: 12,
