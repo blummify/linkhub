@@ -196,6 +196,13 @@ describe("enable2FA", () => {
     expect(result.backupCodes).toHaveLength(8);
     result.backupCodes.forEach((code) => expect(code).toMatch(BACKUP_CODE_RE));
 
+    // Hashes must be derived from the normalized (no-hyphen) code, since
+    // verification normalizes user input before bcrypt.compare.
+    const hashCalls = (bcrypt.hash as ReturnType<typeof vi.fn>).mock.calls;
+    result.backupCodes.forEach((code, i) => {
+      expect(hashCalls[i][0]).toBe(code.replace("-", ""));
+    });
+
     expect(db.user.update).toHaveBeenCalledWith({
       where: { id: "user_123" },
       data: { twoFactorSecret: "encrypted-secret", twoFactorEnabled: true },
