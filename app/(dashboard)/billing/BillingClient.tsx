@@ -4,8 +4,7 @@ import { useState, useCallback, useEffect, useId } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import { DashboardPageTransition } from "../components/DashboardPageTransition";
+import { DashboardPageTransition } from "../../components/DashboardPageTransition";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { BRANDING_FONT_SERIF } from "@/app/constants/brandingFonts";
 import { PlanCard } from "./components/PlanCard";
@@ -240,9 +239,8 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
 
   /* ── Render ── */
   return (
-    <div className="bg-[#f7f8fc] min-h-screen antialiased flex overflow-hidden">
-      <CollapsibleSidebar>
-        <main
+    <>
+      <main
           className={`flex-1 transition-all duration-500 ease-in-out ${
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
@@ -339,8 +337,6 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
             </div>
           </div>
         </main>
-      </CollapsibleSidebar>
-
       {/* ── Change plan modal ── */}
       {modal === "changePlan" && (
         <BillingModal
@@ -471,7 +467,7 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
           </div>
         </BillingModal>
       )}
-    </div>
+    </>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { HELP_FAQ_GROUPS, type FaqItem } from "../../constants/helpLinks";
+import { HELP_FAQ_GROUPS, type FaqItem } from "../../../constants/helpLinks";
 import { HELP_COLORS, CARD_STYLE, highlight, matchesQuery } from "./helpTheme";
 import { SectionLabel } from "./SectionLabel";
 import { HelpIcon, ChevronDownIcon } from "./helpIcons";

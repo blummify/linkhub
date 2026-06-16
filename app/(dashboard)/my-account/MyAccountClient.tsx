@@ -7,9 +7,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
-import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import { DashboardPageTransition } from "../components/DashboardPageTransition";
-import { CommandPalette } from "../components/CommandPalette";
+import { DashboardPageTransition } from "../../components/DashboardPageTransition";
+import { CommandPalette } from "../../components/CommandPalette";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { scorePassword, passwordsMatch, PASSWORD_STRENGTH_LABELS } from "@/lib/validation/auth.schema";
@@ -716,9 +715,8 @@ export default function MyAccountClient({
   };
 
   return (
-    <div className="flex min-h-screen overflow-hidden bg-paper antialiased">
-      <CollapsibleSidebar>
-        <main
+    <>
+      <main
           className={`h-screen flex-1 overflow-y-auto bg-paper transition-all duration-500 ease-in-out ${
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           } ml-0`}
@@ -1090,8 +1088,6 @@ export default function MyAccountClient({
             </DashboardPageTransition>
           </div>
         </main>
-      </CollapsibleSidebar>
-
       <CommandPalette open={showPalette} onClose={() => setShowPalette(false)} searchPlaceholder="Search settings…" />
 
       <DeleteAccountDialog
@@ -1108,6 +1104,6 @@ export default function MyAccountClient({
         }}
         onConfirm={handleDeleteConfirm}
       />
-    </div>
+    </>
   );
 }

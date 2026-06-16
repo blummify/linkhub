@@ -1,4 +1,4 @@
-import type { ManagedLink } from "@/app/user-admin/components/types";
+import type { ManagedLink } from "@/app/(dashboard)/user-admin/components/types";
 import { LinkStatus} from "@/app/constants/linkStatus";
 
 const DEMO_ID_PREFIX = "__demo__";

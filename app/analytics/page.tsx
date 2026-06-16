@@ -1,4 +1,4 @@
-import UserAnalyticsClient from "../user-analytics/UserAnalyticsClient";
+import UserAnalyticsClient from "../(dashboard)/user-analytics/UserAnalyticsClient";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import FocusTrap from "focus-trap-react";
 import { useRouter } from "next/navigation";
-import type { ManagedLink } from "../user-admin/components/types";
+import type { ManagedLink } from "../(dashboard)/user-admin/components/types";
 
 const NAV_ITEMS = [
   { label: "Links",     href: "/user-dashboard", icon: "links"      },

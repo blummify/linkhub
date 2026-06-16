@@ -1,23 +1,21 @@
 "use client";
 
-import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import AppHeader from "../components/AppHeader";
-import { ThemeToggle } from "../ThemeToggle";
+import AppHeader from "../../components/AppHeader";
+import { ThemeToggle } from "../../ThemeToggle";
 import { useSidebarStore } from "@/store/sidebarStore";
-import { MobilePreview } from "../components/MobilePreview";
-import { LinksPreviewPanel } from "../components/LinksPreviewPanel";
-import { LinksStyleTwoColumnLayout } from "../components/LinksStyleTwoColumnLayout";
-import { EDITOR_PREVIEW_COLUMN_CLASS } from "../constants/editorMobilePreview";
-import { useEditorMobilePreview } from "../hooks/useEditorMobilePreview";
+import { MobilePreview } from "../../components/MobilePreview";
+import { LinksPreviewPanel } from "../../components/LinksPreviewPanel";
+import { LinksStyleTwoColumnLayout } from "../../components/LinksStyleTwoColumnLayout";
+import { EDITOR_PREVIEW_COLUMN_CLASS } from "../../constants/editorMobilePreview";
+import { useEditorMobilePreview } from "../../hooks/useEditorMobilePreview";
 
 export default function LinksClient() {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const mobilePreviewProps = useEditorMobilePreview({ linkDensity: "relaxed" });
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen antialiased flex overflow-hidden">
-      <CollapsibleSidebar isAdmin={false}>
-        <AppHeader isAdmin={false} />
+    <>
+      <AppHeader isAdmin={false} />
         <main
           id="mainContent"
           className={`flex-1 h-full lg:pt-16 transition-all duration-500 ease-in-out ${
@@ -169,8 +167,7 @@ export default function LinksClient() {
             }
           />
         </main>
-      </CollapsibleSidebar>
       <ThemeToggle />
-    </div>
+    </>
   );
 }

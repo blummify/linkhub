@@ -1,4 +1,4 @@
-import UserAdminClient from "../../user-admin/UserAdminClient";
+import UserAdminClient from "../../(dashboard)/user-admin/UserAdminClient";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

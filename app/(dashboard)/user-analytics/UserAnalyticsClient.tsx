@@ -1,11 +1,10 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
-import CollapsibleSidebar from "../components/CollapsibleSidebar";
-import { DashboardPageTransition } from "../components/DashboardPageTransition";
+import { DashboardPageTransition } from "../../components/DashboardPageTransition";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
-import { CommandPalette } from "../components/CommandPalette";
+import { CommandPalette } from "../../components/CommandPalette";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 function generateSeries(days: number, base: number, variance: number): number[] {
@@ -348,9 +347,7 @@ export default function UserAnalyticsClient() {
 
   return (
     <>
-    <div className="bg-[#f7f8fc] text-on-surface min-h-screen antialiased font-sans flex overflow-hidden">
-      <CollapsibleSidebar>
-        <main
+      <main
           className={`flex-1 transition-all duration-500 ease-in-out ${
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
@@ -736,9 +733,6 @@ export default function UserAnalyticsClient() {
             </DashboardPageTransition>
           </div>
         </main>
-      </CollapsibleSidebar>
-    </div>
-
     <CommandPalette
       open={showPalette}
       onClose={() => setShowPalette(false)}

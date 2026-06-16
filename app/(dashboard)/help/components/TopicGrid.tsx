@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HELP_TOPICS } from "../../constants/helpLinks";
+import { HELP_TOPICS } from "../../../constants/helpLinks";
 import { HELP_COLORS, CARD_STYLE } from "./helpTheme";
 import { HelpIcon } from "./helpIcons";
 

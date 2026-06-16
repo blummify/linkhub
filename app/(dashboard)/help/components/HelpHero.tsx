@@ -1,5 +1,5 @@
-import { BRANDING_FONT_SERIF } from "../../constants/brandingFonts";
-import { HELP_POPULAR_TERMS } from "../../constants/helpLinks";
+import { BRANDING_FONT_SERIF } from "../../../constants/brandingFonts";
+import { HELP_POPULAR_TERMS } from "../../../constants/helpLinks";
 import { HELP_COLORS } from "./helpTheme";
 
 /** Hero heading + popular-search chips. Chips push a term into the shared search. */

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { DeleteConfirmDialog } from "../DeleteConfirmDialog";
-import type { ManagedLink } from "@/app/user-admin/components/types";
+import type { ManagedLink } from "@/app/(dashboard)/user-admin/components/types";
 
 const link: ManagedLink = {
   id: "1",

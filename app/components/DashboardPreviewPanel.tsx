@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import type { ManagedLink } from "../user-admin/components/types";
+import type { ManagedLink } from "../(dashboard)/user-admin/components/types";
 import { previewLinkBorderRadiusPx } from "@/app/constants/brandingButtonShapes";
 import { APP_DOMAIN } from "@/lib/appConfig";
 import { useLinksStore } from "@/store/linksStore";

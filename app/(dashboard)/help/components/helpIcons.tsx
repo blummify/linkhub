@@ -1,4 +1,4 @@
-import type { HelpIconKey } from "../../constants/helpLinks";
+import type { HelpIconKey } from "../../../constants/helpLinks";
 
 type IconProps = { size?: number; className?: string; style?: React.CSSProperties };
 

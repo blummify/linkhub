@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import FocusTrap from "focus-trap-react";
-import type { ManagedLink } from "../user-admin/components/types";
+import type { ManagedLink } from "../(dashboard)/user-admin/components/types";
 import { LinkStatus } from "@/app/constants/linkStatus";
 
 interface DeleteConfirmDialogProps {
