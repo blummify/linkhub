@@ -286,6 +286,30 @@ function TwoFactorRow({ enabled, onSetup, onManage }: { enabled: boolean; onSetu
   );
 }
 
+/* ───────────────── SmsRow ───────────────── */
+// Design parity with the mockup's Security section — SMS 2FA is out of scope for this ticket.
+function SmsRow() {
+  return (
+    <div className="mb-2.5 flex items-center gap-4 rounded-[12px] border border-ink-100 bg-paper p-4 last:mb-0">
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] border border-ink-100 bg-white text-ink-500 [&_svg]:size-[18px]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+        </svg>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-0.5 flex flex-wrap items-center gap-2 text-[14px] font-medium text-ink-900">
+          SMS
+          <Badge kind="off">Not set up</Badge>
+        </div>
+        <div className="text-xs leading-[1.45] text-ink-400">
+          Receive codes by text message. Less secure than an authenticator app, but still better than no second factor.
+        </div>
+      </div>
+      <Button variant="ghost">Set up</Button>
+    </div>
+  );
+}
+
 /* ───────────────── Delete account dialog ───────────────── */
 function DeleteAccountDialog({
   open,
@@ -935,6 +959,7 @@ export default function MyAccountClient({
                       onSetup={() => setShowSetupModal(true)}
                       onManage={() => setShowDisableModal(true)}
                     />
+                    <SmsRow />
                   </div>
                 ) : (
                   <div className="px-6 pb-5 pt-1">
