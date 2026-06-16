@@ -329,7 +329,9 @@ function DeleteAccountDialog({
   onConfirm: (typedEmail: string, password: string) => void;
 }) {
   // Fields reset on open via a `key` remount from the parent — no effect needed.
-  const [typedEmail, setTypedEmail] = useState("");
+  // After an OAuth reauth round-trip the dialog reopens with reauthReady=true; prefill
+  // the email so the user only has to click "Delete account".
+  const [typedEmail, setTypedEmail] = useState(reauthReady ? email : "");
   const [password, setPassword] = useState("");
 
   if (!open) return null;
@@ -621,6 +623,13 @@ export default function MyAccountClient({
     return { cls: "text-danger-400", text: "Passwords don't match yet." };
   }, [newPw, confirmPw]);
 
+  const newPwHint = useMemo(() => {
+    if (initial.hasPassword && newPw && currentPw && newPw === currentPw) {
+      return { cls: "text-danger-400", text: "New password must be different from your current password." };
+    }
+    return null;
+  }, [initial.hasPassword, newPw, currentPw]);
+
   const baseValid = newPw.length >= 8 && score >= 2 && passwordsMatch(newPw, confirmPw);
   const pwValid = initial.hasPassword
     ? currentPw.length >= 1 && baseValid && newPw !== currentPw
@@ -908,6 +917,9 @@ export default function MyAccountClient({
                           autoComplete="new-password"
                         >
                           <StrengthMeter score={score} />
+                          {newPwHint && (
+                            <div className={`mt-0.5 text-[11.5px] ${newPwHint.cls}`}>{newPwHint.text}</div>
+                          )}
                         </PassField>
                         <PassField
                           id="pw-confirm"
