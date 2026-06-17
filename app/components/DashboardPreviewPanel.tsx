@@ -1365,7 +1365,9 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
   const [shareConfirm, setShareConfirm] = useState<ShareNetwork | null>(null);
   const shareRef = useRef<HTMLDivElement>(null);
 
-  const fullUrl = `https://${publicUrl}`;
+  // Local dev serves plain HTTP (no TLS listener on localhost); production always serves HTTPS.
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const fullUrl = `${protocol}://${publicUrl}`;
 
   // Close share popover on outside click
   useEffect(() => {
