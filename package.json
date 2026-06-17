@@ -12,6 +12,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "check:component-tests": "node scripts/check-component-tests.mjs",
+    "seed:super-admin": "tsx --env-file=.env scripts/seed-super-admin.ts",
     "validate": "npm run lint && npm run typecheck && npm run test:run && npm run check:component-tests",
     "prepare": "husky"
   },
@@ -68,6 +69,7 @@
     "jsdom": "^29.1.0",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "typescript": "^5",
     "vitest": "^4.1.5"
   },
