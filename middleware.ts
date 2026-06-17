@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import authConfig from "./auth.config";
+import { isPublicHandleRoute } from "./app/constants/reservedHandles";
 
 const { auth } = NextAuth(authConfig);
 
@@ -35,7 +36,7 @@ export default auth((req) => {
   const isApiAuthRoute = pathname.startsWith("/api/auth");
   // Paystack webhook calls this without a user session; it authenticates via HMAC signature
   const isWebhookRoute = pathname.startsWith("/api/webhooks");
-  const isPublicRoute = PUBLIC_EXACT.has(pathname);
+  const isPublicRoute = PUBLIC_EXACT.has(pathname) || isPublicHandleRoute(pathname);
   const isAuthRoute = pathname === "/login" || pathname === "/signup";
 
   if (isApiAuthRoute || isWebhookRoute) return undefined;

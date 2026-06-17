@@ -8,6 +8,7 @@ import { deleteFromR2 } from "@/lib/r2";
 import { postly } from "@/lib/postly";
 import { VALID_FONT_VALUES } from "@/app/constants/editorFonts";
 import { BACKGROUND_GRADIENTS } from "@/app/constants/editorBackgroundGradients";
+import { invalidatePublicProfileCache } from "@/lib/publicProfile";
 
 const HEX_RE         = /^#[0-9a-fA-F]{6}$/;
 const SOLID_COLOR_RE = /^solid:#[0-9a-fA-F]{6}$/;
@@ -110,7 +111,7 @@ export async function updateBranding(data: {
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   try {
-    await db.profile.update({
+    const updated = await db.profile.update({
       where: { userId: session.user.id },
       data: {
         ...(data.displayName !== undefined && { displayName: data.displayName }),
@@ -123,6 +124,7 @@ export async function updateBranding(data: {
       },
     });
     try { await redis.del(`profile:${session.user.id}`); } catch {}
+    await invalidatePublicProfileCache(updated.handle);
     return { success: true };
   } catch (err) {
     console.error("[updateBranding] failed:", err);
@@ -143,7 +145,7 @@ export async function updateAvatarUrl(
       select: { avatarKey: true },
     });
 
-    await db.profile.update({
+    const updated = await db.profile.update({
       where: { userId: session.user.id },
       data: { avatarUrl, avatarKey },
     });
@@ -158,6 +160,7 @@ export async function updateAvatarUrl(
     }
 
     await redis.del(`profile:${session.user.id}`);
+    await invalidatePublicProfileCache(updated.handle);
     return { success: true };
   } catch {
     return { error: "Failed to save avatar. Please try again." };
@@ -174,7 +177,7 @@ export async function removeAvatar(): Promise<{ success: true } | { error: strin
       select: { avatarKey: true },
     });
 
-    await db.profile.update({
+    const updated = await db.profile.update({
       where: { userId: session.user.id },
       data: { avatarUrl: null, avatarKey: null },
     });
@@ -189,6 +192,7 @@ export async function removeAvatar(): Promise<{ success: true } | { error: strin
     }
 
     await redis.del(`profile:${session.user.id}`);
+    await invalidatePublicProfileCache(updated.handle);
     return { success: true };
   } catch {
     return { error: "Failed to remove avatar. Please try again." };
@@ -263,7 +267,7 @@ export async function saveEditorTheme(data: {
       },
     });
 
-    await db.profile.update({
+    const updatedProfile = await db.profile.update({
       where: { userId: session.user.id },
       data: {
         themeId:            data.themeId,
@@ -302,6 +306,7 @@ export async function saveEditorTheme(data: {
     }
 
     await redis.del(`profile:${session.user.id}`);
+    await invalidatePublicProfileCache(updatedProfile.handle);
     return { success: true };
   } catch (err) {
     console.error("[saveEditorTheme] failed:", err);
