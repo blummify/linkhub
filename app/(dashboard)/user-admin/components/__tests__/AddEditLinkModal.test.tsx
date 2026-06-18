@@ -73,6 +73,51 @@ describe("AddEditLinkModal", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it("normalizes a bare domain to https:// on save", async () => {
+    const onSave = vi.fn();
+    render(<AddEditLinkModal open onClose={noop} onSave={onSave} />);
+    fireEvent.change(screen.getByPlaceholderText("e.g. Latest Portfolio Drop"), {
+      target: { value: "Search" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("https://example.com"), {
+      target: { value: "google.com" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /add link/i }));
+    });
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ url: "https://google.com" })
+    );
+  });
+
+  it("completes a dot-less label with the most common TLD on save", async () => {
+    const onSave = vi.fn();
+    render(<AddEditLinkModal open onClose={noop} onSave={onSave} />);
+    fireEvent.change(screen.getByPlaceholderText("e.g. Latest Portfolio Drop"), {
+      target: { value: "Search" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("https://example.com"), {
+      target: { value: "google" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /add link/i }));
+    });
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ url: "https://google.com" })
+    );
+  });
+
+  it("keeps the save button disabled for multi-word input", () => {
+    render(<AddEditLinkModal open onClose={noop} onSave={noop} />);
+    fireEvent.change(screen.getByPlaceholderText("e.g. Latest Portfolio Drop"), {
+      target: { value: "My Blog" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("https://example.com"), {
+      target: { value: "not a url" },
+    });
+    expect(screen.getByRole("button", { name: /add link/i })).toBeDisabled();
+  });
+
   it("pre-fills fields from initialLink in edit mode", () => {
     const link: ManagedLink = { title: "Existing", url: "https://existing.com", clicks: "5" };
     render(<AddEditLinkModal open onClose={noop} onSave={noop} initialLink={link} />);
