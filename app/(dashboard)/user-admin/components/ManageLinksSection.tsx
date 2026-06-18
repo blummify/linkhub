@@ -28,6 +28,9 @@ import { AnalyticsCards } from "./AnalyticsCards";
 import { DashboardTopBar } from "./DashboardTopBar";
 
 const PAGE_SIZE = 8;
+const DESKTOP_PAGE_SIZE = 8;
+const MOBILE_PAGE_SIZE = 5;
+const MOBILE_BREAKPOINT = 640;
 
 function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
   return (
@@ -301,15 +304,37 @@ export function ManageLinksSection({
   const openPalette = useUIStore((s) => s.openPalette);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [visibleLinks, setVisibleLinks] = useState(PAGE_SIZE);
+  
+  // Pagination state — page-based, not visible-count-based
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showAll, setShowAll] = useState(false);
   const prevLinksLengthRef = useRef(links.length);
 
+  // Responsive page size — desktop shows 8, mobile shows 5
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window === "undefined") return DESKTOP_PAGE_SIZE;
+    return window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px)`).matches
+      ? DESKTOP_PAGE_SIZE
+      : MOBILE_PAGE_SIZE;
+  });
+
+  // Listen for viewport crossing the breakpoint
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px)`);
+    const handler = (e: MediaQueryListEvent) => {
+      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : MOBILE_PAGE_SIZE);
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  // New link added — jump to page 1 so user sees it
   useEffect(() => {
     const prev = prevLinksLengthRef.current;
     prevLinksLengthRef.current = links.length;
-
     if (links.length === prev + 1) {
-      setVisibleLinks(c => c + 1);
+      setCurrentPage(1);
+      setShowAll(false);
     }
   }, [links.length]);
 
@@ -327,10 +352,14 @@ export function ManageLinksSection({
     return true;
   }), [links, activeTab]);
 
-  const visibleLinkSlides = filteredLinks.slice(0, visibleLinks);
-  const remainingLinks = filteredLinks.length - visibleLinks;
-  const nextBatch = Math.min(PAGE_SIZE, remainingLinks);
-  const showControls = remainingLinks > 0;
+  const totalPages = Math.max(1, Math.ceil(filteredLinks.length / pageSize));
+  // Clamp page in case it overflows after delete/resize/filter change
+  const safePage = Math.min(currentPage, totalPages);
+  const startIdx = (safePage - 1) * pageSize;
+  const visibleLinkSlides = showAll
+    ? filteredLinks
+    : filteredLinks.slice(startIdx, startIdx + pageSize);
+  const showControls = !showAll && filteredLinks.length > pageSize;
 
   const activeLink = activeId
     ? filteredLinks.find((l) => getLinkId(l) === activeId) ?? null
@@ -424,7 +453,7 @@ export function ManageLinksSection({
             <button
               key={key}
               type="button"
-              onClick={() => { setActiveTab(key); setVisibleLinks(PAGE_SIZE); }}
+              onClick={() => { setActiveTab(key); setCurrentPage(1); setShowAll(false); }}
               className="shrink-0 cursor-pointer transition-all duration-150"
               style={{
                 borderRadius: 99,
@@ -500,19 +529,21 @@ export function ManageLinksSection({
             >
               {/* Summary — left */}
               <span style={{ fontSize: 13.5, color: "#6b75a3" }}>
-                Showing{" "}
-                <b style={{ color: "#0b1020", fontWeight: 600 }}>{visibleLinks}</b>
+                Page{" "}
+                <b style={{ color: "#0b1020", fontWeight: 600 }}>{safePage}</b>
                 {" "}of{" "}
+                <b style={{ color: "#0b1020", fontWeight: 600 }}>{totalPages}</b>
+                {" · "}
                 <b style={{ color: "#0b1020", fontWeight: 600 }}>{filteredLinks.length}</b>
-                {" "}links
+                {" "}links total
               </span>
-                  
+                    
               <div className="flex items-center gap-3">
                 {/* Show all */}
                 <button
                   type="button"
                   aria-label={`Show all ${filteredLinks.length} links`}
-                  onClick={() => setVisibleLinks(filteredLinks.length)}
+                  onClick={() => setShowAll(true)}
                   className="cursor-pointer transition-all duration-150"
                   style={{
                     fontSize: 13,
@@ -551,8 +582,8 @@ export function ManageLinksSection({
                   <button
                     type="button"
                     aria-label="Show previous page"
-                    disabled={visibleLinks <= PAGE_SIZE}
-                    onClick={() => setVisibleLinks(c => Math.max(PAGE_SIZE, c - PAGE_SIZE))}
+                    disabled={safePage <= 1}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     className="flex items-center justify-center transition-all duration-150"
                     style={{
                       width: 28,
@@ -560,8 +591,8 @@ export function ManageLinksSection({
                       borderRadius: 99,
                       border: 0,
                       background: "transparent",
-                      color: visibleLinks <= PAGE_SIZE ? "#c5c9e8" : "#3a4474",
-                      cursor: visibleLinks <= PAGE_SIZE ? "not-allowed" : "pointer",
+                      color: safePage <= 1 ? "#c5c9e8" : "#3a4474",
+                      cursor: safePage <= 1 ? "not-allowed" : "pointer",
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -571,17 +602,17 @@ export function ManageLinksSection({
                   
                   {/* Page indicator */}
                   <span style={{ fontSize: 13, color: "#0b1020", padding: "0 8px" }}>
-                    <b style={{ fontWeight: 600 }}>{Math.ceil(visibleLinks / PAGE_SIZE)}</b>
+                    <b style={{ fontWeight: 600 }}>{safePage}</b>
                     <span style={{ color: "#6b75a3", margin: "0 6px" }}>of</span>
-                    <b style={{ fontWeight: 600 }}>{Math.ceil(filteredLinks.length / PAGE_SIZE)}</b>
+                    <b style={{ fontWeight: 600 }}>{totalPages}</b>
                   </span>
                   
                   {/* Next */}
                   <button
                     type="button"
-                    aria-label={`Show ${nextBatch} more links`}
-                    disabled={visibleLinks >= filteredLinks.length}
-                    onClick={() => setVisibleLinks(c => Math.min(c + PAGE_SIZE, filteredLinks.length))}
+                    aria-label="Show next page"
+                    disabled={safePage >= totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     className="flex items-center justify-center transition-all duration-150"
                     style={{
                       width: 28,
@@ -589,8 +620,8 @@ export function ManageLinksSection({
                       borderRadius: 99,
                       border: 0,
                       background: "transparent",
-                      color: visibleLinks >= filteredLinks.length ? "#c5c9e8" : "#3a4474",
-                      cursor: visibleLinks >= filteredLinks.length ? "not-allowed" : "pointer",
+                      color: safePage >= totalPages ? "#c5c9e8" : "#3a4474",
+                      cursor: safePage >= totalPages ? "not-allowed" : "pointer",
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
