@@ -38,4 +38,20 @@ describe("DashboardPreviewPanel", () => {
     expect(screen.queryByRole("button", { name: "Share my page" })).not.toBeInTheDocument();
     expect(container.querySelector('[data-preview-frame="device"]')).toBeInTheDocument();
   });
+
+  it("offers a QR download action in the desktop header", () => {
+    render(<DashboardPreviewPanel width={420} />);
+    expect(screen.getByTitle("Download QR code")).toBeInTheDocument();
+  });
+
+  it("offers a QR download action in sheet mode", () => {
+    render(<DashboardPreviewPanel width="100%" />);
+    expect(screen.getByLabelText("Download QR code")).toBeInTheDocument();
+  });
+
+  it("disables QR/share actions until a handle is claimed (mock handle is empty)", () => {
+    render(<DashboardPreviewPanel width={420} />);
+    expect(screen.getByTitle("Download QR code")).toBeDisabled();
+    expect(screen.getByTitle("Share")).toBeDisabled();
+  });
 });
