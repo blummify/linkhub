@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useUIStore } from "@/store/uiStore";
 import {
   DndContext,
@@ -27,10 +27,29 @@ import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
 import { AnalyticsCards } from "./AnalyticsCards";
 import { DashboardTopBar } from "./DashboardTopBar";
 
-const PAGE_SIZE = 8;
 const DESKTOP_PAGE_SIZE = 8;
 const MOBILE_PAGE_SIZE = 5;
 const MOBILE_BREAKPOINT = 640;
+
+function useResponsivePageSize(): number {
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window === "undefined") return DESKTOP_PAGE_SIZE;
+    return window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px)`).matches
+      ? DESKTOP_PAGE_SIZE
+      : MOBILE_PAGE_SIZE;
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px)`);
+    const handler = (e: MediaQueryListEvent) => {
+      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : MOBILE_PAGE_SIZE);
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  return pageSize;
+}
 
 function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
   return (
@@ -305,30 +324,14 @@ export function ManageLinksSection({
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
   
-  // Pagination state — page-based, not visible-count-based
   const [currentPage, setCurrentPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
   const prevLinksLengthRef = useRef(links.length);
 
   // Responsive page size — desktop shows 8, mobile shows 5
-  const [pageSize, setPageSize] = useState<number>(() => {
-    if (typeof window === "undefined") return DESKTOP_PAGE_SIZE;
-    return window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px)`).matches
-      ? DESKTOP_PAGE_SIZE
-      : MOBILE_PAGE_SIZE;
-  });
+const pageSize = useResponsivePageSize();
 
-  // Listen for viewport crossing the breakpoint
-  useEffect(() => {
-    const mq = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px)`);
-    const handler = (e: MediaQueryListEvent) => {
-      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : MOBILE_PAGE_SIZE);
-    };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  // New link added — jump to page 1 so user sees it
+  // New link added will jump to page 1 so user sees it
   useEffect(() => {
     const prev = prevLinksLengthRef.current;
     prevLinksLengthRef.current = links.length;
@@ -352,21 +355,36 @@ export function ManageLinksSection({
     return true;
   }), [links, activeTab]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredLinks.length / pageSize));
-  // Clamp page in case it overflows after delete/resize/filter change
-  const safePage = Math.min(currentPage, totalPages);
-  const startIdx = (safePage - 1) * pageSize;
-  const visibleLinkSlides = showAll
-    ? filteredLinks
-    : filteredLinks.slice(startIdx, startIdx + pageSize);
-  const showControls = !showAll && filteredLinks.length > pageSize;
+  const linkIndexMap = useMemo(() => {
+  const map = new Map<string, number>();
+  links.forEach((l, i) => map.set(getLinkId(l), i));
+  return map;
+  }, [links]);
 
-  const activeLink = activeId
-    ? filteredLinks.find((l) => getLinkId(l) === activeId) ?? null
-    : null;
+  const paginationState = useMemo ( () => {
+    const totalPages = Math.max(1, Math.ceil(filteredLinks.length / pageSize));
+    const safePage = Math.min(currentPage, totalPages);
+    const startIdx = (safePage - 1) * pageSize;
+    const visibleLinkSlides = showAll
+    ? filteredLinks : filteredLinks.slice(startIdx, startIdx + pageSize);
+    const showControls = !showAll && filteredLinks.length > pageSize;
+    return { totalPages, safePage, startIdx, visibleLinkSlides, showControls };
+  }, [filteredLinks, currentPage, pageSize, showAll]);
+
+  const { totalPages, safePage, visibleLinkSlides, showControls } = paginationState;
+
+  const activeLink = useMemo(() => {
+  if (!activeId) return null;
+  const idx = linkIndexMap.get(activeId);
+  return idx !== undefined ? links[idx] : null;
+  }, [activeId, linkIndexMap, links]);
+
+  const goToPage = useCallback((nextPage: number) => {
+    setCurrentPage(Math.max(1, Math.min(nextPage, totalPages)));
+  }, [totalPages]);
 
   const handleDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(String(active.id));
+  setActiveId(String(active.id));
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
@@ -502,7 +520,7 @@ export function ManageLinksSection({
               style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom, 0px))" }}
             >
               {visibleLinkSlides.map((link) => {
-                const originalIndex = links.indexOf(link);
+                const originalIndex = linkIndexMap.get(getLinkId(link)) ?? -1
                 return (
                   <SortableCardWrapper
                     key={getLinkId(link)}
@@ -583,7 +601,7 @@ export function ManageLinksSection({
                     type="button"
                     aria-label="Show previous page"
                     disabled={safePage <= 1}
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() => goToPage(safePage - 1)}
                     className="flex items-center justify-center transition-all duration-150"
                     style={{
                       width: 28,
@@ -612,7 +630,7 @@ export function ManageLinksSection({
                     type="button"
                     aria-label="Show next page"
                     disabled={safePage >= totalPages}
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() => goToPage(safePage + 1)}
                     className="flex items-center justify-center transition-all duration-150"
                     style={{
                       width: 28,
