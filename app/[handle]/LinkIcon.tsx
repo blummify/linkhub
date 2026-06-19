@@ -1,14 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-
-/** Fixed per-platform colors — matches `PhoneLinkIcon`'s `ICON_CFG` in DashboardPreviewPanel exactly (never accent/theme-tinted). */
-const ICON_CFG: Record<string, { bg: string; fg: string }> = {
-  website: { bg: "linear-gradient(135deg,#eef1ff,#dbe2ff)", fg: "#2a37c0" },
-  instagram: { bg: "linear-gradient(135deg,#ffe9f1,#ffd9e6)", fg: "#d6336c" },
-  youtube: { bg: "linear-gradient(135deg,#fff1f0,#ffd9d6)", fg: "#c0392b" },
-  twitter: { bg: "linear-gradient(135deg,#e9f3ff,#d2e6ff)", fg: "#1565d8" },
-  spotify: { bg: "linear-gradient(135deg,#e9fff0,#d2f5e3)", fg: "#1db954" },
-};
+import { LINK_ICON_COLORS } from "@/app/constants/linkIconColors";
 
 const ICON_GLYPHS: Record<string, ReactNode> = {
   instagram: (
@@ -50,7 +42,7 @@ export function LinkIcon({ iconKey, thumbnailUrl }: { iconKey: string | null; th
     );
   }
 
-  const cfg = ICON_CFG[iconKey ?? ""] ?? ICON_CFG.website;
+  const cfg = LINK_ICON_COLORS[iconKey ?? ""] ?? LINK_ICON_COLORS.website;
   return (
     <span className="pp-link-icon" style={{ background: cfg.bg, color: cfg.fg }}>
       {ICON_GLYPHS[iconKey ?? ""] ?? ICON_GLYPHS.website}

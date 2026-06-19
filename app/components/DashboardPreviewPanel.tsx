@@ -14,17 +14,10 @@ import {
   getBrandingThemeById,
 } from "@/lib/brandingState";
 import { getGradientById } from "@/app/constants/editorBackgroundGradients";
-
-const ICON_CFG: Record<string, { bg: string; fg: string }> = {
-  website:   { bg: "linear-gradient(135deg,#eef1ff,#dbe2ff)", fg: "#2a37c0" },
-  instagram: { bg: "linear-gradient(135deg,#ffe9f1,#ffd9e6)", fg: "#d6336c" },
-  youtube:   { bg: "linear-gradient(135deg,#fff1f0,#ffd9d6)", fg: "#c0392b" },
-  twitter:   { bg: "linear-gradient(135deg,#e9f3ff,#d2e6ff)", fg: "#1565d8" },
-  spotify:   { bg: "linear-gradient(135deg,#e9fff0,#d2f5e3)", fg: "#1db954" },
-};
+import { LINK_ICON_COLORS } from "@/app/constants/linkIconColors";
 
 function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailUrl?: string }) {
-  const cfg = ICON_CFG[iconKey ?? ""] ?? ICON_CFG.website;
+  const cfg = LINK_ICON_COLORS[iconKey ?? ""] ?? LINK_ICON_COLORS.website;
   if (thumbnailUrl) {
     return (
       <div
