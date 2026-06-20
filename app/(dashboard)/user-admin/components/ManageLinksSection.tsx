@@ -541,11 +541,11 @@ const pageSize = useResponsivePageSize();
           </SortableContext>
 
           {showControls && (
-            <div
-              className="flex justify-center pt-2"
-              style={{ marginTop: 8 }}
-            >
-              <div className="flex items-center gap-3">
+              <div
+                className="flex justify-center pt-2"
+                style={{ marginTop: 8 }}
+              >
+                <div className="flex items-center gap-3">
                 {/* Show all */}
                 <button
                   type="button"
