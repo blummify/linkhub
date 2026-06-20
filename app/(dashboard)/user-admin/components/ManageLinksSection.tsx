@@ -542,20 +542,9 @@ const pageSize = useResponsivePageSize();
 
           {showControls && (
             <div
-              className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-between"
+              className="flex justify-center pt-2"
               style={{ marginTop: 8 }}
             >
-              {/* Summary — left */}
-              <span style={{ fontSize: 13.5, color: "#6b75a3" }}>
-                Page{" "}
-                <b style={{ color: "#0b1020", fontWeight: 600 }}>{safePage}</b>
-                {" "}of{" "}
-                <b style={{ color: "#0b1020", fontWeight: 600 }}>{totalPages}</b>
-                {" · "}
-                <b style={{ color: "#0b1020", fontWeight: 600 }}>{filteredLinks.length}</b>
-                {" "}links total
-              </span>
-                    
               <div className="flex items-center gap-3">
                 {/* Show all */}
                 <button
