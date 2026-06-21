@@ -10,13 +10,17 @@ interface PlanCardProps {
   plan: "free" | "hub" | "studio";
   price: string;
   canceled: boolean;
+  currentPeriodEnd: string | null;
   onChangePlan: () => void;
   onCancelSubscription: () => void;
   onResumeSubscription: () => void;
 }
 
-export function PlanCard({ plan, price, canceled, onChangePlan, onCancelSubscription, onResumeSubscription }: PlanCardProps) {
+export function PlanCard({ plan, price, canceled, currentPeriodEnd, onChangePlan, onCancelSubscription, onResumeSubscription }: PlanCardProps) {
   const p = PLAN_META[plan];
+  const periodEndLabel = currentPeriodEnd
+    ? new Date(currentPeriodEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : "—";
 
   if (plan === "free") {
     return (
@@ -81,14 +85,14 @@ export function PlanCard({ plan, price, canceled, onChangePlan, onCancelSubscrip
       <div style={{ marginTop: 22, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.14)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: "rgba(255,255,255,0.72)", position: "relative" }}>
         {canceled ? (
           <>
-            <span>Canceled · access until <strong style={{ color: "white", fontWeight: 500 }}>December 14, 2026</strong></span>
+            <span>Canceled · access until <strong style={{ color: "white", fontWeight: 500 }}>{periodEndLabel}</strong></span>
             <button onClick={onResumeSubscription} style={{ background: "none", border: "none", padding: 0, color: "rgba(255,255,255,0.85)", fontSize: 12.5, textDecoration: "underline", textUnderlineOffset: 2, cursor: "pointer" }}>
               Resume
             </button>
           </>
         ) : (
           <>
-            <span>Renews on <strong style={{ color: "white", fontWeight: 500 }}>December 14, 2026</strong></span>
+            <span>Renews on <strong style={{ color: "white", fontWeight: 500 }}>{periodEndLabel}</strong></span>
             <button onClick={onCancelSubscription} style={{ background: "none", border: "none", padding: 0, color: "rgba(255,255,255,0.85)", fontSize: 12.5, textDecoration: "underline", textUnderlineOffset: 2, cursor: "pointer" }}>
               Cancel subscription
             </button>

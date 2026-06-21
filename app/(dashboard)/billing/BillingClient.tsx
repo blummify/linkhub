@@ -124,6 +124,16 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
   const canceled = subscription?.cancelAtPeriodEnd ?? false;
   const isPastDue = subscription?.status === "past_due";
 
+  /* ── Billing-state gates ── */
+  const isPaid =
+    !!subscription &&
+    planId !== "free" &&
+    (subscription.status === "active" ||
+      subscription.status === "non-renewing" ||
+      subscription.status === "past_due");
+  const hasPaymentMethod = cards.length > 0;
+  const hasInvoices = invoices.length > 0;
+
   /* ── Modal helpers ── */
   const closeModal = useCallback(() => {
     setModal(null);
@@ -262,11 +272,13 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
                   <h1 style={{ fontFamily: BRANDING_FONT_SERIF, fontStyle: "italic", fontSize: 46, lineHeight: 1, letterSpacing: "-0.02em", color: "#0b1020" }}>
                     Billing.
                   </h1>
-                  <CurrencySelector
-                    value={currency}
-                    onChange={handleCurrencyChange}
-                    className="text-[#6b75a3] border-[#d6dae9] mb-1"
-                  />
+                  {isPaid && (
+                    <CurrencySelector
+                      value={currency}
+                      onChange={handleCurrencyChange}
+                      className="text-[#6b75a3] border-[#d6dae9] mb-1"
+                    />
+                  )}
                 </div>
                 <p style={{ fontSize: 14.5, color: "#6b75a3", marginTop: 10 }}>
                   Your plan, payment, and invoices — all in one place.
@@ -288,7 +300,8 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
                 className="billing-bento"
                 style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}
               >
-                <div style={{ gridColumn: "span 2" }}>
+                {/* Plan card: span 2 for paid (NextPayment fills col 3), span 3 for free */}
+                <div style={{ gridColumn: isPaid ? "span 2" : "span 3" }}>
                   {isLoadingSub ? (
                     <div className="h-[160px] bg-[#eef0f7] rounded-2xl animate-pulse" />
                   ) : (
@@ -296,41 +309,64 @@ export default function BillingClient({ defaultCurrency }: { defaultCurrency: Cu
                       plan={planId === "hub" || planId === "studio" ? planId : "free"}
                       price={formatPrice(PLANS.find((p) => p.id === planId)?.ghsAmount ?? 0, curr)}
                       canceled={canceled}
-                      onChangePlan={() => openChangePlan()}
+                      currentPeriodEnd={subscription?.currentPeriodEnd ?? null}
+                      onChangePlan={() => openChangePlan(planId === "free" ? "hub" : undefined)}
                       onCancelSubscription={openCancelSub}
                       onResumeSubscription={handleResume}
                     />
                   )}
                 </div>
-                <div>
-                  <NextPaymentCard
-                    amount={planId !== "free" ? formatPrice(PLANS.find((p) => p.id === planId)?.ghsAmount ?? 0, curr) : null}
-                    dueDate={subscription?.currentPeriodEnd ?? null}
-                    cardBrand={cards.find((c) => c.isDefault)?.brand}
-                    cardLast4={cards.find((c) => c.isDefault)?.last4}
+
+                {/* Next payment: paid only */}
+                {isPaid && (
+                  <div>
+                    <NextPaymentCard
+                      amount={formatPrice(PLANS.find((p) => p.id === planId)?.ghsAmount ?? 0, curr)}
+                      dueDate={subscription?.currentPeriodEnd ?? null}
+                      cardBrand={cards.find((c) => c.isDefault)?.brand}
+                      cardLast4={cards.find((c) => c.isDefault)?.last4}
+                    />
+                  </div>
+                )}
+
+                {/* Usage: span 2 for paid (leaves col 3 empty — bento design), span 3 for free */}
+                <div style={{ gridColumn: isPaid ? "span 2" : "span 3" }}>
+                  <UsageSection
+                    plan={planId === "hub" || planId === "studio" ? planId : "free"}
+                    periodEnd={subscription?.currentPeriodEnd ?? null}
+                    onUpgrade={() => openChangePlan(isPaid ? "studio" : "hub")}
                   />
                 </div>
 
-                <div style={{ gridColumn: "span 2" }}>
-                  <UsageSection onUpgrade={() => openChangePlan("studio")} />
-                </div>
+                {/* Payment methods: paid users or users with a card on file */}
+                {(isPaid || hasPaymentMethod) && (
+                  <div style={{ gridColumn: "span 3" }}>
+                    <PaymentMethodsSection
+                      cards={cards}
+                      onAddCard={openAddCard}
+                      onMakeDefault={handleMakeDefault}
+                      onEditCard={openEditCard}
+                      onRemoveCard={openRemoveCard}
+                    />
+                  </div>
+                )}
 
-                <div style={{ gridColumn: "span 3" }}>
-                  <PaymentMethodsSection
-                    cards={cards}
-                    onAddCard={openAddCard}
-                    onMakeDefault={handleMakeDefault}
-                    onEditCard={openEditCard}
-                    onRemoveCard={openRemoveCard}
-                  />
-                </div>
-                <div style={{ gridColumn: "span 3" }}><BillingAddressSection /></div>
-                <div style={{ gridColumn: "span 3" }}>
-                  <InvoiceHistorySection
-                    invoices={invoices}
-                    isLoading={isLoadingInvoices}
-                  />
-                </div>
+                {/* Billing address: paid users or users who have invoices */}
+                {(isPaid || hasInvoices) && (
+                  <div style={{ gridColumn: "span 3" }}>
+                    <BillingAddressSection />
+                  </div>
+                )}
+
+                {/* Invoice history: only when invoices exist (or still loading for paid users) */}
+                {(hasInvoices || (isLoadingInvoices && isPaid)) && (
+                  <div style={{ gridColumn: "span 3" }}>
+                    <InvoiceHistorySection
+                      invoices={invoices}
+                      isLoading={isLoadingInvoices}
+                    />
+                  </div>
+                )}
               </div>
 
               </DashboardPageTransition>

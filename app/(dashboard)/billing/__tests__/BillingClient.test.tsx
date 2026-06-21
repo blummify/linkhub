@@ -30,6 +30,7 @@ vi.mock("@/app/actions/billing", () => ({
 
 import {
   getSubscription,
+  getInvoices,
   createCheckoutSession,
 } from "@/app/actions/billing";
 
@@ -101,6 +102,67 @@ describe("BillingClient", () => {
     await waitFor(() => screen.getByText(/confirm change/i));
     expect(screen.getByText(/confirm change/i)).toBeInTheDocument();
     expect(screen.getByText(/change plan/i)).toBeInTheDocument();
+  });
+
+  it("hides Next payment, Payment methods, Billing address, and Invoice history for a free user", async () => {
+    (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    render(<BillingClient defaultCurrency="GHS" />);
+    await waitFor(() =>
+      expect(screen.queryByText(/upgrade/i)).toBeInTheDocument()
+    );
+    expect(screen.queryByText("Next payment")).not.toBeInTheDocument();
+    expect(screen.queryByText("Payment methods")).not.toBeInTheDocument();
+    expect(screen.queryByText("Billing address")).not.toBeInTheDocument();
+    expect(screen.queryByText("Invoice history")).not.toBeInTheDocument();
+  });
+
+  it("shows free-plan usage caps (5 links, 1k views, no custom domains) for a free user", async () => {
+    (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    render(<BillingClient defaultCurrency="GHS" />);
+    await waitFor(() =>
+      expect(screen.getByText("3 / 5")).toBeInTheDocument()
+    );
+    expect(screen.getByText("750 / 1,000")).toBeInTheDocument();
+    expect(screen.queryByText("Custom domains")).not.toBeInTheDocument();
+  });
+
+  it("shows all paid sections for an active Hub user with a card and invoice", async () => {
+    (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
+      planId: "hub",
+      status: "active",
+      currentPeriodEnd: "2026-12-14T00:00:00Z",
+      cancelAtPeriodEnd: false,
+      card: { brand: "visa", last4: "4242", expiry: "12/2028" },
+    });
+    (getInvoices as ReturnType<typeof vi.fn>).mockResolvedValue([{
+      id: "inv_1",
+      date: "14 Dec 2026",
+      amount: "₵10.00",
+      status: "success",
+      pdfUrl: "https://example.com/receipt.pdf",
+    }]);
+    render(<BillingClient defaultCurrency="GHS" />);
+    await waitFor(() =>
+      expect(screen.getByText("Next payment")).toBeInTheDocument()
+    );
+    expect(screen.getByText("Payment methods")).toBeInTheDocument();
+    expect(screen.getByText("Billing address")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText("Invoice history")).toBeInTheDocument()
+    );
+  });
+
+  it("shows real renewal date from subscription in PlanCard", async () => {
+    (getSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
+      planId: "hub",
+      status: "active",
+      currentPeriodEnd: "2027-03-01T00:00:00Z",
+      cancelAtPeriodEnd: false,
+    });
+    render(<BillingClient defaultCurrency="GHS" />);
+    await waitFor(() =>
+      expect(screen.getByText(/march 1, 2027/i)).toBeInTheDocument()
+    );
   });
 
   it("calls createCheckoutSession when a Hub user changes to Studio", async () => {

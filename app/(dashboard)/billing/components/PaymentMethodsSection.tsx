@@ -50,12 +50,12 @@ export function PaymentMethodsSection({ cards, onAddCard, onMakeDefault, onEditC
   return (
     <BillingSectionCard
       title="Payment methods"
-      description="Cards used for renewal and any usage overages."
+      description="Cards used for renewal and payments."
       headerAction={addBtn}
     >
       {cards.length === 0 ? (
         <p className="text-[13px] text-[#6b75a3] text-center py-5">
-          No payment methods yet. Add a card to keep your subscription active.
+          No payment methods on file. Add a card to avoid interruption.
         </p>
       ) : (
         <div className="flex flex-col gap-2.5">
