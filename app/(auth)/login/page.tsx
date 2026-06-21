@@ -52,6 +52,7 @@ export default function LoginPage() {
   const [showOauthNoPasswordBanner, setShowOauthNoPasswordBanner] = useState(false);
 
   const [lastUsed] = useState<"google" | "email" | null>(() => {
+    if (typeof window === "undefined") return null;
     const saved = localStorage.getItem("lh_last_auth");
     return saved === "google" || saved === "email" ? saved : null;
   });

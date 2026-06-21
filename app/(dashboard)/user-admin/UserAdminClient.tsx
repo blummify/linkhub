@@ -303,6 +303,7 @@ export default function UserAdminClient() {
       <div className="flex-1 flex flex-col min-h-screen relative">
         <main
               id="mainContent"
+              tabIndex={-1}
               className={`flex-1 transition-all duration-500 ease-in-out ${
                 isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
               } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
