@@ -1,5 +1,8 @@
 import NextAuth from "next-auth";
+import { NextResponse } from "next/server";
 import authConfig from "./auth.config";
+import { SUPER_ADMIN } from "./lib/roles";
+import { decideAdminRoute, isAdminHost, isAdminInternalPath } from "./lib/adminRouting";
 
 const { auth } = NextAuth(authConfig);
 
@@ -31,6 +34,23 @@ export default auth((req) => {
   const pathname = normalizePathname(nextUrl.pathname);
 
   if (PUBLIC_STATIC_EXT.test(pathname)) return undefined;
+
+  // --- Admin subdomain (admin.{APP_DOMAIN}) ---------------------------------
+  // Detect the host, guard for a SUPER_ADMIN session, and rewrite into the
+  // internal /admin-portal/* tree. External URLs stay as admin.host/login.
+  if (isAdminHost(req.headers.get("host") ?? "")) {
+    const isSuperAdmin = isLoggedIn && req.auth?.user?.role === SUPER_ADMIN;
+    const decision = decideAdminRoute({ pathname, isSuperAdmin });
+    return decision.type === "redirect"
+      ? Response.redirect(new URL(decision.to, nextUrl))
+      : NextResponse.rewrite(new URL(decision.to, nextUrl));
+  }
+
+  // The admin tree is reachable only through the admin subdomain rewrite above;
+  // hide it from the main domain so it can't be hit directly.
+  if (isAdminInternalPath(pathname)) {
+    return new NextResponse(null, { status: 404 });
+  }
 
   const isApiAuthRoute = pathname.startsWith("/api/auth");
   // Paystack webhook calls this without a user session; it authenticates via HMAC signature

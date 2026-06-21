@@ -33,7 +33,7 @@ export default function Home() {
 
       <HomeScrollReveal />
       <PublicNav />
-      <main>
+      <main id="mainContent" tabIndex={-1}>
       <HomeHeroSection />
 
       <section
