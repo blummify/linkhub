@@ -8,6 +8,9 @@ import { auth } from "@/auth";
 import { addLinkSchema } from "@/lib/validation/link.schema";
 import { LinkStatusValue } from "@/app/constants/linkStatus";
 import { deleteFromR2 } from "@/lib/r2";
+import {
+  SITEMAP_COUNT_CACHE_KEY, SITEMAP_PAGE_CACHE_KEY_PREFIX,
+} from "@/lib/cacheKeys";
 
 const LINKS_TTL = 300;   // 5 minutes
 const PROFILE_TTL = 300; // 5 minutes
@@ -247,6 +250,10 @@ export async function claimHandle(handle: string) {
       await Promise.all([
         redis.del(`profile:${session.user.id}`),
         redis.del(`handlecheck:${handle.toLowerCase()}`),
+        await redis.del(SITEMAP_COUNT_CACHE_KEY),
+        await redis.del(`${SITEMAP_PAGE_CACHE_KEY_PREFIX}0`), 
+// Only page 0 needs invalidation while user count < SITEMAP_SIZE (50k).
+// Past that, we need to invalidate the highest page id instead.
       ]);
     } catch {}
     return { success: true };

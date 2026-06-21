@@ -1,26 +1,48 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
+import { redis } from "@/lib/redis";
+import {
+  SITEMAP_COUNT_CACHE_KEY as COUNT_CACHE_KEY,
+  SITEMAP_PAGE_CACHE_KEY_PREFIX as PAGE_CACHE_KEY_PREFIX,
+} from "@/lib/cacheKeys";
 
 const SITEMAP_SIZE = 45000;
+const BASE_URL = process.env.NEXTAUTH_URL ?? "https://linkhub.app";
+const STATIC_LASTMOD = new Date();
+
+// Cache count of profiles to avoid count queries on every sitemap request
+const COUNT_CACHE_TTL = 3600; // 1 hour
 
 // Static marketing pages 
-function getStaticEntries(base:string): MetadataRoute.Sitemap {
-  return [
-    { url: base, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
-    { url: `${base}/pricing`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/features`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/login`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.5 },
-    { url: `${base}/signup`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.6 },
-  ];
-}
+const STATIC_ENTRIES: MetadataRoute.Sitemap = [
+  { url: BASE_URL, lastModified: STATIC_LASTMOD, changeFrequency: "weekly", priority: 1 },
+    { url: `${BASE_URL}/pricing`, lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/features`, lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/login`, lastModified: STATIC_LASTMOD, changeFrequency: "yearly", priority: 0.5 },
+    { url: `${BASE_URL}/signup`, lastModified: STATIC_LASTMOD, changeFrequency: "yearly", priority: 0.6 },
+];
 
-// sitemap to generate base on profile count
 export async function generateSitemaps() {
-  const count = await db.profile.count({
-    where: { hasClaimedHandle: true },
-  });
+  let count: number;
+  try {
+    const cached = await redis.get<number>(COUNT_CACHE_KEY);
+    if(cached !== null){
+      count = cached;
+    } else {
+      count = await db.profile.count({
+        where: {hasClaimedHandle: true, NOT: {handle:null}},
+      });
+      await redis.set(COUNT_CACHE_KEY, count, { ex: COUNT_CACHE_TTL });
+    }
+  } 
+  catch {
+    count = await db.profile.count({
+      where: {hasClaimedHandle: true, NOT: {handle:null}},
+    });
+  }
+
   const pages = Math.max(1, Math.ceil(count / SITEMAP_SIZE));
-  return Array.from({ length: pages }, (_, id) => ({ id }));
+  return Array.from({length: pages}, (_, id) => ({id}));
 }
 
 export default async function sitemap({
@@ -28,27 +50,48 @@ export default async function sitemap({
 }: {
   id: number;
 }): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXTAUTH_URL ?? "https://linkhub.app";
+  const cacheKey = `${PAGE_CACHE_KEY_PREFIX}${id}`;
+  let profileEntries: MetadataRoute.Sitemap;
 
-  const profiles = await db.profile.findMany({
-    where: { hasClaimedHandle: true },
-    select: { handle: true, updatedAt: true },
-    skip: id * SITEMAP_SIZE,
-    take: SITEMAP_SIZE,
-    orderBy: { createdAt: "asc" },
-  });
+  try {
+    const cached = await redis.get<MetadataRoute.Sitemap>(cacheKey);
+    if (cached) {
+      profileEntries = cached;
+    } else {
+      const profiles = await db.profile.findMany({
+        where: { hasClaimedHandle: true, NOT: { handle: null } },
+        select: { handle: true, updatedAt: true },
+        skip: id * SITEMAP_SIZE,
+        take: SITEMAP_SIZE,
+        orderBy: { createdAt: "asc" },
+      });
 
-  const profileEntries: MetadataRoute.Sitemap = profiles
-    .filter((p): p is { handle: string; updatedAt: Date } => !!p.handle)
-    .map((p) => ({
-      url: `${base}/${p.handle}`,
+      profileEntries = profiles.map((p) => ({
+        url: `${BASE_URL}/${p.handle}`,
+        lastModified: p.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.9,
+      }));
+
+      await redis.set(cacheKey, profileEntries, { ex: COUNT_CACHE_TTL });
+    }
+  }
+  catch {
+    // fall back to DB query if Redis is unavailable
+    const profiles = await db.profile.findMany({
+      where: { hasClaimedHandle: true, NOT: { handle: null } },
+      select: { handle: true, updatedAt: true },
+      skip: id * SITEMAP_SIZE,
+      take: SITEMAP_SIZE,
+      orderBy: { createdAt: "asc" },
+    });
+    profileEntries = profiles.map((p) => ({
+      url: `${BASE_URL}/${p.handle}`,
       lastModified: p.updatedAt,
-      changeFrequency: "weekly",
+      changeFrequency: "weekly" as const,
       priority: 0.9,
     }));
-
-  // Only static marketing pages in the first sitemap file (id: 0)
-  return id === 0
-    ? [...getStaticEntries(base), ...profileEntries]
-    : profileEntries;
+  }
+  
+  return id === 0 ? [...STATIC_ENTRIES, ...profileEntries] : profileEntries;
 }
