@@ -37,8 +37,18 @@ export function useEditorMobilePreview(
 
   const appearance = useMemo(
     () => brandingStateToMobileAppearance(state),
+    // Individual fields rather than `state` itself: `state` is a new object
+    // reference on every render; listing fields keeps this memo stable unless
+    // a value actually changes. `state` the variable is intentionally omitted.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state.themeId, state.displayName, state.bio, state.accentColor, state.buttonStyle, state.fontFamily]
+    [
+      state.themeId, state.displayName, state.bio,
+      state.accentColor, state.buttonStyle, state.fontFamily,
+      state.backgroundType, state.backgroundValue, state.backgroundKey,
+      state.effects, state.textColor, state.cardStyle,
+      state.bodyFont, state.overlayColor, state.overlayOpacity,
+      state.profileLayout, state.linkDensity,
+    ]
   );
 
   const publicUrl = brandingPublicUrl(handle);

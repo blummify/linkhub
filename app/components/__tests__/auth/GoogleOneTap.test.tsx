@@ -5,8 +5,11 @@ import { GoogleOneTap } from "../../auth/GoogleOneTap";
 import { signInWithGoogleOneTap } from "@/app/actions/auth";
 import { mockRouterPush } from "../../../../vitest.setup";
 
+const mockUseSession = vi.fn(() => ({ status: "unauthenticated" as "authenticated" | "loading" | "unauthenticated" }));
+
 vi.mock("next-auth/react", () => ({
   signIn: vi.fn().mockResolvedValue(undefined),
+  useSession: () => mockUseSession(),
 }));
 
 vi.mock("@/app/actions/auth", () => ({
@@ -19,6 +22,7 @@ describe("GoogleOneTap", () => {
     delete (window as { google?: unknown }).google;
     mockRouterPush.mockClear();
     vi.mocked(signInWithGoogleOneTap).mockReset();
+    mockUseSession.mockReturnValue({ status: "unauthenticated" });
   });
 
   it("renders nothing visible", () => {
@@ -28,6 +32,22 @@ describe("GoogleOneTap", () => {
 
   it("does not inject script when clientId is empty", () => {
     render(<GoogleOneTap clientId="" />);
+    expect(
+      document.querySelector('script[src*="accounts.google.com"]')
+    ).toBeNull();
+  });
+
+  it("does not inject script when session status is authenticated", () => {
+    mockUseSession.mockReturnValue({ status: "authenticated" });
+    render(<GoogleOneTap clientId="test-client-id" />);
+    expect(
+      document.querySelector('script[src*="accounts.google.com"]')
+    ).toBeNull();
+  });
+
+  it("does not inject script when session status is loading", () => {
+    mockUseSession.mockReturnValue({ status: "loading" });
+    render(<GoogleOneTap clientId="test-client-id" />);
     expect(
       document.querySelector('script[src*="accounts.google.com"]')
     ).toBeNull();

@@ -74,11 +74,13 @@ export default function AppearanceClient({
   initialAvatarUrl,
   initialActiveCustomThemeId,
   initialCustomThemes = [],
+  isPaidUser = false,
 }: {
   initialState?: Partial<BrandingAppearanceState> | null;
   initialAvatarUrl?: string | null;
   initialActiveCustomThemeId?: string | null;
   initialCustomThemes?: CustomThemeRecord[];
+  isPaidUser?: boolean;
 }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
 
@@ -134,6 +136,7 @@ export default function AppearanceClient({
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showProUpgradeModal, setShowProUpgradeModal] = useState(false);
 
   // Deferred avatar upload state
   const [cropFile, setCropFile] = useState<File | null>(null);
@@ -303,6 +306,13 @@ export default function AppearanceClient({
 
   const handleSave = useCallback(async () => {
     if (isSaving) return;
+
+    // Gate: pro themes require a paid plan — show upgrade prompt before hitting the server
+    if (getBrandingThemeById(themeId)?.isPro && !isPaidUser) {
+      setShowProUpgradeModal(true);
+      return;
+    }
+
     setIsSaving(true);
     try {
       if (pendingAvatarBlob) {
@@ -312,6 +322,10 @@ export default function AppearanceClient({
         setPendingAvatarPreview(null);
       }
       const result = await updateBranding({ displayName, bio, themeId, accentColor, buttonStyle, fontFamily });
+      if ("requiresUpgrade" in result) {
+        setShowProUpgradeModal(true);
+        return;
+      }
       if ("error" in result) {
         console.error("[handleSave] updateBranding error:", result.error);
         return;
@@ -320,7 +334,7 @@ export default function AppearanceClient({
     } finally {
       setIsSaving(false);
     }
-  }, [isSaving, pendingAvatarBlob, upload, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
+  }, [isSaving, isPaidUser, pendingAvatarBlob, upload, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
 
   const handleResetRequest = useCallback(() => {
     setShowResetConfirm(true);
@@ -553,6 +567,17 @@ export default function AppearanceClient({
       confirmText="Discard changes"
       confirmStyle="danger"
       onConfirm={handleResetConfirm}
+    />
+
+    <BrandingConfirmModal
+      open={showProUpgradeModal}
+      onClose={() => setShowProUpgradeModal(false)}
+      icon="info"
+      title={`${getBrandingThemeById(themeId)?.name ?? "This"} is a Pro theme`}
+      body="Upgrade your plan to save Pro themes to your profile."
+      confirmText="Upgrade now"
+      confirmStyle="primary"
+      onConfirm={() => router.push("/billing")}
     />
 
     {cropFile && (

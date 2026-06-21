@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import AppHeader from "../../components/AppHeader";
 import { ThemeToggle } from "../../ThemeToggle";
 import { useSidebarStore } from "@/store/sidebarStore";
@@ -8,8 +9,24 @@ import { LinksPreviewPanel } from "../../components/LinksPreviewPanel";
 import { LinksStyleTwoColumnLayout } from "../../components/LinksStyleTwoColumnLayout";
 import { EDITOR_PREVIEW_COLUMN_CLASS } from "../../constants/editorMobilePreview";
 import { useEditorMobilePreview } from "../../hooks/useEditorMobilePreview";
+import { useBrandingStore } from "@/store/brandingStore";
+import type { BrandingAppearanceState } from "@/lib/brandingState";
 
-export default function LinksClient() {
+export default function LinksClient({
+  initialState,
+}: {
+  initialState: Partial<BrandingAppearanceState> | null;
+}) {
+  const hydrated = useBrandingStore((s) => s.hydrated);
+  const serverSyncedRef = useRef(false);
+
+  useEffect(() => {
+    if (!hydrated || serverSyncedRef.current) return;
+    serverSyncedRef.current = true;
+    if (initialState && Object.keys(initialState).length > 0) {
+      useBrandingStore.getState().syncFromDb(initialState);
+    }
+  }, [hydrated, initialState]);
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const mobilePreviewProps = useEditorMobilePreview({ linkDensity: "relaxed" });
 

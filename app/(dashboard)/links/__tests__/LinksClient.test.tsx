@@ -17,7 +17,7 @@ vi.mock("@/app/ThemeToggle", () => ({
 
 describe("LinksClient", () => {
   it("renders links page heading and mobile preview", () => {
-    renderWithSidebarAndBranding(<LinksClient />);
+    renderWithSidebarAndBranding(<LinksClient initialState={null} />);
     expect(screen.getByText("Your Links")).toBeInTheDocument();
     expect(screen.getByText(/Manage and organize/i)).toBeInTheDocument();
     expect(screen.getByText("Your Name")).toBeInTheDocument();

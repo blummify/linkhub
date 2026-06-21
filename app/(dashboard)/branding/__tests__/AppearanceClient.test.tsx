@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { screen, fireEvent, within } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { screen, fireEvent, within, waitFor } from "@testing-library/react";
 import AppearanceClient from "../AppearanceClient";
 import { renderWithSidebarAndBranding } from "@/app/test-utils/renderWithProviders";
 
@@ -102,6 +102,10 @@ describe("AppearanceClient", () => {
     document.documentElement.removeAttribute("data-dirty-save-visible");
   });
 
+  afterEach(() => {
+    resetBrandingState();
+  });
+
   it("renders branding page heading and sections", () => {
     renderWithSidebarAndBranding(<AppearanceClient />);
     expect(screen.getByText(/Make it/i)).toBeInTheDocument();
@@ -170,5 +174,20 @@ describe("AppearanceClient", () => {
     fireEvent.click(screen.getByRole("button", { name: "Discard changes" }));
     fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(brandingState.reset).toHaveBeenCalled();
+  });
+
+  it("shows upgrade modal instead of saving when a free user selects a pro theme", async () => {
+    const { updateBranding } = await import("@/app/actions/profile");
+    // "forest" is a pro theme (isPro: true)
+    brandingState.themeId = "forest";
+    renderWithSidebarAndBranding(<AppearanceClient isPaidUser={false} />);
+
+    const toolbar = screen.getByTestId("dirty-save-toolbar");
+    fireEvent.click(within(toolbar).getByRole("button", { name: /Save changes/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/is a Pro theme/i)).toBeInTheDocument();
+    });
+    expect(updateBranding).not.toHaveBeenCalled();
   });
 });

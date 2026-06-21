@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminDashboardPage() {
-  return <UserAdminClient />;
+  return <UserAdminClient initialState={null} />;
 }

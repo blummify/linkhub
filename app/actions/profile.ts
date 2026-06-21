@@ -8,6 +8,7 @@ import { deleteFromR2 } from "@/lib/r2";
 import { postly } from "@/lib/postly";
 import { VALID_FONT_VALUES } from "@/app/constants/editorFonts";
 import { BACKGROUND_GRADIENTS } from "@/app/constants/editorBackgroundGradients";
+import { getBrandingThemeById } from "@/lib/brandingState";
 
 const HEX_RE         = /^#[0-9a-fA-F]{6}$/;
 const SOLID_COLOR_RE = /^solid:#[0-9a-fA-F]{6}$/;
@@ -105,9 +106,22 @@ export async function updateBranding(data: {
   accentColor?: string;
   buttonStyle?: string;
   fontFamily?: string;
-}): Promise<{ success: true } | { error: string }> {
+}): Promise<{ success: true } | { requiresUpgrade: true } | { error: string }> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+
+  if (data.themeId) {
+    const selectedTheme = getBrandingThemeById(data.themeId);
+    if (selectedTheme?.isPro) {
+      const sub = await db.subscription.findUnique({
+        where: { userId: session.user.id },
+        select: { planId: true },
+      });
+      if (!sub || sub.planId === "free") {
+        return { requiresUpgrade: true };
+      }
+    }
+  }
 
   try {
     await db.profile.update({

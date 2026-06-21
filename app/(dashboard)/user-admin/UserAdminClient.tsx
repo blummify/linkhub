@@ -29,7 +29,11 @@ const dateFormatter = new Intl.DateTimeFormat("en-GH", {
   day: "numeric",
 });
 
-export default function UserAdminClient() {
+export default function UserAdminClient({
+  initialState,
+}: {
+  initialState: Partial<BrandingAppearanceState> | null;
+}) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
 
   const links = useLinksStore((s) => s.links);
@@ -47,6 +51,15 @@ export default function UserAdminClient() {
 
   const hydrated = useBrandingStore((s) => s.hydrated);
   const patchState = useBrandingStore((s) => s.patchState);
+
+  const serverSyncedRef = useRef(false);
+  useEffect(() => {
+    if (!hydrated || serverSyncedRef.current) return;
+    serverSyncedRef.current = true;
+    if (initialState && Object.keys(initialState).length > 0) {
+      useBrandingStore.getState().syncFromDb(initialState);
+    }
+  }, [hydrated, initialState]);
 
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);

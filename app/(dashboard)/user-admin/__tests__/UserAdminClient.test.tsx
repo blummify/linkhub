@@ -73,7 +73,7 @@ describe("UserAdminClient", () => {
   });
 
   it("renders manage links section after load", async () => {
-    renderWithSidebarAndBranding(<UserAdminClient />);
+    renderWithSidebarAndBranding(<UserAdminClient initialState={null} />);
     await waitFor(() => {
       expect(
         screen.getByText(/Manage and organize your digital presence/i)
@@ -83,7 +83,7 @@ describe("UserAdminClient", () => {
   });
 
   it("hides the mobile Add link FAB when there are no links", async () => {
-    renderWithSidebarAndBranding(<UserAdminClient />);
+    renderWithSidebarAndBranding(<UserAdminClient initialState={null} />);
     await waitFor(() => {
       expect(
         screen.getByText(/Manage and organize your digital presence/i)
@@ -96,7 +96,7 @@ describe("UserAdminClient", () => {
     useLinksStore.getState().links = [
       { id: "1", title: "Site", url: "https://example.com", clicks: "0" },
     ];
-    renderWithSidebarAndBranding(<UserAdminClient />);
+    renderWithSidebarAndBranding(<UserAdminClient initialState={null} />);
     await waitFor(() => {
       expect(screen.getByText("Site")).toBeInTheDocument();
     });
@@ -105,7 +105,7 @@ describe("UserAdminClient", () => {
 
   describe('"N" keyboard shortcut', () => {
     async function renderLoaded() {
-      renderWithSidebarAndBranding(<UserAdminClient />);
+      renderWithSidebarAndBranding(<UserAdminClient initialState={null} />);
       await waitFor(() => {
         expect(
           screen.getByText(/Manage and organize your digital presence/i)

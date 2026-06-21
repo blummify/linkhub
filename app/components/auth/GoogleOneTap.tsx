@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { signInWithGoogleOneTap } from "@/app/actions/auth";
 
@@ -20,6 +20,7 @@ declare global {
 }
 
 export function GoogleOneTap({ clientId }: { clientId: string }) {
+  const { status } = useSession();
   const router = useRouter();
 
   const handleCredential = useCallback(
@@ -45,6 +46,9 @@ export function GoogleOneTap({ clientId }: { clientId: string }) {
   );
 
   useEffect(() => {
+    // Never prompt if the user is already authenticated (or auth is still loading).
+    // The server's !session guard can miss this window during client-side navigation.
+    if (status !== "unauthenticated") return;
     if (!clientId) return;
 
     let addedScript: HTMLScriptElement | null = null;
@@ -89,7 +93,7 @@ export function GoogleOneTap({ clientId }: { clientId: string }) {
         document.head.removeChild(addedScript);
       }
     };
-  }, [clientId, handleCredential]);
+  }, [clientId, handleCredential, status]);
 
   return null;
 }
