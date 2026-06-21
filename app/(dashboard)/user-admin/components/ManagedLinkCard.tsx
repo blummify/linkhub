@@ -405,8 +405,7 @@ export function ManagedLinkCard({
               {visualStatus !== "draft" && (
                 <span className="flex items-center gap-1.5">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v4M5 5l3 3M3 9h4M21 14l-9-3 3 9 1.5-4.5L21 14z"/>
                   </svg>
                   {clicks} clicks
                 </span>

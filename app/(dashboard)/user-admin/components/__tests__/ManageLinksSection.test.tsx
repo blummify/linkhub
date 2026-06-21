@@ -50,6 +50,31 @@ describe("ManageLinksSection", () => {
     expect(screen.getByRole("button", { name: /add your first link/i })).toBeInTheDocument();
   });
 
+  it("shows the real summed total clicks in the analytics summary", () => {
+    // Links with 100 + 200 clicks -> "300" total in the summary card.
+    // AnalyticsCards renders both a mobile and desktop card, so expect it twice.
+    render(<ManageLinksSection links={links} />);
+    expect(screen.getAllByText("300").length).toBeGreaterThan(0);
+  });
+
+  it("links the total clicks card to the analytics page", () => {
+    render(<ManageLinksSection links={links} />);
+    const totalLinks = screen
+      .getAllByRole("link")
+      .filter((el) => el.getAttribute("href") === "/user-analytics");
+    expect(totalLinks.length).toBeGreaterThan(0);
+  });
+
+  it("renders the clicks-over-time chart when links exist", () => {
+    render(<ManageLinksSection links={links} />);
+    expect(screen.getByText("Clicks over time")).toBeInTheDocument();
+  });
+
+  it("does not render the clicks chart when there are no links", () => {
+    render(<ManageLinksSection links={[]} />);
+    expect(screen.queryByText("Clicks over time")).not.toBeInTheDocument();
+  });
+
   it("calls onDeleteLink when a link card's delete button is clicked", () => {
     const onDeleteLink = vi.fn();
     render(<ManageLinksSection links={links} onDeleteLink={onDeleteLink} />);

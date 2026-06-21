@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import ReactCountryFlag from "react-country-flag";
 
-interface StatCardData {
+export interface StatCardData {
   label: string;
   value?: string;
   change?: string;
@@ -13,13 +13,70 @@ interface StatCardData {
   countryCode?: string;
   cityName?: string;
   trafficPercent?: string;
+  /** When set, the card becomes a link to this route. */
+  href?: string;
+  /** Metric with no data source yet — renders an honest placeholder. */
+  comingSoon?: boolean;
+}
+
+/** Small "Coming soon" pill for metrics that have no data source yet. */
+function ComingSoonPill() {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+        background: "#f1f3ff",
+        color: "#3b46e0",
+        padding: "3px 8px",
+        borderRadius: 99,
+        fontSize: 10,
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.08em",
+      }}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="9" height="9">
+        <circle cx="12" cy="12" r="9" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 2" />
+      </svg>
+      Coming soon
+    </span>
+  );
+}
+
+/** Renders a card as a Next.js Link when `href` is set, otherwise a plain div. */
+function CardShell({
+  href,
+  className,
+  style,
+  children,
+}: {
+  href?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  if (href) {
+    return (
+      <Link href={href} className={className} style={{ ...style, textDecoration: "none", cursor: "pointer" }}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <div className={className} style={style}>
+      {children}
+    </div>
+  );
 }
 
 interface AnalyticsCardsProps {
   cards?: StatCardData[];
 }
 
-const DEFAULT_CARDS: StatCardData[] = [
+export const DEFAULT_CARDS: StatCardData[] = [
   {
     label: "TOTAL CLICKS",
     value: "2,096",
@@ -162,13 +219,16 @@ export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
       <div className="lg:hidden" style={{ marginBottom: 16 }}>
         <div className="grid grid-cols-2 gap-3" style={{ marginBottom: 8 }}>
           {glanceCards.map((card, idx) => (
-            <div
+            <CardShell
               key={card.label}
+              href={card.href}
               style={{
+                display: "block",
                 background: "white",
                 border: "1px solid #eef0f7",
                 borderRadius: 14,
                 padding: "12px 14px",
+                color: "inherit",
                 animation: "acCardUp 0.55s cubic-bezier(0.16,1,0.3,1) both",
                 animationDelay: `${idx * 70}ms`,
               }}
@@ -186,14 +246,20 @@ export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
                   fontWeight: 400,
                   fontStyle: "italic",
                   fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                  color: "#0b1020",
+                  color: card.comingSoon ? "#c5c9e8" : "#0b1020",
                   letterSpacing: "-0.02em",
                 }}
               >
-                {card.value}
+                {card.comingSoon ? "—" : card.value}
               </p>
-              {card.change && <DeltaBadge change={card.change} />}
-            </div>
+              {card.comingSoon ? (
+                <div style={{ marginTop: 6 }}>
+                  <ComingSoonPill />
+                </div>
+              ) : (
+                card.change && <DeltaBadge change={card.change} />
+              )}
+            </CardShell>
           ))}
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -223,14 +289,16 @@ export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
           const isTopRegion = !!card.countryCode;
 
           return (
-            <div
+            <CardShell
               key={card.label}
-              className="relative overflow-hidden"
+              href={card.href}
+              className="relative overflow-hidden block"
               style={{
                 background: "white",
                 border: "1px solid #eef0f7",
                 borderRadius: 16,
                 padding: "14px 16px",
+                color: "inherit",
                 animation: "acCardUp 0.55s cubic-bezier(0.16,1,0.3,1) both",
                 animationDelay: `${idx * 70}ms`,
               }}
@@ -242,7 +310,26 @@ export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
                 {card.label}
               </p>
 
-              {isTopRegion ? (
+              {card.comingSoon ? (
+                <>
+                  <p
+                    className="leading-none"
+                    style={{
+                      fontSize: 26,
+                      fontWeight: 400,
+                      fontStyle: "italic",
+                      fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                      color: "#c5c9e8",
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    —
+                  </p>
+                  <div style={{ marginTop: 8 }}>
+                    <ComingSoonPill />
+                  </div>
+                </>
+              ) : isTopRegion ? (
                 <>
                   <div className="flex items-center gap-2">
                     {card.countryCode && (
@@ -294,7 +381,7 @@ export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
                   )}
                 </>
               )}
-            </div>
+            </CardShell>
           );
         })}
       </div>

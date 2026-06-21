@@ -24,8 +24,10 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
-import { AnalyticsCards } from "./AnalyticsCards";
+import { AnalyticsCards, DEFAULT_CARDS, type StatCardData } from "./AnalyticsCards";
+import { ClicksTrendChart } from "./ClicksTrendChart";
 import { DashboardTopBar } from "./DashboardTopBar";
+import { sumClicks, formatClicks, buildClicksSeries } from "@/lib/clicks";
 
 const PAGE_SIZE = 5;
 
@@ -318,6 +320,26 @@ export function ManageLinksSection({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  const totalClicks = useMemo(() => sumClicks(links), [links]);
+
+  // Mirror the analytics page on the dashboard: the Total Clicks card shows the
+  // real summed total (and links through to the full analytics page), while the
+  // remaining metrics (profile views, CTR, region) have no data source yet and
+  // render an honest "coming soon" state instead of mock numbers.
+  const analyticsCards = useMemo<StatCardData[]>(() => {
+    const [, ...rest] = DEFAULT_CARDS;
+    return [
+      {
+        label: "TOTAL CLICKS",
+        value: formatClicks(totalClicks),
+        changeType: "green",
+        sparkData: totalClicks > 0 ? buildClicksSeries(totalClicks, 10) : undefined,
+        href: "/user-analytics",
+      },
+      ...rest.map((card) => ({ label: card.label, comingSoon: true })),
+    ];
+  }, [totalClicks]);
+
   const filteredLinks = useMemo(() => links.filter((link) => {
     if (activeTab === "all") return true;
     const status = link.status ?? 0;
@@ -412,7 +434,9 @@ export function ManageLinksSection({
         ) : null}
       </div>
 
-      <AnalyticsCards />
+      <AnalyticsCards cards={analyticsCards} />
+
+      {links.length > 0 && <ClicksTrendChart links={links} />}
 
       {links.length === 0 ? null : <div className="flex items-center gap-2 flex-wrap">
         <span className="mr-auto" style={{ fontSize: 12.5, color: "#6b75a3" }}>
