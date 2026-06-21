@@ -90,9 +90,10 @@ export function PasswordField({
         <button
           type="button"
           onClick={onToggleShow}
+          aria-label={show ? "Hide password" : "Show password"}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-on-surface-variant cursor-pointer"
         >
-          <span className="material-symbols-outlined">
+          <span className="material-symbols-outlined" aria-hidden="true">
             {show ? "visibility_off" : "visibility"}
           </span>
         </button>
