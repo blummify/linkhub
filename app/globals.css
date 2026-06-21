@@ -770,3 +770,8 @@ html[data-dirty-save-visible] [data-nextjs-dev-tools-button],
 html[data-dirty-save-visible] [data-next-badge-root] {
   display: none !important;
 }
+
+@keyframes lhSidebarTooltipIn {
+  from { opacity: 0; transform: translateY(-50%) translateX(-6px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0);    }
+}
