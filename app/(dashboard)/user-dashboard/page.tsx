@@ -36,7 +36,7 @@ export default async function UserDashboardPage() {
         buttonStyle:     profile.buttonStyle ?? undefined,
         fontFamily:      profile.fontFamily ?? undefined,
         backgroundType:  (profile.backgroundType as BrandingAppearanceState["backgroundType"]) ?? "gradient",
-        backgroundValue: profile.backgroundValue ?? "midnight",
+        backgroundValue: profile.backgroundValue ?? "",
         backgroundKey:   profile.backgroundKey ?? null,
         effects:         profile.effects ? profile.effects.split(",").filter(Boolean) : [],
         textColor:       profile.textColor ?? null,

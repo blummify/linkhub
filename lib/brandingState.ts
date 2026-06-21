@@ -65,7 +65,7 @@ export function getDefaultBrandingState(): BrandingAppearanceState {
     buttonStyle: "rounded",
     fontFamily: "Instrument Serif",
     backgroundType: "gradient",
-    backgroundValue: "midnight",
+    backgroundValue: "",
     backgroundKey: null,
     effects: [],
     textColor: null,
