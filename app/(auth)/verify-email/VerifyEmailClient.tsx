@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { AuthShell } from "@/app/components/auth/AuthShell";
 import { sendVerificationCode, verifyEmailCode, resendVerificationCode } from "@/app/actions/auth";
@@ -262,13 +263,13 @@ const emailFromParam = searchParams.get("email");
         panelDescription="Verifying your email keeps your account safe and protects your data."
         panelFeatures={PANEL_FEATURES}
       >
-        <a
+        <Link
           href="/login"
           className="w-full bg-primary text-white py-3.5 px-4 rounded-lg font-bold tracking-wide hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
         >
           Back to login
           <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-        </a>
+        </Link>
       </AuthShell>
     );
   }
