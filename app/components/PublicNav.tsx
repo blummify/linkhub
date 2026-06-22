@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import UserAvatar from "./UserAvatar";
 import { LinkhubLogo } from "./icons/LinkhubLogo";
@@ -12,6 +13,21 @@ type PublicNavProps = {
 export function PublicNav({ activePage }: PublicNavProps) {
   const { data: session } = useSession();
   const user = session?.user;
+
+  // Tap-to-toggle for mobile (no hover); desktop keeps the group-hover behavior.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   const defaultNavLink =
     "text-slate-600 hover:text-indigo-600 transition-all hover:translate-y-[-1px]";
@@ -42,9 +58,15 @@ export function PublicNav({ activePage }: PublicNavProps) {
 
         <div className="flex items-center gap-4">
           {user ? (
-            <div className="relative group">
+            <div ref={menuRef} className="relative group">
               {/* Avatar trigger */}
-              <button type="button" className="relative flex items-center gap-1.5 active:scale-95 transition-all duration-200">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((p) => !p)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                className="relative flex items-center gap-1.5 active:scale-95 transition-all duration-200"
+              >
                 <div className="absolute -inset-1.5 bg-gradient-to-tr from-primary/20 to-primary/0 rounded-full opacity-0 group-hover:opacity-100 blur-md transition-opacity" />
                 <UserAvatar
                   src={user.image}
@@ -55,8 +77,15 @@ export function PublicNav({ activePage }: PublicNavProps) {
                 <span className="material-symbols-outlined text-slate-500 text-[16px] group-hover:text-primary transition-colors">keyboard_arrow_down</span>
               </button>
 
-              {/* Dropdown — hover bridge via pt-3 keeps it open */}
-              <div className="absolute top-full right-0 pt-3 w-52 opacity-0 translate-y-3 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
+              {/* Dropdown — hover bridge via pt-3 keeps it open; menuOpen forces it on tap (mobile) */}
+              <div
+                role="menu"
+                className={`absolute top-full right-0 pt-3 w-52 transition-all duration-300 z-50 ${
+                  menuOpen
+                    ? "opacity-100 translate-y-0 pointer-events-auto"
+                    : "opacity-0 translate-y-3 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto"
+                }`}
+              >
                 <div className="bg-white/90 dark:bg-surface/90 backdrop-blur-xl border border-outline-variant/30 rounded-2xl shadow-2xl p-2 overflow-hidden">
                   {/* User info */}
                   <div className="px-3 py-2.5 border-b border-outline-variant/20 mb-1">
@@ -67,6 +96,8 @@ export function PublicNav({ activePage }: PublicNavProps) {
                   {/* Dashboard */}
                   <Link
                     href="/user-dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    role="menuitem"
                     className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors"
                   >
                     <span className="material-symbols-outlined text-[18px] opacity-60">dashboard</span>
@@ -78,8 +109,10 @@ export function PublicNav({ activePage }: PublicNavProps) {
                   {/* Logout */}
                   <button
                     type="button"
+                    role="menuitem"
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-semibold text-red-500/80 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 transition-colors text-left"
                     onClick={() => {
+                      setMenuOpen(false);
                       localStorage.removeItem("linkhub-branding-v2");
                       localStorage.removeItem("linkhub-branding-v1");
                       void signOut({ callbackUrl: "/" });
