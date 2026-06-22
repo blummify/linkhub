@@ -57,6 +57,21 @@ vi.mock("@/app/components/DashboardPreviewPanel", () => ({
   DashboardPreviewPanel: () => <div data-testid="preview-panel" />,
 }));
 
+// Heavy children not exercised by these tests — stub them so the render stays
+// cheap and deterministic (the real ThemesSection alone renders every theme
+// with live previews, which blew the 5s timeout under parallel-worker load).
+vi.mock("../components/ThemesSection", () => ({
+  ThemesSection: () => <div data-testid="themes-section" />,
+}));
+
+vi.mock("@/app/components/CommandPalette", () => ({
+  CommandPalette: () => null,
+}));
+
+vi.mock("@/app/components/ClaimHandleModal", () => ({
+  ClaimHandleModal: () => null,
+}));
+
 vi.mock("@/app/actions/links", () => ({
   getProfile: vi.fn().mockResolvedValue(null),
   claimHandle: vi.fn().mockResolvedValue({ success: true }),

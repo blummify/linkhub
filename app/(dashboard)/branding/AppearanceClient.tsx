@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -128,7 +128,7 @@ export default function AppearanceClient({
 
   const [isSaving, setIsSaving] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -139,10 +139,6 @@ export default function AppearanceClient({
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [pendingAvatarBlob, setPendingAvatarBlob] = useState<Blob | null>(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
-
-  useEffect(() => {
-    queueMicrotask(() => setMounted(true));
-  }, []);
 
   useEffect(() => {
     document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
