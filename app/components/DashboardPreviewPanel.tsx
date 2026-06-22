@@ -14,31 +14,20 @@ import {
   getBrandingThemeById,
 } from "@/lib/brandingState";
 import { getGradientById } from "@/app/constants/editorBackgroundGradients";
-import { LINK_ICON_COLORS } from "@/app/constants/linkIconColors";
+import { isLinkIconKey } from "@/app/constants/linkIconColors";
 
 function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailUrl?: string }) {
-  const cfg = LINK_ICON_COLORS[iconKey ?? ""] ?? LINK_ICON_COLORS.website;
   if (thumbnailUrl) {
     return (
-      <div
-        style={{
-          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-          overflow: "hidden",
-        }}
-      >
+      <div className="w-[22px] h-[22px] rounded-md shrink-0 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        <img src={thumbnailUrl} alt="" className="w-full h-full object-cover block" />
       </div>
     );
   }
+  const key = isLinkIconKey(iconKey) ? iconKey : "website";
   return (
-    <div
-      style={{
-        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: cfg.bg, color: cfg.fg,
-      }}
-    >
+    <div className={`w-[22px] h-[22px] rounded-md shrink-0 flex items-center justify-center dp-link-icon--${key}`}>
       {iconKey === "instagram" ? (
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="2" y="2" width="20" height="20" rx="5"/>

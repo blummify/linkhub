@@ -775,3 +775,25 @@ html[data-dirty-save-visible] [data-next-badge-root] {
   from { opacity: 0; transform: translateY(-50%) translateX(-6px); }
   to   { opacity: 1; transform: translateY(-50%) translateX(0);    }
 }
+
+/* Dashboard live-preview link icon — colors match `pp-link-icon--*` in public-profile.css exactly. */
+.dp-link-icon--website {
+  background: linear-gradient(135deg, #eef1ff, #dbe2ff);
+  color: #2a37c0;
+}
+.dp-link-icon--instagram {
+  background: linear-gradient(135deg, #ffe9f1, #ffd9e6);
+  color: #d6336c;
+}
+.dp-link-icon--youtube {
+  background: linear-gradient(135deg, #fff1f0, #ffd9d6);
+  color: #c0392b;
+}
+.dp-link-icon--twitter {
+  background: linear-gradient(135deg, #e9f3ff, #d2e6ff);
+  color: #1565d8;
+}
+.dp-link-icon--spotify {
+  background: linear-gradient(135deg, #e9fff0, #d2f5e3);
+  color: #1db954;
+}

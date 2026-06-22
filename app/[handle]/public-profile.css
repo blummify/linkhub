@@ -128,6 +128,30 @@
   display: grid;
   place-items: center;
 }
+.pp-link-icon--website {
+  background: linear-gradient(135deg, #eef1ff, #dbe2ff);
+  color: #2a37c0;
+}
+.pp-link-icon--instagram {
+  background: linear-gradient(135deg, #ffe9f1, #ffd9e6);
+  color: #d6336c;
+}
+.pp-link-icon--youtube {
+  background: linear-gradient(135deg, #fff1f0, #ffd9d6);
+  color: #c0392b;
+}
+.pp-link-icon--twitter {
+  background: linear-gradient(135deg, #e9f3ff, #d2e6ff);
+  color: #1565d8;
+}
+.pp-link-icon--spotify {
+  background: linear-gradient(135deg, #e9fff0, #d2f5e3);
+  color: #1db954;
+}
+.pp-link-icon--thumb {
+  object-fit: cover;
+  border-radius: 9px;
+}
 .pp-link-label {
   flex: 1;
   overflow: hidden;

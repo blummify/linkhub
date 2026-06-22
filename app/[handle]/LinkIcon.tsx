@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { LINK_ICON_COLORS } from "@/app/constants/linkIconColors";
+import { isLinkIconKey } from "@/app/constants/linkIconColors";
 
 const ICON_GLYPHS: Record<string, ReactNode> = {
   instagram: (
@@ -37,14 +37,14 @@ export function LinkIcon({ iconKey, thumbnailUrl }: { iconKey: string | null; th
   if (thumbnailUrl) {
     return (
       <span className="pp-link-icon">
-        <Image src={thumbnailUrl} alt="" width={34} height={34} style={{ objectFit: "cover", borderRadius: 9 }} />
+        <Image src={thumbnailUrl} alt="" width={34} height={34} className="pp-link-icon--thumb" />
       </span>
     );
   }
 
-  const cfg = LINK_ICON_COLORS[iconKey ?? ""] ?? LINK_ICON_COLORS.website;
+  const key = isLinkIconKey(iconKey) ? iconKey : "website";
   return (
-    <span className="pp-link-icon" style={{ background: cfg.bg, color: cfg.fg }}>
+    <span className={`pp-link-icon pp-link-icon--${key}`}>
       {ICON_GLYPHS[iconKey ?? ""] ?? ICON_GLYPHS.website}
     </span>
   );
