@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DashboardPageTransition } from "../../components/DashboardPageTransition";
@@ -307,16 +308,39 @@ export default function AppearanceClient({
         setPendingAvatarBlob(null);
         setPendingAvatarPreview(null);
       }
+
+      // Persist the handle separately via claimHandle — it owns handle validation,
+      // cross-user uniqueness, the hasClaimedHandle flag, and cache invalidation.
+      // Only call it when the handle actually changed from the last saved value.
+      const savedHandle = useBrandingStore.getState()._baseline.handle;
+      if (handle !== savedHandle) {
+        const handleResult = await claimHandle(handle);
+        if ("error" in handleResult) {
+          toast.error(handleResult.error);
+          // Revert the field (live + baseline) to the last saved value so the UI
+          // does not falsely indicate success.
+          useBrandingStore.getState().syncFromDb({ handle: savedHandle });
+          return;
+        }
+      }
+
       const result = await updateBranding({ displayName, bio, themeId, accentColor, buttonStyle, fontFamily });
       if ("error" in result) {
-        console.error("[handleSave] updateBranding error:", result.error);
+        toast.error(result.error);
         return;
       }
       markSaved();
+      toast.success("Changes saved");
+    } catch (err) {
+      // Unexpected failure (thrown server action, e.g. expired session, or network
+      // error). markSaved() was not reached, so the dirty state is preserved — never
+      // a false success — but surface feedback so the user can retry.
+      console.error("[handleSave] unexpected error:", err);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSaving(false);
     }
-  }, [isSaving, pendingAvatarBlob, upload, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
+  }, [isSaving, pendingAvatarBlob, upload, handle, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
 
   const handleResetRequest = useCallback(() => {
     setShowResetConfirm(true);

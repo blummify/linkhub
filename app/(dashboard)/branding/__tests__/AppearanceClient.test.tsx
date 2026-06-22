@@ -1,7 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { screen, fireEvent, within } from "@testing-library/react";
+import { screen, fireEvent, within, waitFor } from "@testing-library/react";
+import { toast } from "sonner";
 import AppearanceClient from "../AppearanceClient";
 import { renderWithSidebarAndBranding } from "@/app/test-utils/renderWithProviders";
+import { claimHandle } from "@/app/actions/links";
+import { updateBranding } from "@/app/actions/profile";
 
 const { brandingState, useBrandingStoreMock } = vi.hoisted(() => {
   const baseline = {
@@ -34,6 +37,10 @@ const { brandingState, useBrandingStoreMock } = vi.hoisted(() => {
       Object.assign(state, { ...state._baseline, isDirty: false });
     }),
     markSaved: vi.fn(),
+    syncFromDb: vi.fn((data: Partial<typeof baseline>) => {
+      Object.assign(state, data);
+      Object.assign(state._baseline, data);
+    }),
   };
 
   const useBrandingStoreMock = Object.assign(
@@ -89,6 +96,10 @@ vi.mock("@/app/actions/profile", () => ({
 
 vi.mock("@/app/actions/upload", () => ({
   deleteOrphanedUpload: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+vi.mock("sonner", () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
 }));
 
 vi.mock("@/lib/hooks/useFileUpload", () => ({
@@ -185,5 +196,57 @@ describe("AppearanceClient", () => {
     fireEvent.click(screen.getByRole("button", { name: "Discard changes" }));
     fireEvent.animationEnd(screen.getByTestId("modal-panel"));
     expect(brandingState.reset).toHaveBeenCalled();
+  });
+
+  it("persists a changed handle via claimHandle on save", async () => {
+    brandingState._baseline.handle = "oldhandle";
+    brandingState.handle = "newhandle";
+    renderWithSidebarAndBranding(<AppearanceClient />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Save changes/i }));
+
+    await waitFor(() => expect(claimHandle).toHaveBeenCalledWith("newhandle"));
+    expect(updateBranding).toHaveBeenCalled();
+    await waitFor(() => expect(brandingState.markSaved).toHaveBeenCalled());
+  });
+
+  it("skips claimHandle when the handle is unchanged", async () => {
+    brandingState._baseline.handle = "samehandle";
+    brandingState.handle = "samehandle";
+    brandingState.displayName = "New name";
+    renderWithSidebarAndBranding(<AppearanceClient />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Save changes/i }));
+
+    await waitFor(() => expect(updateBranding).toHaveBeenCalled());
+    expect(claimHandle).not.toHaveBeenCalled();
+    expect(brandingState.markSaved).toHaveBeenCalled();
+  });
+
+  it("shows an error and reverts the handle when claimHandle fails", async () => {
+    vi.mocked(claimHandle).mockResolvedValueOnce({ error: "That handle is already taken. Try another." });
+    brandingState._baseline.handle = "oldhandle";
+    brandingState.handle = "takenhandle";
+    renderWithSidebarAndBranding(<AppearanceClient />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Save changes/i }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("That handle is already taken. Try another.")
+    );
+    expect(brandingState.syncFromDb).toHaveBeenCalledWith({ handle: "oldhandle" });
+    expect(updateBranding).not.toHaveBeenCalled();
+    expect(brandingState.markSaved).not.toHaveBeenCalled();
+  });
+
+  it("surfaces an error without marking saved when a save action throws", async () => {
+    vi.mocked(updateBranding).mockRejectedValueOnce(new Error("Unauthorized"));
+    brandingState.displayName = "New name";
+    renderWithSidebarAndBranding(<AppearanceClient />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Save changes/i }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(brandingState.markSaved).not.toHaveBeenCalled();
   });
 });
