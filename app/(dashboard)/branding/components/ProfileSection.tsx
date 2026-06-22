@@ -259,8 +259,9 @@ export function ProfileSection({
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <div className="grid grid-cols-1 gap-[14px] lg:grid-cols-2">
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            <label style={fieldLabel}>Display name</label>
+            <label htmlFor="profile-display-name" style={fieldLabel}>Display name</label>
             <input
+              id="profile-display-name"
               type="text"
               value={displayName}
               onChange={(e) => onDisplayNameChange(e.target.value)}
@@ -273,7 +274,7 @@ export function ProfileSection({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            <label style={fieldLabel}>Handle</label>
+            <label htmlFor="profile-handle" style={fieldLabel}>Handle</label>
             <div style={{ position: "relative" }}>
               <span
                 style={{
@@ -290,6 +291,7 @@ export function ProfileSection({
                 @
               </span>
               <input
+                id="profile-handle"
                 type="text"
                 value={handle}
                 onChange={(e) =>
@@ -327,7 +329,7 @@ export function ProfileSection({
               justifyContent: "space-between",
             }}
           >
-            <label style={fieldLabel}>Short bio</label>
+            <label htmlFor="profile-bio" style={fieldLabel}>Short bio</label>
             <span
               style={{
                 fontFamily: BRANDING_FONT_MONO,
@@ -339,6 +341,7 @@ export function ProfileSection({
             </span>
           </div>
           <textarea
+            id="profile-bio"
             value={bio}
             onChange={(e) => onBioChange(e.target.value.slice(0, MAX_BIO))}
             placeholder="Tell visitors what you're about…"

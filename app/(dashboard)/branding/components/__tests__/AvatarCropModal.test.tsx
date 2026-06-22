@@ -59,9 +59,9 @@ describe("AvatarCropModal", () => {
     render(
       <AvatarCropModal file={makeFile()} onConfirm={vi.fn()} onCancel={vi.fn()} />
     );
-    expect(screen.getByTitle("Circle")).toBeInTheDocument();
-    expect(screen.getByTitle("Square")).toBeInTheDocument();
-    expect(screen.getByTitle("Rect")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /circle crop shape/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /square crop shape/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /rect crop shape/i })).toBeInTheDocument();
   });
 
   it("save button is disabled when no crop has been completed", () => {

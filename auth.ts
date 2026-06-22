@@ -6,6 +6,7 @@ import { createHash } from "crypto";
 import authConfig from "./auth.config";
 import { db } from "@/lib/db";
 import { createPendingTwoFactorToken } from "@/lib/twoFactorChallenge";
+import { verifySuperAdminCredentials } from "@/lib/adminAuth";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -51,6 +52,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   providers: [
     ...authConfig.providers,
+    Credentials({
+      // Dedicated super-admin login (admin subdomain only). All validation,
+      // constant-time password checks, role gating, and rate limiting live in
+      // verifySuperAdminCredentials, which returns null for every failure so the
+      // UI only ever shows a generic "Invalid credentials".
+      id: "admin-credentials",
+      name: "Admin Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize(credentials) {
+        return verifySuperAdminCredentials(credentials?.email, credentials?.password);
+      },
+    }),
     Credentials({
       name: "Credentials",
       credentials: {

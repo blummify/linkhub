@@ -19,7 +19,7 @@ export default function UserAvatar({ src, name, email, className }: Props) {
     return (
       <Image
         src={src!}
-        alt=""
+        alt={name || email || "User avatar"}
         width={96}
         height={96}
         className={className}

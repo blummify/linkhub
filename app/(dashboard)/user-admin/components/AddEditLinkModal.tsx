@@ -5,6 +5,7 @@ import FocusTrap from "focus-trap-react";
 import type { ManagedLink } from "./types";
 import { LinkStatus, type LinkStatusValue } from "@/app/constants/linkStatus";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
+import { normalizeUrl, isValidUrl } from "@/lib/url";
 
 interface AddEditLinkModalProps {
   open: boolean;
@@ -127,16 +128,6 @@ const DOMAIN_MAP: Record<string, { title: string; icon: PresetId }> = {
   "github.com":    { title: "GitHub Profile",    icon: "globe"     },
 };
 
-function isValidURL(str: string) {
-  try {
-    const u = new URL(str);
-    if (u.protocol === "mailto:") return u.pathname.length > 0;
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
 // ── Preset icon auto-fill defaults ───────────────────────────────────────────
 
 const PRESET_DEFAULTS: Record<PresetId, { url: string; title: string }> = {
@@ -152,7 +143,7 @@ const PRESET_DEFAULTS: Record<PresetId, { url: string; title: string }> = {
 
 function detectFromURL(url: string): { title: string; icon: PresetId } | null {
   try {
-    const host = new URL(url).hostname.replace("www.", "");
+    const host = new URL(normalizeUrl(url)).hostname.replace("www.", "");
     if (DOMAIN_MAP[host]) return DOMAIN_MAP[host];
     const clean = host.split(".")[0];
     return { title: clean.charAt(0).toUpperCase() + clean.slice(1), icon: "globe" };
@@ -217,7 +208,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
   }, [isClosing, onClose]);
 
   const isEdit  = !!initialLink;
-  const canSave = title.trim().length > 0 && isValidURL(url.trim()) && !isSaving && !isUploadingThumb;
+  const canSave = title.trim().length > 0 && isValidUrl(url.trim()) && !isSaving && !isUploadingThumb;
 
   const handleSave = useCallback(async () => {
     if (!canSave) return;
@@ -235,7 +226,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
 
     onSave({
       title: title.trim(),
-      url: url.trim(),
+      url: normalizeUrl(url.trim()),
       icon: selectedPreset,
       thumbnailUrl: finalThumbnailUrl,
       thumbnailKey: finalThumbnailKey,
@@ -268,7 +259,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!val.trim()) return;
     debounceRef.current = setTimeout(() => {
-      if (isValidURL(val.trim())) {
+      if (isValidUrl(val.trim())) {
         setUrlValidState("valid");
         setUrlError(false);
         if (!title.trim()) {
@@ -302,7 +293,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
     setDetectedInfo(null);
     setUrlError(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    setUrlValidState(defaults.url && isValidURL(defaults.url) ? "valid" : "none");
+    setUrlValidState(defaults.url && isValidUrl(defaults.url) ? "valid" : "none");
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -493,7 +484,7 @@ export function AddEditLinkModal({ open, onClose, onSave, initialLink }: AddEdit
                   <circle cx="12" cy="12" r="10"/>
                   <path strokeLinecap="round" d="M12 8v4M12 16h.01"/>
                 </svg>
-                <span>Please enter a valid URL starting with http:// or https://</span>
+                <span>Please enter a valid URL or domain (e.g. example.com)</span>
               </div>
             )}
 
