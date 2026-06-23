@@ -14,6 +14,7 @@ export interface PublicProfileLink {
 }
 
 export interface PublicProfile {
+  userId: string;
   displayName: string | null;
   bio: string | null;
   avatarUrl: string | null;
@@ -56,6 +57,7 @@ export async function getPublicProfileByHandle(handle: string): Promise<PublicPr
         hasClaimedHandle: true,
         user: {
           select: {
+            id: true,
             name: true,
             links: {
               where: { status: LinkStatus.PUBLISHED },
@@ -70,6 +72,7 @@ export async function getPublicProfileByHandle(handle: string): Promise<PublicPr
     if (!profile || !profile.hasClaimedHandle) return null;
 
     const result: PublicProfile = {
+      userId: profile.user.id,
       displayName: profile.displayName,
       bio: profile.bio,
       avatarUrl: profile.avatarUrl,

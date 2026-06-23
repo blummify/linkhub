@@ -3,9 +3,13 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
+import { headers } from "next/headers";
 import { APP_DOMAIN } from "@/lib/appConfig";
+import { getClientIp } from "@/lib/geo";
 import { getPublicProfileByHandle } from "@/lib/publicProfile";
 import { computeProfileThemeTokens } from "@/lib/publicProfileTheme";
+import { recordProfileView } from "@/lib/analytics/profileViews";
 import { ShareButton } from "./ShareButton";
 import { LinkIcon } from "./LinkIcon";
 import "./public-profile.css";
@@ -49,6 +53,11 @@ export default async function PublicProfilePage({ params }: PageParams) {
   const { handle } = await params;
   const profile = await getPublicProfileByHandle(handle);
   if (!profile) notFound();
+
+  const hdrs = await headers();
+  const userAgent = hdrs.get("user-agent");
+  const ip = getClientIp((name) => hdrs.get(name));
+  after(() => recordProfileView({ userId: profile.userId, userAgent, ip }));
 
   const displayName = profile.displayName ?? profile.userName ?? handle;
   const initial = displayName.charAt(0).toUpperCase() || "?";
