@@ -17,7 +17,7 @@ describe("ClaimHandleModal", () => {
 
   it("shows the domain prefix", () => {
     render(<ClaimHandleModal open onClose={vi.fn()} onClaim={vi.fn()} />);
-    expect(screen.getByText(/linkhub\.co\//)).toBeInTheDocument();
+    expect(screen.getByText(/getlinkhub\.app\//)).toBeInTheDocument();
   });
 
   it("disables Continue button when handle is empty", () => {
