@@ -1469,7 +1469,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
       links={links}
       avatarSize={device === "desktop" ? 76 : undefined}
       appearance={appearance}
-      
+      avatarUrl={avatarUrl}
     />
   );
 
@@ -1523,7 +1523,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
               color: "#0b1020",
             }}
           >
-            Live preview
+            Live preview 
           </div>
           <div suppressHydrationWarning style={{ fontSize: 12, color: "#6b75a3", marginTop: 2, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
             <span suppressHydrationWarning>{domain}</span>
