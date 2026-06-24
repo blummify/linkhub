@@ -14,6 +14,7 @@ import {
   getBrandingThemeById,
 } from "@/lib/brandingState";
 import { getGradientById } from "@/app/constants/editorBackgroundGradients";
+import { useProfileStore } from "@/store/profileStore";
 
 const ICON_CFG: Record<string, { bg: string; fg: string }> = {
   website:   { bg: "linear-gradient(135deg,#eef1ff,#dbe2ff)", fg: "#2a37c0" },
@@ -188,12 +189,14 @@ export function PhoneScreenContent({
   links,
   avatarSize = 70,
   appearance,
+  avatarUrl,
 }: {
   displayName: string;
   bio?: string;
   links: ManagedLink[];
   avatarSize?: number;
   appearance?: AppearanceTheme;
+  avatarUrl?: string | null;
 }) {
   const initial = displayName.charAt(0).toUpperCase() || "?";
   const dark =
@@ -349,15 +352,19 @@ export function PhoneScreenContent({
             style={{
               width: 44, height: 44, flexShrink: 0,
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
+              background: avatarUrl ? "none" : "linear-gradient(135deg, #3b46e0, #7a85ff)",
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "white",
+              overflow: "hidden",
               fontFamily: headlineFont,
               fontSize: 18, fontStyle: "italic",
               ...(hasPulse ? { ["--pc" as string]: `${neonAccent}66`, animation: "lhPulse 1.8s ease-out infinite" } : {}),
             }}
-          >
-            {initial}
+          >          
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (initial)}
           </div>
           <div style={{ minWidth: 0 }}>
             <div
@@ -424,9 +431,10 @@ export function PhoneScreenContent({
           style={{
             width: centeredSize, height: centeredSize,
             borderRadius: "50%",
-            background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
+            background: avatarUrl ? "none" : "linear-gradient(135deg, #3b46e0, #7a85ff)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "white",
+            overflow: "hidden",
             fontFamily: headlineFont,
             fontSize: Math.round(centeredSize * 0.4), fontStyle: "italic",
             boxShadow: "0 10px 24px -8px rgba(59,70,224,0.45)",
@@ -437,7 +445,10 @@ export function PhoneScreenContent({
             } : {}),
           }}
         >
-          {initial}
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (initial)}
         </div>
         <div
           style={{
@@ -1357,6 +1368,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
     }))
   );
   const appearance = useBrandingStore(useShallow(brandingStateToPreviewAppearance)) as AppearanceTheme;
+  const avatarUrl = useProfileStore((s) => s.avatarUrl);
   const publicUrl = brandingPublicUrl(handle);
   const themeLabel = getBrandingThemeById(themeId).name;
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
@@ -1449,6 +1461,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
   if (!hydrated) return <DashboardPreviewPanelSkeleton width={width} />;
 
   const isSheet = typeof width === "string";
+
   const screenContent = (
     <PhoneScreenContent
       displayName={displayName}
@@ -1456,6 +1469,7 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
       links={links}
       avatarSize={device === "desktop" ? 76 : undefined}
       appearance={appearance}
+      
     />
   );
 
