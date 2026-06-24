@@ -33,7 +33,7 @@ export function AuthShell({
   panelFeatures,
   onBackClick,
 }: AuthShellProps) {
-  const backClass = "group inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-primary transition-colors mb-8";
+  const backClass = "group inline-flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors mb-8";
 
   // The reCAPTCHA script injects a floating `.grecaptcha-badge` directly into
   // document.body, outside React's tree, and next/script never removes

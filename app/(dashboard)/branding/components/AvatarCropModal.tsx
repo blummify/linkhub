@@ -167,7 +167,8 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
                   key={s}
                   type="button"
                   onClick={() => setShape(s)}
-                  title={s.charAt(0).toUpperCase() + s.slice(1)}
+                  aria-label={`${s.charAt(0).toUpperCase() + s.slice(1)} crop shape`}
+                  aria-pressed={shape === s}
                   className={`w-7 h-7 flex items-center justify-center rounded-full text-[11px] font-bold transition-all cursor-pointer ${
                     shape === s
                       ? "bg-white text-gray-900"
@@ -175,11 +176,11 @@ export function AvatarCropModal({ file, name, onConfirm, onCancel }: AvatarCropM
                   }`}
                 >
                   {s === "circle" ? (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
                   ) : s === "square" ? (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="3"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="3"/></svg>
                   ) : (
-                    <svg width="17" height="11" viewBox="0 0 28 17" fill="currentColor"><rect x="0" y="0" width="28" height="17" rx="3"/></svg>
+                    <svg width="17" height="11" viewBox="0 0 28 17" fill="currentColor" aria-hidden="true"><rect x="0" y="0" width="28" height="17" rx="3"/></svg>
                   )}
                 </button>
               ))}

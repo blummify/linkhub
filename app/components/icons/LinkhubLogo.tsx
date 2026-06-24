@@ -89,7 +89,7 @@ export function LinkhubLogo({
   size?: LogoSize;
 }) {
   const { fontSize, gap, lockupRingH } = SIZES[size];
-  const textColor = "#3a52e0";
+  const textColor = "#4c62ea";
   const brushH  = Math.round(fontSize * 0.22);
   const brushMT = Math.round(fontSize * 0.06);
 

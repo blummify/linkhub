@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -43,6 +43,16 @@ export default function CollapsibleSidebar({
 }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const reduced = usePrefersReducedMotion();
+
+  const [tooltip, setTooltip] = useState<{ label: string; y: number } | null>(null);
+
+  const showTooltip = useCallback((label: string, e: React.MouseEvent) => {
+    if (!isCollapsed) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setTooltip({ label, y: rect.top + rect.height / 2 });
+  }, [isCollapsed]);
+
+  const hideTooltip = useCallback(() => setTooltip(null), []);
 
   const linkCount = useLinksStore((s) => s.links.length);
   const pathname = usePathname();
@@ -131,10 +141,12 @@ export default function CollapsibleSidebar({
                 onMouseEnter={e => {
                   if (!active)
                     (e.currentTarget as HTMLAnchorElement).style.background = "#eef0f7";
+                  showTooltip(label, e);
                 }}
                 onMouseLeave={e => {
                   if (!active)
                     (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+                  hideTooltip();
                 }}
               >
                 {active && (
@@ -237,10 +249,12 @@ export default function CollapsibleSidebar({
                   onMouseEnter={e => {
                     if (!active)
                       (e.currentTarget as HTMLAnchorElement).style.background = "#eef0f7";
+                    showTooltip(label, e);
                   }}
                   onMouseLeave={e => {
                     if (!active)
                       (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+                    hideTooltip();
                   }}
                 >
                   {active && (
@@ -333,10 +347,12 @@ export default function CollapsibleSidebar({
             onMouseEnter={e => {
               (e.currentTarget as HTMLAnchorElement).style.background = "#eef0f7";
               (e.currentTarget as HTMLAnchorElement).style.color = "#0b1020";
+              showTooltip("Help", e);
             }}
             onMouseLeave={e => {
               (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
               (e.currentTarget as HTMLAnchorElement).style.color = "#3a4474";
+              hideTooltip();
             }}
           >
             <HelpIcon className="w-3.5 h-3.5 shrink-0" />
@@ -363,19 +379,45 @@ export default function CollapsibleSidebar({
             onMouseEnter={e => {
               (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7";
               (e.currentTarget as HTMLButtonElement).style.color = "#0b1020";
+              showTooltip("Log out", e);
             }}
             onMouseLeave={e => {
               (e.currentTarget as HTMLButtonElement).style.background = "transparent";
               (e.currentTarget as HTMLButtonElement).style.color = "#3a4474";
+              hideTooltip();
             }}
           >
             <LogoutIcon className="w-3.5 h-3.5 shrink-0" />
             {!isCollapsed && <span>Log out</span>}
           </button>
         </div>
+        {isCollapsed && tooltip && (
+          <div
+            aria-hidden="true"
+            style={{
+              position: "fixed",
+              left: 84,
+              top: tooltip.y,
+              transform: "translateY(-50%)",
+              background: "#1a2244",
+              color: "white",
+              padding: "6px 12px",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+              pointerEvents: "none",
+              zIndex: 9999,
+              boxShadow: "0 4px 16px rgba(15,23,42,0.18)",
+              animation: "lhSidebarTooltipIn 160ms var(--ease-out) both",
+            }}
+          >
+            {tooltip.label}
+          </div>
+        )}
       </aside>
 
-      <div className="flex-1 h-screen overflow-hidden relative flex flex-col pt-14 lg:pt-0">
+      <div className="flex-1 h-dvh overflow-hidden relative flex flex-col pt-14 lg:pt-0">
         {children}
       </div>
 

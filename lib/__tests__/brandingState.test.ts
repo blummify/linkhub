@@ -78,8 +78,8 @@ describe("brandingState", () => {
   });
 
   it("brandingPublicUrl builds slug from handle", () => {
-    expect(brandingPublicUrl("joel")).toBe("linkhub.co/joel");
-    expect(brandingPublicUrl("  ")).toBe("linkhub.co/");
+    expect(brandingPublicUrl("joel")).toBe("getlinkhub.app/joel");
+    expect(brandingPublicUrl("  ")).toBe("getlinkhub.app/");
   });
 
   it("saveBrandingState dispatches custom event", () => {

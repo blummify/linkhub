@@ -59,6 +59,9 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
     >
       <div
         data-testid="modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-dialog-title"
         className="relative w-full flex flex-col"
         style={{
           maxWidth:     isMobile ? undefined : 420,
@@ -93,7 +96,7 @@ export function DeleteConfirmDialog({ open, link, onClose, onConfirm, isLoading 
           </svg>
         </div>
 
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: "#0b1020", marginBottom: 8, letterSpacing: "-0.01em" }}>
+        <h2 id="delete-dialog-title" style={{ fontSize: 18, fontWeight: 700, color: "#0b1020", marginBottom: 8, letterSpacing: "-0.01em" }}>
           Delete &ldquo;{link.title}&rdquo;?
         </h2>
         <p style={{ fontSize: 14, color: "#6b75a3", lineHeight: 1.55 }}>

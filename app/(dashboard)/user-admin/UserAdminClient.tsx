@@ -300,14 +300,15 @@ export default function UserAdminClient() {
 
   return (
     <>
-      <div className="flex-1 flex flex-col min-h-screen relative">
+      <div className="flex-1 flex flex-col min-h-0 relative">
         <main
               id="mainContent"
+              tabIndex={-1}
               className={`flex-1 transition-all duration-500 ease-in-out ${
                 isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
-              } ml-0 overflow-y-auto bg-[#f7f8fc] h-screen`}
+              } ml-0 overflow-y-auto bg-[#f7f8fc] min-h-0 overscroll-y-contain`}
             >
-              <div className="flex flex-col lg:flex-row min-h-screen">
+              <div className="flex flex-col lg:flex-row min-h-full lg:min-h-screen">
                 <div className={`flex-1 min-w-0 px-4 pt-[22px] sm:px-6 lg:px-8 lg:pb-10 ${links.length > 0 ? "pb-40" : "pb-36"}`}>
                   <DashboardPageTransition>
                   <ManageLinksSection

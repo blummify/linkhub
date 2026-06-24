@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useUIStore } from "@/store/uiStore";
 import {
   DndContext,
@@ -29,7 +29,29 @@ import { ClicksTrendChart } from "./ClicksTrendChart";
 import { DashboardTopBar } from "./DashboardTopBar";
 import { sumClicks, formatClicks, buildClicksSeries } from "@/lib/clicks";
 
-const PAGE_SIZE = 5;
+const DESKTOP_PAGE_SIZE = 8;
+const MOBILE_PAGE_SIZE = 5;
+const MOBILE_BREAKPOINT = 640;
+
+function useResponsivePageSize(): number {
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window === "undefined") return DESKTOP_PAGE_SIZE;
+    return window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px)`).matches
+      ? DESKTOP_PAGE_SIZE
+      : MOBILE_PAGE_SIZE;
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px)`);
+    const handler = (e: MediaQueryListEvent) => {
+      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : MOBILE_PAGE_SIZE);
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  return pageSize;
+}
 
 function EmptyLinksState({ onAddLink }: { onAddLink?: () => void }) {
   return (
@@ -303,15 +325,21 @@ export function ManageLinksSection({
   const openPalette = useUIStore((s) => s.openPalette);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [visibleLinks, setVisibleLinks] = useState(PAGE_SIZE);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showAll, setShowAll] = useState(false);
   const prevLinksLengthRef = useRef(links.length);
 
+  // Responsive page size — desktop shows 8, mobile shows 5
+const pageSize = useResponsivePageSize();
+
+  // New link added will jump to page 1 so user sees it
   useEffect(() => {
     const prev = prevLinksLengthRef.current;
     prevLinksLengthRef.current = links.length;
-
     if (links.length === prev + 1) {
-      setVisibleLinks(c => c + 1);
+      setCurrentPage(1);
+      setShowAll(false);
     }
   }, [links.length]);
 
@@ -349,17 +377,36 @@ export function ManageLinksSection({
     return true;
   }), [links, activeTab]);
 
-  const visibleLinkSlides = filteredLinks.slice(0, visibleLinks);
-  const remainingLinks = filteredLinks.length - visibleLinks;
-  const nextBatch = Math.min(PAGE_SIZE, remainingLinks);
-  const showControls = remainingLinks > 0;
+  const linkIndexMap = useMemo(() => {
+  const map = new Map<string, number>();
+  links.forEach((l, i) => map.set(getLinkId(l), i));
+  return map;
+  }, [links]);
 
-  const activeLink = activeId
-    ? filteredLinks.find((l) => getLinkId(l) === activeId) ?? null
-    : null;
+  const paginationState = useMemo ( () => {
+    const totalPages = Math.max(1, Math.ceil(filteredLinks.length / pageSize));
+    const safePage = Math.min(currentPage, totalPages);
+    const startIdx = (safePage - 1) * pageSize;
+    const visibleLinkSlides = showAll
+    ? filteredLinks : filteredLinks.slice(startIdx, startIdx + pageSize);
+    const showControls = !showAll && filteredLinks.length > pageSize;
+    return { totalPages, safePage, startIdx, visibleLinkSlides, showControls };
+  }, [filteredLinks, currentPage, pageSize, showAll]);
+
+  const { totalPages, safePage, visibleLinkSlides, showControls } = paginationState;
+
+  const activeLink = useMemo(() => {
+  if (!activeId) return null;
+  const idx = linkIndexMap.get(activeId);
+  return idx !== undefined ? links[idx] : null;
+  }, [activeId, linkIndexMap, links]);
+
+  const goToPage = useCallback((nextPage: number) => {
+    setCurrentPage(Math.max(1, Math.min(nextPage, totalPages)));
+  }, [totalPages]);
 
   const handleDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(String(active.id));
+  setActiveId(String(active.id));
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
@@ -448,7 +495,7 @@ export function ManageLinksSection({
             <button
               key={key}
               type="button"
-              onClick={() => { setActiveTab(key); setVisibleLinks(PAGE_SIZE); }}
+              onClick={() => { setActiveTab(key); setCurrentPage(1); setShowAll(false); }}
               className="shrink-0 cursor-pointer transition-all duration-150"
               style={{
                 borderRadius: 99,
@@ -497,7 +544,7 @@ export function ManageLinksSection({
               style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom, 0px))" }}
             >
               {visibleLinkSlides.map((link) => {
-                const originalIndex = links.indexOf(link);
+                const originalIndex = linkIndexMap.get(getLinkId(link)) ?? -1
                 return (
                   <SortableCardWrapper
                     key={getLinkId(link)}
@@ -518,74 +565,101 @@ export function ManageLinksSection({
           </SortableContext>
 
           {showControls && (
-            <div
-              className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-center sm:gap-6"
-              style={{ marginTop: 8 }}
-            >
-              <span style={{ fontSize: 13.5, color: "#6b75a3" }}>
-                Showing{" "}
-                <b style={{ color: "#0b1020", fontWeight: 600 }}>{visibleLinks}</b>
-                {" "}of{" "}
-                <b style={{ color: "#0b1020", fontWeight: 600 }}>{filteredLinks.length}</b>
-                {" "}links
-              </span>
-
               <div
-                className="inline-flex items-center"
-                style={{
-                  background: "white",
-                  border: "1px solid #eef0f7",
-                  borderRadius: 99,
-                  padding: "4px 6px",
-                  gap: 4,
-                  boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
-                }}
+                className="flex justify-center pt-2"
+                style={{ marginTop: 8 }}
               >
+                <div className="flex items-center gap-3">
+                {/* Show all */}
                 <button
                   type="button"
-                  aria-label="Show fewer links"
-                  disabled={visibleLinks <= PAGE_SIZE}
-                  onClick={() => setVisibleLinks(c => Math.max(PAGE_SIZE, c - PAGE_SIZE))}
-                  className="flex items-center justify-center cursor-pointer transition-all duration-150"
+                  aria-label={`Show all ${filteredLinks.length} links`}
+                  onClick={() => setShowAll(true)}
+                  className="cursor-pointer transition-all duration-150"
                   style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 99,
-                    border: 0,
-                    background: "transparent",
-                    color: visibleLinks <= PAGE_SIZE ? "#c5c9e8" : "#3a4474",
-                    cursor: visibleLinks <= PAGE_SIZE ? "not-allowed" : "pointer",
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/>
-                  </svg>
-                </button>
-
-                <span style={{ fontSize: 13, color: "#0b1020", padding: "0 8px", fontFamily: "inherit" }}>
-                  <b style={{ fontWeight: 600 }}>{Math.ceil(visibleLinks / PAGE_SIZE)}</b>
-                  <span style={{ color: "#6b75a3", margin: "0 6px" }}>of</span>
-                  <b style={{ fontWeight: 600 }}>{Math.ceil(filteredLinks.length / PAGE_SIZE)}</b>
-                </span>
-
-                <button
-                  type="button"
-                  aria-label={`Show ${nextBatch} more links`}
-                  onClick={() => setVisibleLinks(c => Math.min(c + PAGE_SIZE, filteredLinks.length))}
-                  className="flex items-center justify-center cursor-pointer transition-all duration-150"
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 99,
-                    border: 0,
-                    background: "transparent",
+                    fontSize: 13,
+                    fontWeight: 500,
                     color: "#3a4474",
+                    background: "none",
+                    border: "none",
+                    padding: "7px 12px",
+                    borderRadius: 99,
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7";
+                    (e.currentTarget as HTMLButtonElement).style.color = "#0b1020";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "none";
+                    (e.currentTarget as HTMLButtonElement).style.color = "#3a4474";
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
-                  </svg>
+                  Show all
                 </button>
+                
+                {/* Pager */}
+                <div
+                  className="inline-flex items-center"
+                  style={{
+                    background: "white",
+                    border: "1px solid #eef0f7",
+                    borderRadius: 99,
+                    padding: "4px 6px",
+                    gap: 4,
+                    boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+                  }}
+                >
+                  {/* Previous */}
+                  <button
+                    type="button"
+                    aria-label="Show previous page"
+                    disabled={safePage <= 1}
+                    onClick={() => goToPage(safePage - 1)}
+                    className="flex items-center justify-center transition-all duration-150"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 99,
+                      border: 0,
+                      background: "transparent",
+                      color: safePage <= 1 ? "#c5c9e8" : "#3a4474",
+                      cursor: safePage <= 1 ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/>
+                    </svg>
+                  </button>
+                  
+                  {/* Page indicator */}
+                  <span style={{ fontSize: 13, color: "#0b1020", padding: "0 8px" }}>
+                    <b style={{ fontWeight: 600 }}>{safePage}</b>
+                    <span style={{ color: "#6b75a3", margin: "0 6px" }}>of</span>
+                    <b style={{ fontWeight: 600 }}>{totalPages}</b>
+                  </span>
+                  
+                  {/* Next */}
+                  <button
+                    type="button"
+                    aria-label="Show next page"
+                    disabled={safePage >= totalPages}
+                    onClick={() => goToPage(safePage + 1)}
+                    className="flex items-center justify-center transition-all duration-150"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 99,
+                      border: 0,
+                      background: "transparent",
+                      color: safePage >= totalPages ? "#c5c9e8" : "#3a4474",
+                      cursor: safePage >= totalPages ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           )}

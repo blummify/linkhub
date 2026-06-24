@@ -9,7 +9,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <RecaptchaScript />
-      {children}
+      <main id="mainContent" tabIndex={-1}>
+        {children}
+      </main>
     </>
   );
 }

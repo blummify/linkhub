@@ -18,6 +18,7 @@ export default function LinksClient() {
       <AppHeader isAdmin={false} />
         <main
           id="mainContent"
+          tabIndex={-1}
           className={`flex-1 h-full lg:pt-16 transition-all duration-500 ease-in-out ${
             isCollapsed ? "lg:ml-[80px]" : "lg:ml-[256px]"
           } ml-0 overflow-y-auto bg-surface`}

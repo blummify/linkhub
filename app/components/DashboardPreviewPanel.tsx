@@ -14,38 +14,20 @@ import {
   getBrandingThemeById,
 } from "@/lib/brandingState";
 import { getGradientById } from "@/app/constants/editorBackgroundGradients";
-
-const ICON_CFG: Record<string, { bg: string; fg: string }> = {
-  website:   { bg: "linear-gradient(135deg,#eef1ff,#dbe2ff)", fg: "#2a37c0" },
-  instagram: { bg: "linear-gradient(135deg,#ffe9f1,#ffd9e6)", fg: "#d6336c" },
-  youtube:   { bg: "linear-gradient(135deg,#fff1f0,#ffd9d6)", fg: "#c0392b" },
-  twitter:   { bg: "linear-gradient(135deg,#e9f3ff,#d2e6ff)", fg: "#1565d8" },
-  spotify:   { bg: "linear-gradient(135deg,#e9fff0,#d2f5e3)", fg: "#1db954" },
-};
+import { isLinkIconKey } from "@/app/constants/linkIconColors";
 
 function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailUrl?: string }) {
-  const cfg = ICON_CFG[iconKey ?? ""] ?? ICON_CFG.website;
   if (thumbnailUrl) {
     return (
-      <div
-        style={{
-          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-          overflow: "hidden",
-        }}
-      >
+      <div className="w-[22px] h-[22px] rounded-md shrink-0 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        <img src={thumbnailUrl} alt="" className="w-full h-full object-cover block" />
       </div>
     );
   }
+  const key = isLinkIconKey(iconKey) ? iconKey : "website";
   return (
-    <div
-      style={{
-        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: cfg.bg, color: cfg.fg,
-      }}
-    >
+    <div className={`w-[22px] h-[22px] rounded-md shrink-0 flex items-center justify-center dp-link-icon--${key}`}>
       {iconKey === "instagram" ? (
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="2" y="2" width="20" height="20" rx="5"/>
@@ -1365,7 +1347,9 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
   const [shareConfirm, setShareConfirm] = useState<ShareNetwork | null>(null);
   const shareRef = useRef<HTMLDivElement>(null);
 
-  const fullUrl = `https://${publicUrl}`;
+  // Local dev serves plain HTTP (no TLS listener on localhost); production always serves HTTPS.
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const fullUrl = `${protocol}://${publicUrl}`;
 
   // Close share popover on outside click
   useEffect(() => {
@@ -1385,6 +1369,18 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* clipboard not available */ }
+  };
+
+  const handleDownloadQr = () => {
+    if (!handle) return;
+    // The server derives the handle from the session and sets the filename via
+    // Content-Disposition; `download` is just a client-side fallback hint.
+    const a = document.createElement("a");
+    a.href = "/api/qr";
+    a.download = `linkhub-${handle}-qr.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   const handleNativeShare = async () => {
@@ -1672,9 +1668,51 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
                     </button>
                   ))}
                 </div>
+
+                <div style={{ height: 1, background: "#f2f4fb", margin: "0 14px" }} />
+
+                <div style={{ padding: "12px 14px 14px" }}>
+                  <button
+                    type="button"
+                    onClick={handleDownloadQr}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                      width: "100%", padding: "10px 12px", borderRadius: 10,
+                      background: "#f7f8fc", border: "1px solid #eef0f7",
+                      color: "#1a2244", fontSize: 12, fontWeight: 500,
+                      cursor: "pointer", fontFamily: "inherit",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "#eef0f7";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#d6dae9";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "#f7f8fc";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#eef0f7";
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14 14h3v3M21 14v.01M14 21h3M21 17v4" />
+                    </svg>
+                    Download QR code
+                  </button>
+                </div>
               </div>
             )}
           </div>
+
+          <PreviewActionBtn title="Download QR code" onClick={handleDownloadQr} disabled={!handle}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 14h3v3M21 14v.01M14 21h3M21 17v4" />
+            </svg>
+          </PreviewActionBtn>
 
           <PreviewActionBtn title="Open in new tab" href={fullUrl} disabled={!handle}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
@@ -1850,27 +1888,57 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
             zIndex: 50,
           }}
         >
-          <button
-            type="button"
-            onClick={() => void handleNativeShare()}
-            disabled={!handle}
-            style={{
-              width: "100%",
-              minHeight: 44,
-              background: copied ? "#16a34a" : "#3b46e0",
-              color: "white",
-              borderRadius: 12,
-              fontWeight: 600,
-              fontSize: 14,
-              border: 0,
-              cursor: handle ? "pointer" : "not-allowed",
-              opacity: handle ? 1 : 0.5,
-              fontFamily: "inherit",
-              transition: "background 0.15s",
-            }}
-          >
-            {copied ? "Link copied!" : "Share my page"}
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => void handleNativeShare()}
+              disabled={!handle}
+              style={{
+                flex: 1,
+                minHeight: 44,
+                background: copied ? "#16a34a" : "#3b46e0",
+                color: "white",
+                borderRadius: 12,
+                fontWeight: 600,
+                fontSize: 14,
+                border: 0,
+                cursor: handle ? "pointer" : "not-allowed",
+                opacity: handle ? 1 : 0.5,
+                fontFamily: "inherit",
+                transition: "background 0.15s",
+              }}
+            >
+              {copied ? "Link copied!" : "Share my page"}
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadQr}
+              disabled={!handle}
+              title="Download QR code"
+              aria-label="Download QR code"
+              style={{
+                flexShrink: 0,
+                width: 44,
+                minHeight: 44,
+                background: "white",
+                color: "#3b46e0",
+                borderRadius: 12,
+                border: "1px solid #eef0f7",
+                cursor: handle ? "pointer" : "not-allowed",
+                opacity: handle ? 1 : 0.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14 14h3v3M21 14v.01M14 21h3M21 17v4" />
+              </svg>
+            </button>
+          </div>
         </div>
       ) : null}
 

@@ -35,6 +35,7 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
       <div className="flex items-center gap-4 sm:gap-6 flex-1 min-w-0">
         <button
           onClick={toggleSidebar}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="shrink-0 flex items-center justify-center transition-all active:scale-90"
           style={{
             width: 38, height: 38,
@@ -46,7 +47,7 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#d6dae9'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#eef0f7'; }}
         >
-          <span className="material-symbols-outlined text-[20px] font-black">
+          <span className="material-symbols-outlined text-[20px] font-black" aria-hidden="true">
             {isCollapsed ? 'menu_open' : 'menu'}
           </span>
         </button>
@@ -60,6 +61,7 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
           </div>
           <input
             ref={searchInputRef}
+            aria-label="Search links, pages, and analytics"
             className="w-full pl-[42px] pr-4 sm:pr-[90px] text-[14px] text-[#0b1020] placeholder:text-[#6b75a3] outline-none transition-all"
             style={{
               height: 42,
@@ -100,26 +102,28 @@ export default function AppHeader({}: { isAdmin?: boolean }) {
       <div className="flex items-center gap-3 shrink-0 ml-4">
         <div className="hidden md:flex items-center gap-1.5">
           <button
+            aria-label="Notifications"
             className="relative flex items-center justify-center transition-all active:scale-90"
             style={{ width: 38, height: 38, borderRadius: 12, border: '1px solid #eef0f7', background: 'white', color: '#6b75a3' }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#d6dae9'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#eef0f7'; }}
           >
-            <span className="material-symbols-outlined text-[20px] font-medium">notifications</span>
-            <span className="absolute top-[9px] right-[10px] w-[7px] h-[7px] rounded-full border-2 border-white" style={{ background: '#e11d48' }} />
+            <span className="material-symbols-outlined text-[20px] font-medium" aria-hidden="true">notifications</span>
+            <span className="absolute top-[9px] right-[10px] w-[7px] h-[7px] rounded-full border-2 border-white" style={{ background: '#e11d48' }} aria-hidden="true" />
           </button>
           <button
+            aria-label="Help"
             className="flex items-center justify-center transition-all active:scale-90"
             style={{ width: 38, height: 38, borderRadius: 12, border: '1px solid #eef0f7', background: 'white', color: '#6b75a3' }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#d6dae9'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#eef0f7'; }}
           >
-            <span className="material-symbols-outlined text-[20px] font-medium">help</span>
+            <span className="material-symbols-outlined text-[20px] font-medium" aria-hidden="true">help</span>
           </button>
         </div>
 
         <div className="relative group">
-          <button type="button" className="relative flex items-center gap-2 active:scale-95 transition-all duration-300">
+          <button type="button" aria-label="User menu" aria-haspopup="true" className="relative flex items-center gap-2 active:scale-95 transition-all duration-300">
             <div className="absolute -inset-1.5 bg-gradient-to-tr from-primary/20 to-primary/0 rounded-full opacity-0 group-hover:opacity-100 blur-md transition-opacity" />
             <UserAvatar
               src={user?.image}
