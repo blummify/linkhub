@@ -2,9 +2,10 @@
  * Click-analytics helpers.
  *
  * These are intentionally pure and dependency-free so they can be unit-tested
- * and reused across the dashboard. The only source of truth for clicks is the
- * cumulative `Link.clicks` integer (surfaced as a display string in the links
- * store), so everything here derives from that total.
+ * and reused across the dashboard. All-time totals come from the cumulative
+ * `Link.clicks` integer; the per-day time series comes from the `ClickDaily`
+ * table (via the `getClicksSeries` action) and is shaped into a fixed-length
+ * array by `fillSeries`.
  */
 
 /** Parse a clicks value that may be a number or a display string like "1,240". */
@@ -40,9 +41,16 @@ function mulberry32(seed: number): () => number {
 
 /**
  * Distribute a cumulative `total` across `days` buckets to form a plausible
- * time series. There is no real per-day history in the DB, so the shape is
- * synthesized — but it is deterministic for a given `(total, days)` and is
- * guaranteed to sum back to exactly `total`.
+ * time series. There is no real per-day history for this shape, so it is
+ * synthesized — deterministic for a given `(total, days)` and guaranteed to sum
+ * back to exactly `total`.
+ *
+ * NOTE: real per-day data now powers the main "Clicks over time" chart on
+ * `/user-analytics` (via `fillSeries` + `getClicksSeries`). This helper remains
+ * only for small DECORATIVE sparklines that don't claim to be a dated axis: the
+ * Total Clicks KPI card on the links page and the per-link trend sparklines in
+ * the analytics "Top links" list (which have no per-link daily source yet).
+ * Prefer `fillSeries` for any real, labeled time series.
  */
 export function buildClicksSeries(total: number, days: number): number[] {
   const n = Math.max(0, Math.floor(days));
@@ -80,5 +88,42 @@ export function buildClicksSeries(total: number, days: number): number[] {
     }
   }
 
+  return series;
+}
+
+/** Normalise a Date or date-ish string to a `YYYY-MM-DD` UTC day key. */
+function dayKey(value: Date | string): string {
+  const d = value instanceof Date ? value : new Date(value);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Shape per-day `ClickDaily` rows into a fixed-length series of length `days`,
+ * ordered oldest -> newest and ending on today (UTC). Missing days are filled
+ * with 0, so the chart always has a continuous axis even when no clicks landed
+ * on a given day. Rows outside the window are ignored.
+ */
+export function fillSeries(
+  rows: { day: Date | string; count: number }[],
+  days: number
+): number[] {
+  const n = Math.max(0, Math.floor(days));
+  if (n === 0) return [];
+
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const key = dayKey(row.day);
+    counts.set(key, (counts.get(key) ?? 0) + Math.max(0, Math.floor(row.count)));
+  }
+
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  const series: number[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setUTCDate(d.getUTCDate() - i);
+    series.push(counts.get(d.toISOString().slice(0, 10)) ?? 0);
+  }
   return series;
 }

@@ -305,6 +305,8 @@ const LineChart = memo(function LineChart({ clicks }: { clicks: number[] }) {
   const yTicks = 4;
 
   const { clickPath, areaPath, stepX, maxY } = useMemo(() => {
+    // A path needs at least two points; bail out cleanly for empty/1-point input.
+    if (clicks.length < 2) return { clickPath: "", areaPath: "", stepX: 0, maxY: 1 };
     const max = Math.max(...clicks, 1) * 1.18;
     const sX = innerW / (clicks.length - 1);
     const toPt = (val: number, i: number) => ({
@@ -361,17 +363,62 @@ const LineChart = memo(function LineChart({ clicks }: { clicks: number[] }) {
   );
 });
 
+// Friendly empty state for the "Clicks over time" chart — shown until the user
+// has at least one recorded click, so we never render an empty/flat axis.
+const ChartZeroState = memo(function ChartZeroState() {
+  return (
+    <div className="flex flex-col items-center justify-center text-center" style={{ padding: "44px 16px 40px" }}>
+      <div
+        style={{
+          width: 44, height: 44, borderRadius: 12,
+          background: "#f0f1f9",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          marginBottom: 14, color: "#6b75a3",
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 14l3-3 3 3 4-5" />
+        </svg>
+      </div>
+      <p
+        className="leading-none"
+        style={{
+          fontSize: 26, fontWeight: 400, fontStyle: "italic",
+          fontFamily: "var(--font-instrument-serif), Georgia, serif",
+          color: "#0b1020", letterSpacing: "-0.02em", marginBottom: 8,
+        }}
+      >
+        0 clicks
+      </p>
+      <p className="max-w-sm" style={{ fontSize: 13, color: "#6b75a3", lineHeight: 1.6 }}>
+        Your click data populates once your public page is live.{" "}
+        <span style={{ color: "#3b46e0", fontWeight: 500 }}>Share your page</span> to start tracking how your links
+        perform.
+      </p>
+    </div>
+  );
+});
+
 // ── Main component ────────────────────────────────────────────────────────────
-export default function UserAnalyticsClient({ links = [] }: { links?: AnalyticsLink[] }) {
+export default function UserAnalyticsClient({
+  links = [],
+  series = [],
+}: {
+  links?: AnalyticsLink[];
+  /** Real per-day clicks (ClickDaily), oldest -> newest, ending today (UTC). */
+  series?: number[];
+}) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const [range, setRange] = useState<RangeKey>("30");
   const [showPalette, setShowPalette] = useState(false);
 
   // ── Real, click-derived metrics (from Link.clicks) ──────────────────────────
   const realTotalClicks = useMemo(() => sumClicks(links), [links]);
+  // Real per-day series sliced to the selected range (oldest -> newest).
   const realClicksSeries = useMemo(
-    () => buildClicksSeries(realTotalClicks, RANGE_DAYS[range]),
-    [realTotalClicks, range]
+    () => series.slice(-RANGE_DAYS[range]),
+    [series, range]
   );
   const realTopLinks = useMemo(() => {
     const totalForShare = realTotalClicks || 1;
@@ -585,16 +632,20 @@ export default function UserAnalyticsClient({ links = [] }: { links?: AnalyticsL
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
                 <div>
                   <PanelTitle>Clicks over time</PanelTitle>
-                  <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 3 }}>{RANGE_LABEL[range]}</div>
+                  <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 3 }}>
+                    {realTotalClicks > 0 ? RANGE_LABEL[range] : "No clicks recorded yet"}
+                  </div>
                 </div>
-                <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: "#6b75a3" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b46e0", display: "inline-block" }}/>
-                    Clicks
-                  </span>
-                </div>
+                {realTotalClicks > 0 && (
+                  <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: "#6b75a3" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b46e0", display: "inline-block" }}/>
+                      Clicks
+                    </span>
+                  </div>
+                )}
               </div>
-              <LineChart clicks={realClicksSeries}/>
+              {realTotalClicks > 0 ? <LineChart clicks={realClicksSeries}/> : <ChartZeroState />}
             </div>
 
             {/* Top links + Sources */}

@@ -25,7 +25,6 @@ import { CSS } from "@dnd-kit/utilities";
 import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
 import { AnalyticsCards, DEFAULT_CARDS, type StatCardData } from "./AnalyticsCards";
-import { ClicksTrendChart } from "./ClicksTrendChart";
 import { DashboardTopBar } from "./DashboardTopBar";
 import { sumClicks, formatClicks, buildClicksSeries } from "@/lib/clicks";
 
@@ -353,7 +352,9 @@ const pageSize = useResponsivePageSize();
   // Mirror the analytics page on the dashboard: the Total Clicks card shows the
   // real summed total (and links through to the full analytics page), while the
   // remaining metrics (profile views, CTR, region) have no data source yet and
-  // render an honest "coming soon" state instead of mock numbers.
+  // render an honest "coming soon" state instead of mock numbers. The card's
+  // sparkline is a decorative shape derived from the total — the real per-day
+  // time series lives on the dedicated /user-analytics chart.
   const analyticsCards = useMemo<StatCardData[]>(() => {
     const [, ...rest] = DEFAULT_CARDS;
     return [
@@ -482,8 +483,6 @@ const pageSize = useResponsivePageSize();
       </div>
 
       <AnalyticsCards cards={analyticsCards} />
-
-      {links.length > 0 && <ClicksTrendChart links={links} />}
 
       {links.length === 0 ? null : <div className="flex items-center gap-2 flex-wrap">
         <span className="mr-auto" style={{ fontSize: 12.5, color: "#6b75a3" }}>

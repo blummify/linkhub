@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+
 import { ManageLinksSection } from "../ManageLinksSection";
 import type { ManagedLink } from "../types";
 
@@ -65,13 +66,9 @@ describe("ManageLinksSection", () => {
     expect(totalLinks.length).toBeGreaterThan(0);
   });
 
-  it("renders the clicks-over-time chart when links exist", () => {
+  it("does not render a clicks-over-time chart on the links page", () => {
+    // The time-series chart lives on /user-analytics, not the links page.
     render(<ManageLinksSection links={links} />);
-    expect(screen.getByText("Clicks over time")).toBeInTheDocument();
-  });
-
-  it("does not render the clicks chart when there are no links", () => {
-    render(<ManageLinksSection links={[]} />);
     expect(screen.queryByText("Clicks over time")).not.toBeInTheDocument();
   });
 
