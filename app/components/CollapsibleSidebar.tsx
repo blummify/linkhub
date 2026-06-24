@@ -414,7 +414,7 @@ export default function CollapsibleSidebar({
         )}
       </aside>
 
-      <div className="flex-1 h-screen overflow-hidden relative flex flex-col pt-14 lg:pt-0">
+      <div className="flex-1 h-dvh overflow-hidden relative flex flex-col pt-14 lg:pt-0">
         {children}
       </div>
 

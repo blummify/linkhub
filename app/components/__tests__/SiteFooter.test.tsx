@@ -27,9 +27,12 @@ describe("SiteFooter", () => {
     expect(screen.getByText("Terms of Service")).toBeInTheDocument();
   });
 
-  it("renders the copyright notice", () => {
+  it("renders the copyright notice with the current year", () => {
     render(<SiteFooter />);
-    expect(screen.getByText(/© 2024 LinkHub/)).toBeInTheDocument();
+    const year = new Date().getFullYear();
+    expect(
+      screen.getByText(new RegExp(`© ${year} LinkHub`)),
+    ).toBeInTheDocument();
   });
 
   it("renders inside a footer element", () => {

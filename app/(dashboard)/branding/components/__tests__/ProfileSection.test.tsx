@@ -17,7 +17,7 @@ describe("ProfileSection", () => {
     expect(screen.getByDisplayValue("Alex Rivera")).toBeInTheDocument();
     expect(screen.getByDisplayValue("alex")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Hello world")).toBeInTheDocument();
-    expect(screen.getByText(/linkhub.co\/alex/)).toBeInTheDocument();
+    expect(screen.getByText(/getlinkhub.app\/alex/)).toBeInTheDocument();
   });
 
   it("calls change handlers on input", () => {

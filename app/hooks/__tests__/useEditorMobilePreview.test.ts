@@ -6,7 +6,7 @@ describe("useEditorMobilePreview", () => {
   it("returns appearance and publicUrl from branding store", () => {
     const { result } = renderHook(() => useEditorMobilePreview());
     expect(result.current.appearance.profileTitle).toBe("Your Name");
-    expect(result.current.publicUrl).toContain("linkhub.co");
+    expect(result.current.publicUrl).toContain("getlinkhub.app");
     expect(result.current.showHeaderChrome).toBe(false);
   });
 

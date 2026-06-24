@@ -2,8 +2,9 @@
 
 import { useEffect, useCallback } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { signInWithGoogleOneTap } from "@/app/actions/auth";
+import { isPublicHandleRoute } from "@/app/constants/reservedHandles";
 
 declare global {
   interface Window {
@@ -21,6 +22,7 @@ declare global {
 
 export function GoogleOneTap({ clientId }: { clientId: string }) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleCredential = useCallback(
     async ({ credential }: { credential: string }) => {
@@ -45,7 +47,9 @@ export function GoogleOneTap({ clientId }: { clientId: string }) {
   );
 
   useEffect(() => {
-    if (!clientId) return;
+    // Public profile pages (/{handle}) are a standalone visitor-facing surface —
+    // don't prompt link clickers to sign in to the dashboard.
+    if (!clientId || isPublicHandleRoute(pathname)) return;
 
     let addedScript: HTMLScriptElement | null = null;
 
@@ -89,7 +93,7 @@ export function GoogleOneTap({ clientId }: { clientId: string }) {
         document.head.removeChild(addedScript);
       }
     };
-  }, [clientId, handleCredential]);
+  }, [clientId, handleCredential, pathname]);
 
   return null;
 }

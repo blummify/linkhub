@@ -15,38 +15,20 @@ import {
 } from "@/lib/brandingState";
 import { getGradientById } from "@/app/constants/editorBackgroundGradients";
 import { useProfileStore } from "@/store/profileStore";
-
-const ICON_CFG: Record<string, { bg: string; fg: string }> = {
-  website:   { bg: "linear-gradient(135deg,#eef1ff,#dbe2ff)", fg: "#2a37c0" },
-  instagram: { bg: "linear-gradient(135deg,#ffe9f1,#ffd9e6)", fg: "#d6336c" },
-  youtube:   { bg: "linear-gradient(135deg,#fff1f0,#ffd9d6)", fg: "#c0392b" },
-  twitter:   { bg: "linear-gradient(135deg,#e9f3ff,#d2e6ff)", fg: "#1565d8" },
-  spotify:   { bg: "linear-gradient(135deg,#e9fff0,#d2f5e3)", fg: "#1db954" },
-};
+import { isLinkIconKey } from "@/app/constants/linkIconColors";
 
 function PhoneLinkIcon({ iconKey, thumbnailUrl }: { iconKey?: string; thumbnailUrl?: string }) {
-  const cfg = ICON_CFG[iconKey ?? ""] ?? ICON_CFG.website;
   if (thumbnailUrl) {
     return (
-      <div
-        style={{
-          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-          overflow: "hidden",
-        }}
-      >
+      <div className="w-[22px] h-[22px] rounded-md shrink-0 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        <img src={thumbnailUrl} alt="" className="w-full h-full object-cover block" />
       </div>
     );
   }
+  const key = isLinkIconKey(iconKey) ? iconKey : "website";
   return (
-    <div
-      style={{
-        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: cfg.bg, color: cfg.fg,
-      }}
-    >
+    <div className={`w-[22px] h-[22px] rounded-md shrink-0 flex items-center justify-center dp-link-icon--${key}`}>
       {iconKey === "instagram" ? (
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="2" y="2" width="20" height="20" rx="5"/>
@@ -1377,7 +1359,9 @@ export function DashboardPreviewPanel({ width = 420, showThemeFooter = false, on
   const [shareConfirm, setShareConfirm] = useState<ShareNetwork | null>(null);
   const shareRef = useRef<HTMLDivElement>(null);
 
-  const fullUrl = `https://${publicUrl}`;
+  // Local dev serves plain HTTP (no TLS listener on localhost); production always serves HTTPS.
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const fullUrl = `${protocol}://${publicUrl}`;
 
   // Close share popover on outside click
   useEffect(() => {
