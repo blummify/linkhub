@@ -11,7 +11,7 @@ export async function GET(
 
   const link = await db.link.findUnique({
     where: { id },
-    select: { url: true },
+    select: { url: true, userId: true },
   });
 
   if (!link) {
@@ -20,7 +20,19 @@ export async function GET(
 
   after(async () => {
     try {
-      await db.link.update({ where: { id }, data: { clicks: { increment: 1 } } });
+      // Bump the all-time counter and today's per-day bucket. The bucket powers the
+      // dashboard time-series chart; `day` is normalised to UTC midnight so all of a
+      // day's clicks land in one row.
+      const day = new Date();
+      day.setUTCHours(0, 0, 0, 0);
+      await db.$transaction([
+        db.link.update({ where: { id }, data: { clicks: { increment: 1 } } }),
+        db.clickDaily.upsert({
+          where: { linkId_day: { linkId: id, day } },
+          create: { linkId: id, userId: link.userId, day, count: 1 },
+          update: { count: { increment: 1 } },
+        }),
+      ]);
     } catch (error) {
       console.error("Error incrementing link clicks:", error);
     }
