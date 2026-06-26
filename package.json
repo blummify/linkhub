@@ -72,7 +72,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
     "typescript": "^5",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.9"
   },
   "browserslist": [
     "chrome >= 109",
