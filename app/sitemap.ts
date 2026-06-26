@@ -50,7 +50,8 @@ export default async function sitemap({
 }: {
   id: number;
 }): Promise<MetadataRoute.Sitemap> {
-  const cacheKey = `${PAGE_CACHE_KEY_PREFIX}${id}`;
+  const pageId = Number.isFinite(Number(id)) ? Math.max(0, Math.trunc(Number(id))) : 0;
+  const cacheKey = `${PAGE_CACHE_KEY_PREFIX}${pageId}`;
   let profileEntries: MetadataRoute.Sitemap;
 
   try {
@@ -61,7 +62,7 @@ export default async function sitemap({
       const profiles = await db.profile.findMany({
         where: { hasClaimedHandle: true, NOT: { handle: null } },
         select: { handle: true, updatedAt: true },
-        skip: id * SITEMAP_SIZE,
+        skip: pageId * SITEMAP_SIZE,
         take: SITEMAP_SIZE,
         orderBy: { createdAt: "asc" },
       });
@@ -77,11 +78,10 @@ export default async function sitemap({
     }
   }
   catch {
-    // fall back to DB query if Redis is unavailable
     const profiles = await db.profile.findMany({
       where: { hasClaimedHandle: true, NOT: { handle: null } },
       select: { handle: true, updatedAt: true },
-      skip: id * SITEMAP_SIZE,
+      skip: pageId * SITEMAP_SIZE,
       take: SITEMAP_SIZE,
       orderBy: { createdAt: "asc" },
     });
@@ -92,6 +92,6 @@ export default async function sitemap({
       priority: 0.9,
     }));
   }
-  
-  return id === 0 ? [...STATIC_ENTRIES, ...profileEntries] : profileEntries;
+
+  return pageId === 0 ? [...STATIC_ENTRIES, ...profileEntries] : profileEntries;
 }
