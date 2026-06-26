@@ -21,6 +21,7 @@ model User {
   createdAt           DateTime               @default(now())
   updatedAt           DateTime               @updatedAt
   accounts            Account[]
+  analytics           Analytics[]
   backupCodes         TwoFactorBackupCode[]
   customThemes        CustomTheme[]
   emailVerification   EmailVerification?
@@ -29,6 +30,21 @@ model User {
   profile             Profile?
   sessions            Session[]
   subscription        Subscription?
+}
+
+/** General-purpose metrics table — every metric (current and future) is a row keyed by
+ *  (userId, date, metric, dimension). "dimension" defaults to "total" (no breakdown);
+ *  future metrics can write dimensioned rows (referrer, device, linkId, ...) without a migration. */
+model Analytics {
+  userId    String
+  date      DateTime @db.Date
+  metric    String
+  dimension String   @default("total")
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, date, metric, dimension])
 }
 
 model TwoFactorBackupCode {

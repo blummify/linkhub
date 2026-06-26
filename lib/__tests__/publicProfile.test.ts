@@ -27,6 +27,7 @@ const PROFILE_ROW = {
   cardStyle: "filled",
   hasClaimedHandle: true,
   user: {
+    id: "u1",
     name: "Joel Osei",
     links: [{ id: "l1", title: "Website", url: "https://joel.dev", icon: "website", thumbnailUrl: null }],
   },
@@ -68,6 +69,7 @@ describe("getPublicProfileByHandle", () => {
     const result = await getPublicProfileByHandle("joelosei");
     expect(result?.displayName).toBe("Joel Osei Acquah");
     expect(result?.userName).toBe("Joel Osei");
+    expect(result?.userId).toBe("u1");
     expect(result?.links).toEqual(PROFILE_ROW.user.links);
   });
 

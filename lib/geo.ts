@@ -1,6 +1,16 @@
 import { detectCurrency, type CurrencyCode } from "./currencies";
 
 /**
+ * Resolve the client's IP from request headers — `x-forwarded-for` (first hop) with
+ * `x-real-ip` as fallback. Only import this from Server Components / Route Handlers.
+ */
+export function getClientIp(get: (name: string) => string | null): string | null {
+  const forwarded = get("x-forwarded-for");
+  const ip = (forwarded ? forwarded.split(",")[0] : (get("x-real-ip") ?? "")).trim();
+  return ip || null;
+}
+
+/**
  * Resolve the visitor's currency from request headers.
  * Only import this from Server Components / Route Handlers — never from client components.
  *
@@ -22,8 +32,7 @@ export function detectCurrencyFromHeaders(
     const geoip = require("geoip-lite") as {
       lookup: (ip: string) => { country?: string } | null;
     };
-    const forwarded = get("x-forwarded-for");
-    const ip = (forwarded ? forwarded.split(",")[0] : (get("x-real-ip") ?? "")).trim();
+    const ip = getClientIp(get);
     if (ip) {
       const geo = geoip.lookup(ip);
       if (geo?.country) return detectCurrency(geo.country);
