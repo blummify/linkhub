@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { signOut } from "next-auth/react";
 import { PublicNav } from "../PublicNav";
 
 const { mockUseSession } = vi.hoisted(() => ({
@@ -51,5 +52,68 @@ describe("PublicNav", () => {
     const links = screen.getAllByRole("link");
     const dashLink = links.find((l) => l.getAttribute("href") === "/user-dashboard");
     expect(dashLink).toBeDefined();
+  });
+});
+
+describe("PublicNav authenticated avatar menu (mobile tap)", () => {
+  const getTrigger = () =>
+    screen
+      .getAllByRole("button")
+      .find((b) => b.getAttribute("aria-haspopup") === "menu")!;
+
+  beforeEach(() => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Joel", email: "joel@test.com", image: null } },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    mockUseSession.mockReturnValue({ data: null });
+  });
+
+  it("opens the dropdown when the avatar button is tapped", () => {
+    render(<PublicNav />);
+    const trigger = getTrigger();
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(trigger);
+
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("menu").className).toContain("pointer-events-auto");
+  });
+
+  it("shows the user's name, email, Dashboard and Logout in the menu", () => {
+    render(<PublicNav />);
+    fireEvent.click(getTrigger());
+
+    expect(screen.getByText("Joel")).toBeInTheDocument();
+    expect(screen.getByText("joel@test.com")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Dashboard/ })).toHaveAttribute(
+      "href",
+      "/user-dashboard",
+    );
+    expect(screen.getByRole("menuitem", { name: /Logout/ })).toBeInTheDocument();
+  });
+
+  it("closes the dropdown when tapping outside", () => {
+    render(<PublicNav />);
+    const trigger = getTrigger();
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.mouseDown(document.body);
+
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("calls signOut when Logout is tapped", () => {
+    render(<PublicNav />);
+    fireEvent.click(getTrigger());
+
+    fireEvent.click(screen.getByRole("menuitem", { name: /Logout/ }));
+
+    expect(signOut).toHaveBeenCalledWith({ callbackUrl: "/" });
   });
 });

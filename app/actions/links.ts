@@ -7,6 +7,7 @@ import type { LinkRow } from "@/lib/linkRow";
 import { auth } from "@/auth";
 import { addLinkSchema } from "@/lib/validation/link.schema";
 import { LinkStatusValue } from "@/app/constants/linkStatus";
+import { isReservedHandle, HANDLE_REGEX } from "@/app/constants/reservedHandles";
 import { deleteFromR2 } from "@/lib/r2";
 import {
   SITEMAP_COUNT_CACHE_KEY, SITEMAP_PAGE_CACHE_KEY_PREFIX,
@@ -225,14 +226,16 @@ async function fetchProfile(userId: string, cacheKey: string) {
   return profile;
 }
 
-const HANDLE_REGEX = /^[a-zA-Z0-9_]{3,24}$/;
-
 export async function claimHandle(handle: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   if (!HANDLE_REGEX.test(handle)) {
     return { error: "Handle must be 3–24 characters: letters, numbers, underscores only." };
+  }
+
+  if (isReservedHandle(handle)) {
+    return { error: "That handle is reserved. Try another." };
   }
 
   try {
@@ -270,6 +273,7 @@ export async function checkHandleAvailability(handle: string): Promise<{ availab
   if (!session?.user?.id) return { available: false };
 
   if (!HANDLE_REGEX.test(handle)) return { available: false };
+  if (isReservedHandle(handle)) return { available: false };
 
   const cacheKey = `handlecheck:${handle.toLowerCase()}`;
   try {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { isPublicHandleRoute } from "@/app/constants/reservedHandles";
 
 const DASHBOARD_PREFIXES = [
   "/user-dashboard",
@@ -40,7 +41,8 @@ export function ThemeToggle() {
     } catch {}
   }, [mode]);
 
-  if (DASHBOARD_PREFIXES.some((p) => pathname.startsWith(p))) return null;
+  // Public profile pages (/{handle}) are a standalone, themed surface — no app chrome.
+  if (DASHBOARD_PREFIXES.some((p) => pathname.startsWith(p)) || isPublicHandleRoute(pathname)) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-[60]">
