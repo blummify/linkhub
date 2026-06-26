@@ -5,26 +5,21 @@ import { DashboardPageTransition } from "../../components/DashboardPageTransitio
 import { useSidebarStore } from "@/store/sidebarStore";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { CommandPalette } from "../../components/CommandPalette";
+import { sumClicks, parseClicks, formatClicks, buildClicksSeries } from "@/lib/clicks";
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-function generateSeries(days: number, base: number, variance: number): number[] {
-  const arr: number[] = [];
-  for (let i = 0; i < days; i++) {
-    const noise = (Math.sin(i * 0.6) + Math.cos(i * 0.3)) * variance;
-    const v = Math.max(0, base + noise + Math.sin(i * 0.13) * variance * 0.4);
-    arr.push(Math.round(v));
-  }
-  return arr;
+/** Light link shape passed from the server (real Link.clicks data). */
+export interface AnalyticsLink {
+  title: string;
+  url: string;
+  clicks: string;
+  icon?: string | null;
 }
 
-const RANGE_DATA = {
-  "7":   { clicks: generateSeries(7, 72, 25),   visitors: generateSeries(7, 48, 16),   totalClicks: 504,   totalVisitors: 336,  ctr: 71.2, clicksDelta: 18.6, visitorsDelta: 12.3, ctrDelta:  1.2 },
-  "30":  { clicks: generateSeries(30, 70, 30),  visitors: generateSeries(30, 47, 20),  totalClicks: 2096,  totalVisitors: 1418, ctr: 68.2, clicksDelta: 12.4, visitorsDelta:  8.1, ctrDelta: -1.8 },
-  "90":  { clicks: generateSeries(90, 65, 35),  visitors: generateSeries(90, 44, 22),  totalClicks: 5832,  totalVisitors: 3941, ctr: 67.6, clicksDelta: 22.7, visitorsDelta: 14.5, ctrDelta: -0.4 },
-  "all": { clicks: generateSeries(180, 60, 40), visitors: generateSeries(180, 40, 25), totalClicks: 10847, totalVisitors: 7204, ctr: 66.4, clicksDelta: 38.9, visitorsDelta: 28.3, ctrDelta:  4.1 },
-} as const;
+// How many day-buckets each range renders in the (derived) time series.
+const RANGE_DAYS: Record<RangeKey, number> = { "7": 7, "30": 30, "90": 90, all: 180 };
 
-type RangeKey = keyof typeof RANGE_DATA;
+// ── Data ──────────────────────────────────────────────────────────────────────
+type RangeKey = "7" | "30" | "90" | "all";
 
 const RANGE_LABEL: Record<RangeKey, string> = {
   "7": "Last 7 days",
@@ -33,11 +28,9 @@ const RANGE_LABEL: Record<RangeKey, string> = {
   all: "All time",
 };
 
-const TOP_LINKS = [
-  { title: "Official Website",      url: "johndoe.design",               clicks: 1240, share: 59, trend: [12,16,14,22,20,28,26,32,30,38], type: "globe" },
-  { title: "Latest Portfolio Drop", url: "behance.net/johndoe/vibe-check", clicks: 856, share: 41, trend: [8,12,10,14,18,16,22,24,28,32],  type: "behance" },
-];
-
+// Illustrative data for the panels that don't have a real source yet
+// (traffic sources, devices). These render behind a "coming soon" overlay —
+// they are never shown as real figures.
 const SOURCES = [
   { name: "Direct",      clicks: 728, pct: 35, colorClass: "s1" },
   { name: "Instagram",   clicks: 524, pct: 25, colorClass: "s2" },
@@ -85,32 +78,6 @@ function smoothPath(pts: { x: number; y: number }[]): string {
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-const Delta = memo(function Delta({ val, suffix = "%" }: { val: number; suffix?: string }) {
-  const up = val >= 0;
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 3,
-        padding: "2px 7px",
-        borderRadius: 99,
-        fontSize: 11,
-        fontWeight: 600,
-        background: up ? "#e8f6ee" : "#fef2f4",
-        color: up ? "#16a34a" : "#e11d48",
-      }}
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="10" height="10">
-        {up
-          ? <path strokeLinecap="round" strokeLinejoin="round" d="M7 17l5-5 4 4 6-7"/>
-          : <path strokeLinecap="round" strokeLinejoin="round" d="M17 7l-5 5-4-4-6 7"/>}
-      </svg>
-      {up ? "+" : ""}{val.toFixed(1)}{suffix}
-    </span>
-  );
-});
-
 const PanelTitle = memo(function PanelTitle({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -126,6 +93,68 @@ const PanelTitle = memo(function PanelTitle({ children }: { children: React.Reac
     </div>
   );
 });
+
+// "Coming soon" treatment for metrics with no data source yet (visitors,
+// CTR, sources, devices). These need event tracking that doesn't exist, so
+// rather than show fake numbers we surface an honest placeholder.
+const ComingSoonTag = memo(function ComingSoonTag() {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+        background: "#f1f3ff",
+        color: "#3b46e0",
+        padding: "3px 8px",
+        borderRadius: 99,
+        fontSize: 10,
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.08em",
+      }}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="9" height="9">
+        <circle cx="12" cy="12" r="9" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 2" />
+      </svg>
+      Coming soon
+    </span>
+  );
+});
+
+function ComingSoonOverlay({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "grid",
+        placeItems: "center",
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.95) 100%)",
+        backdropFilter: "blur(2px)",
+      }}
+    >
+      <div style={{ textAlign: "center", padding: "16px 22px 20px", maxWidth: 320 }}>
+        <ComingSoonTag />
+        <div
+          style={{
+            fontFamily: "var(--font-instrument-serif), Georgia, serif",
+            fontStyle: "italic",
+            fontSize: 22,
+            color: "#0b1020",
+            margin: "10px 0 6px",
+            lineHeight: 1.15,
+          }}
+        >
+          {title}
+        </div>
+        <p style={{ fontSize: 12.5, color: "#6b75a3", lineHeight: 1.5 }}>{subtitle}</p>
+      </div>
+    </div>
+  );
+}
 
 const Sparkline = memo(function Sparkline({ values }: { values: number[] }) {
   const W = 60, H = 22;
@@ -268,33 +297,31 @@ const DonutChart = memo(function DonutChart() {
 });
 
 // ── Line chart ────────────────────────────────────────────────────────────────
-const LineChart = memo(function LineChart({ range }: { range: RangeKey }) {
-  const data = RANGE_DATA[range];
-  const { clicks, visitors } = data;
+const LineChart = memo(function LineChart({ clicks }: { clicks: number[] }) {
   const W = 800, H = 280;
   const padL = 42, padR = 16, padT = 16, padB = 32;
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
   const yTicks = 4;
 
-  const { clickPath, areaPath, visitorPath, stepX, maxY } = useMemo(() => {
-    const max = Math.max(...clicks, ...visitors) * 1.18;
+  const { clickPath, areaPath, stepX, maxY } = useMemo(() => {
+    // A path needs at least two points; bail out cleanly for empty/1-point input.
+    if (clicks.length < 2) return { clickPath: "", areaPath: "", stepX: 0, maxY: 1 };
+    const max = Math.max(...clicks, 1) * 1.18;
     const sX = innerW / (clicks.length - 1);
     const toPt = (val: number, i: number) => ({
       x: padL + i * sX,
       y: padT + innerH - (val / max) * innerH,
     });
     const cPts = clicks.map(toPt);
-    const vPts = visitors.map(toPt);
     const cp = smoothPath(cPts);
     return {
       clickPath: cp,
       areaPath: `${cp} L ${cPts[cPts.length - 1].x} ${padT + innerH} L ${cPts[0].x} ${padT + innerH} Z`,
-      visitorPath: smoothPath(vPts),
       stepX: sX,
       maxY: max,
     };
-  }, [clicks, visitors, innerW, innerH, padL, padT]);
+  }, [clicks, innerW, innerH, padL, padT]);
 
   const today = new Date();
 
@@ -329,21 +356,89 @@ const LineChart = memo(function LineChart({ range }: { range: RangeKey }) {
         return <text key={i} x={x} y={H - padB + 18} textAnchor="middle" fontSize="10" fill="#a8aecb" fontFamily="'Geist Mono', monospace">{label}</text>;
       })}
 
-      {/* Area + lines */}
+      {/* Area + clicks line */}
       <path d={areaPath} fill="url(#areaGrad)"/>
-      <path d={visitorPath} fill="none" stroke="#c8cefd" strokeWidth="2" strokeDasharray="4,3" strokeLinecap="round" strokeLinejoin="round"/>
       <path d={clickPath} fill="none" stroke="#3b46e0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 });
 
+// Friendly empty state for the "Clicks over time" chart — shown until the user
+// has at least one recorded click, so we never render an empty/flat axis.
+const ChartZeroState = memo(function ChartZeroState() {
+  return (
+    <div className="flex flex-col items-center justify-center text-center" style={{ padding: "44px 16px 40px" }}>
+      <div
+        style={{
+          width: 44, height: 44, borderRadius: 12,
+          background: "#f0f1f9",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          marginBottom: 14, color: "#6b75a3",
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 14l3-3 3 3 4-5" />
+        </svg>
+      </div>
+      <p
+        className="leading-none"
+        style={{
+          fontSize: 26, fontWeight: 400, fontStyle: "italic",
+          fontFamily: "var(--font-instrument-serif), Georgia, serif",
+          color: "#0b1020", letterSpacing: "-0.02em", marginBottom: 8,
+        }}
+      >
+        0 clicks
+      </p>
+      <p className="max-w-sm" style={{ fontSize: 13, color: "#6b75a3", lineHeight: 1.6 }}>
+        Your click data populates once your public page is live.{" "}
+        <span style={{ color: "#3b46e0", fontWeight: 500 }}>Share your page</span> to start tracking how your links
+        perform.
+      </p>
+    </div>
+  );
+});
+
 // ── Main component ────────────────────────────────────────────────────────────
-export default function UserAnalyticsClient() {
+export default function UserAnalyticsClient({
+  links = [],
+  series = [],
+}: {
+  links?: AnalyticsLink[];
+  /** Real per-day clicks (ClickDaily), oldest -> newest, ending today (UTC). */
+  series?: number[];
+}) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const [range, setRange] = useState<RangeKey>("30");
   const [showPalette, setShowPalette] = useState(false);
 
-  const data = RANGE_DATA[range];
+  // ── Real, click-derived metrics (from Link.clicks) ──────────────────────────
+  const realTotalClicks = useMemo(() => sumClicks(links), [links]);
+  // Real per-day series sliced to the selected range (oldest -> newest).
+  const realClicksSeries = useMemo(
+    () => series.slice(-RANGE_DAYS[range]),
+    [series, range]
+  );
+  const realTopLinks = useMemo(() => {
+    const totalForShare = realTotalClicks || 1;
+    return links
+      .map((l) => ({
+        title: l.title,
+        url: l.url.replace(/^https?:\/\//, ""),
+        clicks: parseClicks(l.clicks),
+        type: /behance/i.test(`${l.icon ?? ""} ${l.url}`) ? "behance" : "globe",
+      }))
+      .filter((l) => l.clicks > 0)
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 5)
+      .map((l) => ({
+        ...l,
+        share: Math.round((l.clicks / totalForShare) * 100),
+        trend: buildClicksSeries(l.clicks, 10),
+      }));
+  }, [links, realTotalClicks]);
+  const topLink = realTopLinks[0];
 
   return (
     <>
@@ -462,14 +557,13 @@ export default function UserAnalyticsClient() {
                   </svg>
                   Total clicks
                 </div>
-                <div style={kpiValue}>{fmt(data.totalClicks)}</div>
+                <div style={kpiValue}>{formatClicks(realTotalClicks)}</div>
                 <div style={kpiMeta}>
-                  <Delta val={data.clicksDelta}/>
-                  <span>vs prev {RANGE_LABEL[range].toLowerCase()}</span>
+                  <span>Total across all links</span>
                 </div>
               </div>
 
-              {/* Unique visitors */}
+              {/* Unique visitors — needs visit tracking (not available yet) */}
               <div style={kpiCard}>
                 <div style={kpiLabel}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12">
@@ -477,14 +571,13 @@ export default function UserAnalyticsClient() {
                   </svg>
                   Unique visitors
                 </div>
-                <div style={kpiValue}>{fmt(data.totalVisitors)}</div>
+                <div style={{ ...kpiValue, color: "#c5c9e8" }}>—</div>
                 <div style={kpiMeta}>
-                  <Delta val={data.visitorsDelta}/>
-                  <span>vs prev {RANGE_LABEL[range].toLowerCase()}</span>
+                  <ComingSoonTag />
                 </div>
               </div>
 
-              {/* CTR */}
+              {/* CTR — needs profile views (not tracked yet) */}
               <div style={kpiCard}>
                 <div style={kpiLabel}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12">
@@ -492,10 +585,9 @@ export default function UserAnalyticsClient() {
                   </svg>
                   Click-through rate
                 </div>
-                <div style={kpiValue}>{data.ctr}%</div>
+                <div style={{ ...kpiValue, color: "#c5c9e8" }}>—</div>
                 <div style={kpiMeta}>
-                  <Delta val={data.ctrDelta}/>
-                  <span>vs prev {RANGE_LABEL[range].toLowerCase()}</span>
+                  <ComingSoonTag />
                 </div>
               </div>
 
@@ -522,8 +614,14 @@ export default function UserAnalyticsClient() {
                     </svg>
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#0b1020", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Official Website</div>
-                    <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>1,240 clicks · 59% of total</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#0b1020", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {topLink ? topLink.title : "No clicks yet"}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>
+                      {topLink
+                        ? `${formatClicks(topLink.clicks)} clicks · ${topLink.share}% of total`
+                        : "Share your page to start tracking"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -534,20 +632,20 @@ export default function UserAnalyticsClient() {
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
                 <div>
                   <PanelTitle>Clicks over time</PanelTitle>
-                  <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 3 }}>{RANGE_LABEL[range]}</div>
+                  <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 3 }}>
+                    {realTotalClicks > 0 ? RANGE_LABEL[range] : "No clicks recorded yet"}
+                  </div>
                 </div>
-                <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: "#6b75a3" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b46e0", display: "inline-block" }}/>
-                    Clicks
-                  </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#c8cefd", display: "inline-block" }}/>
-                    Visitors
-                  </span>
-                </div>
+                {realTotalClicks > 0 && (
+                  <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: "#6b75a3" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b46e0", display: "inline-block" }}/>
+                      Clicks
+                    </span>
+                  </div>
+                )}
               </div>
-              <LineChart range={range}/>
+              {realTotalClicks > 0 ? <LineChart clicks={realClicksSeries}/> : <ChartZeroState />}
             </div>
 
             {/* Top links + Sources */}
@@ -557,10 +655,15 @@ export default function UserAnalyticsClient() {
               <div style={panelCard}>
                 <div style={{ marginBottom: 18 }}>
                   <PanelTitle>Top links</PanelTitle>
-                  <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>Most clicks in the selected period</div>
+                  <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>Your most-clicked links</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  {TOP_LINKS.map((link, i) => (
+                  {realTopLinks.length === 0 && (
+                    <div style={{ fontSize: 13, color: "#6b75a3", padding: "8px 8px 4px", lineHeight: 1.5 }}>
+                      No link clicks yet — share your page to start tracking.
+                    </div>
+                  )}
+                  {realTopLinks.map((link, i) => (
                     <div
                       key={link.title}
                       style={{
@@ -602,8 +705,9 @@ export default function UserAnalyticsClient() {
                 </div>
               </div>
 
-              {/* Traffic sources */}
-              <div style={panelCard}>
+              {/* Traffic sources — needs referrer tracking (not available yet) */}
+              <div style={{ ...panelCard, position: "relative", overflow: "hidden" }}>
+                <div style={{ filter: "blur(6px)", opacity: 0.45, pointerEvents: "none", userSelect: "none" }}>
                 <div style={{ marginBottom: 18 }}>
                   <PanelTitle>Traffic sources</PanelTitle>
                   <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>Where your visitors are coming from</div>
@@ -636,19 +740,30 @@ export default function UserAnalyticsClient() {
                     </div>
                   ))}
                 </div>
+                </div>
+                <ComingSoonOverlay
+                  title="See where your clicks come from"
+                  subtitle="Referrer tracking lights up here once your public page starts receiving traffic."
+                />
               </div>
             </div>
 
             {/* Devices + Geography */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
 
-              {/* Devices donut */}
-              <div style={panelCard}>
-                <div style={{ marginBottom: 18 }}>
-                  <PanelTitle>Devices</PanelTitle>
-                  <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>How your audience visits</div>
+              {/* Devices donut — needs user-agent tracking (not available yet) */}
+              <div style={{ ...panelCard, position: "relative", overflow: "hidden" }}>
+                <div style={{ filter: "blur(6px)", opacity: 0.45, pointerEvents: "none", userSelect: "none" }}>
+                  <div style={{ marginBottom: 18 }}>
+                    <PanelTitle>Devices</PanelTitle>
+                    <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>How your audience visits</div>
+                  </div>
+                  <DonutChart/>
                 </div>
-                <DonutChart/>
+                <ComingSoonOverlay
+                  title="Know your audience's devices"
+                  subtitle="Device breakdown appears here once visit tracking is live on your public page."
+                />
               </div>
 
               {/* Geography — Pro locked */}

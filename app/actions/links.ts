@@ -9,6 +9,7 @@ import { addLinkSchema } from "@/lib/validation/link.schema";
 import { LinkStatusValue } from "@/app/constants/linkStatus";
 import { isReservedHandle, HANDLE_REGEX } from "@/app/constants/reservedHandles";
 import { deleteFromR2 } from "@/lib/r2";
+import { fillSeries } from "@/lib/clicks";
 
 const LINKS_TTL = 300;   // 5 minutes
 const PROFILE_TTL = 300; // 5 minutes
@@ -51,6 +52,34 @@ export async function getLinksCount() {
   } catch (error) {
     console.error("Error counting links:", error);
     return { count: 0 };
+  }
+}
+
+/**
+ * Real per-day click counts for the signed-in user, as a fixed-length series of
+ * length `days` (oldest -> newest, ending today UTC, missing days filled with 0).
+ * Powers the dashboard "Clicks over time" chart. Reads from `ClickDaily`; not
+ * cached, so it reflects the latest clicks on refresh.
+ */
+export async function getClicksSeries(days: number): Promise<number[]> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const span = Math.max(1, Math.min(365, Math.floor(days) || 0));
+
+  const since = new Date();
+  since.setUTCHours(0, 0, 0, 0);
+  since.setUTCDate(since.getUTCDate() - (span - 1));
+
+  try {
+    const rows = await db.clickDaily.findMany({
+      where: { userId: session.user.id, day: { gte: since } },
+      select: { day: true, count: true },
+    });
+    return fillSeries(rows, span);
+  } catch (error) {
+    console.error("Error fetching click series:", error);
+    return new Array(span).fill(0);
   }
 }
 
