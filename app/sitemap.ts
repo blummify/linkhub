@@ -15,7 +15,7 @@ const COUNT_CACHE_TTL = 3600; // 1 hour
 
 // Static marketing pages 
 const STATIC_ENTRIES: MetadataRoute.Sitemap = [
-  { url: BASE_URL, lastModified: STATIC_LASTMOD, changeFrequency: "weekly", priority: 1 },
+    { url: BASE_URL, lastModified: STATIC_LASTMOD, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE_URL}/pricing`, lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/features`, lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/login`, lastModified: STATIC_LASTMOD, changeFrequency: "yearly", priority: 0.5 },
