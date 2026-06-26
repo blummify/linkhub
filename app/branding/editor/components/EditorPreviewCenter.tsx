@@ -169,7 +169,7 @@ export function EditorPreviewCenter() {
               color: "#0b1020",
             }}
           >
-            Live preview
+            Live preview 
           </div>
           <div
             suppressHydrationWarning

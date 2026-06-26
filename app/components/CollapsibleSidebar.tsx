@@ -21,6 +21,8 @@ import {
 } from "./icons/SidebarIcons";
 import UpgradeCard from "./UpgradeCard";
 import { MobileTopBar, MobileBottomNav } from "./MobileNav";
+import { useProfileStore } from "@/store/profileStore";
+import UserAvatar from "./UserAvatar";
 
 const NAV_ITEMS = [
   { label: "Links",     href: "/user-dashboard", Icon: LinksIcon,      showBadge: true },
@@ -58,6 +60,7 @@ export default function CollapsibleSidebar({
   const pathname = usePathname();
   const { data: session, status, update } = useSession();
   const user = session?.user;
+  const avatarUrl = useProfileStore((s) => s.avatarUrl);
 
   useEffect(() => {
     void update();
@@ -298,18 +301,12 @@ export default function CollapsibleSidebar({
             (e.currentTarget as HTMLDivElement).style.borderColor = "#eef0f7";
           }}
         >
-          <div
-            className="flex items-center justify-center text-white font-semibold shrink-0"
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #3b46e0, #7a85ff)",
-              fontSize: 13,
-            }}
-          >
-            {displayName.charAt(0).toUpperCase()}
-          </div>
+          <UserAvatar
+            src={avatarUrl}
+            name={displayName}
+            email={displayEmail}
+            className="w-[34px] h-[34px] rounded-full shrink-0 object-cover"
+          />
 
           {!isCollapsed && (
             <>

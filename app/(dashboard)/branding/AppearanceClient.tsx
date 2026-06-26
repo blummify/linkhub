@@ -140,6 +140,7 @@ export default function AppearanceClient({
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [pendingAvatarBlob, setPendingAvatarBlob] = useState<Blob | null>(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
+  const previousAvatarUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
@@ -224,9 +225,14 @@ export default function AppearanceClient({
       const result = await updateAvatarUrl(publicUrl, key);
       if ("error" in result) {
         await deleteOrphanedUpload(key);
+        useProfileStore.getState().setAvatarUrl(previousAvatarUrlRef.current);
+        if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
         return;
       }
       useProfileStore.getState().setAvatarUrl(publicUrl);
+      if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
+      setPendingAvatarPreview(null);
+      setPendingAvatarBlob(null);
     },
   });
 
@@ -234,9 +240,15 @@ export default function AppearanceClient({
     // Also discard any pending crop that hasn't been saved yet
     setPendingAvatarBlob(null);
     setPendingAvatarPreview(null);
-    const result = await removeAvatar();
-    if ("error" in result) return;
+
+    const previousUrl = useProfileStore.getState().avatarUrl;
     useProfileStore.getState().setAvatarUrl(null);
+
+    const result = await removeAvatar();
+    if ("error" in result) {
+      useProfileStore.getState().setAvatarUrl(previousUrl);
+      return;
+    }
   }, []);
 
   const handleApplyCustomTheme = useCallback(async (id: string) => {
@@ -583,7 +595,11 @@ export default function AppearanceClient({
           setCropFile(null);
           setPendingAvatarBlob(blob);
           if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
+          const blobUrl = URL.createObjectURL(blob);
           setPendingAvatarPreview(URL.createObjectURL(blob));
+          previousAvatarUrlRef.current = useProfileStore.getState().avatarUrl ?? initialAvatarUrl ?? null;
+
+          useProfileStore.getState().setAvatarUrl(blobUrl);
         }}
         onCancel={() => setCropFile(null)}
       />
