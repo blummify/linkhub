@@ -1059,26 +1059,6 @@ export default function MyAccountClient({
                 </button>
               </div>
 
-              {showSetupModal && (
-                <TwoFactorSetupModal
-                  onClose={() => setShowSetupModal(false)}
-                  onEnabled={() => {
-                    setTwoFactorEnabled(true);
-                    toast.success("Two-factor authentication enabled");
-                  }}
-                />
-              )}
-
-              {showDisableModal && (
-                <TwoFactorDisableModal
-                  onClose={() => setShowDisableModal(false)}
-                  onDisabled={() => {
-                    setTwoFactorEnabled(false);
-                    toast.success("Two-factor authentication disabled");
-                  }}
-                />
-              )}
-
               {/* ── Danger zone — last, most deliberate action ── */}
               <Section danger>
                 <SectionHead danger title="Danger zone" desc="Permanent actions. Once done, they cannot be undone." />
@@ -1101,6 +1081,26 @@ export default function MyAccountClient({
           </div>
         </main>
       <CommandPalette open={showPalette} onClose={() => setShowPalette(false)} searchPlaceholder="Search settings…" />
+
+      {showSetupModal && (
+        <TwoFactorSetupModal
+          onClose={() => setShowSetupModal(false)}
+          onEnabled={() => {
+            setTwoFactorEnabled(true);
+            toast.success("Two-factor authentication enabled");
+          }}
+        />
+      )}
+
+      {showDisableModal && (
+        <TwoFactorDisableModal
+          onClose={() => setShowDisableModal(false)}
+          onDisabled={() => {
+            setTwoFactorEnabled(false);
+            toast.success("Two-factor authentication disabled");
+          }}
+        />
+      )}
 
       <DeleteAccountDialog
         key={deleteOpen ? "delete-open" : "delete-closed"}
