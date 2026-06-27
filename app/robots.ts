@@ -19,6 +19,11 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${base}/sitemap.xml`,
+    // generateSitemaps() already auto-paginates children at /sitemap/[id].xml as
+    // profiles grow (skip/take by SITEMAP_SIZE) — children scale with zero code change.
+    // The only non-scaling piece is THIS entry point: it advertises page 0 only.
+    // Deferred: reclaim /sitemap.xml from the [handle] route to serve a self-listing
+    // sitemap index, then point robots here once. See PR notes.
+    sitemap: `${base}/sitemap/0.xml`,
   };
 }
