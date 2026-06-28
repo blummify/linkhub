@@ -81,7 +81,6 @@ export default async function sitemap({
 
       await redis.set(cacheKey, profileEntries, { ex: COUNT_CACHE_TTL });
     }
-  }
   } catch {
     try {
       const profiles = await db.profile.findMany({
