@@ -53,6 +53,7 @@ export interface PreviewAppearance {
   overlayOpacity?: number;
   profileLayout?: string;
   linkDensity?: string;
+  effects?: string[];
 }
 
 export function getDefaultBrandingState(): BrandingAppearanceState {
@@ -92,7 +93,7 @@ function normalizeBrandingState(
 
   // Coerce missing fields from older persisted blobs
   if (!merged.backgroundType) merged.backgroundType = defaults.backgroundType;
-  if (!merged.backgroundValue) merged.backgroundValue = defaults.backgroundValue;
+  if (merged.backgroundValue == null) merged.backgroundValue = defaults.backgroundValue;
   if (merged.backgroundKey === undefined) merged.backgroundKey = null;
   if (!Array.isArray(merged.effects)) merged.effects = [];
   if (merged.textColor === undefined) merged.textColor = null;
@@ -130,6 +131,7 @@ export function brandingStateToPreviewAppearance(
     overlayOpacity: state.overlayOpacity,
     profileLayout: state.profileLayout,
     linkDensity: state.linkDensity,
+    effects: state.effects,
   };
 }
 
