@@ -16,6 +16,18 @@ const { brandingState, useBrandingStoreMock } = vi.hoisted(() => {
     buttonStyle: "rounded",
     fontFamily: "Instrument Serif",
     userPickedTheme: false,
+    backgroundType: "gradient" as const,
+    backgroundValue: "midnight",
+    backgroundKey: null,
+    effects: [] as string[],
+    textColor: null,
+    cardStyle: "filled",
+    bodyFont: "Geist",
+    overlayColor: "#000000",
+    overlayOpacity: 0,
+    profileLayout: "classic",
+    linkDensity: "default",
+    customThemeName: "My Theme",
   };
 
   const state = {
