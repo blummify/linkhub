@@ -95,6 +95,9 @@ export const useBrandingStore = create<BrandingStore>()(
         set({
           themeId: theme.id,
           accentColor: theme.screen.titleColor,
+          backgroundType: "gradient",
+          backgroundValue: "",
+          backgroundKey: null,
           userPickedTheme: true,
           isDirty: true,
         }),
@@ -166,7 +169,7 @@ export const useBrandingStore = create<BrandingStore>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           if (!state.backgroundType) state.backgroundType = "gradient";
-          if (!state.backgroundValue) state.backgroundValue = "midnight";
+          if (state.backgroundValue == null) state.backgroundValue = "midnight";
           if (state.backgroundKey === undefined) state.backgroundKey = null;
           if (!Array.isArray(state.effects)) state.effects = [];
           if (state.textColor === undefined) state.textColor = null;

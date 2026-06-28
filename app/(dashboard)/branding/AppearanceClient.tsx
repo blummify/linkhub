@@ -25,6 +25,7 @@ const AvatarCropModal = dynamic(
   { ssr: false }
 );
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
+import { useBrandingServerSync } from "@/lib/hooks/useBrandingServerSync";
 import { updateAvatarUrl, removeAvatar, updateBranding, applyCustomTheme, deleteCustomTheme } from "@/app/actions/profile";
 import { claimHandle, checkHandleAvailability } from "@/app/actions/links";
 import { deleteOrphanedUpload } from "@/app/actions/upload";
@@ -75,11 +76,13 @@ export default function AppearanceClient({
   initialAvatarUrl,
   initialActiveCustomThemeId,
   initialCustomThemes = [],
+  isPaidUser = false,
 }: {
   initialState?: Partial<BrandingAppearanceState> | null;
   initialAvatarUrl?: string | null;
   initialActiveCustomThemeId?: string | null;
   initialCustomThemes?: CustomThemeRecord[];
+  isPaidUser?: boolean;
 }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
 
@@ -135,6 +138,7 @@ export default function AppearanceClient({
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showProUpgradeModal, setShowProUpgradeModal] = useState(false);
 
   // Deferred avatar upload state
   const [cropFile, setCropFile] = useState<File | null>(null);
@@ -147,26 +151,13 @@ export default function AppearanceClient({
     return () => document.documentElement.removeAttribute("data-mobile-preview-open");
   }, [previewOpen]);
 
-  // Track whether we've applied the server-provided initial state yet.
-  // We wait for the Zustand store to finish its localStorage hydration (hydrated===true)
-  // before overriding, so server data always wins over stale localStorage.
-  const hydrated = useBrandingStore((s) => s.hydrated);
-  const serverSyncedRef = useRef(false);
+  useBrandingServerSync(initialState);
 
   useEffect(() => {
-    if (!hydrated || serverSyncedRef.current) return;
-    serverSyncedRef.current = true;
-
-    // Seed the profileStore so other pages don't re-fetch
     if (!profileFetched) {
       useProfileStore.getState().markFetched({ avatarUrl: initialAvatarUrl ?? null });
     }
-
-    // Override stale localStorage with fresh server data
-    if (initialState && Object.keys(initialState).length > 0) {
-      useBrandingStore.getState().syncFromDb(initialState);
-    }
-  }, [hydrated, profileFetched, initialState, initialAvatarUrl]);
+  }, [profileFetched, initialAvatarUrl]);
 
   const isDirtyOrPending = isDirty || !!pendingAvatarBlob;
 
@@ -312,6 +303,10 @@ export default function AppearanceClient({
 
   const handleSave = useCallback(async () => {
     if (isSaving) return;
+    if (theme.isPro && !isPaidUser) {
+      setShowProUpgradeModal(true);
+      return;
+    }
     setIsSaving(true);
     try {
       if (pendingAvatarBlob) {
@@ -336,7 +331,27 @@ export default function AppearanceClient({
         }
       }
 
-      const result = await updateBranding({ displayName, bio, themeId, accentColor, buttonStyle, fontFamily });
+      const s = useBrandingStore.getState();
+      const result = await updateBranding({
+        displayName,
+        bio,
+        themeId,
+        accentColor,
+        buttonStyle,
+        fontFamily,
+        backgroundType:  s.backgroundType,
+        backgroundValue: s.backgroundValue,
+        backgroundKey:   s.backgroundKey,
+        effects:         s.effects.join(","),
+        textColor:       s.textColor,
+        cardStyle:       s.cardStyle,
+        bodyFont:        s.bodyFont,
+        overlayColor:    s.overlayColor,
+        overlayOpacity:  s.overlayOpacity,
+        profileLayout:   s.profileLayout,
+        linkDensity:     s.linkDensity,
+        customThemeName: s.customThemeName,
+      });
       if ("error" in result) {
         toast.error(result.error);
         return;
@@ -352,7 +367,7 @@ export default function AppearanceClient({
     } finally {
       setIsSaving(false);
     }
-  }, [isSaving, pendingAvatarBlob, upload, handle, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
+  }, [isSaving, isPaidUser, theme.isPro, pendingAvatarBlob, upload, handle, displayName, bio, themeId, accentColor, buttonStyle, fontFamily, markSaved]);
 
   const handleResetRequest = useCallback(() => {
     setShowResetConfirm(true);
@@ -585,6 +600,17 @@ export default function AppearanceClient({
       confirmText="Discard changes"
       confirmStyle="danger"
       onConfirm={handleResetConfirm}
+    />
+
+    <BrandingConfirmModal
+      open={showProUpgradeModal}
+      onClose={() => setShowProUpgradeModal(false)}
+      icon="info"
+      title={`${theme.name} is a Pro theme`}
+      body="Upgrade to Linkhub Pro to unlock premium themes, custom fonts, and advanced analytics."
+      confirmText="Upgrade now"
+      confirmStyle="primary"
+      onConfirm={() => router.push("/billing")}
     />
 
     {cropFile && (

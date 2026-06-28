@@ -15,9 +15,10 @@ export default async function BrandingPage() {
   let initialAvatarUrl: string | null = null;
   let initialActiveCustomThemeId: string | null = null;
   let initialCustomThemes: Awaited<ReturnType<typeof db.customTheme.findMany>> = [];
+  let isPaidUser = false;
 
   if (session?.user?.id) {
-    const [profile, customThemes] = await Promise.all([
+    const [profile, customThemes, subscription] = await Promise.all([
       db.profile.findUnique({
         where: { userId: session.user.id },
         select: {
@@ -34,8 +35,13 @@ export default async function BrandingPage() {
         where: { userId: session.user.id },
         orderBy: { createdAt: "desc" },
       }),
+      db.subscription.findUnique({
+        where: { userId: session.user.id },
+        select: { planId: true },
+      }),
     ]);
 
+    isPaidUser = !!subscription && subscription.planId !== "free";
     initialCustomThemes = customThemes;
 
     if (profile) {
@@ -71,6 +77,7 @@ export default async function BrandingPage() {
       initialAvatarUrl={initialAvatarUrl}
       initialActiveCustomThemeId={initialActiveCustomThemeId}
       initialCustomThemes={initialCustomThemes}
+      isPaidUser={isPaidUser}
     />
   );
 }
