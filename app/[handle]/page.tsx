@@ -14,6 +14,16 @@ import { ShareButton } from "./ShareButton";
 import { LinkIcon } from "./LinkIcon";
 import "./public-profile.css";
 
+const RESERVED_HANDLES = new Set([
+  "sitemap.xml",
+  "robots.txt",
+  "favicon.ico",
+  "manifest.json",
+  "manifest.webmanifest",
+  "apple-touch-icon.png",
+  "og-image.png",
+]);
+
 interface PageParams {
   params: Promise<{ handle: string }>;
 }
@@ -24,6 +34,9 @@ function profileUrl(handle: string): string {
 
 export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
   const { handle } = await params;
+
+  if (RESERVED_HANDLES.has(handle)) return {};
+
   const profile = await getPublicProfileByHandle(handle);
   if (!profile) return { title: { absolute: "Page not found" } };
 
@@ -51,6 +64,9 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
 
 export default async function PublicProfilePage({ params }: PageParams) {
   const { handle } = await params;
+
+  if (RESERVED_HANDLES.has(handle)) notFound();
+
   const profile = await getPublicProfileByHandle(handle);
   if (!profile) notFound();
 
