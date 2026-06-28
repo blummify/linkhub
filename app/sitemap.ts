@@ -25,26 +25,29 @@ const STATIC_ENTRIES: MetadataRoute.Sitemap = [
 ];
 
 export async function generateSitemaps() {
-  let count: number;
   try {
-    const cached = await redis.get<number>(COUNT_CACHE_KEY);
-    if(cached !== null){
-      count = cached;
-    } else {
+    let count: number;
+    try {
+      const cached = await redis.get<number>(COUNT_CACHE_KEY);
+      if (cached !== null) {
+        count = cached;
+      } else {
+        count = await db.profile.count({
+          where: { hasClaimedHandle: true, NOT: { handle: null } },
+        });
+        await redis.set(COUNT_CACHE_KEY, count, { ex: COUNT_CACHE_TTL });
+      }
+    } catch {
       count = await db.profile.count({
-        where: {hasClaimedHandle: true, NOT: {handle:null}},
+        where: { hasClaimedHandle: true, NOT: { handle: null } },
       });
-      await redis.set(COUNT_CACHE_KEY, count, { ex: COUNT_CACHE_TTL });
     }
-  } 
-  catch {
-    count = await db.profile.count({
-      where: {hasClaimedHandle: true, NOT: {handle:null}},
-    });
+    const pages = Math.max(1, Math.ceil(count / SITEMAP_SIZE));
+    return Array.from({ length: pages }, (_, id) => ({ id }));
+  } catch {
+    // DB/Redis unavailable (e.g. during CI build) — emit a single placeholder page
+    return [{ id: 0 }];
   }
-
-  const pages = Math.max(1, Math.ceil(count / SITEMAP_SIZE));
-  return Array.from({length: pages}, (_, id) => ({id}));
 }
 
 export default async function sitemap({
@@ -79,20 +82,24 @@ export default async function sitemap({
       await redis.set(cacheKey, profileEntries, { ex: COUNT_CACHE_TTL });
     }
   }
-  catch {
-    const profiles = await db.profile.findMany({
-      where: { hasClaimedHandle: true, NOT: { handle: null } },
-      select: { handle: true, updatedAt: true },
-      skip: pageId * SITEMAP_SIZE,
-      take: SITEMAP_SIZE,
-      orderBy: { createdAt: "asc" },
-    });
-    profileEntries = profiles.map((p) => ({
-      url: `${BASE_URL}/${p.handle}`,
-      lastModified: p.updatedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.9,
-    }));
+  } catch {
+    try {
+      const profiles = await db.profile.findMany({
+        where: { hasClaimedHandle: true, NOT: { handle: null } },
+        select: { handle: true, updatedAt: true },
+        skip: pageId * SITEMAP_SIZE,
+        take: SITEMAP_SIZE,
+        orderBy: { createdAt: "asc" },
+      });
+      profileEntries = profiles.map((p) => ({
+        url: `${BASE_URL}/${p.handle}`,
+        lastModified: p.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.9,
+      }));
+    } catch {
+      profileEntries = [];
+    }
   }
 
   return pageId === 0 ? [...STATIC_ENTRIES, ...profileEntries] : profileEntries;
