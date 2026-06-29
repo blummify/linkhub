@@ -36,7 +36,7 @@
     "nextjs-toploader": "^3.9.17",
     "nodemailer": "^7.0.13",
     "otplib": "^13.4.1",
-    "pg": "^8.20.0",
+    "pg": "^8.22.0",
     "prisma": "^7.8.0",
     "qrcode": "^1.5.4",
     "react": "19.2.6",
