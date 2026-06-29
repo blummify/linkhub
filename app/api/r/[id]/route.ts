@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { db } from "@/lib/db";
+import { checkLinkMilestone } from "@/lib/notifications/milestones";
 
 /** Public click-through redirect for `/{handle}` link cards — tracks `Link.clicks` without blocking the redirect. */
 export async function GET(
@@ -36,6 +37,8 @@ export async function GET(
     } catch (error) {
       console.error("Error incrementing link clicks:", error);
     }
+
+    await checkLinkMilestone(id, link.userId);
   });
 
   return NextResponse.redirect(link.url, 307);

@@ -3,6 +3,7 @@ import { redis } from "@/lib/redis";
 import { ANALYTICS_METRIC } from "@/app/constants/analyticsMetrics";
 import { incrementMetric } from "./analytics";
 import { isBotUserAgent } from "./botUserAgents";
+import { checkProfileMilestone } from "@/lib/notifications/milestones";
 
 const DEDUP_TTL = 1800; // 30 minutes — a visitor reloading within this window counts once
 
@@ -41,4 +42,5 @@ export async function recordProfileView({ userId, userAgent, ip }: RecordProfile
   if (alreadySeen) return;
 
   await incrementMetric(userId, ANALYTICS_METRIC.PROFILE_VIEW);
+  await checkProfileMilestone(userId);
 }
