@@ -42,9 +42,11 @@ export default auth((req) => {
   if (isAdminHost(req.headers.get("host") ?? "")) {
     const isSuperAdmin = isLoggedIn && req.auth?.user?.role === SUPER_ADMIN;
     const decision = decideAdminRoute({ pathname, isSuperAdmin });
-    return decision.type === "redirect"
-      ? Response.redirect(new URL(decision.to, nextUrl))
-      : NextResponse.rewrite(new URL(decision.to, nextUrl));
+    if (decision.type === "redirect") {
+      const host = req.headers.get("host") ?? nextUrl.host;
+      return Response.redirect(new URL(decision.to, `${nextUrl.protocol}//${host}`));
+    }
+    return NextResponse.rewrite(new URL(decision.to, nextUrl));
   }
 
   // The admin tree is reachable only through the admin subdomain rewrite above;
