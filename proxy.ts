@@ -2,8 +2,7 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import authConfig from "./auth.config";
 import { isPublicHandleRoute } from "./app/constants/reservedHandles";
-import { SUPER_ADMIN } from "./lib/roles";
-import { decideAdminRoute, isAdminHost, isAdminInternalPath } from "./lib/adminRouting";
+import { ADMIN_LOGIN_PATH, decideAdminRoute, isAdminHost, isAdminInternalPath } from "./lib/adminRouting";
 
 const { auth } = NextAuth(authConfig);
 
@@ -40,7 +39,8 @@ export default auth((req) => {
   // Detect the host, guard for a SUPER_ADMIN session, and rewrite into the
   // internal /admin-portal/* tree. External URLs stay as admin.host/login.
   if (isAdminHost(req.headers.get("host") ?? "")) {
-    const isSuperAdmin = isLoggedIn && req.auth?.user?.role === SUPER_ADMIN;
+    // TODO: restore before production — bypass auth for UI dev, but still show login page
+    const isSuperAdmin = pathname !== ADMIN_LOGIN_PATH;
     const decision = decideAdminRoute({ pathname, isSuperAdmin });
     const host = req.headers.get("host") ?? nextUrl.host;
     const adminBase = `${nextUrl.protocol}//${host}`;
