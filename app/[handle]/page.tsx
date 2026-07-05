@@ -95,7 +95,6 @@ export default async function PublicProfilePage({ params }: PageParams) {
         )}
 
         <h1 className="pp-name">{displayName}</h1>
-        <p className="pp-handle">@{handle}</p>
         {profile.bio && <p className="pp-bio">{profile.bio}</p>}
 
         <nav className="pp-socials" aria-label="Social profiles">
