@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -129,7 +129,7 @@ export default function AppearanceClient({
 
   const [isSaving, setIsSaving] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const [mounted, setMounted] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -146,6 +146,10 @@ export default function AppearanceClient({
     document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
     return () => document.documentElement.removeAttribute("data-mobile-preview-open");
   }, [previewOpen]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Track whether we've applied the server-provided initial state yet.
   // We wait for the Zustand store to finish its localStorage hydration (hydrated===true)

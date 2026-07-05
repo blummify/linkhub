@@ -24,12 +24,12 @@ async function recordMilestone(
 }
 
 export async function checkLinkMilestone(linkId: string, userId: string): Promise<void> {
-  const [link, profile] = await Promise.all([
-    db.link.findUnique({ where: { id: linkId }, select: { clicks: true, title: true, url: true } }),
-    db.profile.findUnique({ where: { userId }, select: { notificationsEnabled: true } }),
-  ]);
+  const link = await db.link.findUnique({
+    where: { id: linkId },
+    select: { clicks: true, title: true, url: true },
+  });
 
-  if (!link || !profile?.notificationsEnabled) return;
+  if (!link || typeof link.clicks !== "number") return;
 
   const user = await db.user.findUnique({ where: { id: userId }, select: { email: true, name: true } });
   if (!user?.email) return;
@@ -59,10 +59,10 @@ export async function checkLinkMilestone(linkId: string, userId: string): Promis
 export async function checkProfileMilestone(userId: string): Promise<void> {
   const profile = await db.profile.findUnique({
     where: { userId },
-    select: { id: true, notificationsEnabled: true },
+    select: { id: true },
   });
 
-  if (!profile?.notificationsEnabled) return;
+  if (!profile) return;
 
   const [totalViews, user] = await Promise.all([
     getMetricTotal(userId, ANALYTICS_METRIC.PROFILE_VIEW),

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useState, useSyncExternalStore } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
@@ -307,7 +307,11 @@ export function ThemesSection({
   const [isHandoffClosing, setIsHandoffClosing] = useState(false);
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [copied, setCopied] = useState(false);
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   function requestCloseHandoffSheet() { setIsHandoffClosing(true); }
 
