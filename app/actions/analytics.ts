@@ -48,7 +48,9 @@ export async function getGeographyBreakdown(): Promise<{ dimension: string; coun
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  return getMetricBreakdown(session.user.id, [ANALYTICS_METRIC.PROFILE_VIEW], { exclude: NON_COUNTRY_DIMENSIONS });
+  return getMetricBreakdown(session.user.id, [ANALYTICS_METRIC.PROFILE_VIEW], {
+    exclude: [...NON_COUNTRY_DIMENSIONS, "total"],
+  });
 }
 
 export interface AnalyticsRangeInput {
@@ -89,7 +91,9 @@ export async function getAnalyticsForRange(input: AnalyticsRangeInput): Promise<
     ),
     getMetricBreakdown(userId, [ANALYTICS_METRIC.PROFILE_VIEW], { include: SOURCE_DIMENSIONS }, start, end),
     getMetricBreakdown(userId, [ANALYTICS_METRIC.PROFILE_VIEW], { include: DEVICE_DIMENSIONS }, start, end),
-    getMetricBreakdown(userId, [ANALYTICS_METRIC.PROFILE_VIEW], { exclude: NON_COUNTRY_DIMENSIONS }, start, end),
+    getMetricBreakdown(userId, [ANALYTICS_METRIC.PROFILE_VIEW], {
+      exclude: [...NON_COUNTRY_DIMENSIONS, "total"],
+    }, start, end),
   ]);
 
   return {

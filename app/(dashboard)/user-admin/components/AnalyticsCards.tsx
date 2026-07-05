@@ -351,14 +351,9 @@ export function AnalyticsCards({ cards = DEFAULT_CARDS }: AnalyticsCardsProps) {
                         letterSpacing: "-0.02em",
                       }}
                     >
-                      {card.cityName ?? card.value}
+                      {card.value ?? card.cityName}
                     </span>
                   </div>
-                  {card.trafficPercent && (
-                    <p style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 4 }}>
-                      {card.trafficPercent}
-                    </p>
-                  )}
                 </>
               ) : (
                 <>

@@ -26,11 +26,20 @@ import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
 import { AnalyticsCards, type StatCardData } from "./AnalyticsCards";
 import { DashboardTopBar } from "./DashboardTopBar";
-import { sumClicks, formatClicks, buildClicksSeries } from "@/lib/clicks";
+import { sumClicks, formatClicks } from "@/lib/clicks";
 
 const DESKTOP_PAGE_SIZE = 8;
 const MOBILE_PAGE_SIZE = 5;
 const MOBILE_BREAKPOINT = 640;
+const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
+
+function countryDisplayName(code: string): string {
+  try {
+    return countryNames.of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
 
 function useResponsivePageSize(): number {
   const [pageSize, setPageSize] = useState<number>(() => {
@@ -355,35 +364,33 @@ const pageSize = useResponsivePageSize();
 
   // Mirror the analytics page on the dashboard: Total Clicks, Profile Views, CTR,
   // and Top Region all now show real data (Total Clicks links through to the
-  // full analytics page). Each falls back to "coming soon" only while its data
-  // hasn't loaded yet or there's nothing to show. The Total Clicks sparkline is
-  // a decorative shape derived from the total — the real per-day time series
-  // lives on the dedicated /user-analytics chart.
+  // full analytics page). The Total Clicks sparkline is a decorative shape
+  // derived from the total — the real per-day time series lives on the
+  // dedicated /user-analytics chart.
   const analyticsCards = useMemo<StatCardData[]>(() => {
-    const region = topRegion && topRegion.dimension !== "unknown" ? topRegion : null;
+    const region =
+      topRegion && topRegion.dimension !== "unknown" && topRegion.dimension !== "total"
+        ? topRegion
+        : null;
     return [
       {
         label: "TOTAL CLICKS",
         value: formatClicks(totalClicks),
         changeType: "green",
-        sparkData: totalClicks > 0 ? buildClicksSeries(totalClicks, 10) : undefined,
         href: "/user-analytics",
       },
       {
         label: "PROFILE VIEWS",
-        value: analyticsSummary ? formatClicks(analyticsSummary.profileViews) : undefined,
-        comingSoon: !analyticsSummary,
+        value: analyticsSummary ? formatClicks(analyticsSummary.profileViews) : "—",
       },
       {
         label: "CTR",
-        value: analyticsSummary && analyticsSummary.profileViews > 0 ? `${analyticsSummary.ctr.toFixed(1)}%` : undefined,
-        comingSoon: !analyticsSummary || analyticsSummary.profileViews === 0,
+        value: analyticsSummary && analyticsSummary.profileViews > 0 ? `${analyticsSummary.ctr.toFixed(1)}%` : "—",
       },
       {
         label: "TOP REGION",
         countryCode: region?.dimension,
-        trafficPercent: region ? `${region.pct}% of visits` : undefined,
-        comingSoon: !region,
+        value: region ? countryDisplayName(region.dimension) : "—",
       },
     ];
   }, [totalClicks, analyticsSummary, topRegion]);

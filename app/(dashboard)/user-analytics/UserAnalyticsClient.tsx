@@ -529,6 +529,7 @@ export default function UserAnalyticsClient({
   const realGeography = useMemo(() => {
     const total = effectiveGeography.reduce((s, d) => s + d.count, 0) || 1;
     return effectiveGeography
+      .filter((d) => d.dimension !== UNKNOWN_COUNTRY && d.dimension !== "total")
       .map((d) => ({ code: d.dimension, name: countryDisplayName(d.dimension), count: d.count, pct: Math.round((d.count / total) * 100) }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 4);
@@ -834,7 +835,7 @@ export default function UserAnalyticsClient({
             </div>
 
             {/* Top links + Sources */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mb-3.5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mt-4 mb-3.5">
 
               {/* Top links */}
               <div style={panelCard}>

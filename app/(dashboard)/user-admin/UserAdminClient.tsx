@@ -66,6 +66,45 @@ export default function UserAdminClient({ initialBranding }: { initialBranding?:
   const pendingProfileRef = useRef<Awaited<ReturnType<typeof getProfile>>>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function loadAnalytics() {
+      try {
+        const [summary, geography] = await Promise.all([
+          getAnalyticsSummary().catch(() => null),
+          getGeographyBreakdown().catch(() => []),
+        ]);
+        if (cancelled) return;
+
+        setAnalyticsSummary(summary);
+        const validGeography = geography.filter(
+          (entry) => entry.dimension !== "unknown" && entry.dimension !== "total"
+        );
+        const totalGeo = validGeography.reduce((s, d) => s + d.count, 0);
+        const topGeo = validGeography[0];
+        setTopRegion(
+          topGeo
+            ? {
+                dimension: topGeo.dimension,
+                count: topGeo.count,
+                pct: totalGeo > 0 ? Math.round((topGeo.count / totalGeo) * 100) : 0,
+              }
+            : null
+        );
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Failed to load analytics data:", error);
+        }
+      }
+    }
+
+    void loadAnalytics();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     // If we already fetched during this session (e.g. navigated away and back),
     // skip the round-trip and render immediately from the store.
     // profileReady and isLoading are already correct from prior loadData() run.
@@ -73,16 +112,10 @@ export default function UserAdminClient({ initialBranding }: { initialBranding?:
 
     async function loadData() {
       try {
-        const [dbLinks, dbProfile, summary, geography] = await Promise.all([
+        const [dbLinks, dbProfile] = await Promise.all([
           getLinks(),
           getProfile(),
-          getAnalyticsSummary().catch(() => null),
-          getGeographyBreakdown().catch(() => []),
         ]);
-        setAnalyticsSummary(summary);
-        const totalGeo = geography.reduce((s, d) => s + d.count, 0);
-        const topGeo = geography[0];
-        setTopRegion(topGeo ? { dimension: topGeo.dimension, count: topGeo.count, pct: totalGeo > 0 ? Math.round((topGeo.count / totalGeo) * 100) : 0 } : null);
         const fromDb = dbLinks.map((l: LinkRow) => ({
           id: l.id,
           title: l.title,
