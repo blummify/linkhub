@@ -1,0 +1,159 @@
+/**
+ * Domain types for the admin surface. Status-like fields are modelled as
+ * discriminated string unions so invalid states are unrepresentable and the UI
+ * can map each case exhaustively.
+ */
+
+export type Plan = "free" | "pro" | "business";
+export type UserStatus = "active" | "suspended" | "pending";
+export type ReportSeverity = "high" | "medium";
+export type ReportCategory = "phishing" | "spam" | "scam";
+export type ReportStatus = "open" | "reviewing" | "resolved";
+export type SystemStatus = "operational" | "degraded" | "down";
+export type TrendDirection = "up" | "down" | "flat";
+
+/** Filter tabs on the Users table. */
+export type UserFilter = "all" | "pro" | "free" | "suspended";
+
+/** Actions available on a moderation report. */
+export type ReportAction = "review" | "takedown" | "warn" | "dismiss";
+
+/** Result of a mutation against the admin service. */
+export interface ActionResult {
+  ok: true;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  handle: string;
+  plan: Plan;
+  status: UserStatus;
+  links: number;
+  views30d: number;
+  country: string;
+  /** ISO date string. */
+  joinedAt: string;
+  /** ISO date string, or null when the user has never been active. */
+  lastActiveAt: string | null;
+}
+
+export interface UsageMetric {
+  label: string;
+  used: number;
+  limit: number;
+  /** Human-readable form, e.g. "8.4k / 50k" or "410MB / 1GB". */
+  display: string;
+}
+
+export interface ActivityItem {
+  id: string;
+  title: string;
+  meta: string;
+}
+
+export interface AdminUserDetail extends AdminUser {
+  usage: UsageMetric[];
+  recentActivity: ActivityItem[];
+}
+
+export interface UserQuery {
+  search?: string;
+  filter?: UserFilter;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface UserPage {
+  users: AdminUser[];
+  /** Total users matching the query (before pagination). */
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export type DeltaTone = "positive" | "negative" | "warning" | "neutral";
+
+export interface KpiDelta {
+  direction: TrendDirection;
+  text: string;
+  /** Overrides the colour derived from `direction` (e.g. a warning that isn't a drop). */
+  tone?: DeltaTone;
+}
+
+export interface Kpi {
+  id: string;
+  label: string;
+  value: string;
+  delta?: KpiDelta;
+  /** Raw series the Sparkline component renders as an inline SVG path. */
+  sparkline?: number[];
+}
+
+export interface DistributionSlice {
+  label: string;
+  pct: number;
+  tone: "neutral" | "primary" | "purple";
+}
+
+export interface SystemComponentStatus {
+  name: string;
+  status: SystemStatus;
+}
+
+export interface SignupItem {
+  id: string;
+  name: string;
+  handle: string;
+  plan: Plan;
+  when: string;
+}
+
+export interface ModerationQueueItem {
+  id: string;
+  handle: string;
+  reason: string;
+  reports: number;
+  severity: ReportSeverity;
+}
+
+export interface OverviewMetrics {
+  kpis: Kpi[];
+  signupsRevenueSeries: { signups: number[]; revenue: number[] };
+  distribution: DistributionSlice[];
+  systemStatus: SystemComponentStatus[];
+  recentSignups: SignupItem[];
+  moderationQueue: ModerationQueueItem[];
+}
+
+export interface Report {
+  id: string;
+  handle: string;
+  category: ReportCategory;
+  severity: ReportSeverity;
+  reportCount: number;
+  description: string;
+  reporter: string;
+  reportedAt: string;
+  url: string;
+  status: ReportStatus;
+}
+
+/**
+ * The typed boundary the admin UI talks to. The current implementation returns
+ * in-memory mock data; it can be swapped for server actions later without
+ * touching any caller.
+ */
+export interface AdminService {
+  getOverviewMetrics(): Promise<OverviewMetrics>;
+  listUsers(query?: UserQuery): Promise<UserPage>;
+  getUser(id: string): Promise<AdminUserDetail | null>;
+  listReports(status?: ReportStatus): Promise<Report[]>;
+  suspendUser(id: string): Promise<ActionResult>;
+  deleteUser(id: string): Promise<ActionResult>;
+  impersonateUser(id: string): Promise<ActionResult>;
+  changeUserPlan(id: string, plan: Plan): Promise<ActionResult>;
+  sendPasswordReset(id: string): Promise<ActionResult>;
+  actOnReport(id: string, action: ReportAction): Promise<ActionResult>;
+}
