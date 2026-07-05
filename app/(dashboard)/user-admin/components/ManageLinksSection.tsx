@@ -24,7 +24,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type { ManagedLink } from "./types";
 import { ManagedLinkCard, type ManagedLinkCardProps } from "./ManagedLinkCard";
-import { AnalyticsCards, DEFAULT_CARDS, type StatCardData } from "./AnalyticsCards";
+import { AnalyticsCards, type StatCardData } from "./AnalyticsCards";
 import { DashboardTopBar } from "./DashboardTopBar";
 import { sumClicks, formatClicks, buildClicksSeries } from "@/lib/clicks";
 
@@ -254,6 +254,8 @@ export interface ManageLinksSectionProps {
   links: ManagedLink[];
   isLoadingLinks?: boolean;
   deletingId?: string | null;
+  analyticsSummary?: { profileViews: number; linkClicks: number; ctr: number } | null;
+  topRegion?: { dimension: string; count: number; pct: number } | null;
   onAddLink?: () => void;
   onEditLink?: (link: ManagedLink, index: number) => void;
   onDeleteLink?: (link: ManagedLink, index: number) => void;
@@ -313,6 +315,8 @@ export function ManageLinksSection({
   links,
   isLoadingLinks = false,
   deletingId = null,
+  analyticsSummary = null,
+  topRegion = null,
   onAddLink,
   onEditLink,
   onDeleteLink,
@@ -349,14 +353,14 @@ const pageSize = useResponsivePageSize();
 
   const totalClicks = useMemo(() => sumClicks(links), [links]);
 
-  // Mirror the analytics page on the dashboard: the Total Clicks card shows the
-  // real summed total (and links through to the full analytics page), while the
-  // remaining metrics (profile views, CTR, region) have no data source yet and
-  // render an honest "coming soon" state instead of mock numbers. The card's
-  // sparkline is a decorative shape derived from the total — the real per-day
-  // time series lives on the dedicated /user-analytics chart.
+  // Mirror the analytics page on the dashboard: Total Clicks, Profile Views, CTR,
+  // and Top Region all now show real data (Total Clicks links through to the
+  // full analytics page). Each falls back to "coming soon" only while its data
+  // hasn't loaded yet or there's nothing to show. The Total Clicks sparkline is
+  // a decorative shape derived from the total — the real per-day time series
+  // lives on the dedicated /user-analytics chart.
   const analyticsCards = useMemo<StatCardData[]>(() => {
-    const [, ...rest] = DEFAULT_CARDS;
+    const region = topRegion && topRegion.dimension !== "unknown" ? topRegion : null;
     return [
       {
         label: "TOTAL CLICKS",
@@ -365,9 +369,24 @@ const pageSize = useResponsivePageSize();
         sparkData: totalClicks > 0 ? buildClicksSeries(totalClicks, 10) : undefined,
         href: "/user-analytics",
       },
-      ...rest.map((card) => ({ label: card.label, comingSoon: true })),
+      {
+        label: "PROFILE VIEWS",
+        value: analyticsSummary ? formatClicks(analyticsSummary.profileViews) : undefined,
+        comingSoon: !analyticsSummary,
+      },
+      {
+        label: "CTR",
+        value: analyticsSummary && analyticsSummary.profileViews > 0 ? `${analyticsSummary.ctr.toFixed(1)}%` : undefined,
+        comingSoon: !analyticsSummary || analyticsSummary.profileViews === 0,
+      },
+      {
+        label: "TOP REGION",
+        countryCode: region?.dimension,
+        trafficPercent: region ? `${region.pct}% of visits` : undefined,
+        comingSoon: !region,
+      },
     ];
-  }, [totalClicks]);
+  }, [totalClicks, analyticsSummary, topRegion]);
 
   const filteredLinks = useMemo(() => links.filter((link) => {
     if (activeTab === "all") return true;

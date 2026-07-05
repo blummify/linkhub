@@ -7,9 +7,17 @@ vi.mock("@/app/components/CollapsibleSidebar", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+vi.mock("@/app/actions/links", () => ({
+  getTopLinksForRange: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@/app/actions/analytics", () => ({
+  getAnalyticsForRange: vi.fn().mockResolvedValue(null),
+}));
+
 const links = [
-  { title: "Site A", url: "https://site-a.com", clicks: "100" },
-  { title: "Site B", url: "https://site-b.com", clicks: "200" },
+  { id: "l1", title: "Site A", url: "https://site-a.com", clicks: "100" },
+  { id: "l2", title: "Site B", url: "https://site-b.com", clicks: "200" },
 ];
 
 // Real per-day series (oldest -> newest); length is irrelevant beyond >= 2.

@@ -1,44 +1,76 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
+import ReactCountryFlag from "react-country-flag";
 import { DashboardPageTransition } from "../../components/DashboardPageTransition";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { DashboardTopBar } from "../user-admin/components/DashboardTopBar";
 import { CommandPalette } from "../../components/CommandPalette";
 import { sumClicks, parseClicks, formatClicks, buildClicksSeries } from "@/lib/clicks";
+import { UNKNOWN_COUNTRY } from "@/lib/analytics/dimensions";
+import { getTopLinksForRange } from "@/app/actions/links";
+import { getAnalyticsForRange, type AnalyticsRangeResult } from "@/app/actions/analytics";
 
 /** Light link shape passed from the server (real Link.clicks data). */
 export interface AnalyticsLink {
+  id: string;
   title: string;
   url: string;
   clicks: string;
   icon?: string | null;
 }
 
-// How many day-buckets each range renders in the (derived) time series.
-const RANGE_DAYS: Record<RangeKey, number> = { "7": 7, "30": 30, "90": 90, all: 180 };
+/** Real dimension breakdown row, e.g. { dimension: "instagram", count: 42 }. */
+export interface DimensionCount {
+  dimension: string;
+  count: number;
+}
+
+export interface AnalyticsSummaryProp {
+  profileViews: number;
+  linkClicks: number;
+  ctr: number;
+}
+
+// How many day-buckets each fixed range renders in the (derived) time series.
+// "custom" has no fixed day count — it's driven by an explicit start/end instead.
+const RANGE_DAYS: Record<Exclude<RangeKey, "custom">, number> = { "7": 7, "30": 30, "90": 90, all: 180 };
 
 // ── Data ──────────────────────────────────────────────────────────────────────
-type RangeKey = "7" | "30" | "90" | "all";
+type RangeKey = "7" | "30" | "90" | "all" | "custom";
 
-const RANGE_LABEL: Record<RangeKey, string> = {
+const RANGE_LABEL: Record<Exclude<RangeKey, "custom">, string> = {
   "7": "Last 7 days",
   "30": "Last 30 days",
   "90": "Last 90 days",
   all: "All time",
 };
 
-// Illustrative data for the panels that don't have a real source yet
-// (traffic sources, devices). These render behind a "coming soon" overlay —
-// they are never shown as real figures.
-const SOURCES = [
-  { name: "Direct",      clicks: 728, pct: 35, colorClass: "s1" },
-  { name: "Instagram",   clicks: 524, pct: 25, colorClass: "s2" },
-  { name: "X / Twitter", clicks: 314, pct: 15, colorClass: "s3" },
-  { name: "WhatsApp",    clicks: 251, pct: 12, colorClass: "s4" },
-  { name: "LinkedIn",    clicks: 167, pct:  8, colorClass: "s5" },
-  { name: "Other",       clicks: 112, pct:  5, colorClass: "s6" },
-];
+/** UTC-midnight Date, `daysBack - 1` days before today (inclusive of today). */
+function daysAgoUtc(daysBack: number): Date {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() - (daysBack - 1));
+  return d;
+}
+
+function todayUtc(): Date {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
+// Display metadata for the SOURCE_DIMENSIONS values written by the tracking
+// pipeline (lib/analytics/dimensions.ts) — keeps the real dimension string
+// ("instagram", "twitter", ...) separate from its display name/color.
+const SOURCE_META: Record<string, { name: string; colorClass: string }> = {
+  direct:    { name: "Direct",      colorClass: "s1" },
+  instagram: { name: "Instagram",   colorClass: "s2" },
+  twitter:   { name: "X / Twitter", colorClass: "s3" },
+  whatsapp:  { name: "WhatsApp",    colorClass: "s4" },
+  linkedin:  { name: "LinkedIn",    colorClass: "s5" },
+  other:     { name: "Other",       colorClass: "s6" },
+};
 
 const SOURCE_COLORS: Record<string, string> = {
   s1: "linear-gradient(90deg, #3b46e0, #6873ff)",
@@ -49,11 +81,22 @@ const SOURCE_COLORS: Record<string, string> = {
   s6: "linear-gradient(90deg, #a8aecb, #6b75a3)",
 };
 
-const DEVICES = [
-  { name: "Mobile",  pct: 64, clicks: 1341, color: "#3b46e0" },
-  { name: "Desktop", pct: 28, clicks:  587, color: "#6873ff" },
-  { name: "Tablet",  pct:  8, clicks:  168, color: "#c8cefd" },
-];
+const DEVICE_META: Record<string, { name: string; color: string }> = {
+  mobile:  { name: "Mobile",  color: "#3b46e0" },
+  desktop: { name: "Desktop", color: "#6873ff" },
+  tablet:  { name: "Tablet",  color: "#c8cefd" },
+};
+
+const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
+
+function countryDisplayName(code: string): string {
+  if (code === UNKNOWN_COUNTRY) return "Unknown";
+  try {
+    return countryNames.of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(n: number) {
@@ -94,67 +137,6 @@ const PanelTitle = memo(function PanelTitle({ children }: { children: React.Reac
   );
 });
 
-// "Coming soon" treatment for metrics with no data source yet (visitors,
-// CTR, sources, devices). These need event tracking that doesn't exist, so
-// rather than show fake numbers we surface an honest placeholder.
-const ComingSoonTag = memo(function ComingSoonTag() {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 4,
-        background: "#f1f3ff",
-        color: "#3b46e0",
-        padding: "3px 8px",
-        borderRadius: 99,
-        fontSize: 10,
-        fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: "0.08em",
-      }}
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="9" height="9">
-        <circle cx="12" cy="12" r="9" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 2" />
-      </svg>
-      Coming soon
-    </span>
-  );
-});
-
-function ComingSoonOverlay({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        display: "grid",
-        placeItems: "center",
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.95) 100%)",
-        backdropFilter: "blur(2px)",
-      }}
-    >
-      <div style={{ textAlign: "center", padding: "16px 22px 20px", maxWidth: 320 }}>
-        <ComingSoonTag />
-        <div
-          style={{
-            fontFamily: "var(--font-instrument-serif), Georgia, serif",
-            fontStyle: "italic",
-            fontSize: 22,
-            color: "#0b1020",
-            margin: "10px 0 6px",
-            lineHeight: 1.15,
-          }}
-        >
-          {title}
-        </div>
-        <p style={{ fontSize: 12.5, color: "#6b75a3", lineHeight: 1.5 }}>{subtitle}</p>
-      </div>
-    </div>
-  );
-}
 
 const Sparkline = memo(function Sparkline({ values }: { values: number[] }) {
   const W = 60, H = 22;
@@ -227,11 +209,18 @@ const SourceIcon = memo(function SourceIcon({ name }: { name: string }) {
   );
 });
 
-const DonutChart = memo(function DonutChart() {
+interface DeviceSlice {
+  name: string;
+  pct: number;
+  clicks: number;
+  color: string;
+}
+
+const DonutChart = memo(function DonutChart({ devices }: { devices: DeviceSlice[] }) {
   const cx = 50, cy = 50, r = 36, sw = 14;
   const C = 2 * Math.PI * r;
   const segments = useMemo(() =>
-    DEVICES.reduce<{ nodes: React.ReactNode[]; offset: number }>(
+    devices.reduce<{ nodes: React.ReactNode[]; offset: number }>(
       (acc, d, i) => {
         const dash = (d.pct / 100) * C;
         acc.nodes.push(
@@ -250,7 +239,9 @@ const DonutChart = memo(function DonutChart() {
       },
       { nodes: [], offset: 0 }
     ).nodes,
-  [C]);
+  [C, devices]);
+
+  const top = devices[0];
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
@@ -267,25 +258,25 @@ const DonutChart = memo(function DonutChart() {
             fill: "#0b1020",
           }}
         >
-          {DEVICES[0].pct}%
+          {top ? `${top.pct}%` : "—"}
         </text>
         <text
           x={cx} y={cy + 10}
           textAnchor="middle"
           style={{ fontSize: 8, fill: "#a8aecb", textTransform: "uppercase", letterSpacing: "0.1em" }}
         >
-          Mobile
+          {top ? top.name : ""}
         </text>
       </svg>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-        {DEVICES.map((d) => (
+        {devices.map((d) => (
           <div key={d.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 12, height: 12, borderRadius: 3, background: d.color, flexShrink: 0 }}/>
               <div>
                 <div style={{ fontSize: 13, color: "#0b1020", fontWeight: 500 }}>{d.name}</div>
-                <div style={{ fontSize: 10.5, color: "#6b75a3", fontFamily: "'Geist Mono', monospace", marginTop: 1 }}>{fmt(d.clicks)} clicks</div>
+                <div style={{ fontSize: 10.5, color: "#6b75a3", fontFamily: "'Geist Mono', monospace", marginTop: 1 }}>{fmt(d.clicks)} views</div>
               </div>
             </div>
             <div style={{ fontSize: 13, color: "#0b1020", fontWeight: 500, fontFamily: "'Geist Mono', monospace" }}>{d.pct}%</div>
@@ -404,10 +395,18 @@ const ChartZeroState = memo(function ChartZeroState() {
 export default function UserAnalyticsClient({
   links = [],
   series = [],
+  summary,
+  sources = [],
+  devices = [],
+  geography = [],
 }: {
   links?: AnalyticsLink[];
   /** Real per-day clicks (ClickDaily), oldest -> newest, ending today (UTC). */
   series?: number[];
+  summary?: AnalyticsSummaryProp;
+  sources?: DimensionCount[];
+  devices?: DimensionCount[];
+  geography?: DimensionCount[];
 }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const [range, setRange] = useState<RangeKey>("30");
@@ -415,30 +414,125 @@ export default function UserAnalyticsClient({
 
   // ── Real, click-derived metrics (from Link.clicks) ──────────────────────────
   const realTotalClicks = useMemo(() => sumClicks(links), [links]);
-  // Real per-day series sliced to the selected range (oldest -> newest).
+  // Real per-day series sliced to the selected fixed range (oldest -> newest).
   const realClicksSeries = useMemo(
-    () => series.slice(-RANGE_DAYS[range]),
+    () => (range === "custom" ? series.slice(-RANGE_DAYS.all) : series.slice(-RANGE_DAYS[range])),
     [series, range]
   );
-  const realTopLinks = useMemo(() => {
-    const totalForShare = realTotalClicks || 1;
-    return links
-      .map((l) => ({
-        title: l.title,
-        url: l.url.replace(/^https?:\/\//, ""),
-        clicks: parseClicks(l.clicks),
-        type: /behance/i.test(`${l.icon ?? ""} ${l.url}`) ? "behance" : "globe",
-      }))
-      .filter((l) => l.clicks > 0)
-      .sort((a, b) => b.clicks - a.clicks)
-      .slice(0, 5)
-      .map((l) => ({
-        ...l,
-        share: Math.round((l.clicks / totalForShare) * 100),
-        trend: buildClicksSeries(l.clicks, 10),
-      }));
-  }, [links, realTotalClicks]);
-  const topLink = realTopLinks[0];
+
+  // ── Top links, scoped to the selected range instead of lifetime Link.clicks ─
+  // Fixed pills (7/30/90/all) fetch a range-grouped ClickDaily query on change;
+  // custom ranges reuse the same payload already fetched by getAnalyticsForRange.
+  const [rangeTopLinks, setRangeTopLinks] = useState<{ linkId: string; clicks: number }[] | null>(null);
+
+  useEffect(() => {
+    if (range === "custom") return;
+    let cancelled = false;
+    getTopLinksForRange(daysAgoUtc(RANGE_DAYS[range]), todayUtc())
+      .then((rows) => { if (!cancelled) setRangeTopLinks(rows); })
+      .catch(() => { if (!cancelled) setRangeTopLinks(null); });
+    return () => { cancelled = true; };
+  }, [range]);
+
+  // ── Custom date range ────────────────────────────────────────────────────────
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [customData, setCustomData] = useState<AnalyticsRangeResult | null>(null);
+  const [customError, setCustomError] = useState<string | null>(null);
+  const [isLoadingCustom, setIsLoadingCustom] = useState(false);
+
+  async function applyCustomRange(): Promise<void> {
+    setCustomError(null);
+    setIsLoadingCustom(true);
+    try {
+      const result = await getAnalyticsForRange({ start: customStart, end: customEnd });
+      setCustomData(result);
+      setRange("custom");
+      setShowCustomPicker(false);
+    } catch (error) {
+      setCustomError(error instanceof Error ? error.message : "Couldn't load that range");
+    } finally {
+      setIsLoadingCustom(false);
+    }
+  }
+
+  const activeTopLinks = range === "custom" ? customData?.topLinks ?? null : rangeTopLinks;
+
+  const displayTopLinks = useMemo(() => {
+    if (!activeTopLinks) {
+      // Loading state / not-yet-fetched — fall back to lifetime totals so the
+      // panel isn't empty while the range-scoped query is in flight.
+      const totalForShare = realTotalClicks || 1;
+      return links
+        .map((l) => ({
+          title: l.title,
+          url: l.url.replace(/^https?:\/\//, ""),
+          clicks: parseClicks(l.clicks),
+          type: /behance/i.test(`${l.icon ?? ""} ${l.url}`) ? "behance" : "globe",
+        }))
+        .filter((l) => l.clicks > 0)
+        .sort((a, b) => b.clicks - a.clicks)
+        .slice(0, 5)
+        .map((l) => ({ ...l, share: Math.round((l.clicks / totalForShare) * 100), trend: buildClicksSeries(l.clicks, 10) }));
+    }
+
+    const byId = new Map(links.map((l) => [l.id, l]));
+    const totalForShare = activeTopLinks.reduce((s, t) => s + t.clicks, 0) || 1;
+    return activeTopLinks
+      .map((t) => {
+        const link = byId.get(t.linkId);
+        if (!link || t.clicks <= 0) return null;
+        return {
+          title: link.title,
+          url: link.url.replace(/^https?:\/\//, ""),
+          clicks: t.clicks,
+          type: /behance/i.test(`${link.icon ?? ""} ${link.url}`) ? "behance" : "globe",
+          share: Math.round((t.clicks / totalForShare) * 100),
+          trend: buildClicksSeries(t.clicks, 10),
+        };
+      })
+      .filter((l): l is NonNullable<typeof l> => l !== null);
+  }, [activeTopLinks, links, realTotalClicks]);
+
+  const topLink = displayTopLinks[0];
+
+  const displayClicksSeries = range === "custom" && customData ? customData.series : realClicksSeries;
+  const displayChartTotal = range === "custom" && customData
+    ? customData.series.reduce((s, v) => s + v, 0)
+    : realTotalClicks;
+
+  const effectiveSummary = range === "custom" && customData ? customData.summary : summary;
+  const effectiveSources = range === "custom" && customData ? customData.sources : sources;
+  const effectiveDevices = range === "custom" && customData ? customData.devices : devices;
+  const effectiveGeography = range === "custom" && customData ? customData.geography : geography;
+
+  // ── Real dimension breakdowns (profile-view device/referrer/country rows) ──
+  const realSources = useMemo(() => {
+    const total = effectiveSources.reduce((s, d) => s + d.count, 0) || 1;
+    return effectiveSources.map((d) => {
+      const meta = SOURCE_META[d.dimension] ?? { name: d.dimension, colorClass: "s6" };
+      return { name: meta.name, clicks: d.count, pct: Math.round((d.count / total) * 100), colorClass: meta.colorClass };
+    });
+  }, [effectiveSources]);
+
+  const realDevices = useMemo<DeviceSlice[]>(() => {
+    const total = effectiveDevices.reduce((s, d) => s + d.count, 0) || 1;
+    return effectiveDevices
+      .map((d) => {
+        const meta = DEVICE_META[d.dimension] ?? { name: d.dimension, color: "#a8aecb" };
+        return { name: meta.name, clicks: d.count, pct: Math.round((d.count / total) * 100), color: meta.color };
+      })
+      .sort((a, b) => b.clicks - a.clicks);
+  }, [effectiveDevices]);
+
+  const realGeography = useMemo(() => {
+    const total = effectiveGeography.reduce((s, d) => s + d.count, 0) || 1;
+    return effectiveGeography
+      .map((d) => ({ code: d.dimension, name: countryDisplayName(d.dimension), count: d.count, pct: Math.round((d.count / total) * 100) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 4);
+  }, [effectiveGeography]);
 
   return (
     <>
@@ -482,7 +576,7 @@ export default function UserAnalyticsClient({
                 </p>
               </div>
 
-              <div className="flex gap-2 items-center flex-wrap">
+              <div className="flex gap-2 items-center flex-wrap" style={{ position: "relative" }}>
                 {/* Range pills */}
                 <div
                   style={{
@@ -515,7 +609,85 @@ export default function UserAnalyticsClient({
                       {r === "all" ? "All" : `${r}D`}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomPicker((v) => !v)}
+                    style={{
+                      padding: "6px 14px",
+                      fontSize: 12.5,
+                      fontWeight: 500,
+                      color: range === "custom" ? "white" : "#6b75a3",
+                      background: range === "custom" ? "#0b1020" : "transparent",
+                      borderRadius: 99,
+                      border: 0,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    Custom
+                  </button>
                 </div>
+
+                {showCustomPicker && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 8px)",
+                      left: 0,
+                      zIndex: 20,
+                      background: "white",
+                      border: "1px solid #eef0f7",
+                      borderRadius: 14,
+                      padding: 14,
+                      boxShadow: "0 8px 24px -8px rgba(15,23,42,0.18)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      minWidth: 220,
+                    }}
+                  >
+                    <label style={{ fontSize: 11.5, color: "#6b75a3" }}>
+                      Start
+                      <input
+                        type="date"
+                        value={customStart}
+                        onChange={(e) => setCustomStart(e.target.value)}
+                        style={{ display: "block", width: "100%", marginTop: 4, padding: "6px 8px", border: "1px solid #eef0f7", borderRadius: 8, fontSize: 12.5, fontFamily: "inherit" }}
+                      />
+                    </label>
+                    <label style={{ fontSize: 11.5, color: "#6b75a3" }}>
+                      End
+                      <input
+                        type="date"
+                        value={customEnd}
+                        onChange={(e) => setCustomEnd(e.target.value)}
+                        style={{ display: "block", width: "100%", marginTop: 4, padding: "6px 8px", border: "1px solid #eef0f7", borderRadius: 8, fontSize: 12.5, fontFamily: "inherit" }}
+                      />
+                    </label>
+                    {customError && <div style={{ fontSize: 11.5, color: "#c0392b" }}>{customError}</div>}
+                    <button
+                      type="button"
+                      disabled={!customStart || !customEnd || isLoadingCustom}
+                      onClick={() => void applyCustomRange()}
+                      style={{
+                        marginTop: 4,
+                        padding: "8px 12px",
+                        borderRadius: 8,
+                        border: 0,
+                        background: "#3b46e0",
+                        color: "white",
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        cursor: !customStart || !customEnd || isLoadingCustom ? "not-allowed" : "pointer",
+                        opacity: !customStart || !customEnd || isLoadingCustom ? 0.6 : 1,
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      {isLoadingCustom ? "Loading…" : "Apply"}
+                    </button>
+                  </div>
+                )}
 
                 {/* Export */}
                 <button
@@ -563,21 +735,21 @@ export default function UserAnalyticsClient({
                 </div>
               </div>
 
-              {/* Unique visitors — needs visit tracking (not available yet) */}
+              {/* Profile views — real, from the Analytics table */}
               <div style={kpiCard}>
                 <div style={kpiLabel}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12">
                     <circle cx="9" cy="7" r="4"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2M17 11l2 2 4-4"/>
                   </svg>
-                  Unique visitors
+                  Profile views
                 </div>
-                <div style={{ ...kpiValue, color: "#c5c9e8" }}>—</div>
+                <div style={kpiValue}>{formatClicks(effectiveSummary?.profileViews ?? 0)}</div>
                 <div style={kpiMeta}>
-                  <ComingSoonTag />
+                  <span>Visits to your public page</span>
                 </div>
               </div>
 
-              {/* CTR — needs profile views (not tracked yet) */}
+              {/* CTR — real, linkClicks / profileViews */}
               <div style={kpiCard}>
                 <div style={kpiLabel}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12">
@@ -585,10 +757,21 @@ export default function UserAnalyticsClient({
                   </svg>
                   Click-through rate
                 </div>
-                <div style={{ ...kpiValue, color: "#c5c9e8" }}>—</div>
-                <div style={kpiMeta}>
-                  <ComingSoonTag />
-                </div>
+                {effectiveSummary && effectiveSummary.profileViews > 0 ? (
+                  <>
+                    <div style={kpiValue}>{effectiveSummary.ctr.toFixed(1)}%</div>
+                    <div style={kpiMeta}>
+                      <span>Clicks per profile view</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ ...kpiValue, color: "#c5c9e8" }}>—</div>
+                    <div style={kpiMeta}>
+                      <span>No profile views yet</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Top link */}
@@ -633,10 +816,12 @@ export default function UserAnalyticsClient({
                 <div>
                   <PanelTitle>Clicks over time</PanelTitle>
                   <div style={{ fontSize: 12, color: "#6b75a3", marginTop: 3 }}>
-                    {realTotalClicks > 0 ? RANGE_LABEL[range] : "No clicks recorded yet"}
+                    {displayChartTotal > 0
+                      ? (range === "custom" ? `${customStart} – ${customEnd}` : RANGE_LABEL[range])
+                      : "No clicks recorded yet"}
                   </div>
                 </div>
-                {realTotalClicks > 0 && (
+                {displayChartTotal > 0 && (
                   <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: "#6b75a3" }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b46e0", display: "inline-block" }}/>
@@ -645,7 +830,7 @@ export default function UserAnalyticsClient({
                   </div>
                 )}
               </div>
-              {realTotalClicks > 0 ? <LineChart clicks={realClicksSeries}/> : <ChartZeroState />}
+              {displayChartTotal > 0 ? <LineChart clicks={displayClicksSeries}/> : <ChartZeroState />}
             </div>
 
             {/* Top links + Sources */}
@@ -658,12 +843,12 @@ export default function UserAnalyticsClient({
                   <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>Your most-clicked links</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  {realTopLinks.length === 0 && (
+                  {displayTopLinks.length === 0 && (
                     <div style={{ fontSize: 13, color: "#6b75a3", padding: "8px 8px 4px", lineHeight: 1.5 }}>
                       No link clicks yet — share your page to start tracking.
                     </div>
                   )}
-                  {realTopLinks.map((link, i) => (
+                  {displayTopLinks.map((link, i) => (
                     <div
                       key={link.title}
                       style={{
@@ -705,144 +890,93 @@ export default function UserAnalyticsClient({
                 </div>
               </div>
 
-              {/* Traffic sources — needs referrer tracking (not available yet) */}
-              <div style={{ ...panelCard, position: "relative", overflow: "hidden" }}>
-                <div style={{ filter: "blur(6px)", opacity: 0.45, pointerEvents: "none", userSelect: "none" }}>
+              {/* Traffic sources — real, from the profile_view referrer dimension */}
+              <div style={panelCard}>
                 <div style={{ marginBottom: 18 }}>
                   <PanelTitle>Traffic sources</PanelTitle>
                   <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>Where your visitors are coming from</div>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {SOURCES.map((s) => (
-                    <div key={s.name}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#0b1020", fontWeight: 500 }}>
-                          <span style={{ width: 22, height: 22, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b75a3" }}>
-                            <SourceIcon name={s.name}/>
-                          </span>
-                          {s.name}
+                {realSources.length === 0 ? (
+                  <div style={{ fontSize: 13, color: "#6b75a3", padding: "8px 8px 4px", lineHeight: 1.5 }}>
+                    No visits recorded yet — share your page to start tracking.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {realSources.map((s) => (
+                      <div key={s.name}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#0b1020", fontWeight: 500 }}>
+                            <span style={{ width: 22, height: 22, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b75a3" }}>
+                              <SourceIcon name={s.name}/>
+                            </span>
+                            {s.name}
+                          </div>
+                          <div style={{ fontFamily: "'Geist Mono', monospace", fontSize: 11.5, color: "#6b75a3" }}>
+                            <b style={{ color: "#0b1020", fontWeight: 500 }}>{fmt(s.clicks)}</b> · {s.pct}%
+                          </div>
                         </div>
-                        <div style={{ fontFamily: "'Geist Mono', monospace", fontSize: 11.5, color: "#6b75a3" }}>
-                          <b style={{ color: "#0b1020", fontWeight: 500 }}>{fmt(s.clicks)}</b> · {s.pct}%
+                        <div style={{ height: 6, background: "#eef0f7", borderRadius: 99, overflow: "hidden" }}>
+                          <div
+                            style={{
+                              height: "100%",
+                              width: `${s.pct}%`,
+                              background: SOURCE_COLORS[s.colorClass],
+                              borderRadius: 99,
+                              transition: "width 0.6s cubic-bezier(0.16,1,0.3,1)",
+                            }}
+                          />
                         </div>
                       </div>
-                      <div style={{ height: 6, background: "#eef0f7", borderRadius: 99, overflow: "hidden" }}>
-                        <div
-                          style={{
-                            height: "100%",
-                            width: `${s.pct}%`,
-                            background: SOURCE_COLORS[s.colorClass],
-                            borderRadius: 99,
-                            transition: "width 0.6s cubic-bezier(0.16,1,0.3,1)",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                </div>
-                <ComingSoonOverlay
-                  title="See where your clicks come from"
-                  subtitle="Referrer tracking lights up here once your public page starts receiving traffic."
-                />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Devices + Geography */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
 
-              {/* Devices donut — needs user-agent tracking (not available yet) */}
-              <div style={{ ...panelCard, position: "relative", overflow: "hidden" }}>
-                <div style={{ filter: "blur(6px)", opacity: 0.45, pointerEvents: "none", userSelect: "none" }}>
-                  <div style={{ marginBottom: 18 }}>
-                    <PanelTitle>Devices</PanelTitle>
-                    <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>How your audience visits</div>
-                  </div>
-                  <DonutChart/>
+              {/* Devices donut — real, from the profile_view device dimension */}
+              <div style={panelCard}>
+                <div style={{ marginBottom: 18 }}>
+                  <PanelTitle>Devices</PanelTitle>
+                  <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2 }}>How your audience visits</div>
                 </div>
-                <ComingSoonOverlay
-                  title="Know your audience's devices"
-                  subtitle="Device breakdown appears here once visit tracking is live on your public page."
-                />
+                {realDevices.length === 0 ? (
+                  <div style={{ fontSize: 13, color: "#6b75a3", padding: "8px 8px 4px", lineHeight: 1.5 }}>
+                    No visits recorded yet — share your page to start tracking.
+                  </div>
+                ) : (
+                  <DonutChart devices={realDevices}/>
+                )}
               </div>
 
-              {/* Geography — Pro locked */}
-              <div style={{ ...panelCard, position: "relative", overflow: "hidden" }}>
-                {/* Blurred placeholder */}
-                <div style={{ filter: "blur(6px)", opacity: 0.45, pointerEvents: "none", userSelect: "none" }}>
-                  <PanelTitle>Geography</PanelTitle>
-                  <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2, marginBottom: 18 }}>Top countries by clicks</div>
-                  {[["🇬🇭 Ghana", "682", 32], ["🇳🇬 Nigeria", "421", 20], ["🇺🇸 United States", "318", 15], ["🇬🇧 United Kingdom", "241", 11]].map(([name, count, pct]) => (
-                    <div key={String(name)} style={{ marginBottom: 14 }}>
+              {/* Geography — real, from the profile_view country dimension */}
+              <div style={panelCard}>
+                <PanelTitle>Geography</PanelTitle>
+                <div style={{ fontSize: 11.5, color: "#6b75a3", marginTop: 2, marginBottom: 18 }}>Top countries by visits</div>
+                {realGeography.length === 0 ? (
+                  <div style={{ fontSize: 13, color: "#6b75a3", padding: "8px 8px 4px", lineHeight: 1.5 }}>
+                    No visits recorded yet — share your page to start tracking.
+                  </div>
+                ) : (
+                  realGeography.map((c) => (
+                    <div key={c.code} style={{ marginBottom: 14 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                        <span style={{ fontSize: 13, color: "#0b1020", fontWeight: 500 }}>{name}</span>
-                        <span style={{ fontSize: 11.5, color: "#6b75a3" }}><b style={{ color: "#0b1020" }}>{count}</b> · {pct}%</span>
+                        <span style={{ fontSize: 13, color: "#0b1020", fontWeight: 500, display: "flex", alignItems: "center", gap: 8 }}>
+                          {c.code !== UNKNOWN_COUNTRY && (
+                            <ReactCountryFlag countryCode={c.code} svg style={{ width: 18, height: 13, borderRadius: 2 }} title={c.code}/>
+                          )}
+                          {c.name}
+                        </span>
+                        <span style={{ fontSize: 11.5, color: "#6b75a3" }}><b style={{ color: "#0b1020" }}>{fmt(c.count)}</b> · {c.pct}%</span>
                       </div>
                       <div style={{ height: 6, background: "#eef0f7", borderRadius: 99, overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, #3b46e0, #6873ff)", borderRadius: 99 }}/>
+                        <div style={{ height: "100%", width: `${c.pct}%`, background: "linear-gradient(90deg, #3b46e0, #6873ff)", borderRadius: 99 }}/>
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                {/* Lock overlay */}
-                <div
-                  style={{
-                    position: "absolute", inset: 0,
-                    display: "grid", placeItems: "center",
-                    background: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.95) 100%)",
-                    backdropFilter: "blur(2px)",
-                  }}
-                >
-                  <div style={{ textAlign: "center", padding: "16px 22px 20px", maxWidth: 320 }}>
-                    <span
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: 5,
-                        background: "#2c1810", color: "#f5d77f",
-                        padding: "4px 10px", borderRadius: 99,
-                        fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em",
-                        marginBottom: 10,
-                      }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10">
-                        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/>
-                      </svg>
-                      PRO
-                    </span>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                        fontStyle: "italic",
-                        fontSize: 22,
-                        color: "#0b1020",
-                        marginBottom: 6,
-                        lineHeight: 1.15,
-                      }}
-                    >
-                      See where your audience is
-                    </div>
-                    <p style={{ fontSize: 12.5, color: "#6b75a3", lineHeight: 1.5, marginBottom: 14 }}>
-                      Unlock geography, heatmaps, custom date ranges, and per-link UTM tracking.
-                    </p>
-                    <button
-                      type="button"
-                      style={{
-                        background: "linear-gradient(180deg, #3b46e0, #2a37c0)",
-                        color: "white", border: 0,
-                        padding: "9px 18px", borderRadius: 99,
-                        fontSize: 12.5, fontWeight: 600, fontFamily: "inherit",
-                        cursor: "pointer",
-                        display: "inline-flex", alignItems: "center", gap: 5,
-                        boxShadow: "0 4px 14px -4px rgba(59,70,224,0.5)",
-                      }}
-                    >
-                      Upgrade to Pro
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="13" height="13">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 5l7 7-7 7"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+                  ))
+                )}
               </div>
             </div>
             </DashboardPageTransition>

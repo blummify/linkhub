@@ -12,6 +12,7 @@ const AddEditLinkModal = dynamic(
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, checkHandleAvailability, reorderLinks } from "../../actions/links";
+import { getAnalyticsSummary, getGeographyBreakdown, type AnalyticsSummary } from "../../actions/analytics";
 import { toast } from "sonner";
 import type { BrandingAppearanceState } from "@/lib/brandingState";
 import { useBrandingServerSync } from "@/lib/hooks/useBrandingServerSync";
@@ -51,6 +52,8 @@ export default function UserAdminClient({ initialBranding }: { initialBranding?:
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [analyticsSummary, setAnalyticsSummary] = useState<AnalyticsSummary | null>(null);
+  const [topRegion, setTopRegion] = useState<{ dimension: string; count: number; pct: number } | null>(null);
 
   useEffect(() => {
     document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
@@ -70,7 +73,16 @@ export default function UserAdminClient({ initialBranding }: { initialBranding?:
 
     async function loadData() {
       try {
-        const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
+        const [dbLinks, dbProfile, summary, geography] = await Promise.all([
+          getLinks(),
+          getProfile(),
+          getAnalyticsSummary().catch(() => null),
+          getGeographyBreakdown().catch(() => []),
+        ]);
+        setAnalyticsSummary(summary);
+        const totalGeo = geography.reduce((s, d) => s + d.count, 0);
+        const topGeo = geography[0];
+        setTopRegion(topGeo ? { dimension: topGeo.dimension, count: topGeo.count, pct: totalGeo > 0 ? Math.round((topGeo.count / totalGeo) * 100) : 0 } : null);
         const fromDb = dbLinks.map((l: LinkRow) => ({
           id: l.id,
           title: l.title,
@@ -289,6 +301,8 @@ export default function UserAdminClient({ initialBranding }: { initialBranding?:
                     links={links}
                     isLoadingLinks={isLoadingLinks}
                     deletingId={deletingId}
+                    analyticsSummary={analyticsSummary}
+                    topRegion={topRegion}
                     onAddLink={openAddLink}
                     onEditLink={openEditLink}
                     onRequestDelete={(link, index) => setPendingDelete({ link, index })}
