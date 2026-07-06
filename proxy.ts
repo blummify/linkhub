@@ -42,12 +42,21 @@ export default auth((req) => {
     // TODO: restore before production — bypass auth for UI dev, but still show login page
     const isSuperAdmin = pathname !== ADMIN_LOGIN_PATH;
     const decision = decideAdminRoute({ pathname, isSuperAdmin });
-    const host = req.headers.get("host") ?? nextUrl.host;
-    const adminBase = `${nextUrl.protocol}//${host}`;
     if (decision.type === "redirect") {
-      return Response.redirect(new URL(decision.to, adminBase));
+      // Redirects are browser-visible: build against the incoming Host so the
+      // admin.* subdomain is preserved in the Location (the browser resolves
+      // admin.localhost itself; Node cannot).
+      const host = req.headers.get("host") ?? nextUrl.host;
+      const adminBase = `${nextUrl.protocol}//${host}`;
+      return NextResponse.redirect(new URL(decision.to, adminBase));
     }
-    return NextResponse.rewrite(new URL(decision.to, adminBase));
+    // Rewrites must stay same-origin/internal. Building the URL against the
+    // admin.* host makes Next treat it as an EXTERNAL proxy and fetch
+    // admin.localhost server-side, which Node can't resolve (ENOTFOUND) → 500.
+    // Clone nextUrl and set only the pathname so the rewrite routes internally.
+    const rewriteUrl = nextUrl.clone();
+    rewriteUrl.pathname = decision.to;
+    return NextResponse.rewrite(rewriteUrl);
   }
 
   // The admin tree is reachable only through the admin subdomain rewrite above;
