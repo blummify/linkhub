@@ -11,6 +11,8 @@
  *   - app/components/icons/*.tsx
  *   - app/branding/components/*.tsx
  *   - app/user-admin/components/*.tsx
+ *   - app/admin-portal/components/*.tsx (+ drawer/) and shell/*.tsx
+ *   - app/admin-portal/(app)/<view>/<Name>Client.tsx
  *   - app route Client.tsx modules (e.g. LinksClient)
  *   - app/ThemeToggle.tsx
  *   - lib/*.ts (excluding tests)
@@ -43,6 +45,22 @@ const WATCHERS = [
   {
     pattern: /^app\/user-admin\/components\/([^/]+)\.tsx$/,
     testPath: (name) => `app/user-admin/components/__tests__/${name}.test.tsx`,
+  },
+  {
+    pattern: /^app\/admin-portal\/components\/([^/]+)\.tsx$/,
+    testPath: (name) => `app/admin-portal/components/__tests__/${name}.test.tsx`,
+  },
+  {
+    pattern: /^app\/admin-portal\/components\/drawer\/([^/]+)\.tsx$/,
+    testPath: (name) => `app/admin-portal/components/drawer/__tests__/${name}.test.tsx`,
+  },
+  {
+    pattern: /^app\/admin-portal\/shell\/([^/]+)\.tsx$/,
+    testPath: (name) => `app/admin-portal/shell/__tests__/${name}.test.tsx`,
+  },
+  {
+    pattern: /^app\/admin-portal\/\(app\)\/([^/]+)\/([A-Z][\w]*Client)\.tsx$/,
+    testPath: (view, name) => `app/admin-portal/(app)/${view}/__tests__/${name}.test.tsx`,
   },
   {
     pattern: /^app\/([^/]+)\/([A-Z][\w]*Client)\.tsx$/,

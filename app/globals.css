@@ -204,9 +204,20 @@
   --color-indigo-600: #2a37c0;
 
   /* Status tints — exact design hues (Tailwind's rose-50/green-50 differ). */
-  --color-danger-50: #fdebef;  /* danger-zone / mismatch card bg */
+  --color-danger-50: #fdebef;  /* danger-zone / mismatch card bg (≈ rose-50) */
   --color-danger-400: #b9405a; /* "passwords don't match yet" hint */
-  --color-success-50: #e8f6ee; /* active-badge bg */
+  --color-success-50: #e8f6ee; /* active-badge bg (≈ green-50) */
+
+  /* Admin surface — dark sidebar ramp + status hues (linkhub-admin prototype). */
+  --color-ink-600: #26305c;
+  --color-ink-800: #141a30;
+  --color-indigo-700: #1e2a8a;
+  --color-amber-50: #fdf0dd;
+  --color-amber-500: #d97706;
+  --color-purple-50: #f3ecff;
+  --color-purple-500: #7c3aed;
+  --color-rose-500: #e11d48;
+  --color-green-500: #16a34a;
 }
 
 @import "tailwindcss";
