@@ -47,7 +47,9 @@ export default auth((req) => {
     if (decision.type === "redirect") {
       return Response.redirect(new URL(decision.to, adminBase));
     }
-    return NextResponse.rewrite(new URL(decision.to, adminBase));
+    const rewriteUrl = nextUrl.clone();
+    rewriteUrl.pathname = decision.to;
+    return NextResponse.rewrite(rewriteUrl);
   }
 
   // The admin tree is reachable only through the admin subdomain rewrite above;
