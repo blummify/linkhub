@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
@@ -306,12 +306,6 @@ export function ThemesSection({
   const [isHandoffClosing, setIsHandoffClosing] = useState(false);
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [copied, setCopied] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   function requestCloseHandoffSheet() { setIsHandoffClosing(true); }
 
   function handleHandoffSheetAnimEnd(e: React.AnimationEvent<HTMLDivElement>) {
@@ -836,7 +830,7 @@ export function ThemesSection({
       </div>
 
       {/* ── Mobile handoff sheet — editor lives on desktop ── */}
-      {mounted && showHandoffSheet && createPortal(
+      {typeof document !== "undefined" && showHandoffSheet && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-end"
           style={{

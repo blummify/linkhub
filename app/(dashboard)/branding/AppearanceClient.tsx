@@ -132,7 +132,6 @@ export default function AppearanceClient({
 
   const [isSaving, setIsSaving] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -150,14 +149,6 @@ export default function AppearanceClient({
     document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
     return () => document.documentElement.removeAttribute("data-mobile-preview-open");
   }, [previewOpen]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useBrandingServerSync(initialState);
 
@@ -666,7 +657,7 @@ export default function AppearanceClient({
       searchPlaceholder="Search themes, fonts, colors…"
     />
 
-    {mounted && showLeaveModal && createPortal(
+    {typeof document !== "undefined" && showLeaveModal && createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
         <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"

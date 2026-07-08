@@ -67,24 +67,5 @@ export async function GET(
     }
   });
 
-  const userAgent = req.headers.get("user-agent");
-  const referrer = req.headers.get("referer");
-  const country = getCountryFromHeaders((name) => req.headers.get(name));
-
-  after(async () => {
-    try {
-      const device = detectDeviceType(userAgent);
-      const source = normalizeReferrer(referrer, `https://${APP_DOMAIN}`);
-      const countryDim = country ?? UNKNOWN_COUNTRY;
-      await Promise.all([
-        incrementMetric(link.userId, ANALYTICS_METRIC.LINK_CLICK, device),
-        incrementMetric(link.userId, ANALYTICS_METRIC.LINK_CLICK, source),
-        incrementMetric(link.userId, ANALYTICS_METRIC.LINK_CLICK, countryDim),
-      ]);
-    } catch (error) {
-      console.error("Error recording link click dimensions:", error);
-    }
-  });
-
   return NextResponse.redirect(link.url, 307);
 }
