@@ -6,13 +6,23 @@ import { notFound } from "next/navigation";
 import { after } from "next/server";
 import { headers } from "next/headers";
 import { APP_DOMAIN } from "@/lib/appConfig";
-import { getClientIp } from "@/lib/geo";
+import { getClientIp, getCountryFromHeaders } from "@/lib/geo";
 import { getPublicProfileByHandle } from "@/lib/publicProfile";
 import { computeProfileThemeTokens } from "@/lib/publicProfileTheme";
 import { recordProfileView } from "@/lib/analytics/profileViews";
 import { ShareButton } from "./ShareButton";
 import { LinkIcon } from "./LinkIcon";
 import "./public-profile.css";
+
+const RESERVED_HANDLES = new Set([
+  "sitemap.xml",
+  "robots.txt",
+  "favicon.ico",
+  "manifest.json",
+  "manifest.webmanifest",
+  "apple-touch-icon.png",
+  "og-image.png",
+]);
 
 interface PageParams {
   params: Promise<{ handle: string }>;
@@ -24,6 +34,9 @@ function profileUrl(handle: string): string {
 
 export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
   const { handle } = await params;
+
+  if (RESERVED_HANDLES.has(handle)) return {};
+
   const profile = await getPublicProfileByHandle(handle);
   if (!profile) return { title: { absolute: "Page not found" } };
 
@@ -51,13 +64,18 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
 
 export default async function PublicProfilePage({ params }: PageParams) {
   const { handle } = await params;
+
+  if (RESERVED_HANDLES.has(handle)) notFound();
+
   const profile = await getPublicProfileByHandle(handle);
   if (!profile) notFound();
 
   const hdrs = await headers();
   const userAgent = hdrs.get("user-agent");
   const ip = getClientIp((name) => hdrs.get(name));
-  after(() => recordProfileView({ userId: profile.userId, userAgent, ip }));
+  const referrer = hdrs.get("referer");
+  const country = getCountryFromHeaders((name) => hdrs.get(name));
+  after(() => recordProfileView({ userId: profile.userId, userAgent, ip, referrer, country }));
 
   const displayName = profile.displayName ?? profile.userName ?? handle;
   const initial = displayName.charAt(0).toUpperCase() || "?";
@@ -79,7 +97,6 @@ export default async function PublicProfilePage({ params }: PageParams) {
         )}
 
         <h1 className="pp-name">{displayName}</h1>
-        <p className="pp-handle">@{handle}</p>
         {profile.bio && <p className="pp-bio">{profile.bio}</p>}
 
         <nav className="pp-socials" aria-label="Social profiles">

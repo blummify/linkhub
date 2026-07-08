@@ -12,8 +12,10 @@ const AddEditLinkModal = dynamic(
 import type { LinkRow } from "@/lib/linkRow";
 import type { ManagedLink } from "./components/types";
 import { getLinks, addLink, updateLink, deleteLink, getProfile, claimHandle, checkHandleAvailability, reorderLinks } from "../../actions/links";
+import { getAnalyticsSummary, getGeographyBreakdown, type AnalyticsSummary } from "../../actions/analytics";
 import { toast } from "sonner";
-import { getBrandingThemeById, type BrandingAppearanceState } from "@/lib/brandingState";
+import type { BrandingAppearanceState } from "@/lib/brandingState";
+import { useBrandingServerSync } from "@/lib/hooks/useBrandingServerSync";
 import { ClaimHandleModal } from "../../components/ClaimHandleModal";
 import { DeleteConfirmDialog } from "../../components/DeleteConfirmDialog";
 import { CommandPalette } from "../../components/CommandPalette";
@@ -29,7 +31,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-GH", {
   day: "numeric",
 });
 
-export default function UserAdminClient() {
+export default function UserAdminClient({ initialBranding }: { initialBranding?: Partial<BrandingAppearanceState> | null } = {}) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
 
   const links = useLinksStore((s) => s.links);
@@ -45,12 +47,13 @@ export default function UserAdminClient() {
   const setPendingDelete = useUIStore((s) => s.setPendingDelete);
   const closePalette = useUIStore((s) => s.closePalette);
 
-  const hydrated = useBrandingStore((s) => s.hydrated);
-  const patchState = useBrandingStore((s) => s.patchState);
+  useBrandingServerSync(initialBranding);
 
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [analyticsSummary, setAnalyticsSummary] = useState<AnalyticsSummary | null>(null);
+  const [topRegion, setTopRegion] = useState<{ dimension: string; count: number; pct: number } | null>(null);
 
   useEffect(() => {
     document.documentElement.toggleAttribute("data-mobile-preview-open", previewOpen);
@@ -59,10 +62,47 @@ export default function UserAdminClient() {
 
   const [claimOpen, setClaimOpen] = useState(false);
   const [profileReady, setProfileReady] = useState(() => useProfileStore.getState().fetched);
-  const [profileDataReady, setProfileDataReady] = useState(false);
   const isSavingRef = useRef(false);
-  const profileMergedRef = useRef(false);
   const pendingProfileRef = useRef<Awaited<ReturnType<typeof getProfile>>>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAnalytics() {
+      try {
+        const [summary, geography] = await Promise.all([
+          getAnalyticsSummary().catch(() => null),
+          getGeographyBreakdown().catch(() => []),
+        ]);
+        if (cancelled) return;
+
+        setAnalyticsSummary(summary);
+        const validGeography = geography.filter(
+          (entry) => entry.dimension !== "unknown" && entry.dimension !== "total"
+        );
+        const totalGeo = validGeography.reduce((s, d) => s + d.count, 0);
+        const topGeo = validGeography[0];
+        setTopRegion(
+          topGeo
+            ? {
+                dimension: topGeo.dimension,
+                count: topGeo.count,
+                pct: totalGeo > 0 ? Math.round((topGeo.count / totalGeo) * 100) : 0,
+              }
+            : null
+        );
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Failed to load analytics data:", error);
+        }
+      }
+    }
+
+    void loadAnalytics();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     // If we already fetched during this session (e.g. navigated away and back),
@@ -72,7 +112,10 @@ export default function UserAdminClient() {
 
     async function loadData() {
       try {
-        const [dbLinks, dbProfile] = await Promise.all([getLinks(), getProfile()]);
+        const [dbLinks, dbProfile] = await Promise.all([
+          getLinks(),
+          getProfile(),
+        ]);
         const fromDb = dbLinks.map((l: LinkRow) => ({
           id: l.id,
           title: l.title,
@@ -87,7 +130,6 @@ export default function UserAdminClient() {
         useLinksStore.getState().setLinks(fromDb);
         if (dbProfile) {
           pendingProfileRef.current = dbProfile;
-          setProfileDataReady(true);
           useProfileStore.getState().markFetched({
             hasClaimedHandle: dbProfile.hasClaimedHandle,
           });
@@ -104,29 +146,6 @@ export default function UserAdminClient() {
     }
     loadData();
   }, []);
-
-  useEffect(() => {
-    const dbProfile = pendingProfileRef.current;
-    if (!hydrated || profileMergedRef.current || !dbProfile) return;
-    profileMergedRef.current = true;
-    const patch: Partial<BrandingAppearanceState> = {};
-    const name = dbProfile.displayName || dbProfile.user?.name || dbProfile.user?.email;
-    if (name) patch.displayName = name;
-    if (dbProfile.handle) patch.handle = dbProfile.handle;
-    if (dbProfile.bio) patch.bio = dbProfile.bio;
-    if (dbProfile.themeId && dbProfile.themeId !== "default") {
-      const theme = getBrandingThemeById(dbProfile.themeId);
-      patch.themeId = theme.id;
-      patch.accentColor = (dbProfile.accentColor as string | null) ?? theme.screen.titleColor;
-      patch.userPickedTheme = true;
-    } else if (dbProfile.accentColor) {
-      patch.accentColor = dbProfile.accentColor as string;
-    }
-    if (dbProfile.buttonStyle) patch.buttonStyle = dbProfile.buttonStyle as string;
-    if (dbProfile.fontFamily)  patch.fontFamily  = dbProfile.fontFamily  as string;
-    // Use syncFromDb so baseline is updated too — keeps isDirty false after load
-    if (Object.keys(patch).length > 0) useBrandingStore.getState().syncFromDb(patch);
-  }, [hydrated, profileDataReady, patchState]);
 
   // Auto-show the claim modal 1s after load for first-time users (no handle yet)
   useEffect(() => {
@@ -315,6 +334,8 @@ export default function UserAdminClient() {
                     links={links}
                     isLoadingLinks={isLoadingLinks}
                     deletingId={deletingId}
+                    analyticsSummary={analyticsSummary}
+                    topRegion={topRegion}
                     onAddLink={openAddLink}
                     onEditLink={openEditLink}
                     onRequestDelete={(link, index) => setPendingDelete({ link, index })}

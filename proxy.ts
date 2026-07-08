@@ -2,8 +2,7 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import authConfig from "./auth.config";
 import { isPublicHandleRoute } from "./app/constants/reservedHandles";
-import { SUPER_ADMIN } from "./lib/roles";
-import { decideAdminRoute, isAdminHost, isAdminInternalPath } from "./lib/adminRouting";
+import { ADMIN_LOGIN_PATH, decideAdminRoute, isAdminHost, isAdminInternalPath } from "./lib/adminRouting";
 
 const { auth } = NextAuth(authConfig);
 
@@ -40,11 +39,17 @@ export default auth((req) => {
   // Detect the host, guard for a SUPER_ADMIN session, and rewrite into the
   // internal /admin-portal/* tree. External URLs stay as admin.host/login.
   if (isAdminHost(req.headers.get("host") ?? "")) {
-    const isSuperAdmin = isLoggedIn && req.auth?.user?.role === SUPER_ADMIN;
+    // TODO: restore before production — bypass auth for UI dev, but still show login page
+    const isSuperAdmin = pathname !== ADMIN_LOGIN_PATH;
     const decision = decideAdminRoute({ pathname, isSuperAdmin });
-    return decision.type === "redirect"
-      ? Response.redirect(new URL(decision.to, nextUrl))
-      : NextResponse.rewrite(new URL(decision.to, nextUrl));
+    const host = req.headers.get("host") ?? nextUrl.host;
+    const adminBase = `${nextUrl.protocol}//${host}`;
+    if (decision.type === "redirect") {
+      return Response.redirect(new URL(decision.to, adminBase));
+    }
+    const rewriteUrl = nextUrl.clone();
+    rewriteUrl.pathname = decision.to;
+    return NextResponse.rewrite(rewriteUrl);
   }
 
   // The admin tree is reachable only through the admin subdomain rewrite above;

@@ -106,6 +106,18 @@ export async function updateBranding(data: {
   accentColor?: string;
   buttonStyle?: string;
   fontFamily?: string;
+  backgroundType?: string;
+  backgroundValue?: string;
+  backgroundKey?: string | null;
+  effects?: string;
+  textColor?: string | null;
+  cardStyle?: string;
+  bodyFont?: string;
+  overlayColor?: string;
+  overlayOpacity?: number;
+  profileLayout?: string;
+  linkDensity?: string;
+  customThemeName?: string;
 }): Promise<{ success: true } | { error: string }> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
@@ -114,12 +126,24 @@ export async function updateBranding(data: {
     const updated = await db.profile.update({
       where: { userId: session.user.id },
       data: {
-        ...(data.displayName !== undefined && { displayName: data.displayName }),
-        ...(data.bio         !== undefined && { bio:         data.bio         }),
-        ...(data.themeId     !== undefined && { themeId:     data.themeId     }),
-        ...(data.accentColor !== undefined && { accentColor: data.accentColor }),
-        ...(data.buttonStyle !== undefined && { buttonStyle: data.buttonStyle }),
-        ...(data.fontFamily  !== undefined && { fontFamily:  data.fontFamily  }),
+        ...(data.displayName    !== undefined && { displayName:    data.displayName    }),
+        ...(data.bio            !== undefined && { bio:            data.bio            }),
+        ...(data.themeId        !== undefined && { themeId:        data.themeId        }),
+        ...(data.accentColor    !== undefined && { accentColor:    data.accentColor    }),
+        ...(data.buttonStyle    !== undefined && { buttonStyle:    data.buttonStyle    }),
+        ...(data.fontFamily     !== undefined && { fontFamily:     data.fontFamily     }),
+        ...(data.backgroundType  !== undefined && { backgroundType:  data.backgroundType  }),
+        ...(data.backgroundValue !== undefined && { backgroundValue: data.backgroundValue }),
+        ...(data.backgroundKey   !== undefined && { backgroundKey:   data.backgroundKey   }),
+        ...(data.effects         !== undefined && { effects:         data.effects         }),
+        ...(data.textColor       !== undefined && { textColor:       data.textColor       }),
+        ...(data.cardStyle       !== undefined && { cardStyle:       data.cardStyle       }),
+        ...(data.bodyFont        !== undefined && { bodyFont:        data.bodyFont        }),
+        ...(data.overlayColor    !== undefined && { overlayColor:    data.overlayColor    }),
+        ...(data.overlayOpacity  !== undefined && { overlayOpacity:  data.overlayOpacity  }),
+        ...(data.profileLayout   !== undefined && { layout:          data.profileLayout   }),
+        ...(data.linkDensity     !== undefined && { linkDensity:     data.linkDensity     }),
+        ...(data.customThemeName !== undefined && { customThemeName: data.customThemeName }),
         activeCustomThemeId: null,
       },
     });

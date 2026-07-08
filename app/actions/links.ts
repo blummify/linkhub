@@ -10,6 +10,9 @@ import { LinkStatusValue } from "@/app/constants/linkStatus";
 import { isReservedHandle, HANDLE_REGEX } from "@/app/constants/reservedHandles";
 import { deleteFromR2 } from "@/lib/r2";
 import { fillSeries } from "@/lib/clicks";
+import {
+  SITEMAP_COUNT_CACHE_KEY, SITEMAP_PAGE_CACHE_KEY_PREFIX,
+} from "@/lib/cacheKeys";
 
 const LINKS_TTL = 300;   // 5 minutes
 const PROFILE_TTL = 300; // 5 minutes
@@ -80,6 +83,54 @@ export async function getClicksSeries(days: number): Promise<number[]> {
   } catch (error) {
     console.error("Error fetching click series:", error);
     return new Array(span).fill(0);
+  }
+}
+
+/**
+ * Real per-day click counts for the signed-in user between explicit start/end
+ * dates (inclusive, UTC). Complements getClicksSeries ("last N days from today")
+ * for custom date-range selections.
+ */
+export async function getClicksSeriesForRange(start: Date, end: Date): Promise<number[]> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const days = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1);
+
+  try {
+    const rows = await db.clickDaily.findMany({
+      where: { userId: session.user.id, day: { gte: start, lte: end } },
+      select: { day: true, count: true },
+    });
+    return fillSeries(rows, days);
+  } catch (error) {
+    console.error("Error fetching click series for range:", error);
+    return new Array(days).fill(0);
+  }
+}
+
+/**
+ * Top 5 links by clicks within [start, end] (inclusive, UTC), grouped from
+ * ClickDaily. Used for both the 7/30/90/all range pills and custom ranges, so
+ * "Top links" reflects the selected window instead of always showing lifetime
+ * Link.clicks totals.
+ */
+export async function getTopLinksForRange(start: Date, end: Date): Promise<{ linkId: string; clicks: number }[]> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    const rows = await db.clickDaily.groupBy({
+      by: ["linkId"],
+      where: { userId: session.user.id, day: { gte: start, lte: end } },
+      _sum: { count: true },
+      orderBy: { _sum: { count: "desc" } },
+      take: 5,
+    });
+    return rows.map((r) => ({ linkId: r.linkId, clicks: r._sum.count ?? 0 }));
+  } catch (error) {
+    console.error("Error fetching top links for range:", error);
+    return [];
   }
 }
 
@@ -279,6 +330,10 @@ export async function claimHandle(handle: string) {
       await Promise.all([
         redis.del(`profile:${session.user.id}`),
         redis.del(`handlecheck:${handle.toLowerCase()}`),
+        await redis.del(SITEMAP_COUNT_CACHE_KEY),
+        await redis.del(`${SITEMAP_PAGE_CACHE_KEY_PREFIX}0`), 
+// Only page 0 needs invalidation while user count < SITEMAP_SIZE (50k).
+// Past that, we need to invalidate the highest page id instead.
       ]);
     } catch {}
     return { success: true };

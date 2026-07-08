@@ -301,7 +301,6 @@ export function ThemesSection({
   applyingThemeId = null,
 }: ThemesSectionProps) {
   const [category, setCategory] = useState<CategoryId>("all");
-  const [proModalTheme, setProModalTheme] = useState<BrandingTheme | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [showHandoffSheet, setShowHandoffSheet] = useState(false);
   const [isHandoffClosing, setIsHandoffClosing] = useState(false);
@@ -323,10 +322,6 @@ export function ThemesSection({
   }
 
   const handleThemeClick = (theme: BrandingTheme) => {
-    if (theme.isPro) {
-      setProModalTheme(theme);
-      return;
-    }
     onSelect(theme);
   };
 
@@ -658,22 +653,6 @@ export function ThemesSection({
         ))}
       </div>
 
-      <BrandingConfirmModal
-        open={proModalTheme !== null}
-        onClose={() => setProModalTheme(null)}
-        icon="info"
-        title={
-          proModalTheme
-            ? `${proModalTheme.name} is a Pro theme`
-            : ""
-        }
-        body="Upgrade to Linkhub Pro to unlock premium themes, custom fonts, and advanced analytics."
-        confirmText="Upgrade now"
-        confirmStyle="primary"
-        onConfirm={() => {
-          /* upgrade flow */
-        }}
-      />
 
       {/* Pro custom theme banner */}
       <div

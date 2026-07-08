@@ -38,7 +38,7 @@ describe("ThemesSection", () => {
     );
   });
 
-  it("opens pro modal instead of selecting pro themes", () => {
+  it("calls onSelect for pro themes (upgrade gate is at save time, not click time)", () => {
     const onSelect = vi.fn();
     render(
       <ThemesSection
@@ -49,7 +49,9 @@ describe("ThemesSection", () => {
       />
     );
     fireEvent.click(screen.getByText("Deep Forest"));
-    expect(onSelect).not.toHaveBeenCalled();
-    expect(screen.getByText(/is a Pro theme/i)).toBeInTheDocument();
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "forest", isPro: true })
+    );
+    expect(screen.queryByText(/is a Pro theme/i)).not.toBeInTheDocument();
   });
 });
