@@ -11,7 +11,8 @@ export function getClientIp(get: (name: string) => string | null): string | null
 }
 
 /**
- * Resolve the visitor's currency from request headers.
+ * Resolve the client's ISO 3166-1 alpha-2 country code from request headers,
+ * or null when nothing identifies one.
  * Only import this from Server Components / Route Handlers — never from client components.
  *
  * Priority:
@@ -19,12 +20,10 @@ export function getClientIp(get: (name: string) => string | null): string | null
  *   2. geoip-lite          — in-process IP lookup, works on any Node.js host (VPS, etc.)
  *   3. accept-language     — browser locale header, universal last resort
  */
-export function detectCurrencyFromHeaders(
-  get: (name: string) => string | null
-): CurrencyCode {
+export function detectCountryFromHeaders(get: (name: string) => string | null): string | null {
   // 1. Vercel
   const vercel = get("x-vercel-ip-country");
-  if (vercel) return detectCurrency(vercel);
+  if (vercel) return vercel.toUpperCase();
 
   // 2. geoip-lite — Node.js only, bundled MaxMind database
   try {
@@ -35,7 +34,7 @@ export function detectCurrencyFromHeaders(
     const ip = getClientIp(get);
     if (ip) {
       const geo = geoip.lookup(ip);
-      if (geo?.country) return detectCurrency(geo.country);
+      if (geo?.country) return geo.country;
     }
   } catch {
     // geoip-lite not available — skip silently
@@ -44,7 +43,16 @@ export function detectCurrencyFromHeaders(
   // 3. accept-language: "en-GH,en;q=0.9" → "GH"
   const lang = get("accept-language") ?? "";
   const match = lang.match(/[a-z]{2}-([A-Z]{2})/);
-  if (match) return detectCurrency(match[1]);
+  return match ? match[1] : null;
+}
 
-  return "USD";
+/**
+ * Resolve the visitor's currency from request headers (same source priority as
+ * {@link detectCountryFromHeaders}).
+ */
+export function detectCurrencyFromHeaders(
+  get: (name: string) => string | null
+): CurrencyCode {
+  const country = detectCountryFromHeaders(get);
+  return country ? detectCurrency(country) : "USD";
 }

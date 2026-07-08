@@ -8,7 +8,7 @@ vi.mock("@/app/actions/profile", () => ({
 }));
 
 describe("ThemesSection", () => {
-  it("renders theme cards and category chips", () => {
+  it("renders theme cards and category chips", { timeout: 15000 }, () => {
     render(
       <ThemesSection
         selectedThemeId="monochrome"

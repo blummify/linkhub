@@ -59,6 +59,7 @@ export async function getPublicProfileByHandle(handle: string): Promise<PublicPr
           select: {
             id: true,
             name: true,
+            suspendedAt: true,
             links: {
               where: { status: LinkStatus.PUBLISHED },
               orderBy: [{ order: "asc" }, { createdAt: "desc" }],
@@ -69,7 +70,9 @@ export async function getPublicProfileByHandle(handle: string): Promise<PublicPr
       },
     });
 
-    if (!profile || !profile.hasClaimedHandle) return null;
+    // Suspended accounts' pages are offline (admin suspension bypasses the cache
+    // via invalidatePublicProfileCache, so this takes effect immediately).
+    if (!profile || !profile.hasClaimedHandle || profile.user.suspendedAt) return null;
 
     const result: PublicProfile = {
       userId: profile.user.id,
