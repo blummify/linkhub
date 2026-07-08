@@ -3,6 +3,9 @@ import { redis } from "@/lib/redis";
 import { ANALYTICS_METRIC } from "@/app/constants/analyticsMetrics";
 import { incrementMetric } from "./analytics";
 import { isBotUserAgent } from "./botUserAgents";
+import { detectDeviceType } from "./device";
+import { normalizeReferrer } from "./referrer";
+import { UNKNOWN_COUNTRY } from "./dimensions";
 
 const DEDUP_TTL = 1800; // 30 minutes — a visitor reloading within this window counts once
 
@@ -10,6 +13,8 @@ interface RecordProfileViewInput {
   userId: string;
   userAgent: string | null;
   ip: string | null;
+  referrer: string | null;
+  country: string | null;
 }
 
 /**
@@ -17,7 +22,7 @@ interface RecordProfileViewInput {
  * already been counted within the dedup window. Never throws — a tracking failure must
  * never affect the page response.
  */
-export async function recordProfileView({ userId, userAgent, ip }: RecordProfileViewInput): Promise<void> {
+export async function recordProfileView({ userId, userAgent, ip, referrer, country }: RecordProfileViewInput): Promise<void> {
   if (isBotUserAgent(userAgent)) return;
 
   // IP+UA fingerprint — a coarse "same visitor" heuristic. Visitors behind a shared IP
@@ -40,5 +45,13 @@ export async function recordProfileView({ userId, userAgent, ip }: RecordProfile
 
   if (alreadySeen) return;
 
-  await incrementMetric(userId, ANALYTICS_METRIC.PROFILE_VIEW);
+  const device = detectDeviceType(userAgent);
+  const source = normalizeReferrer(referrer);
+  const countryDim = country ?? UNKNOWN_COUNTRY;
+
+  await Promise.all([
+    incrementMetric(userId, ANALYTICS_METRIC.PROFILE_VIEW, device),
+    incrementMetric(userId, ANALYTICS_METRIC.PROFILE_VIEW, source),
+    incrementMetric(userId, ANALYTICS_METRIC.PROFILE_VIEW, countryDim),
+  ]);
 }
