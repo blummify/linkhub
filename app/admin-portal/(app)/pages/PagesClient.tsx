@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { Button } from "../../components/Button";
 import { FilterTabs } from "../../components/FilterTabs";
@@ -46,12 +46,6 @@ export function PagesClient() {
   const search = useDebouncedValue(searchInput, 200);
   const { data, loading } = usePages({ search, filter, sort, page, pageSize: PAGE_SIZE });
 
-  useEffect(() => {
-    if (data && data.page !== page) {
-      setPage(data.page);
-    }
-  }, [data, page]);
-
   const handleFilter = useCallback((value: PageFilter) => {
     setFilter(value);
     setPage(1);
@@ -72,8 +66,9 @@ export function PagesClient() {
 
   const pages = data?.pages ?? [];
   const total = data?.total ?? 0;
-  const start = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const end = Math.min(page * PAGE_SIZE, total);
+  const currentPage = data?.page ?? page;
+  const start = total === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const end = Math.min(currentPage * PAGE_SIZE, total);
 
   return (
     <div>
@@ -141,7 +136,7 @@ export function PagesClient() {
           <span>
             Showing {start}-{end} of {formatNumber(total)}
           </span>
-          <Pager page={page} pageSize={PAGE_SIZE} total={total} onPage={setPage} />
+          <Pager page={currentPage} pageSize={PAGE_SIZE} total={total} onPage={setPage} />
         </div>
       </div>
 
