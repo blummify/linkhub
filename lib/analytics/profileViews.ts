@@ -3,6 +3,7 @@ import { redis } from "@/lib/redis";
 import { ANALYTICS_METRIC } from "@/app/constants/analyticsMetrics";
 import { incrementMetric } from "./analytics";
 import { isBotUserAgent } from "./botUserAgents";
+import { checkProfileMilestone } from "@/lib/notifications/milestones";
 import { detectDeviceType } from "./device";
 import { normalizeReferrer } from "./referrer";
 import { UNKNOWN_COUNTRY } from "./dimensions";
@@ -54,4 +55,5 @@ export async function recordProfileView({ userId, userAgent, ip, referrer, count
     incrementMetric(userId, ANALYTICS_METRIC.PROFILE_VIEW, source),
     incrementMetric(userId, ANALYTICS_METRIC.PROFILE_VIEW, countryDim),
   ]);
+  await checkProfileMilestone(userId);
 }

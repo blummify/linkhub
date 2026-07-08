@@ -351,3 +351,19 @@ export async function deleteAccount(args: {
 
   return { success: true };
 }
+
+export async function updateNotificationPrefs(
+  notificationsEnabled: boolean,
+  notificationsDigest: boolean
+): Promise<Result> {
+  const userId = await requireUserId();
+  try {
+    await db.profile.update({
+      where: { userId },
+      data: { notificationsEnabled, notificationsDigest },
+    });
+    return { success: true };
+  } catch {
+    return { error: "Failed to update notification preferences." };
+  }
+}

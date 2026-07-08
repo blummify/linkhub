@@ -12,6 +12,10 @@ vi.mock("../botUserAgents", () => ({
   isBotUserAgent: vi.fn(),
 }));
 
+vi.mock("@/lib/notifications/milestones", () => ({
+  checkProfileMilestone: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { redis } from "@/lib/redis";
 import { incrementMetric } from "../analytics";
 import { isBotUserAgent } from "../botUserAgents";
