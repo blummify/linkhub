@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { adminService } from "../adminService";
-import { MOCK_USERS } from "../mockData";
+import { MOCK_PAGES, MOCK_USERS } from "../mockData";
 
 describe("adminService.listUsers", () => {
   it("paginates with a default page size of 8", async () => {
@@ -67,6 +67,34 @@ describe("adminService.getUser", () => {
   });
 });
 
+describe("adminService.listPages", () => {
+  it("paginates and sorts the pages feed", async () => {
+    const page = await adminService.listPages();
+    expect(page.pages).toHaveLength(8);
+    expect(page.page).toBe(1);
+    expect(page.total).toBe(MOCK_PAGES.length);
+    expect(page.pages[0]?.id).toBe("page_cryptodoubler");
+  });
+
+  it("filters by status and searches by owner", async () => {
+    const suspended = await adminService.listPages({ filter: "suspended", pageSize: 100 });
+    expect(suspended.pages.every((item) => item.status === "suspended")).toBe(true);
+
+    const searched = await adminService.listPages({ search: "sara", pageSize: 100 });
+    expect(searched.pages[0]?.handle).toBe("@saraa");
+  });
+
+  it("returns detail records with published links and report history", async () => {
+    const page = await adminService.getPage("page_quickcash");
+    expect(page?.publishedLinks.length).toBeGreaterThan(0);
+    expect(page?.reportHistory.length).toBeGreaterThan(0);
+  });
+
+  it("returns null for an unknown page", async () => {
+    expect(await adminService.getPage("nope")).toBeNull();
+  });
+});
+
 describe("adminService.listReports", () => {
   it("returns open reports by default", async () => {
     const reports = await adminService.listReports();
@@ -86,6 +114,8 @@ describe("adminService mutations", () => {
     expect(await adminService.impersonateUser("usr_joelosei")).toEqual({ ok: true });
     expect(await adminService.changeUserPlan("usr_joelosei", "pro")).toEqual({ ok: true });
     expect(await adminService.sendPasswordReset("usr_joelosei")).toEqual({ ok: true });
+    expect(await adminService.suspendPage("page_joelosei")).toEqual({ ok: true });
+    expect(await adminService.takeDownPage("page_joelosei")).toEqual({ ok: true });
     expect(await adminService.actOnReport("rep_quickcash", "takedown")).toEqual({ ok: true });
   });
 });

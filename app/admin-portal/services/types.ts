@@ -11,6 +11,15 @@ export type ReportCategory = "phishing" | "spam" | "scam";
 export type ReportStatus = "open" | "reviewing" | "resolved";
 export type SystemStatus = "operational" | "degraded" | "down";
 export type TrendDirection = "up" | "down" | "flat";
+export type PageStatus = "live" | "flagged" | "suspended";
+export type PageFilter = "all" | PageStatus;
+export type PageSort =
+  | "newest"
+  | "oldest"
+  | "views_desc"
+  | "views_asc"
+  | "reports_desc"
+  | "links_desc";
 
 /** Filter tabs on the Users table. */
 export type UserFilter = "all" | "pro" | "free" | "suspended";
@@ -21,6 +30,45 @@ export type ReportAction = "review" | "takedown" | "warn" | "dismiss";
 /** Result of a mutation against the admin service. */
 export interface ActionResult {
   ok: true;
+}
+
+export interface PageOwner {
+  id: string;
+  name: string;
+  handle: string;
+}
+
+export interface PublishedPageLink {
+  id: string;
+  title: string;
+  url: string;
+  clicks: number;
+}
+
+export interface PageReportHistoryItem {
+  id: string;
+  reporter: string;
+  reason: ReportCategory;
+  status: ReportStatus;
+  reportedAt: string;
+}
+
+export interface AdminPageListItem {
+  id: string;
+  handle: string;
+  owner: PageOwner;
+  url: string;
+  status: PageStatus;
+  links: number;
+  views30d: number;
+  reports: number;
+  createdAt: string;
+  theme: string;
+}
+
+export interface AdminPageDetail extends AdminPageListItem {
+  publishedLinks: PublishedPageLink[];
+  reportHistory: PageReportHistoryItem[];
 }
 
 export interface AdminUser {
@@ -71,6 +119,22 @@ export interface UserPage {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface PageQuery {
+  search?: string;
+  filter?: PageFilter;
+  sort?: PageSort;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PagePage {
+  pages: AdminPageListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  sort: PageSort;
 }
 
 export type DeltaTone = "positive" | "negative" | "warning" | "neutral";
@@ -149,6 +213,10 @@ export interface AdminService {
   getOverviewMetrics(): Promise<OverviewMetrics>;
   listUsers(query?: UserQuery): Promise<UserPage>;
   getUser(id: string): Promise<AdminUserDetail | null>;
+  listPages(query?: PageQuery): Promise<PagePage>;
+  getPage(id: string): Promise<AdminPageDetail | null>;
+  suspendPage(id: string): Promise<ActionResult>;
+  takeDownPage(id: string): Promise<ActionResult>;
   listReports(status?: ReportStatus): Promise<Report[]>;
   suspendUser(id: string): Promise<ActionResult>;
   deleteUser(id: string): Promise<ActionResult>;
