@@ -86,7 +86,7 @@ describe("MyAccountClient", () => {
   });
 
   it("renders the account page with its sections", () => {
-    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} notificationsEnabled={true} notificationsDigest={true} />);
     expect(screen.getByRole("main")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /my account/i })).toBeInTheDocument();
     expect(screen.getByText("Personal info")).toBeInTheDocument();
@@ -99,7 +99,7 @@ describe("MyAccountClient", () => {
 
   it("saves the name via updateName and refreshes the session", async () => {
     actions.updateName.mockResolvedValue({ success: true });
-    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} notificationsEnabled={true} notificationsDigest={true} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[0]);
 
     const save = screen.getByRole("button", { name: /save changes/i });
@@ -117,7 +117,7 @@ describe("MyAccountClient", () => {
   it("runs the email-change code flow", async () => {
     actions.requestEmailChange.mockResolvedValue({ success: true });
     actions.confirmEmailChange.mockResolvedValue({ success: true, email: "new@linkhub.co" });
-    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} notificationsEnabled={true} notificationsDigest={true} />);
 
     fireEvent.click(screen.getByRole("button", { name: /change email/i }));
     fireEvent.change(screen.getByLabelText("New email address"), { target: { value: "new@linkhub.co" } });
@@ -134,14 +134,14 @@ describe("MyAccountClient", () => {
   });
 
   it("shows the pending banner immediately when initial.pendingEmail is set", () => {
-    render(<MyAccountClient initial={{ ...credentialInitial, pendingEmail: "pending@linkhub.co" }} twoFactorEnabled={false} />);
+    render(<MyAccountClient initial={{ ...credentialInitial, pendingEmail: "pending@linkhub.co" }} twoFactorEnabled={false} notificationsEnabled={true} notificationsDigest={true} />);
     expect(screen.getByText(/pending@linkhub.co/)).toBeInTheDocument();
     expect(screen.getByLabelText("Verification code")).toBeInTheDocument();
   });
 
   it("gates and submits the change-password form", async () => {
     actions.changePassword.mockResolvedValue({ success: true });
-    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} notificationsEnabled={true} notificationsDigest={true} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[1]);
 
     const update_ = screen.getByRole("button", { name: /update password/i });
@@ -159,7 +159,7 @@ describe("MyAccountClient", () => {
 
   it("shows a set-password form for OAuth-only users", async () => {
     actions.setPassword.mockResolvedValue({ success: true });
-    render(<MyAccountClient initial={{ ...credentialInitial, hasPassword: false }} twoFactorEnabled={false} />);
+    render(<MyAccountClient initial={{ ...credentialInitial, hasPassword: false }} twoFactorEnabled={false} notificationsEnabled={true} notificationsDigest={true} />);
     expect(screen.getByText("Set a password")).toBeInTheDocument();
     expect(screen.getByText(/No password set/i)).toBeInTheDocument();
 
@@ -174,7 +174,7 @@ describe("MyAccountClient", () => {
 
   it("arms and runs credential account deletion, then signs out", async () => {
     actions.deleteAccount.mockResolvedValue({ success: true });
-    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} notificationsEnabled={true} notificationsDigest={true} />);
 
     fireEvent.click(screen.getByRole("button", { name: /^delete account$/i }));
     // Once open, both the danger-zone trigger and the dialog confirm read
@@ -196,7 +196,7 @@ describe("MyAccountClient", () => {
 
   it("starts a Google re-prompt for OAuth-only account deletion", async () => {
     actions.armOAuthDeletion.mockResolvedValue({ nonce: "abc123" });
-    render(<MyAccountClient initial={{ ...credentialInitial, hasPassword: false }} twoFactorEnabled={false} />);
+    render(<MyAccountClient initial={{ ...credentialInitial, hasPassword: false }} twoFactorEnabled={false} notificationsEnabled={true} notificationsDigest={true} />);
 
     fireEvent.click(screen.getByRole("button", { name: /^delete account$/i }));
     fireEvent.change(screen.getByLabelText(/type your email/i), { target: { value: "joel@linkhub.co" } });
@@ -214,7 +214,7 @@ describe("MyAccountClient", () => {
   });
 
   it("opens setup modal when 2FA is not enabled and Set up is clicked", () => {
-    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={false} notificationsEnabled={true} notificationsDigest={true} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[2]);
 
     // The Authenticator app row's "Set up" button is first; the SMS row (design
@@ -224,7 +224,7 @@ describe("MyAccountClient", () => {
   });
 
   it("opens disable modal when 2FA is enabled and Manage is clicked", () => {
-    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={true} />);
+    render(<MyAccountClient initial={credentialInitial} twoFactorEnabled={true} notificationsEnabled={true} notificationsDigest={true} />);
     fireEvent.click(screen.getAllByLabelText("Edit")[2]);
 
     fireEvent.click(screen.getByRole("button", { name: /manage/i }));

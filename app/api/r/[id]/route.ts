@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { db } from "@/lib/db";
+import { checkLinkMilestone } from "@/lib/notifications/milestones";
 import { incrementMetric } from "@/lib/analytics/analytics";
 import { ANALYTICS_METRIC } from "@/app/constants/analyticsMetrics";
 import { detectDeviceType } from "@/lib/analytics/device";
@@ -43,6 +44,8 @@ export async function GET(
     } catch (error) {
       console.error("Error incrementing link clicks:", error);
     }
+
+    await checkLinkMilestone(id, link.userId);
   });
 
   const userAgent = req.headers.get("user-agent");
