@@ -57,7 +57,7 @@ describe("PageDetailDrawer", () => {
   it("shows the page detail and confirms destructive actions", async () => {
     render(<PageDetailDrawer pageId="page_quickcash" onClose={vi.fn()} />);
 
-    expect(await screen.findByText("@quick-cash-now")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "quick-cash-now" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Suspend page" }));
     expect(screen.getByRole("alertdialog", { name: "Suspend this page?" })).toBeInTheDocument();
