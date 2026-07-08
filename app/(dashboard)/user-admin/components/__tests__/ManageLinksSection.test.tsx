@@ -66,6 +66,17 @@ describe("ManageLinksSection", () => {
     expect(totalLinks.length).toBeGreaterThan(0);
   });
 
+  it("does not treat the synthetic total dimension as a country", () => {
+    render(
+      <ManageLinksSection
+        links={links}
+        topRegion={{ dimension: "total", count: 12, pct: 100 }}
+      />
+    );
+
+    expect(screen.queryByTitle("total")).not.toBeInTheDocument();
+  });
+
   it("does not render a clicks-over-time chart on the links page", () => {
     // The time-series chart lives on /user-analytics, not the links page.
     render(<ManageLinksSection links={links} />);

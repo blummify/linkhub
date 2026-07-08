@@ -1,11 +1,6 @@
-import UserAnalyticsClient from "../(dashboard)/user-analytics/UserAnalyticsClient";
-import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Analytics",
-  description: "View detailed analytics and performance metrics for your links.",
-};
-
+/** Canonical analytics page is `/user-analytics`; keep this URL working for bookmarks. */
 export default function AnalyticsPage() {
-  return <UserAnalyticsClient />;
+  redirect("/user-analytics");
 }

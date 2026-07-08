@@ -14,10 +14,16 @@ export default async function MyAccountPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { name: true, email: true, pendingEmail: true, passwordHash: true, twoFactorEnabled: true },
-  });
+  const [user, profile] = await Promise.all([
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, email: true, pendingEmail: true, passwordHash: true, twoFactorEnabled: true },
+    }),
+    db.profile.findUnique({
+      where: { userId: session.user.id },
+      select: { notificationsEnabled: true, notificationsDigest: true },
+    }),
+  ]);
   if (!user) redirect("/login");
 
   return (
@@ -29,6 +35,8 @@ export default async function MyAccountPage() {
         hasPassword: user.passwordHash != null,
       }}
       twoFactorEnabled={user.twoFactorEnabled}
+      notificationsEnabled={profile?.notificationsEnabled ?? true}
+      notificationsDigest={profile?.notificationsDigest ?? true}
     />
   );
 }

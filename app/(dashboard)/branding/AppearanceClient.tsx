@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -132,7 +132,6 @@ export default function AppearanceClient({
 
   const [isSaving, setIsSaving] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -658,7 +657,7 @@ export default function AppearanceClient({
       searchPlaceholder="Search themes, fonts, colors…"
     />
 
-    {mounted && showLeaveModal && createPortal(
+    {typeof document !== "undefined" && showLeaveModal && createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
         <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
