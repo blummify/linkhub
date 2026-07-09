@@ -1,8 +1,28 @@
-/**
- * The set of values accepted by `User.role` (see prisma/schema.prisma).
- * Enforced at the DB level by a CHECK constraint and used app-wide for
- * role comparisons so the literals never drift.
- */
-export type Role = "USER" | "PRO" | "SUPER_ADMIN";
+
+export type Role =
+    | "USER"
+    | "PRO"
+    | "SUPER_ADMIN"
+    | "SUPPORT"
+    | "FINANCE"
+    | "MODERATOR";
 
 export const SUPER_ADMIN: Role = "SUPER_ADMIN";
+
+/** Roles that grant access to the admin portal (used by the Team page). */
+export type AdminRole = "SUPER_ADMIN" | "SUPPORT" | "FINANCE" | "MODERATOR";
+
+export const ADMIN_ROLES: readonly AdminRole[] = [
+    "SUPER_ADMIN",
+    "SUPPORT",
+    "FINANCE",
+    "MODERATOR",
+] as const;
+
+/** Display label for each admin role — used by badges and the role select. */
+export const ROLE_LABEL: Record<AdminRole, string> = {
+    SUPER_ADMIN: "Super admin",
+    SUPPORT: "Support",
+    FINANCE: "Finance",
+    MODERATOR: "Moderator",
+};
