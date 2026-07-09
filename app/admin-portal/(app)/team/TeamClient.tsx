@@ -39,9 +39,10 @@ export function TeamClient({ isSuperAdmin }: TeamClientProps) {
     return (
     <>
         <AdminPageHeader
-            crumb="Admin / Team"
-            title="Team."
-            subtitle="Admin members, roles, and permissions."
+            crumb="Admin / Team & roles."
+            title="Team "
+            accent="& roles."
+            subtitle="Admin members and what they can do."
             action={
                 isSuperAdmin ? (
                     <Button variant="primary" onClick={() => setInviteOpen(true)}>
