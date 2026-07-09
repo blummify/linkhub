@@ -5,11 +5,15 @@
  * interface stay unchanged.
  */
 
-import { MOCK_OVERVIEW, MOCK_REPORTS, MOCK_USERS } from "./mockData";
+import { AUDIT_LOG_NOW, MOCK_AUDIT_LOG, MOCK_OVERVIEW, MOCK_REPORTS, MOCK_USERS } from "./mockData";
 import type {
   AdminService,
   AdminUser,
   AdminUserDetail,
+  AuditLogEntry,
+  AuditLogEntryDetail,
+  AuditLogPage,
+  AuditLogQuery,
   OverviewMetrics,
   Report,
   ReportStatus,
@@ -65,6 +69,51 @@ function matchesSearch(user: AdminUserDetail, search: string): boolean {
   );
 }
 
+const AUDIT_DEFAULT_PAGE_SIZE = 10;
+
+const RANGE_WINDOW_MS: Record<Exclude<AuditLogQuery["range"], undefined>, number | null> = {
+  "24h": 24 * 3_600_000,
+  "7d": 7 * 24 * 3_600_000,
+  "30d": 30 * 24 * 3_600_000,
+  all: null,
+};
+
+function matchesAuditSearch(entry: AuditLogEntryDetail, search: string): boolean {
+  if (!search) return true;
+  const needle = search.trim().toLowerCase();
+  if (!needle) return true;
+  return (
+    entry.actor.name.toLowerCase().includes(needle) ||
+    entry.actionLabel.toLowerCase().includes(needle) ||
+    entry.target.toLowerCase().includes(needle)
+  );
+}
+
+function matchesAuditFilters(entry: AuditLogEntryDetail, query: AuditLogQuery): boolean {
+  if (query.actorId && query.actorId !== "all" && entry.actor.id !== query.actorId) return false;
+  if (query.actionType && query.actionType !== "all" && entry.actionType !== query.actionType) {
+    return false;
+  }
+  const windowMs = query.range ? RANGE_WINDOW_MS[query.range] : null;
+  if (windowMs !== null && windowMs !== undefined) {
+    const age = AUDIT_LOG_NOW.getTime() - new Date(entry.createdAt).getTime();
+    if (age > windowMs) return false;
+  }
+  return matchesAuditSearch(entry, query.search ?? "");
+}
+
+/** Newest-first entries matching `query`, before pagination. */
+function filterAuditLog(query: AuditLogQuery): AuditLogEntryDetail[] {
+  return MOCK_AUDIT_LOG.filter((entry) => matchesAuditFilters(entry, query)).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+function toAuditListRow(entry: AuditLogEntryDetail): AuditLogEntry {
+  const { id, actor, actionType, actionLabel, target, sensitive, ip, createdAt } = entry;
+  return { id, actor, actionType, actionLabel, target, sensitive, ip, createdAt };
+}
+
 export const adminService: AdminService = {
   getOverviewMetrics(): Promise<OverviewMetrics> {
     return resolve(MOCK_OVERVIEW);
@@ -104,4 +153,25 @@ export const adminService: AdminService = {
   changeUserPlan: () => resolve({ ok: true } as const),
   sendPasswordReset: () => resolve({ ok: true } as const),
   actOnReport: () => resolve({ ok: true } as const),
+
+  listAuditLog(query: AuditLogQuery = {}): Promise<AuditLogPage> {
+    const pageSize = query.pageSize ?? AUDIT_DEFAULT_PAGE_SIZE;
+    const matched = filterAuditLog(query);
+
+    const total = matched.length;
+    const lastPage = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(Math.max(1, query.page ?? 1), lastPage);
+    const start = (page - 1) * pageSize;
+    const entries = matched.slice(start, start + pageSize).map(toAuditListRow);
+
+    return resolve({ entries, total, page, pageSize });
+  },
+
+  getAuditLogEntry(id: string): Promise<AuditLogEntryDetail | null> {
+    return resolve(MOCK_AUDIT_LOG.find((entry) => entry.id === id) ?? null);
+  },
+
+  exportAuditLog(query: AuditLogQuery = {}): Promise<AuditLogEntry[]> {
+    return resolve(filterAuditLog(query).map(toAuditListRow));
+  },
 };

@@ -140,6 +140,73 @@ export interface Report {
   status: ReportStatus;
 }
 
+/** Kinds of admin actions the audit log records. */
+export type AuditActionType =
+  | "user_suspended"
+  | "user_reinstated"
+  | "page_takedown"
+  | "impersonation"
+  | "password_reset"
+  | "plan_changed"
+  | "payment_refunded"
+  | "report_dismissed"
+  | "settings_updated";
+
+/** Preset windows for the audit log's date-range filter. */
+export type AuditDateRange = "24h" | "7d" | "30d" | "all";
+
+export interface AuditActor {
+  id: string;
+  name: string;
+  role: string;
+}
+
+/** A single before/after field change, shown in the entry detail modal. */
+export interface AuditChange {
+  field: string;
+  before: string;
+  after: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  actor: AuditActor;
+  actionType: AuditActionType;
+  actionLabel: string;
+  target: string;
+  /** Flags actions with real user/data impact (suspensions, takedowns, impersonation, ...). */
+  sensitive: boolean;
+  ip: string;
+  /** ISO datetime string. */
+  createdAt: string;
+}
+
+export interface AuditLogEntryDetail extends AuditLogEntry {
+  session: string;
+  /** Present for actions justified by a reason (suspend, takedown, refund, ...). */
+  reason?: string;
+  /** Present for actions that changed a record's fields (plan, settings, ...). */
+  changes?: AuditChange[];
+}
+
+export interface AuditLogQuery {
+  search?: string;
+  /** "all" or an `AuditActor["id"]`. */
+  actorId?: string;
+  actionType?: AuditActionType | "all";
+  range?: AuditDateRange;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AuditLogPage {
+  entries: AuditLogEntry[];
+  /** Total entries matching the query (before pagination). */
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 /**
  * The typed boundary the admin UI talks to. The current implementation returns
  * in-memory mock data; it can be swapped for server actions later without
@@ -156,4 +223,8 @@ export interface AdminService {
   changeUserPlan(id: string, plan: Plan): Promise<ActionResult>;
   sendPasswordReset(id: string): Promise<ActionResult>;
   actOnReport(id: string, action: ReportAction): Promise<ActionResult>;
+  listAuditLog(query?: AuditLogQuery): Promise<AuditLogPage>;
+  getAuditLogEntry(id: string): Promise<AuditLogEntryDetail | null>;
+  /** Full filtered set, unpaginated — backs CSV export. */
+  exportAuditLog(query?: AuditLogQuery): Promise<AuditLogEntry[]>;
 }

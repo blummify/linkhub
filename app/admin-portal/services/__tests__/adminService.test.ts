@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { adminService } from "../adminService";
-import { MOCK_USERS } from "../mockData";
+import { MOCK_AUDIT_LOG, MOCK_USERS } from "../mockData";
 
 describe("adminService.listUsers", () => {
   it("paginates with a default page size of 8", async () => {
@@ -87,5 +87,83 @@ describe("adminService mutations", () => {
     expect(await adminService.changeUserPlan("usr_joelosei", "pro")).toEqual({ ok: true });
     expect(await adminService.sendPasswordReset("usr_joelosei")).toEqual({ ok: true });
     expect(await adminService.actOnReport("rep_quickcash", "takedown")).toEqual({ ok: true });
+  });
+});
+
+describe("adminService.listAuditLog", () => {
+  it("paginates with a default page size of 10, newest first", async () => {
+    const page = await adminService.listAuditLog();
+    expect(page.entries).toHaveLength(10);
+    expect(page.page).toBe(1);
+    expect(page.total).toBe(MOCK_AUDIT_LOG.length);
+    expect(page.entries[0].id).toBe("evt_001");
+  });
+
+  it("clamps an out-of-range page to the last page", async () => {
+    const overflow = await adminService.listAuditLog({ page: 999, pageSize: 50 });
+    const lastPage = Math.ceil(MOCK_AUDIT_LOG.length / 50);
+    expect(overflow.page).toBe(lastPage);
+  });
+
+  it("filters by actor", async () => {
+    const page = await adminService.listAuditLog({ actorId: "act_sam", pageSize: 500 });
+    expect(page.entries.length).toBeGreaterThan(0);
+    expect(page.entries.every((e) => e.actor.id === "act_sam")).toBe(true);
+  });
+
+  it("filters by action type", async () => {
+    const page = await adminService.listAuditLog({ actionType: "page_takedown", pageSize: 500 });
+    expect(page.entries.length).toBeGreaterThan(0);
+    expect(page.entries.every((e) => e.actionType === "page_takedown")).toBe(true);
+  });
+
+  it("filters by date range relative to the fixture's reference time", async () => {
+    const page = await adminService.listAuditLog({ range: "24h", pageSize: 500 });
+    expect(page.total).toBe(6);
+  });
+
+  it("searches across actor, action label, and target", async () => {
+    const page = await adminService.listAuditLog({ search: "quick-cash-now" });
+    expect(page.total).toBe(1);
+    expect(page.entries[0].id).toBe("evt_001");
+  });
+
+  it("returns an empty page when nothing matches", async () => {
+    const page = await adminService.listAuditLog({ search: "no-such-entry" });
+    expect(page.entries).toHaveLength(0);
+    expect(page.total).toBe(0);
+  });
+
+  it("omits detail-only fields from list rows", async () => {
+    const page = await adminService.listAuditLog();
+    expect(page.entries[0]).not.toHaveProperty("session");
+    expect(page.entries[0]).not.toHaveProperty("reason");
+    expect(page.entries[0]).not.toHaveProperty("changes");
+  });
+});
+
+describe("adminService.getAuditLogEntry", () => {
+  it("returns the full detail, including a reason, for a known id", async () => {
+    const entry = await adminService.getAuditLogEntry("evt_001");
+    expect(entry?.target).toBe("@quick-cash-now");
+    expect(entry?.reason).toContain("Phishing");
+    expect(entry?.session).toBeTruthy();
+  });
+
+  it("returns the full detail, including changes, for a known id", async () => {
+    const entry = await adminService.getAuditLogEntry("evt_006");
+    expect(entry?.changes).toEqual([{ field: "Monthly price", before: "€8.00", after: "€9.00" }]);
+  });
+
+  it("returns null for an unknown id", async () => {
+    expect(await adminService.getAuditLogEntry("nope")).toBeNull();
+  });
+});
+
+describe("adminService.exportAuditLog", () => {
+  it("returns the full filtered set, unpaginated", async () => {
+    const rows = await adminService.exportAuditLog({ range: "24h" });
+    expect(rows).toHaveLength(6);
+    expect(rows[0]).not.toHaveProperty("session");
   });
 });

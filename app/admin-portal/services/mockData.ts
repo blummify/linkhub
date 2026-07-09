@@ -6,6 +6,9 @@
 
 import type {
   AdminUserDetail,
+  AuditActionType,
+  AuditActor,
+  AuditLogEntryDetail,
   OverviewMetrics,
   Report,
 } from "./types";
@@ -483,3 +486,143 @@ export const MOCK_REPORTS: Report[] = [
     status: "open",
   },
 ];
+
+/** Admins who can appear as an audit log actor, and the actor filter's options. */
+export const AUDIT_ACTORS: AuditActor[] = [
+  { id: "act_ama", name: "Ama Mensah", role: "Super admin" },
+  { id: "act_sam", name: "Sam Hale", role: "Admin" },
+  { id: "act_efua", name: "Efua Boat", role: "Support" },
+  { id: "act_kojo", name: "Kojo Brent", role: "Admin" },
+];
+
+const AUDIT_ACTION_META: Record<AuditActionType, { label: string; sensitive: boolean }> = {
+  user_suspended: { label: "Suspended account", sensitive: true },
+  user_reinstated: { label: "Reinstated account", sensitive: false },
+  page_takedown: { label: "Took down page", sensitive: true },
+  impersonation: { label: "Impersonated user", sensitive: true },
+  password_reset: { label: "Sent password reset", sensitive: false },
+  plan_changed: { label: "Edited plan", sensitive: false },
+  payment_refunded: { label: "Refunded payment", sensitive: false },
+  report_dismissed: { label: "Dismissed report", sensitive: false },
+  settings_updated: { label: "Updated settings", sensitive: false },
+};
+
+/** Latest timestamp in the fixture set — the reference point for date-range filtering. */
+export const AUDIT_LOG_NOW = new Date("2026-06-30T14:22:00Z");
+
+function auditEntry(
+  id: string,
+  actor: AuditActor,
+  actionType: AuditActionType,
+  target: string,
+  ip: string,
+  hoursAgo: number,
+  extra: Partial<Pick<AuditLogEntryDetail, "reason" | "changes" | "sensitive">> = {}
+): AuditLogEntryDetail {
+  const meta = AUDIT_ACTION_META[actionType];
+  const createdAt = new Date(AUDIT_LOG_NOW.getTime() - hoursAgo * 3_600_000).toISOString();
+  return {
+    id,
+    actor,
+    actionType,
+    actionLabel: meta.label,
+    target,
+    sensitive: extra.sensitive ?? meta.sensitive,
+    ip,
+    createdAt,
+    session: `ses_${id.replace("evt_", "")}`,
+    reason: extra.reason,
+    changes: extra.changes,
+  };
+}
+
+const [AMA, SAM, EFUA, KOJO] = AUDIT_ACTORS;
+
+/**
+ * Hand-written entries covering every action type, mixing sensitive/
+ * non-sensitive and reason/changes/plain rows.
+ */
+const AUDIT_LOG_SEED: AuditLogEntryDetail[] = [
+  auditEntry("evt_001", AMA, "user_suspended", "@quick-cash-now", "41.66.12.9", 0.5, {
+    reason: "Phishing — impersonating a bank login. Confirmed by link scanner + 3 reports.",
+  }),
+  auditEntry("evt_002", SAM, "page_takedown", "@cryptodoubler", "102.89.4.201", 1.75, {
+    reason: "Advance-fee crypto scam. Confirmed by link scanner + 2 reports.",
+  }),
+  auditEntry("evt_003", EFUA, "payment_refunded", "Kwame Asare · €9", "154.160.31.5", 3),
+  auditEntry("evt_004", AMA, "impersonation", "@laraowusu", "41.66.12.9", 4.25, {
+    reason: "Investigating a billing dispute at the user's request.",
+  }),
+  auditEntry("evt_005", KOJO, "password_reset", "@saraa", "197.251.8.44", 19),
+  auditEntry("evt_006", AMA, "plan_changed", "Pro plan", "41.66.12.9", 22, {
+    changes: [{ field: "Monthly price", before: "€8.00", after: "€9.00" }],
+  }),
+  auditEntry("evt_007", SAM, "report_dismissed", "@free-giftcards", "102.89.4.201", 29),
+  auditEntry("evt_008", EFUA, "settings_updated", "Notification templates", "154.160.31.5", 34, {
+    changes: [{ field: "Password reset subject", before: "Reset your password", after: "Reset your LinkHub password" }],
+  }),
+  auditEntry("evt_009", KOJO, "user_reinstated", "@kwesiopoku", "197.251.8.44", 41),
+  auditEntry("evt_010", AMA, "user_suspended", "@spammybot", "41.66.12.9", 52, {
+    reason: "Bulk affiliate spam across all links.",
+  }),
+  auditEntry("evt_011", SAM, "impersonation", "@naakaikai", "102.89.4.201", 68, {
+    reason: "Reproducing a reported rendering bug on the user's page.",
+  }),
+  auditEntry("evt_012", EFUA, "payment_refunded", "Nadia Owusu · €24", "154.160.31.5", 80, {
+    reason: "Duplicate charge from a failed retry.",
+  }),
+  auditEntry("evt_013", AMA, "plan_changed", "Business plan", "41.66.12.9", 96, {
+    changes: [{ field: "Seats included", before: "3", after: "5" }],
+  }),
+  auditEntry("evt_014", KOJO, "page_takedown", "@fake-giveaway-gh", "197.251.8.44", 130, {
+    reason: "Impersonates a verified brand giveaway.",
+  }),
+  auditEntry("evt_015", SAM, "settings_updated", "Rate limits", "102.89.4.201", 150, {
+    changes: [{ field: "API requests / min", before: "60", after: "120" }],
+  }),
+];
+
+const GENERATED_ACTORS = AUDIT_ACTORS;
+const GENERATED_ACTIONS: AuditActionType[] = [
+  "user_suspended",
+  "page_takedown",
+  "password_reset",
+  "plan_changed",
+  "report_dismissed",
+  "payment_refunded",
+  "settings_updated",
+  "user_reinstated",
+  "impersonation",
+];
+const GENERATED_TARGETS = [
+  "@yawb",
+  "@akuasarpong",
+  "@efiamensa",
+  "@abenakuma",
+  "@kojoanan",
+  "@amaboateng",
+  "@adwoaserwaa",
+  "@kobby",
+  "@esinam",
+  "@fiifi",
+];
+const GENERATED_IPS = ["41.66.12.9", "102.89.4.201", "154.160.31.5", "197.251.8.44"];
+
+/**
+ * Deterministic padding so the log is large enough to exercise pagination and
+ * the date-range filter, spanning back from the seed entries across ~30 days.
+ */
+function buildGeneratedEntries(count: number): AuditLogEntryDetail[] {
+  return Array.from({ length: count }, (_, index) => {
+    const actor = GENERATED_ACTORS[index % GENERATED_ACTORS.length];
+    const actionType = GENERATED_ACTIONS[index % GENERATED_ACTIONS.length];
+    const target = GENERATED_TARGETS[index % GENERATED_TARGETS.length];
+    const ip = GENERATED_IPS[index % GENERATED_IPS.length];
+    // Spread ~135 entries across the 30 days preceding the seed entries.
+    const hoursAgo = 160 + index * 5.3;
+    return auditEntry(`evt_gen_${index}`, actor, actionType, target, ip, hoursAgo);
+  });
+}
+
+/** Full audit log fixture (~150 entries) backing `listAuditLog`/`exportAuditLog`. */
+export const MOCK_AUDIT_LOG: AuditLogEntryDetail[] = [...AUDIT_LOG_SEED, ...buildGeneratedEntries(135)];
