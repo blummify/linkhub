@@ -12,23 +12,24 @@ export interface UseTeamMembersResult {
 
 export function useTeamMembers(): UseTeamMembersResult {
     const [data, setData] = useState<TeamMember[] | undefined>(undefined);
-    const [loading, setLoading] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
+    const [resolvedKey, setResolvedKey] = useState(-1);
 
     useEffect(() => {
         let cancelled = false;
-        setLoading(true);
         adminService.listTeamMembers().then((rows) => {
-        if (cancelled) return;
-        setData(rows);
-        setLoading(false);
-    });
+            if (cancelled) return;
+            setData(rows);
+            setResolvedKey(refreshKey);
+        });
     return () => {
         cancelled = true;
     };
     }, [refreshKey]);
 
     const refresh = useCallback(() => setRefreshKey((n) => n + 1), []);
+
+    const loading = resolvedKey !== refreshKey;
 
     return { data, loading, refresh };
 }
