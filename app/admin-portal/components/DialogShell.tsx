@@ -15,9 +15,7 @@ export interface DialogShellProps {
 }
 
 /**
- * Both ConfirmDialog and InviteAdminModal render inside this so overlay
- * behaviour, focus handling, and z-index ordering stay identical across the
- * admin surface.
+ * Both ConfirmDialog and InviteAdminModal render inside this 
  */
 export function DialogShell({
     open,
@@ -25,7 +23,7 @@ export function DialogShell({
     role = "dialog",
     locked = false,
     onClose,
-    widthClassName = "w-[360px]",
+    widthClassName = "w-[420px]",
     children,
 }: DialogShellProps) {
     useEffect(() => {
@@ -42,10 +40,10 @@ export function DialogShell({
     return (
     <>
         <div
-        className="fixed inset-0 z-[100] bg-ink-900/50"
-        aria-hidden="true"
-        onClick={locked ? undefined : onClose}
-        />
+            className="fixed inset-0 z-[100] bg-ink-900/50 backdrop-blur-md"
+            aria-hidden="true"
+            onClick={locked ? undefined : onClose}
+        />  
         <FocusTrap>
         <div
             role={role}
