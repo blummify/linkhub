@@ -5,7 +5,7 @@
  * interface stay unchanged.
  */
 
-import { MOCK_OVERVIEW, MOCK_REPORTS, MOCK_USERS } from "./mockData";
+import { MOCK_OVERVIEW, MOCK_REPORTS, MOCK_USERS, MOCK_TEAM_MEMBERS } from "./mockData";
 import type {
   AdminService,
   AdminUser,
@@ -104,4 +104,9 @@ export const adminService: AdminService = {
   changeUserPlan: () => resolve({ ok: true } as const),
   sendPasswordReset: () => resolve({ ok: true } as const),
   actOnReport: () => resolve({ ok: true } as const),
+
+  listTeamMembers: () => resolve(MOCK_TEAM_MEMBERS),
+  inviteTeamMember: () => resolve({ ok: true } as const),
+  changeTeamMemberRole: () => resolve({ ok: true } as const),
+  removeTeamMember: () => resolve({ ok: true } as const),
 };
