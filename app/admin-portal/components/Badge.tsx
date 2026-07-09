@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
-import type { Plan, ReportSeverity, UserStatus } from "../services/types";
+import type { Plan, ReportSeverity, UserStatus, TeamMemberStatus } from "../services/types";
+import {ROLE_LABEL} from "@/lib/roles";
+import type { AdminRole } from "@/lib/roles";
 
 /** Visual tones map to the admin token pairs (bg tint + foreground hue). */
 export type BadgeTone = "neutral" | "indigo" | "purple" | "green" | "amber" | "rose";
@@ -61,4 +63,28 @@ const SEVERITY_LABEL: Record<ReportSeverity, string> = { high: "High", medium: "
 
 export function SeverityBadge({ severity }: { severity: ReportSeverity }) {
   return <Badge tone={SEVERITY_TONE[severity]}>{SEVERITY_LABEL[severity]}</Badge>;
+}
+
+const ROLE_TONE: Record<AdminRole, BadgeTone> = {
+  SUPER_ADMIN: "indigo",
+  SUPPORT: "neutral",
+  FINANCE: "purple",
+  MODERATOR: "amber",
+};
+
+export function RoleBadge({ role }: { role: AdminRole }) {
+  return <Badge tone={ROLE_TONE[role]}>{ROLE_LABEL[role]}</Badge>;
+}
+
+const TEAM_MEMBER_STATUS_TONE: Record<TeamMemberStatus, BadgeTone> = {
+  active: "green",
+  invited: "amber",
+};
+const TEAM_MEMBER_STATUS_LABEL: Record<TeamMemberStatus, string> = {
+  active: "Active",
+  invited: "Invited",
+};
+
+export function TeamMemberStatusBadge({ status }: { status: TeamMemberStatus }) {
+  return <Badge tone={TEAM_MEMBER_STATUS_TONE[status]}>{TEAM_MEMBER_STATUS_LABEL[status]}</Badge>;
 }
