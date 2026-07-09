@@ -1,16 +1,14 @@
-import type { Metadata } from "next";
-import { StubView } from "../../components/StubView";
+import { auth } from "@/auth";
+import { SUPER_ADMIN } from "@/lib/roles";
+import { TeamClient } from "./TeamClient";
 
-export const metadata: Metadata = { title: "Team & roles" };
+export const metadata = {
+  title: "Team & roles",
+};
 
-export default function AdminTeamPage() {
-  return (
-    <StubView
-      crumb="Admin / Team"
-      title="Team."
-      icon="team"
-      heading="Team & roles"
-      description="Admin members, roles, and permissions."
-    />
-  );
+export default async function TeamPage() {
+  const session = await auth();
+  const isSuperAdmin = session?.user?.role === SUPER_ADMIN;
+
+  return <TeamClient isSuperAdmin={isSuperAdmin} />;
 }
