@@ -11,6 +11,27 @@ vi.mock("next-auth/react", () => ({
   signOut: vi.fn(),
 }));
 
+vi.mock("../user-admin/components/DashboardTopBar", () => ({
+  DashboardTopBar: ({
+    searchPlaceholder,
+    searchValue,
+    onSearchChange,
+  }: {
+    searchPlaceholder?: string;
+    searchValue?: string;
+    onSearchChange?: (value: string) => void;
+  }) => (
+    <div>
+      <input
+        aria-label="Help search"
+        placeholder={searchPlaceholder}
+        value={searchValue ?? ""}
+        onChange={(event) => onSearchChange?.(event.target.value)}
+      />
+    </div>
+  ),
+}));
+
 describe("HelpClient", () => {
   it("renders hero, sections, and FAQ", () => {
     render(<HelpClient />);

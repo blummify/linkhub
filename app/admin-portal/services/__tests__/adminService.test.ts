@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { adminService } from "../adminService";
-import { MOCK_USERS } from "../mockData";
+import { MOCK_PLAN_SNAPSHOT, MOCK_USERS } from "../mockData";
 
 describe("adminService.listUsers", () => {
   it("paginates with a default page size of 8", async () => {
@@ -76,6 +76,17 @@ describe("adminService.listReports", () => {
 
   it("returns an empty list for a status with no reports", async () => {
     expect(await adminService.listReports("resolved")).toHaveLength(0);
+  });
+});
+
+describe("adminService.getPlans", () => {
+  it("returns the seeded plans snapshot", async () => {
+    const snapshot = await adminService.getPlans();
+    expect(snapshot.plans).toHaveLength(3);
+    expect(snapshot.plans[1].name).toBe("Pro");
+    expect(snapshot.plans[1].price).toBe("€9/mo");
+    expect(snapshot.flags).toHaveLength(MOCK_PLAN_SNAPSHOT.flags.length);
+    expect(snapshot.versions[0].plan).toBe("all");
   });
 });
 

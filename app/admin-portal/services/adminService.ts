@@ -5,11 +5,12 @@
  * interface stay unchanged.
  */
 
-import { MOCK_OVERVIEW, MOCK_REPORTS, MOCK_USERS } from "./mockData";
+import { MOCK_OVERVIEW, MOCK_PLAN_SNAPSHOT, MOCK_REPORTS, MOCK_USERS } from "./mockData";
 import type {
   AdminService,
   AdminUser,
   AdminUserDetail,
+  PlanAdminSnapshot,
   OverviewMetrics,
   Report,
   ReportStatus,
@@ -94,6 +95,10 @@ export const adminService: AdminService = {
 
   listReports(status: ReportStatus = "open"): Promise<Report[]> {
     return resolve(MOCK_REPORTS.filter((report) => report.status === status));
+  },
+
+  getPlans(): Promise<PlanAdminSnapshot> {
+    return resolve(structuredClone(MOCK_PLAN_SNAPSHOT));
   },
 
   // Mock mutations acknowledge without side effects; a real backend will use the

@@ -140,6 +140,71 @@ export interface Report {
   status: ReportStatus;
 }
 
+export type PlanInterval = "Monthly" | "Yearly";
+export type PlanFeatureScope = "plan" | "rollout";
+
+export interface PlanLimitSet {
+  links: string;
+  views: string;
+  customDomains: string;
+  storage: string;
+}
+
+export interface PlanEditorDraft {
+  price: string;
+  interval: PlanInterval;
+  linkLimit: string;
+  monthlyViews: string;
+  customDomains: string;
+  storage: string;
+  featureToggles: Record<string, boolean>;
+}
+
+export interface PlanFeatureFlag {
+  id: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+  scope: PlanFeatureScope;
+}
+
+export interface PlanVersionEntry {
+  id: string;
+  plan: Plan | "all";
+  version: string;
+  summary: string;
+  changedBy: string;
+  changedAt: string;
+  fields: string[];
+}
+
+export interface PlanAuditEntry {
+  id: string;
+  action: string;
+  plan: Plan | "all";
+  actor: string;
+  details: string;
+  timestamp: string;
+}
+
+export interface PlanAdminRow {
+  plan: Plan;
+  tier: string;
+  name: string;
+  price: string;
+  highlighted?: boolean;
+  limits: PlanLimitSet;
+  features: string[];
+  editor: PlanEditorDraft;
+}
+
+export interface PlanAdminSnapshot {
+  plans: PlanAdminRow[];
+  flags: PlanFeatureFlag[];
+  versions: PlanVersionEntry[];
+  auditLog: PlanAuditEntry[];
+}
+
 /**
  * The typed boundary the admin UI talks to. The current implementation returns
  * in-memory mock data; it can be swapped for server actions later without
@@ -156,4 +221,5 @@ export interface AdminService {
   changeUserPlan(id: string, plan: Plan): Promise<ActionResult>;
   sendPasswordReset(id: string): Promise<ActionResult>;
   actOnReport(id: string, action: ReportAction): Promise<ActionResult>;
+  getPlans(): Promise<PlanAdminSnapshot>;
 }

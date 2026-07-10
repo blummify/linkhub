@@ -6,6 +6,7 @@
 
 import type {
   AdminUserDetail,
+  PlanAdminSnapshot,
   OverviewMetrics,
   Report,
 } from "./types";
@@ -77,6 +78,130 @@ export const MOCK_OVERVIEW: OverviewMetrics = {
     { id: "mq_1", handle: "@quick-cash-now", reason: "phishing", reports: 3, severity: "high" },
     { id: "mq_2", handle: "@free-giftcards", reason: "spam", reports: 1, severity: "medium" },
     { id: "mq_3", handle: "@cryptodoubler", reason: "scam", reports: 2, severity: "medium" },
+  ],
+};
+
+export const MOCK_PLAN_SNAPSHOT: PlanAdminSnapshot = {
+  plans: [
+    {
+      plan: "free",
+      tier: "Starter",
+      name: "Free",
+      price: "Free",
+      limits: {
+        links: "5 links",
+        views: "1,000 views/mo",
+        customDomains: "No custom domain",
+        storage: "1 GB storage",
+      },
+      features: ["linkhub badge shown"],
+      editor: {
+        price: "0.00",
+        interval: "Monthly",
+        linkLimit: "5",
+        monthlyViews: "1000",
+        customDomains: "0",
+        storage: "1",
+        featureToggles: {
+          linkhubBadge: true,
+        },
+      },
+    },
+    {
+      plan: "pro",
+      tier: "Creator",
+      name: "Pro",
+      price: "€9/mo",
+      limits: {
+        links: "Unlimited links",
+        views: "50,000 views/mo",
+        customDomains: "3 custom domains",
+        storage: "10 GB storage",
+      },
+      features: ["Remove badge", "Custom themes"],
+      highlighted: true,
+      editor: {
+        price: "9.00",
+        interval: "Monthly",
+        linkLimit: "Unlimited",
+        monthlyViews: "50000",
+        customDomains: "3",
+        storage: "10",
+        featureToggles: {
+          removeBadge: true,
+          customThemeEditor: true,
+        },
+      },
+    },
+    {
+      plan: "business",
+      tier: "Scale",
+      name: "Business",
+      price: "€29/mo",
+      limits: {
+        links: "Unlimited links",
+        views: "250,000 views/mo",
+        customDomains: "10 custom domains",
+        storage: "100 GB storage",
+      },
+      features: ["Team seats", "Priority support"],
+      editor: {
+        price: "29.00",
+        interval: "Monthly",
+        linkLimit: "Unlimited",
+        monthlyViews: "250000",
+        customDomains: "10",
+        storage: "100",
+        featureToggles: {
+          teamSeats: true,
+          prioritySupport: true,
+        },
+      },
+    },
+  ],
+  flags: [
+    {
+      id: "custom-theme-editor",
+      label: "Custom theme editor",
+      description: "Pro & Business only",
+      enabled: true,
+      scope: "plan",
+    },
+    {
+      id: "ai-bio-suggestions",
+      label: "AI bio suggestions (beta)",
+      description: "Rolling out to 20% of Pro users",
+      enabled: false,
+      scope: "rollout",
+    },
+    {
+      id: "scheduled-links",
+      label: "Scheduled links",
+      description: "Business only",
+      enabled: true,
+      scope: "plan",
+    },
+  ],
+  versions: [
+    {
+      id: "plan-ver-1",
+      plan: "all",
+      version: "v1",
+      summary: "Loaded from the reference plan set.",
+      changedBy: "Ama Mensah",
+      changedAt: "Today",
+      fields: ["price", "limits", "features", "feature flags"],
+    },
+  ],
+  auditLog: [
+    {
+      id: "plan-audit-1",
+      action: "Baseline loaded",
+      plan: "all",
+      actor: "Ama Mensah",
+      details: "Seeded the plans view with the current reference values.",
+      timestamp: "Today",
+    },
   ],
 };
 
