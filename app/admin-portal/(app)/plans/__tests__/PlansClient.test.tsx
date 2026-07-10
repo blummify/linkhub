@@ -165,6 +165,7 @@ describe("PlansClient", () => {
 
     render(<PlansClient />);
 
+    await screen.findByRole("button", { name: "Edit plan" });
     fireEvent.click(screen.getByRole("button", { name: "Edit plan" }));
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     expect(screen.getByRole("alertdialog", { name: "Apply plan changes?" })).toBeInTheDocument();
