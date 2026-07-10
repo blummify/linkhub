@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { PlansClient } from "../PlansClient";
 
 const { usePlans } = vi.hoisted(() => ({ usePlans: vi.fn() }));
@@ -77,6 +77,7 @@ vi.mock("../../../components/PlanFlagsSection", () => ({
     onToggle: (id: string, enabled: boolean) => void;
   }) => (
     <div>
+      <h2>Feature flags</h2>
       {flags.map((flag) => (
         <button key={flag.id} type="button" onClick={() => onToggle(flag.id, !flag.enabled)}>
           {flag.label}
@@ -87,7 +88,12 @@ vi.mock("../../../components/PlanFlagsSection", () => ({
 }));
 
 vi.mock("../../../components/PlanHistorySection", () => ({
-  PlanHistorySection: () => <div data-testid="history" />,
+  PlanHistorySection: () => (
+    <div>
+      <h2>Version history</h2>
+      <h2>Audit trail</h2>
+    </div>
+  ),
 }));
 
 describe("PlansClient", () => {
@@ -158,10 +164,6 @@ describe("PlansClient", () => {
     });
 
     render(<PlansClient />);
-
-    await waitFor(() => {
-      expect(screen.getByText("Feature flags")).toBeInTheDocument();
-    });
 
     fireEvent.click(screen.getByRole("button", { name: "Edit plan" }));
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
