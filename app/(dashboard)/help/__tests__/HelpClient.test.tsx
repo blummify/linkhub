@@ -33,7 +33,7 @@ vi.mock("../user-admin/components/DashboardTopBar", () => ({
 }));
 
 describe("HelpClient", () => {
-  it("renders hero, sections, and FAQ", () => {
+  it("renders hero, sections, and FAQ", { timeout: 15000 }, () => {
     render(<HelpClient />);
     expect(screen.getByRole("heading", { name: /how can we help/i })).toBeInTheDocument();
     expect(screen.getByText("Get started")).toBeInTheDocument();

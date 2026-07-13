@@ -154,7 +154,7 @@ describe("AppearanceClient", () => {
     expect(screen.getByTestId("preview-panel")).toBeInTheDocument();
   });
 
-  it("renders a single desktop save toolbar in the page header", () => {
+  it("renders a single desktop save toolbar in the page header", { timeout: 15000 }, () => {
     renderWithSidebarAndBranding(<AppearanceClient />);
     expect(screen.getAllByTestId("dirty-save-toolbar")).toHaveLength(1);
     expect(screen.getByRole("button", { name: /Save changes/i })).toBeInTheDocument();

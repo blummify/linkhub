@@ -22,7 +22,12 @@ export type PageSort =
   | "links_desc";
 
 /** Filter tabs on the Users table. */
-export type UserFilter = "all" | "pro" | "free" | "suspended";
+export type UserFilter = "all" | "pro" | "free" | "business" | "suspended" | "unverified";
+
+/** Columns the Users table can sort by, server-side. */
+export type UserSort = "name" | "links" | "views" | "joined";
+
+export type SortDirection = "asc" | "desc";
 
 /** Actions available on a moderation report. */
 export type ReportAction = "review" | "takedown" | "warn" | "dismiss";
@@ -101,9 +106,48 @@ export interface ActivityItem {
   meta: string;
 }
 
+export interface BillingCard {
+  brand: string;
+  last4: string;
+  /** e.g. "12/27"; null when the processor didn't report one. */
+  expiry: string | null;
+}
+
+export interface BillingInfo {
+  plan: Plan;
+  /** Subscription status as stored (e.g. "active", "cancelled"). */
+  status: string;
+  /** ISO date of the next renewal, or null for free/never-billed accounts. */
+  renewsAt: string | null;
+  cancelAtPeriodEnd: boolean;
+  card: BillingCard | null;
+}
+
+export interface LoginItem {
+  id: string;
+  /** ISO timestamp of the sign-in. */
+  at: string;
+  ip: string | null;
+  country: string | null;
+  userAgent: string | null;
+}
+
+export interface SecurityInfo {
+  twoFactorEnabled: boolean;
+  backupCodesRemaining: number;
+  passwordSet: boolean;
+  /** OAuth providers linked to the account (e.g. ["google"]). */
+  providers: string[];
+  emailVerifiedAt: string | null;
+  /** Newest first. Empty for accounts that predate login tracking. */
+  recentLogins: LoginItem[];
+}
+
 export interface AdminUserDetail extends AdminUser {
   usage: UsageMetric[];
   recentActivity: ActivityItem[];
+  billing: BillingInfo;
+  security: SecurityInfo;
 }
 
 export interface UserQuery {
@@ -111,6 +155,8 @@ export interface UserQuery {
   filter?: UserFilter;
   page?: number;
   pageSize?: number;
+  sort?: UserSort;
+  dir?: SortDirection;
 }
 
 export interface UserPage {
@@ -202,6 +248,30 @@ export interface Report {
   reportedAt: string;
   url: string;
   status: ReportStatus;
+}
+
+export interface AuditEntry {
+  id: string;
+  /** Namespaced action id, e.g. "user.suspend". */
+  action: string;
+  actorEmail: string | null;
+  targetUserId: string | null;
+  targetEmail: string | null;
+  metadata: Record<string, string> | null;
+  /** ISO timestamp. */
+  at: string;
+}
+
+export interface AuditQuery {
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AuditPage {
+  entries: AuditEntry[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 export type PlanInterval = "Monthly" | "Yearly";
@@ -308,7 +378,9 @@ export interface AdminService {
   suspendPage(id: string): Promise<ActionResult>;
   takeDownPage(id: string): Promise<ActionResult>;
   listReports(status?: ReportStatus): Promise<Report[]>;
+  listAuditLog(query?: AuditQuery): Promise<AuditPage>;
   suspendUser(id: string): Promise<ActionResult>;
+  unsuspendUser(id: string): Promise<ActionResult>;
   deleteUser(id: string): Promise<ActionResult>;
   impersonateUser(id: string): Promise<ActionResult>;
   changeUserPlan(id: string, plan: Plan): Promise<ActionResult>;

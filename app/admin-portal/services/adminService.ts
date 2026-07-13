@@ -1,17 +1,20 @@
 /**
- * Mock implementation of {@link AdminService}. Filtering, search, and
- * pagination run here (as a real backend would) so components stay
- * presentational. Swap this module for server actions later — callers and the
- * interface stay unchanged.
+ * Admin data service. The users surface (list, detail, every mutation) and the
+ * audit log are backed by the real API under `/api/admin/*`; mutation errors
+ * surface the server's message. Overview, reports, pages, plans, and settings
+ * still serve mock data, and impersonation is a stub until the session-swap
+ * feature exists.
  */
 
-import { MOCK_OVERVIEW, MOCK_PLAN_SNAPSHOT, MOCK_PAGES, MOCK_REPORTS, MOCK_SETTINGS, MOCK_USERS } from "./mockData";
+import { MOCK_OVERVIEW, MOCK_PLAN_SNAPSHOT, MOCK_PAGES, MOCK_REPORTS, MOCK_SETTINGS } from "./mockData";
 import type {
+  ActionResult,
   AdminPageDetail,
   AdminPageListItem,
   AdminService,
-  AdminUser,
   AdminUserDetail,
+  AuditPage,
+  AuditQuery,
   PlanAdminSnapshot,
   OverviewMetrics,
   PlatformSettings,
@@ -21,7 +24,6 @@ import type {
   PageQuery,
   PageSort,
   ReportStatus,
-  UserFilter,
   UserPage,
   UserQuery,
 } from "./types";
@@ -34,20 +36,30 @@ function resolve<T>(value: T): Promise<T> {
   return Promise.resolve(value);
 }
 
-function toListRow(user: AdminUserDetail): AdminUser {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    handle: user.handle,
-    plan: user.plan,
-    status: user.status,
-    links: user.links,
-    views30d: user.views30d,
-    country: user.country,
-    joinedAt: user.joinedAt,
-    lastActiveAt: user.lastActiveAt,
-  };
+/** Runs a mutation request and throws the server's error message on failure. */
+async function mutateUser(path: string, init: RequestInit): Promise<ActionResult> {
+  const res = await fetch(path, {
+    ...init,
+    headers: { "content-type": "application/json", accept: "application/json" },
+  });
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`;
+    try {
+      const body = (await res.json()) as { error?: string };
+      if (body.error) message = body.error;
+    } catch {
+      // Non-JSON error body — keep the status message.
+    }
+    throw new Error(message);
+  }
+  return (await res.json()) as ActionResult;
+}
+
+function patchUser(id: string, body: Record<string, string>): Promise<ActionResult> {
+  return mutateUser(`/api/admin/users/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
 }
 
 function toPageRow(page: AdminPageDetail): AdminPageListItem {
@@ -63,30 +75,6 @@ function toPageRow(page: AdminPageDetail): AdminPageListItem {
     createdAt: page.createdAt,
     theme: page.theme,
   };
-}
-
-function matchesFilter(user: AdminUserDetail, filter: UserFilter): boolean {
-  switch (filter) {
-    case "all":
-      return true;
-    case "pro":
-      return user.plan === "pro";
-    case "free":
-      return user.plan === "free";
-    case "suspended":
-      return user.status === "suspended";
-  }
-}
-
-function matchesSearch(user: AdminUserDetail, search: string): boolean {
-  if (!search) return true;
-  const needle = search.trim().toLowerCase();
-  if (!needle) return true;
-  return (
-    user.name.toLowerCase().includes(needle) ||
-    user.email.toLowerCase().includes(needle) ||
-    user.handle.toLowerCase().includes(needle)
-  );
 }
 
 function matchesPageFilter(page: AdminPageDetail, filter: PageFilter): boolean {
@@ -133,26 +121,35 @@ export const adminService: AdminService = {
     return resolve(MOCK_OVERVIEW);
   },
 
-  listUsers(query: UserQuery = {}): Promise<UserPage> {
-    const filter = query.filter ?? "all";
-    const search = query.search ?? "";
-    const pageSize = query.pageSize ?? DEFAULT_PAGE_SIZE;
+  async listUsers(query: UserQuery = {}): Promise<UserPage> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.filter) params.set("filter", query.filter);
+    if (query.page) params.set("page", String(query.page));
+    if (query.pageSize) params.set("pageSize", String(query.pageSize));
+    if (query.sort) params.set("sort", query.sort);
+    if (query.dir) params.set("dir", query.dir);
 
-    const matched = MOCK_USERS.filter(
-      (user) => matchesFilter(user, filter) && matchesSearch(user, search)
-    );
-
-    const total = matched.length;
-    const lastPage = Math.max(1, Math.ceil(total / pageSize));
-    const page = Math.min(Math.max(1, query.page ?? 1), lastPage);
-    const start = (page - 1) * pageSize;
-    const users = matched.slice(start, start + pageSize).map(toListRow);
-
-    return resolve({ users, total, page, pageSize });
+    const res = await fetch(`/api/admin/users?${params.toString()}`, {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to load users (HTTP ${res.status})`);
+    }
+    return (await res.json()) as UserPage;
   },
 
-  getUser(id: string): Promise<AdminUserDetail | null> {
-    return resolve(MOCK_USERS.find((user) => user.id === id) ?? null);
+  async getUser(id: string): Promise<AdminUserDetail | null> {
+    const res = await fetch(`/api/admin/users/${encodeURIComponent(id)}`, {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      throw new Error(`Failed to load user (HTTP ${res.status})`);
+    }
+    return (await res.json()) as AdminUserDetail;
   },
 
   listPages(query: PageQuery = {}): Promise<PagePage> {
@@ -181,6 +178,21 @@ export const adminService: AdminService = {
     return resolve(MOCK_REPORTS.filter((report) => report.status === status));
   },
 
+  async listAuditLog(query: AuditQuery = {}): Promise<AuditPage> {
+    const params = new URLSearchParams();
+    if (query.page) params.set("page", String(query.page));
+    if (query.pageSize) params.set("pageSize", String(query.pageSize));
+
+    const res = await fetch(`/api/admin/audit?${params.toString()}`, {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to load audit log (HTTP ${res.status})`);
+    }
+    return (await res.json()) as AuditPage;
+  },
+
   getPlans(): Promise<PlanAdminSnapshot> {
     return resolve(structuredClone(MOCK_PLAN_SNAPSHOT));
   },
@@ -189,13 +201,16 @@ export const adminService: AdminService = {
     return resolve(MOCK_SETTINGS);
   },
 
-  // Mock mutations acknowledge without side effects; a real backend will use the
-  // arguments. A no-arg implementation still satisfies the typed signature.
-  suspendUser: () => resolve({ ok: true } as const),
-  deleteUser: () => resolve({ ok: true } as const),
+  suspendUser: (id) => patchUser(id, { action: "suspend" }),
+  unsuspendUser: (id) => patchUser(id, { action: "unsuspend" }),
+  changeUserPlan: (id, plan) => patchUser(id, { action: "changePlan", plan }),
+  sendPasswordReset: (id) => patchUser(id, { action: "sendReset" }),
+  deleteUser: (id) =>
+    mutateUser(`/api/admin/users/${encodeURIComponent(id)}`, { method: "DELETE" }),
+
+  // Stub until the impersonation session-swap feature exists.
   impersonateUser: () => resolve({ ok: true } as const),
-  changeUserPlan: () => resolve({ ok: true } as const),
-  sendPasswordReset: () => resolve({ ok: true } as const),
+  // Mock until the pages/plans/settings/moderation surfaces get real backends.
   suspendPage: () => resolve({ ok: true } as const),
   takeDownPage: () => resolve({ ok: true } as const),
   actOnReport: () => resolve({ ok: true } as const),

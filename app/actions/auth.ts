@@ -7,7 +7,9 @@ import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { createHash, randomBytes } from "crypto";
-import { after } from "next/server";
+import { headers } from "next/headers";
+import { getCountryFromHeaders } from "@/lib/geo";
+import { issuePasswordReset } from "@/lib/passwordReset";
 import { verifyRecaptcha } from "@/lib/recaptcha.server";
 import { createPendingTwoFactorToken } from "@/lib/twoFactorChallenge";
 
@@ -20,6 +22,16 @@ type CredentialsFormData = {
 type RegisterFormData = CredentialsFormData & {
   name: string;
 };
+
+/** Country is best-effort signup metadata; a failed lookup must never block registration. */
+async function detectSignupCountry(): Promise<string | null> {
+  try {
+    const hdrs = await headers();
+    return getCountryFromHeaders((name) => hdrs.get(name));
+  } catch {
+    return null;
+  }
+}
 
 export async function checkEmailVerified(email: string): Promise<boolean> {
   try {
@@ -85,6 +97,7 @@ export async function registerUser(formData: RegisterFormData) {
         name,
         email,
         passwordHash,
+        country: await detectSignupCountry(),
         profile: { create: {} },
         subscription: { create: {} },
       },
@@ -338,7 +351,7 @@ export async function signInWithGoogleOneTap(
 
     if (!user) {
       user = await db.user.create({
-        data: { email, name, image: picture, emailVerified: new Date(), profile: { create: {} }, subscription: { create: {} } },
+        data: { email, name, image: picture, emailVerified: new Date(), country: await detectSignupCountry(), profile: { create: {} }, subscription: { create: {} } },
       });
     } else if (!user.emailVerified) {
       await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
@@ -391,30 +404,7 @@ export async function sendResetLink(
         if (count > 3) return { success: true }; // Silent — don't reveal limiting
       } catch {} // Redis unavailable — allow through
 
-      const rawToken = randomBytes(32).toString("hex");
-      const tokenHash = createHash("sha256").update(rawToken).digest("hex");
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
-      await db.passwordResetToken.deleteMany({ where: { userId: user.id } });
-      await db.passwordResetToken.create({ data: { userId: user.id, tokenHash, expiresAt } });
-
-      const baseUrl = process.env.NEXTAUTH_URL
-        ?? (process.env.NEXT_PUBLIC_APP_DOMAIN ? `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}` : "http://localhost:3000");
-      const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
-      const name = user.name ?? "there";
-
-      // Fire email after the response is returned — doesn't block the UI
-      after(async () => {
-        try {
-          await postly.send({
-            template: process.env.POSTLY_TEMPLATE_FORGOT_PASSWORD!,
-            to: [email],
-            data: { name, email, resetUrl, expiresInHours: 1 },
-          });
-        } catch (err) {
-          console.error("[postly] reset link send failed", err);
-        }
-      });
+      await issuePasswordReset(db, { id: user.id, email, name: user.name });
     }
 
     // Always return success to avoid leaking whether the email exists
