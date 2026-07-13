@@ -11,6 +11,15 @@ export type ReportCategory = "phishing" | "spam" | "scam";
 export type ReportStatus = "open" | "reviewing" | "resolved";
 export type SystemStatus = "operational" | "degraded" | "down";
 export type TrendDirection = "up" | "down" | "flat";
+export type PageStatus = "live" | "flagged" | "suspended";
+export type PageFilter = "all" | PageStatus;
+export type PageSort =
+  | "newest"
+  | "oldest"
+  | "views_desc"
+  | "views_asc"
+  | "reports_desc"
+  | "links_desc";
 
 /** Filter tabs on the Users table. */
 export type UserFilter = "all" | "pro" | "free" | "suspended";
@@ -21,6 +30,45 @@ export type ReportAction = "review" | "takedown" | "warn" | "dismiss";
 /** Result of a mutation against the admin service. */
 export interface ActionResult {
   ok: true;
+}
+
+export interface PageOwner {
+  id: string;
+  name: string;
+  handle: string;
+}
+
+export interface PublishedPageLink {
+  id: string;
+  title: string;
+  url: string;
+  clicks: number;
+}
+
+export interface PageReportHistoryItem {
+  id: string;
+  reporter: string;
+  reason: ReportCategory;
+  status: ReportStatus;
+  reportedAt: string;
+}
+
+export interface AdminPageListItem {
+  id: string;
+  handle: string;
+  owner: PageOwner;
+  url: string;
+  status: PageStatus;
+  links: number;
+  views30d: number;
+  reports: number;
+  createdAt: string;
+  theme: string;
+}
+
+export interface AdminPageDetail extends AdminPageListItem {
+  publishedLinks: PublishedPageLink[];
+  reportHistory: PageReportHistoryItem[];
 }
 
 export interface AdminUser {
@@ -71,6 +119,22 @@ export interface UserPage {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface PageQuery {
+  search?: string;
+  filter?: PageFilter;
+  sort?: PageSort;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PagePage {
+  pages: AdminPageListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  sort: PageSort;
 }
 
 export type DeltaTone = "positive" | "negative" | "warning" | "neutral";
@@ -205,6 +269,31 @@ export interface PlanAdminSnapshot {
   auditLog: PlanAuditEntry[];
 }
 
+export type CurrencyCode = "EUR" | "USD" | "GHS";
+
+export interface GeneralSettings {
+  defaultCurrency: CurrencyCode;
+  supportEmail: string;
+}
+
+export interface SafetySettings {
+  autoFlagSuspiciousLinks: boolean;
+  /** A page is auto-suspended once it reaches this many unique reports. */
+  autoSuspendAfterReports: number;
+}
+
+export interface SystemSettings {
+  maintenanceMode: boolean;
+}
+
+export interface PlatformSettings {
+  general: GeneralSettings;
+  safety: SafetySettings;
+  /** Admin-managed handles that can't be claimed (on top of built-in route reservations). */
+  reservedHandles: string[];
+  system: SystemSettings;
+}
+
 /**
  * The typed boundary the admin UI talks to. The current implementation returns
  * in-memory mock data; it can be swapped for server actions later without
@@ -214,6 +303,10 @@ export interface AdminService {
   getOverviewMetrics(): Promise<OverviewMetrics>;
   listUsers(query?: UserQuery): Promise<UserPage>;
   getUser(id: string): Promise<AdminUserDetail | null>;
+  listPages(query?: PageQuery): Promise<PagePage>;
+  getPage(id: string): Promise<AdminPageDetail | null>;
+  suspendPage(id: string): Promise<ActionResult>;
+  takeDownPage(id: string): Promise<ActionResult>;
   listReports(status?: ReportStatus): Promise<Report[]>;
   suspendUser(id: string): Promise<ActionResult>;
   deleteUser(id: string): Promise<ActionResult>;
@@ -222,4 +315,13 @@ export interface AdminService {
   sendPasswordReset(id: string): Promise<ActionResult>;
   actOnReport(id: string, action: ReportAction): Promise<ActionResult>;
   getPlans(): Promise<PlanAdminSnapshot>;
+
+  // Platform settings. Every mutation is audit-logged server-side.
+  getSettings(): Promise<PlatformSettings>;
+  updateGeneralSettings(input: GeneralSettings): Promise<ActionResult>;
+  updateSafetySettings(input: SafetySettings): Promise<ActionResult>;
+  addReservedHandle(handle: string): Promise<ActionResult>;
+  removeReservedHandle(handle: string): Promise<ActionResult>;
+  setMaintenanceMode(enabled: boolean): Promise<ActionResult>;
+  purgeCdnCache(): Promise<ActionResult>;
 }
