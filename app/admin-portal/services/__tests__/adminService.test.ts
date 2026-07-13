@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { adminService } from "../adminService";
 import type { UserPage } from "../types";
+import { MOCK_PLAN_SNAPSHOT, MOCK_PAGES } from "../mockData";
 
 const EMPTY_PAGE: UserPage = { users: [], total: 0, page: 1, pageSize: 8 };
 
@@ -74,6 +75,34 @@ describe("adminService.getUser", () => {
   });
 });
 
+describe("adminService.listPages", () => {
+  it("paginates and sorts the pages feed", async () => {
+    const page = await adminService.listPages();
+    expect(page.pages).toHaveLength(8);
+    expect(page.page).toBe(1);
+    expect(page.total).toBe(MOCK_PAGES.length);
+    expect(page.pages[0]?.id).toBe("page_cryptodoubler");
+  });
+
+  it("filters by status and searches by owner", async () => {
+    const suspended = await adminService.listPages({ filter: "suspended", pageSize: 100 });
+    expect(suspended.pages.every((item) => item.status === "suspended")).toBe(true);
+
+    const searched = await adminService.listPages({ search: "sara", pageSize: 100 });
+    expect(searched.pages[0]?.handle).toBe("@saraa");
+  });
+
+  it("returns detail records with published links and report history", async () => {
+    const page = await adminService.getPage("page_quickcash");
+    expect(page?.publishedLinks.length).toBeGreaterThan(0);
+    expect(page?.reportHistory.length).toBeGreaterThan(0);
+  });
+
+  it("returns null for an unknown page", async () => {
+    expect(await adminService.getPage("nope")).toBeNull();
+  });
+});
+
 describe("adminService.listReports", () => {
   it("returns open reports by default", async () => {
     const reports = await adminService.listReports();
@@ -103,6 +132,17 @@ describe("adminService.listAuditLog", () => {
   it("throws a descriptive error on a failed response", async () => {
     stubFetch(() => new Response("nope", { status: 500 }));
     await expect(adminService.listAuditLog()).rejects.toThrow(/HTTP 500/);
+  });
+});
+
+describe("adminService.getPlans", () => {
+  it("returns the seeded plans snapshot", async () => {
+    const snapshot = await adminService.getPlans();
+    expect(snapshot.plans).toHaveLength(3);
+    expect(snapshot.plans[1].name).toBe("Pro");
+    expect(snapshot.plans[1].price).toBe("€9/mo");
+    expect(snapshot.flags).toHaveLength(MOCK_PLAN_SNAPSHOT.flags.length);
+    expect(snapshot.versions[0].plan).toBe("all");
   });
 });
 
@@ -159,6 +199,8 @@ describe("adminService mutations", () => {
 
   it("keeps the local stubs acknowledging", async () => {
     expect(await adminService.impersonateUser("usr_1")).toEqual({ ok: true });
+    expect(await adminService.suspendPage("page_1")).toEqual({ ok: true });
+    expect(await adminService.takeDownPage("page_1")).toEqual({ ok: true });
     expect(await adminService.actOnReport("rep_quickcash", "takedown")).toEqual({ ok: true });
   });
 });

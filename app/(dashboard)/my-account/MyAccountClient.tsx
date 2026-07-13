@@ -22,6 +22,7 @@ import {
   setPassword as setPasswordAction,
   armOAuthDeletion,
   deleteAccount,
+  updateNotificationPrefs,
 } from "@/app/actions/account";
 import { TwoFactorSetupModal } from "./components/TwoFactorSetupModal";
 import { TwoFactorDisableModal } from "./components/TwoFactorDisableModal";
@@ -473,9 +474,13 @@ function DeleteAccountDialog({
 export default function MyAccountClient({
   initial,
   twoFactorEnabled: initialTwoFactorEnabled,
+  notificationsEnabled: initialNotificationsEnabled,
+  notificationsDigest: initialNotificationsDigest,
 }: {
   initial: AccountInitial;
   twoFactorEnabled: boolean;
+  notificationsEnabled: boolean;
+  notificationsDigest: boolean;
 }) {
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const { update, data: session } = useSession();
@@ -499,6 +504,27 @@ export default function MyAccountClient({
   const [editingProfile, setEditingProfile] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
   const [editingSecurity, setEditingSecurity] = useState(false);
+
+  /* ── Notification prefs state ── */
+  const [notificationsEnabled, setNotificationsEnabled] = useState(initialNotificationsEnabled);
+  const [notificationsDigest, setNotificationsDigest] = useState(initialNotificationsDigest);
+  const [savingNotifs, setSavingNotifs] = useState(false);
+
+  const handleNotifToggle = async (field: "enabled" | "digest", value: boolean) => {
+    const next = field === "enabled"
+      ? { notificationsEnabled: value, notificationsDigest: notificationsDigest }
+      : { notificationsEnabled: notificationsEnabled, notificationsDigest: value };
+    if (field === "enabled") setNotificationsEnabled(value);
+    else setNotificationsDigest(value);
+    setSavingNotifs(true);
+    const result = await updateNotificationPrefs(next.notificationsEnabled, next.notificationsDigest);
+    setSavingNotifs(false);
+    if ("error" in result) {
+      toast.error(result.error);
+      if (field === "enabled") setNotificationsEnabled(!value);
+      else setNotificationsDigest(!value);
+    }
+  };
 
   /* ── 2FA state ── */
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(initialTwoFactorEnabled);
@@ -979,6 +1005,66 @@ export default function MyAccountClient({
                     </div>
                   </div>
                 )}
+              </Section>
+
+              {/* ── Notifications ── */}
+              <Section>
+                <SectionHead
+                  title="Notifications"
+                  desc="Control when LinkHub sends you emails about your page activity."
+                />
+                <div className="px-6 pb-6 pt-2 flex flex-col gap-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-[13.5px] font-medium text-ink-900">Milestone emails</div>
+                      <div className="mt-0.5 text-xs text-ink-500">
+                        Get notified when a link or your profile hits a click or view milestone.
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notificationsEnabled}
+                      disabled={savingNotifs}
+                      onClick={() => void handleNotifToggle("enabled", !notificationsEnabled)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 ${
+                        notificationsEnabled ? "bg-indigo-500" : "bg-ink-200"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform ${
+                          notificationsEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className={`text-[13.5px] font-medium ${notificationsEnabled ? "text-ink-900" : "text-ink-400"}`}>
+                        Weekly digest
+                      </div>
+                      <div className="mt-0.5 text-xs text-ink-500">
+                        Monday morning summary: page views, clicks, top link, and CTR. Only sent if you had activity that week.
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notificationsDigest}
+                      disabled={savingNotifs || !notificationsEnabled}
+                      onClick={() => void handleNotifToggle("digest", !notificationsDigest)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 ${
+                        notificationsDigest && notificationsEnabled ? "bg-indigo-500" : "bg-ink-200"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform ${
+                          notificationsDigest && notificationsEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
               </Section>
 
               {/* ── Mobile-only: sidebar actions that have no home on small screens ── */}

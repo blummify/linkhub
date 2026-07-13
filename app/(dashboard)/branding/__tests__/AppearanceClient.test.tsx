@@ -110,6 +110,10 @@ vi.mock("@/app/actions/upload", () => ({
   deleteOrphanedUpload: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock("../user-admin/components/DashboardTopBar", () => ({
+  DashboardTopBar: () => <div data-testid="dashboard-top-bar" />,
+}));
+
 vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));

@@ -8,7 +8,7 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { createHash, randomBytes } from "crypto";
 import { headers } from "next/headers";
-import { detectCountryFromHeaders } from "@/lib/geo";
+import { getCountryFromHeaders } from "@/lib/geo";
 import { issuePasswordReset } from "@/lib/passwordReset";
 import { verifyRecaptcha } from "@/lib/recaptcha.server";
 import { createPendingTwoFactorToken } from "@/lib/twoFactorChallenge";
@@ -27,7 +27,7 @@ type RegisterFormData = CredentialsFormData & {
 async function detectSignupCountry(): Promise<string | null> {
   try {
     const hdrs = await headers();
-    return detectCountryFromHeaders((name) => hdrs.get(name));
+    return getCountryFromHeaders((name) => hdrs.get(name));
   } catch {
     return null;
   }

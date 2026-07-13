@@ -11,21 +11,21 @@ export function getClientIp(get: (name: string) => string | null): string | null
 }
 
 /**
- * Resolve the client's ISO 3166-1 alpha-2 country code from request headers,
- * or null when nothing identifies one.
- * Only import this from Server Components / Route Handlers — never from client components.
+ * Resolve the visitor's ISO-3166 alpha-2 country code from request headers, or
+ * null if it can't be determined. Only import this from Server Components /
+ * Route Handlers — never from client components.
  *
  * Priority:
  *   1. x-vercel-ip-country — injected by Vercel (dev / preview)
  *   2. geoip-lite          — in-process IP lookup, works on any Node.js host (VPS, etc.)
- *   3. accept-language     — browser locale header, universal last resort
+ *
+ * No accept-language fallback here — a language tag is too weak a signal for a
+ * stored dimension. `detectCurrencyFromHeaders` layers that fallback itself.
  */
-export function detectCountryFromHeaders(get: (name: string) => string | null): string | null {
-  // 1. Vercel
+export function getCountryFromHeaders(get: (name: string) => string | null): string | null {
   const vercel = get("x-vercel-ip-country");
   if (vercel) return vercel.toUpperCase();
 
-  // 2. geoip-lite — Node.js only, bundled MaxMind database
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const geoip = require("geoip-lite") as {
@@ -34,25 +34,33 @@ export function detectCountryFromHeaders(get: (name: string) => string | null): 
     const ip = getClientIp(get);
     if (ip) {
       const geo = geoip.lookup(ip);
-      if (geo?.country) return geo.country;
+      if (geo?.country) return geo.country.toUpperCase();
     }
   } catch {
     // geoip-lite not available — skip silently
   }
 
-  // 3. accept-language: "en-GH,en;q=0.9" → "GH"
-  const lang = get("accept-language") ?? "";
-  const match = lang.match(/[a-z]{2}-([A-Z]{2})/);
-  return match ? match[1] : null;
+  return null;
 }
 
 /**
- * Resolve the visitor's currency from request headers (same source priority as
- * {@link detectCountryFromHeaders}).
+ * Resolve the visitor's currency from request headers.
+ * Only import this from Server Components / Route Handlers — never from client components.
+ *
+ * Priority:
+ *   1. getCountryFromHeaders (Vercel header, then geoip-lite)
+ *   2. accept-language      — browser locale header, universal last resort
  */
 export function detectCurrencyFromHeaders(
   get: (name: string) => string | null
 ): CurrencyCode {
-  const country = detectCountryFromHeaders(get);
-  return country ? detectCurrency(country) : "USD";
+  const country = getCountryFromHeaders(get);
+  if (country) return detectCurrency(country);
+
+  // accept-language: "en-GH,en;q=0.9" → "GH"
+  const lang = get("accept-language") ?? "";
+  const match = lang.match(/[a-z]{2}-([A-Z]{2})/);
+  if (match) return detectCurrency(match[1]);
+
+  return "USD";
 }

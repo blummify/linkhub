@@ -47,6 +47,12 @@ vi.mock("@/app/actions/links", () => ({
   deleteLink: vi.fn(),
   claimHandle: vi.fn(),
   checkHandleAvailability: vi.fn().mockResolvedValue({ available: true }),
+  reorderLinks: vi.fn(),
+}));
+
+vi.mock("@/app/actions/analytics", () => ({
+  getAnalyticsSummary: vi.fn().mockResolvedValue({ profileViews: 0, linkClicks: 0, ctr: 0 }),
+  getGeographyBreakdown: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/lib/hooks/useFileUpload", () => ({

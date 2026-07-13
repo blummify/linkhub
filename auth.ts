@@ -6,7 +6,7 @@ import { createHash } from "crypto";
 import { headers } from "next/headers";
 import authConfig from "./auth.config";
 import { db } from "@/lib/db";
-import { detectCountryFromHeaders, getClientIp } from "@/lib/geo";
+import { getCountryFromHeaders, getClientIp } from "@/lib/geo";
 import { createPendingTwoFactorToken } from "@/lib/twoFactorChallenge";
 import { verifySuperAdminCredentials } from "@/lib/adminAuth";
 
@@ -46,7 +46,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const hdrs = await headers();
         const get = (name: string) => hdrs.get(name);
         ip = getClientIp(get);
-        country = detectCountryFromHeaders(get);
+        country = getCountryFromHeaders(get);
         userAgent = get("user-agent");
       } catch {
         // Outside a request scope — record the login without location data.

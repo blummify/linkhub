@@ -1,23 +1,35 @@
 /**
  * Admin data service. The users surface (list, detail, every mutation) and the
  * audit log are backed by the real API under `/api/admin/*`; mutation errors
- * surface the server's message. Overview/reports still serve mock data, and
- * impersonation is a stub until the session-swap feature exists.
+ * surface the server's message. Overview, reports, pages, plans, and settings
+ * still serve mock data, and impersonation is a stub until the session-swap
+ * feature exists.
  */
 
-import { MOCK_OVERVIEW, MOCK_REPORTS } from "./mockData";
+import { MOCK_OVERVIEW, MOCK_PLAN_SNAPSHOT, MOCK_PAGES, MOCK_REPORTS, MOCK_SETTINGS } from "./mockData";
 import type {
   ActionResult,
+  AdminPageDetail,
+  AdminPageListItem,
   AdminService,
   AdminUserDetail,
   AuditPage,
   AuditQuery,
+  PlanAdminSnapshot,
   OverviewMetrics,
+  PlatformSettings,
   Report,
+  PageFilter,
+  PagePage,
+  PageQuery,
+  PageSort,
   ReportStatus,
   UserPage,
   UserQuery,
 } from "./types";
+
+const DEFAULT_PAGE_SIZE = 8;
+const DEFAULT_PAGE_SORT: PageSort = "newest";
 
 /** Resolve on the next microtask so hooks exercise real loading states. */
 function resolve<T>(value: T): Promise<T> {
@@ -48,6 +60,60 @@ function patchUser(id: string, body: Record<string, string>): Promise<ActionResu
     method: "PATCH",
     body: JSON.stringify(body),
   });
+}
+
+function toPageRow(page: AdminPageDetail): AdminPageListItem {
+  return {
+    id: page.id,
+    handle: page.handle,
+    owner: page.owner,
+    url: page.url,
+    status: page.status,
+    links: page.links,
+    views30d: page.views30d,
+    reports: page.reports,
+    createdAt: page.createdAt,
+    theme: page.theme,
+  };
+}
+
+function matchesPageFilter(page: AdminPageDetail, filter: PageFilter): boolean {
+  return filter === "all" || page.status === filter;
+}
+
+function matchesPageSearch(page: AdminPageDetail, search: string): boolean {
+  if (!search) return true;
+  const needle = search.trim().toLowerCase();
+  if (!needle) return true;
+  return (
+    page.handle.toLowerCase().includes(needle) ||
+    page.owner.name.toLowerCase().includes(needle) ||
+    page.owner.handle.toLowerCase().includes(needle)
+  );
+}
+
+function sortPages(pages: AdminPageDetail[], sort: PageSort): AdminPageDetail[] {
+  const copy = [...pages];
+  copy.sort((left, right) => comparePages(left, right, sort));
+  return copy;
+}
+
+function comparePages(left: AdminPageDetail, right: AdminPageDetail, sort: PageSort): number {
+  switch (sort) {
+    case "newest":
+      return right.createdAt.localeCompare(left.createdAt);
+    case "oldest":
+      return left.createdAt.localeCompare(right.createdAt);
+    case "views_desc":
+      return right.views30d - left.views30d;
+    case "views_asc":
+      return left.views30d - right.views30d;
+    case "reports_desc":
+      return right.reports - left.reports;
+    case "links_desc":
+      return right.links - left.links;
+  }
+  return 0;
 }
 
 export const adminService: AdminService = {
@@ -86,6 +152,28 @@ export const adminService: AdminService = {
     return (await res.json()) as AdminUserDetail;
   },
 
+  listPages(query: PageQuery = {}): Promise<PagePage> {
+    const filter = query.filter ?? "all";
+    const search = query.search ?? "";
+    const sort = query.sort ?? DEFAULT_PAGE_SORT;
+    const pageSize = query.pageSize ?? DEFAULT_PAGE_SIZE;
+    const matched = sortPages(
+      MOCK_PAGES.filter((page) => matchesPageFilter(page, filter) && matchesPageSearch(page, search)),
+      sort
+    );
+    const total = matched.length;
+    const lastPage = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(Math.max(1, query.page ?? 1), lastPage);
+    const start = (page - 1) * pageSize;
+    const pages = matched.slice(start, start + pageSize).map(toPageRow);
+
+    return resolve({ pages, total, page, pageSize, sort });
+  },
+
+  getPage(id: string): Promise<AdminPageDetail | null> {
+    return resolve(MOCK_PAGES.find((page) => page.id === id) ?? null);
+  },
+
   listReports(status: ReportStatus = "open"): Promise<Report[]> {
     return resolve(MOCK_REPORTS.filter((report) => report.status === status));
   },
@@ -105,6 +193,14 @@ export const adminService: AdminService = {
     return (await res.json()) as AuditPage;
   },
 
+  getPlans(): Promise<PlanAdminSnapshot> {
+    return resolve(structuredClone(MOCK_PLAN_SNAPSHOT));
+  },
+
+  getSettings(): Promise<PlatformSettings> {
+    return resolve(MOCK_SETTINGS);
+  },
+
   suspendUser: (id) => patchUser(id, { action: "suspend" }),
   unsuspendUser: (id) => patchUser(id, { action: "unsuspend" }),
   changeUserPlan: (id, plan) => patchUser(id, { action: "changePlan", plan }),
@@ -114,6 +210,14 @@ export const adminService: AdminService = {
 
   // Stub until the impersonation session-swap feature exists.
   impersonateUser: () => resolve({ ok: true } as const),
-  // Mock until the moderation surface gets its real backend.
+  // Mock until the pages/plans/settings/moderation surfaces get real backends.
+  suspendPage: () => resolve({ ok: true } as const),
+  takeDownPage: () => resolve({ ok: true } as const),
   actOnReport: () => resolve({ ok: true } as const),
+  updateGeneralSettings: () => resolve({ ok: true } as const),
+  updateSafetySettings: () => resolve({ ok: true } as const),
+  addReservedHandle: () => resolve({ ok: true } as const),
+  removeReservedHandle: () => resolve({ ok: true } as const),
+  setMaintenanceMode: () => resolve({ ok: true } as const),
+  purgeCdnCache: () => resolve({ ok: true } as const),
 };

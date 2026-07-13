@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { detectCountryFromHeaders, getClientIp } from "../geo";
+import { getCountryFromHeaders, getClientIp } from "../geo";
 
 function headerGetter(headers: Record<string, string>): (name: string) => string | null {
   return (name: string) => headers[name] ?? null;
@@ -22,20 +22,13 @@ describe("getClientIp", () => {
   });
 });
 
-describe("detectCountryFromHeaders", () => {
+describe("getCountryFromHeaders", () => {
   it("prefers the Vercel geo header, normalised to upper case", () => {
-    const country = detectCountryFromHeaders(
-      headerGetter({ "x-vercel-ip-country": "gh", "accept-language": "en-US,en;q=0.9" })
-    );
+    const country = getCountryFromHeaders(headerGetter({ "x-vercel-ip-country": "gh" }));
     expect(country).toBe("GH");
   });
 
-  it("falls back to the accept-language region", () => {
-    const country = detectCountryFromHeaders(headerGetter({ "accept-language": "en-DE,en;q=0.9" }));
-    expect(country).toBe("DE");
-  });
-
   it("returns null when nothing identifies a country", () => {
-    expect(detectCountryFromHeaders(headerGetter({}))).toBeNull();
+    expect(getCountryFromHeaders(headerGetter({}))).toBeNull();
   });
 });
