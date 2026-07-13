@@ -204,6 +204,31 @@ export interface Report {
   status: ReportStatus;
 }
 
+export type CurrencyCode = "EUR" | "USD" | "GHS";
+
+export interface GeneralSettings {
+  defaultCurrency: CurrencyCode;
+  supportEmail: string;
+}
+
+export interface SafetySettings {
+  autoFlagSuspiciousLinks: boolean;
+  /** A page is auto-suspended once it reaches this many unique reports. */
+  autoSuspendAfterReports: number;
+}
+
+export interface SystemSettings {
+  maintenanceMode: boolean;
+}
+
+export interface PlatformSettings {
+  general: GeneralSettings;
+  safety: SafetySettings;
+  /** Admin-managed handles that can't be claimed (on top of built-in route reservations). */
+  reservedHandles: string[];
+  system: SystemSettings;
+}
+
 /**
  * The typed boundary the admin UI talks to. The current implementation returns
  * in-memory mock data; it can be swapped for server actions later without
@@ -224,4 +249,13 @@ export interface AdminService {
   changeUserPlan(id: string, plan: Plan): Promise<ActionResult>;
   sendPasswordReset(id: string): Promise<ActionResult>;
   actOnReport(id: string, action: ReportAction): Promise<ActionResult>;
+
+  // Platform settings. Every mutation is audit-logged server-side.
+  getSettings(): Promise<PlatformSettings>;
+  updateGeneralSettings(input: GeneralSettings): Promise<ActionResult>;
+  updateSafetySettings(input: SafetySettings): Promise<ActionResult>;
+  addReservedHandle(handle: string): Promise<ActionResult>;
+  removeReservedHandle(handle: string): Promise<ActionResult>;
+  setMaintenanceMode(enabled: boolean): Promise<ActionResult>;
+  purgeCdnCache(): Promise<ActionResult>;
 }

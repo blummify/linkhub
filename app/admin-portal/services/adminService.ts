@@ -5,7 +5,7 @@
  * interface stay unchanged.
  */
 
-import { MOCK_OVERVIEW, MOCK_PAGES, MOCK_REPORTS, MOCK_USERS } from "./mockData";
+import { MOCK_OVERVIEW, MOCK_PAGES, MOCK_REPORTS, MOCK_SETTINGS, MOCK_USERS } from "./mockData";
 import type {
   AdminPageDetail,
   AdminPageListItem,
@@ -13,6 +13,7 @@ import type {
   AdminUser,
   AdminUserDetail,
   OverviewMetrics,
+  PlatformSettings,
   Report,
   PageFilter,
   PagePage,
@@ -179,6 +180,10 @@ export const adminService: AdminService = {
     return resolve(MOCK_REPORTS.filter((report) => report.status === status));
   },
 
+  getSettings(): Promise<PlatformSettings> {
+    return resolve(MOCK_SETTINGS);
+  },
+
   // Mock mutations acknowledge without side effects; a real backend will use the
   // arguments. A no-arg implementation still satisfies the typed signature.
   suspendUser: () => resolve({ ok: true } as const),
@@ -189,4 +194,10 @@ export const adminService: AdminService = {
   suspendPage: () => resolve({ ok: true } as const),
   takeDownPage: () => resolve({ ok: true } as const),
   actOnReport: () => resolve({ ok: true } as const),
+  updateGeneralSettings: () => resolve({ ok: true } as const),
+  updateSafetySettings: () => resolve({ ok: true } as const),
+  addReservedHandle: () => resolve({ ok: true } as const),
+  removeReservedHandle: () => resolve({ ok: true } as const),
+  setMaintenanceMode: () => resolve({ ok: true } as const),
+  purgeCdnCache: () => resolve({ ok: true } as const),
 };
