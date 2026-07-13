@@ -5,10 +5,14 @@
  */
 
 import type {
+  AdminPageDetail,
   AdminUserDetail,
   OverviewMetrics,
   PlatformSettings,
   Report,
+  PageReportHistoryItem,
+  PageOwner,
+  PublishedPageLink,
 } from "./types";
 
 export const MOCK_SETTINGS: PlatformSettings = {
@@ -98,6 +102,213 @@ const DEFAULT_ACTIVITY: AdminUserDetail["recentActivity"] = [
   { id: "ac_1", title: "Added link · YouTube", meta: "2h ago" },
   { id: "ac_2", title: "Changed theme · Midnight", meta: "1d ago" },
   { id: "ac_3", title: "Upgraded to Pro", meta: "24 May 2026" },
+];
+
+function makeLink(id: string, title: string, url: string, clicks: number): PublishedPageLink {
+  return { id, title, url, clicks };
+}
+
+function makeReport(
+  id: string,
+  reporter: string,
+  reason: PageReportHistoryItem["reason"],
+  status: PageReportHistoryItem["status"],
+  reportedAt: string
+): PageReportHistoryItem {
+  return { id, reporter, reason, status, reportedAt };
+}
+
+function makeOwner(id: string, name: string, handle: string): PageOwner {
+  return { id, name, handle };
+}
+
+export const MOCK_PAGES: AdminPageDetail[] = [
+  {
+    id: "page_joelosei",
+    handle: "@joelosei",
+    owner: makeOwner("usr_joelosei", "Joel Osei Acquah", "@joelosei"),
+    url: "https://linkhub.app/joelosei",
+    status: "live",
+    links: 15,
+    views30d: 8420,
+    reports: 0,
+    createdAt: "2026-05-24",
+    theme: "Midnight",
+    publishedLinks: [
+      makeLink("pl_joel_1", "Official website", "https://joelosei.me", 412),
+      makeLink("pl_joel_2", "Latest portfolio drop", "https://behance.net/joelosei", 289),
+      makeLink("pl_joel_3", "YouTube channel", "https://youtube.com/@joelosei", 689),
+    ],
+    reportHistory: [],
+  },
+  {
+    id: "page_saraa",
+    handle: "@saraa",
+    owner: makeOwner("usr_saraa", "Sara Addo", "@saraa"),
+    url: "https://linkhub.app/saraa",
+    status: "live",
+    links: 22,
+    views30d: 12910,
+    reports: 0,
+    createdAt: "2026-05-18",
+    theme: "Sunrise",
+    publishedLinks: [
+      makeLink("pl_sara_1", "Brand studio", "https://saraaddo.com", 930),
+      makeLink("pl_sara_2", "Instagram", "https://instagram.com/saraa", 1550),
+      makeLink("pl_sara_3", "Newsletter", "https://substack.com/@saraa", 410),
+    ],
+    reportHistory: [],
+  },
+  {
+    id: "page_quickcash",
+    handle: "@quick-cash-now",
+    owner: makeOwner("usr_quickcash", "quick-cash-now", "@quick-cash-now"),
+    url: "https://linkhub.app/quick-cash-now",
+    status: "flagged",
+    links: 9,
+    views30d: 0,
+    reports: 3,
+    createdAt: "2026-06-19",
+    theme: "Alert",
+    publishedLinks: [
+      makeLink("pl_quick_1", "Bank login", "https://quick-cash-now.com/login", 2),
+      makeLink("pl_quick_2", "Bonus claim", "https://quick-cash-now.com/bonus", 1),
+      makeLink("pl_quick_3", "Support chat", "https://quick-cash-now.com/chat", 0),
+    ],
+    reportHistory: [
+      makeReport("pr_quick_1", "@nadiaowusu", "phishing", "open", "2026-06-19"),
+      makeReport("pr_quick_2", "@saraa", "scam", "reviewing", "2026-06-20"),
+      makeReport("pr_quick_3", "@kofitwum", "phishing", "resolved", "2026-06-21"),
+    ],
+  },
+  {
+    id: "page_nadiaowusu",
+    handle: "@nadiaowusu",
+    owner: makeOwner("usr_nadiaowusu", "Nadia Owusu", "@nadiaowusu"),
+    url: "https://linkhub.app/nadiaowusu",
+    status: "live",
+    links: 38,
+    views30d: 41200,
+    reports: 0,
+    createdAt: "2026-03-02",
+    theme: "Editorial",
+    publishedLinks: [
+      makeLink("pl_nadia_1", "Studio site", "https://nadiaowusu.com", 2100),
+      makeLink("pl_nadia_2", "Portfolio", "https://behance.net/nadiaowusu", 1200),
+      makeLink("pl_nadia_3", "Calendly", "https://cal.com/nadia", 830),
+    ],
+    reportHistory: [],
+  },
+  {
+    id: "page_cryptodoubler",
+    handle: "@cryptodoubler",
+    owner: makeOwner("usr_cryptodoubler", "cryptodoubler", "@cryptodoubler"),
+    url: "https://linkhub.app/cryptodoubler",
+    status: "flagged",
+    links: 5,
+    views30d: 120,
+    reports: 2,
+    createdAt: "2026-06-25",
+    theme: "Hustle",
+    publishedLinks: [
+      makeLink("pl_crypto_1", "Investment pitch", "https://cryptodoubler.io", 12),
+      makeLink("pl_crypto_2", "Telegram", "https://t.me/cryptodoubler", 4),
+      makeLink("pl_crypto_3", "Testimonials", "https://cryptodoubler.io/reviews", 1),
+    ],
+    reportHistory: [
+      makeReport("pr_crypto_1", "@saraa", "scam", "open", "2026-06-25"),
+      makeReport("pr_crypto_2", "@joelosei", "scam", "resolved", "2026-06-26"),
+    ],
+  },
+  {
+    id: "page_laraowusu",
+    handle: "@laraowusu",
+    owner: makeOwner("usr_laraowusu", "Lara Owusu", "@laraowusu"),
+    url: "https://linkhub.app/laraowusu",
+    status: "live",
+    links: 17,
+    views30d: 9830,
+    reports: 0,
+    createdAt: "2026-04-15",
+    theme: "Aurora",
+    publishedLinks: [
+      makeLink("pl_lara_1", "Shop", "https://laraowusu.com/shop", 540),
+      makeLink("pl_lara_2", "TikTok", "https://tiktok.com/@laraowusu", 980),
+      makeLink("pl_lara_3", "Contact", "https://laraowusu.com/contact", 210),
+    ],
+    reportHistory: [],
+  },
+  {
+    id: "page_freegiftcards",
+    handle: "@free-giftcards",
+    owner: makeOwner("usr_freegiftcards", "free-giftcards", "@free-giftcards"),
+    url: "https://linkhub.app/free-giftcards",
+    status: "suspended",
+    links: 6,
+    views30d: 0,
+    reports: 1,
+    createdAt: "2026-06-15",
+    theme: "Flash",
+    publishedLinks: [
+      makeLink("pl_free_1", "Claim offer", "https://free-giftcards.net", 3),
+      makeLink("pl_free_2", "Survey", "https://free-giftcards.net/survey", 0),
+      makeLink("pl_free_3", "Terms", "https://free-giftcards.net/terms", 0),
+    ],
+    reportHistory: [makeReport("pr_free_1", "@efiamensa", "spam", "resolved", "2026-06-15")],
+  },
+  {
+    id: "page_akuasarpong",
+    handle: "@akuasarpong",
+    owner: makeOwner("usr_akuasarpong", "Akua Sarpong", "@akuasarpong"),
+    url: "https://linkhub.app/akuasarpong",
+    status: "live",
+    links: 11,
+    views30d: 5210,
+    reports: 0,
+    createdAt: "2026-02-11",
+    theme: "Dusk",
+    publishedLinks: [
+      makeLink("pl_akua_1", "Book now", "https://akuasarpong.com/book", 640),
+      makeLink("pl_akua_2", "Gallery", "https://akuasarpong.com/gallery", 290),
+      makeLink("pl_akua_3", "CV", "https://akuasarpong.com/cv", 110),
+    ],
+    reportHistory: [],
+  },
+  {
+    id: "page_kwameasare",
+    handle: "@kwameasare",
+    owner: makeOwner("usr_kwameasare", "Kwame Asare", "@kwameasare"),
+    url: "https://linkhub.app/kwameasare",
+    status: "live",
+    links: 7,
+    views30d: 3300,
+    reports: 0,
+    createdAt: "2026-01-30",
+    theme: "Mono",
+    publishedLinks: [
+      makeLink("pl_kwame_1", "GitHub", "https://github.com/kwameasare", 520),
+      makeLink("pl_kwame_2", "Blog", "https://kwameasare.dev", 210),
+      makeLink("pl_kwame_3", "X profile", "https://x.com/kwameasare", 80),
+    ],
+    reportHistory: [],
+  },
+  {
+    id: "page_fiifimensah",
+    handle: "@fiifimensah",
+    owner: makeOwner("usr_fiifimensah", "Fiifi Mensah", "@fiifimensah"),
+    url: "https://linkhub.app/fiifimensah",
+    status: "suspended",
+    links: 0,
+    views30d: 0,
+    reports: 2,
+    createdAt: "2026-05-30",
+    theme: "Classic",
+    publishedLinks: [],
+    reportHistory: [
+      makeReport("pr_fiifi_1", "@saraa", "spam", "open", "2026-05-31"),
+      makeReport("pr_fiifi_2", "@yaaa", "spam", "resolved", "2026-06-01"),
+    ],
+  },
 ];
 
 /**
