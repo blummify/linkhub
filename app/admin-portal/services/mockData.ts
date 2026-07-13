@@ -7,8 +7,16 @@
 import type {
   AdminUserDetail,
   OverviewMetrics,
+  PlatformSettings,
   Report,
 } from "./types";
+
+export const MOCK_SETTINGS: PlatformSettings = {
+  general: { defaultCurrency: "EUR", supportEmail: "support@linkhub.app" },
+  safety: { autoFlagSuspiciousLinks: true, autoSuspendAfterReports: 3 },
+  reservedHandles: ["admin", "api", "login", "dashboard", "settings", "support"],
+  system: { maintenanceMode: false },
+};
 
 export const MOCK_OVERVIEW: OverviewMetrics = {
   kpis: [
