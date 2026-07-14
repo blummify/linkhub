@@ -3,8 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { createHash } from "crypto";
+import { headers } from "next/headers";
 import authConfig from "./auth.config";
 import { db } from "@/lib/db";
+import { getCountryFromHeaders, getClientIp } from "@/lib/geo";
 import { createPendingTwoFactorToken } from "@/lib/twoFactorChallenge";
 import { verifySuperAdminCredentials } from "@/lib/adminAuth";
 
@@ -31,6 +33,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
+    async signIn({ user }) {
+      const id = user?.id;
+      if (!id) return;
+
+      // Request headers are best-effort: available when the event runs inside a
+      // request scope (route handler / server action), null otherwise.
+      let ip: string | null = null;
+      let country: string | null = null;
+      let userAgent: string | null = null;
+      try {
+        const hdrs = await headers();
+        const get = (name: string) => hdrs.get(name);
+        ip = getClientIp(get);
+        country = getCountryFromHeaders(get);
+        userAgent = get("user-agent");
+      } catch {
+        // Outside a request scope — record the login without location data.
+      }
+
+      try {
+        await Promise.all([
+          db.user.update({ where: { id }, data: { lastActiveAt: new Date() } }),
+          db.loginEvent.create({ data: { userId: id, ip, country, userAgent } }),
+          // Backfill country for accounts that predate signup capture.
+          ...(country
+            ? [db.user.updateMany({ where: { id, country: null }, data: { country } })]
+            : []),
+        ]);
+      } catch {
+        // Best-effort bookkeeping — sign-in must never fail because of it.
+      }
+    },
     async createUser({ user }) {
       const id = user.id;
       if (!id) return;

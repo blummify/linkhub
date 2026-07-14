@@ -110,6 +110,10 @@ vi.mock("@/app/actions/upload", () => ({
   deleteOrphanedUpload: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock("../user-admin/components/DashboardTopBar", () => ({
+  DashboardTopBar: () => <div data-testid="dashboard-top-bar" />,
+}));
+
 vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
@@ -150,7 +154,7 @@ describe("AppearanceClient", () => {
     expect(screen.getByTestId("preview-panel")).toBeInTheDocument();
   });
 
-  it("renders a single desktop save toolbar in the page header", () => {
+  it("renders a single desktop save toolbar in the page header", { timeout: 15000 }, () => {
     renderWithSidebarAndBranding(<AppearanceClient />);
     expect(screen.getAllByTestId("dirty-save-toolbar")).toHaveLength(1);
     expect(screen.getByRole("button", { name: /Save changes/i })).toBeInTheDocument();

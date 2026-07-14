@@ -29,6 +29,7 @@ const PROFILE_ROW = {
   user: {
     id: "u1",
     name: "Joel Osei",
+    suspendedAt: null,
     links: [{ id: "l1", title: "Website", url: "https://joel.dev", icon: "website", thumbnailUrl: null }],
   },
 };
@@ -60,6 +61,15 @@ describe("getPublicProfileByHandle", () => {
 
   it("returns null when the handle was never claimed", async () => {
     asMock(db.profile.findUnique).mockResolvedValue({ ...PROFILE_ROW, hasClaimedHandle: false });
+    const result = await getPublicProfileByHandle("joelosei");
+    expect(result).toBeNull();
+  });
+
+  it("returns null for a suspended account's page", async () => {
+    asMock(db.profile.findUnique).mockResolvedValue({
+      ...PROFILE_ROW,
+      user: { ...PROFILE_ROW.user, suspendedAt: new Date() },
+    });
     const result = await getPublicProfileByHandle("joelosei");
     expect(result).toBeNull();
   });

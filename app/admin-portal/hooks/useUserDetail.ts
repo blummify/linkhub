@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminService } from "../services/adminService";
 import type { AdminUserDetail } from "../services/types";
 import { type AsyncState, toError } from "./asyncState";
 
-export function useUserDetail(id: string): AsyncState<AdminUserDetail> {
+export interface UserDetailResult extends AsyncState<AdminUserDetail> {
+  /** Refetches the detail — call after a mutation changes this user. */
+  reload: () => void;
+}
+
+export function useUserDetail(id: string): UserDetailResult {
+  const [tick, setTick] = useState(0);
   const [state, setState] = useState<AsyncState<AdminUserDetail>>({
     data: null,
     loading: true,
@@ -25,7 +31,9 @@ export function useUserDetail(id: string): AsyncState<AdminUserDetail> {
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [id, tick]);
 
-  return state;
+  const reload = useCallback(() => setTick((value) => value + 1), []);
+
+  return { ...state, reload };
 }

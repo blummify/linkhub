@@ -18,6 +18,12 @@ model User {
   role                String                 @default("USER")
   twoFactorSecret     String?
   twoFactorEnabled    Boolean                @default(false)
+  /// Set when a staff member suspends the account; null means not suspended.
+  suspendedAt         DateTime?
+  /// Last successful sign-in; approximates activity until finer tracking exists.
+  lastActiveAt        DateTime?
+  /// ISO 3166-1 alpha-2 country code captured from request geo headers at signup.
+  country             String?
   createdAt           DateTime               @default(now())
   updatedAt           DateTime               @updatedAt
   accounts            Account[]
@@ -26,6 +32,7 @@ model User {
   customThemes        CustomTheme[]
   emailVerification   EmailVerification?
   links               Link[]
+  loginEvents         LoginEvent[]
   milestones          Milestone[]
   passwordResetTokens PasswordResetToken[]
   profile             Profile?
@@ -105,6 +112,37 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/** Immutable log of staff actions taken in the admin portal. Deliberately has no
+ *  relation to User so entries survive account deletion. */
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  actorId      String?
+  actorEmail   String?
+  /// e.g. "user.suspend", "user.delete", "user.changePlan", "user.sendReset"
+  action       String
+  targetUserId String?
+  targetEmail  String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([targetUserId, createdAt])
+  @@index([createdAt])
+}
+
+/** One row per successful sign-in (any provider). Powers the admin Security tab's
+ *  recent-logins list; ip/country/userAgent are best-effort from request headers. */
+model LoginEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  ip        String?
+  country   String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model VerificationToken {
