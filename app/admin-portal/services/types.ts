@@ -4,6 +4,8 @@
  * can map each case exhaustively.
  */
 
+import type { AdminRole } from "@/lib/roles";
+
 export type Plan = "free" | "pro" | "business";
 export type UserStatus = "active" | "suspended" | "pending";
 export type ReportSeverity = "high" | "medium";
@@ -31,6 +33,18 @@ export type SortDirection = "asc" | "desc";
 
 /** Actions available on a moderation report. */
 export type ReportAction = "review" | "takedown" | "warn" | "dismiss";
+
+export type TeamMemberStatus = "active" | "invited";
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: AdminRole;
+  status: TeamMemberStatus;
+  /** ISO date string, or null when the member has never signed in (invited). */
+  lastActiveAt: string | null;
+}
 
 /** Result of a mutation against the admin service. */
 export interface ActionResult {
@@ -396,4 +410,9 @@ export interface AdminService {
   removeReservedHandle(handle: string): Promise<ActionResult>;
   setMaintenanceMode(enabled: boolean): Promise<ActionResult>;
   purgeCdnCache(): Promise<ActionResult>;
+
+  listTeamMembers(): Promise<TeamMember[]>;
+  inviteTeamMember(email: string, role: AdminRole): Promise<ActionResult>;
+  changeTeamMemberRole(id: string, role: AdminRole): Promise<ActionResult>;
+  removeTeamMember(id: string): Promise<ActionResult>;
 }

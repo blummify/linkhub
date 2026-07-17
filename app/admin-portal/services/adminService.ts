@@ -6,7 +6,8 @@
  * feature exists.
  */
 
-import { MOCK_OVERVIEW, MOCK_PLAN_SNAPSHOT, MOCK_PAGES, MOCK_REPORTS, MOCK_SETTINGS } from "./mockData";
+import {MOCK_OVERVIEW, MOCK_PAGES, MOCK_PLAN_SNAPSHOT, MOCK_REPORTS, MOCK_SETTINGS, MOCK_TEAM_MEMBERS} from "./mockData";
+
 import type {
   ActionResult,
   AdminPageDetail,
@@ -214,6 +215,10 @@ export const adminService: AdminService = {
   suspendPage: () => resolve({ ok: true } as const),
   takeDownPage: () => resolve({ ok: true } as const),
   actOnReport: () => resolve({ ok: true } as const),
+  listTeamMembers: () => resolve(MOCK_TEAM_MEMBERS),
+  inviteTeamMember: () => resolve({ ok: true } as const),
+  changeTeamMemberRole: () => resolve({ ok: true } as const),
+  removeTeamMember: () => resolve({ ok: true } as const),
   updateGeneralSettings: () => resolve({ ok: true } as const),
   updateSafetySettings: () => resolve({ ok: true } as const),
   addReservedHandle: () => resolve({ ok: true } as const),

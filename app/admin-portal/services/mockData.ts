@@ -10,9 +10,11 @@ import type {
   OverviewMetrics,
   PlatformSettings,
   Report,
+  TeamMember,
   PageReportHistoryItem,
   PageOwner,
   PublishedPageLink,
+
 } from "./types";
 
 export const MOCK_SETTINGS: PlatformSettings = {
@@ -461,5 +463,50 @@ export const MOCK_REPORTS: Report[] = [
     reportedAt: "1d ago",
     url: "linkhub.app/free-giftcards",
     status: "open",
+  },
+];
+
+export const MOCK_TEAM_MEMBERS: TeamMember[] = [
+  {
+    id: "adm_ama",
+    name: "Ama Mensah",
+    email: "ama@linkhub.app",
+    role: "SUPER_ADMIN",
+    status: "active",
+    // "now" in the prototype — represent as a very recent timestamp so the
+    // formatter still produces something sensible if wired to relative time.
+    lastActiveAt: "2026-06-30",
+  },
+  {
+    id: "adm_kojo",
+    name: "Kojo Brent",
+    email: "kojo@linkhub.app",
+    role: "SUPPORT",
+    status: "active",
+    lastActiveAt: "2026-06-30",
+  },
+  {
+    id: "adm_efua",
+    name: "Efua Boat",
+    email: "efua@linkhub.app",
+    role: "FINANCE",
+    status: "active",
+    lastActiveAt: "2026-06-29",
+  },
+  {
+    id: "adm_sam",
+    name: "Sam Hale",
+    email: "sam@linkhub.app",
+    role: "MODERATOR",
+    status: "active",
+    lastActiveAt: "2026-06-30",
+  },
+  {
+    id: "adm_nii",
+    name: "Nii Ako",
+    email: "nii@linkhub.app",
+    role: "MODERATOR",
+    status: "invited",
+    lastActiveAt: null,
   },
 ];

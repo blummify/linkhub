@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import FocusTrap from "focus-trap-react";
 import { Button, type ButtonVariant } from "./Button";
+import { DialogShell } from "./DialogShell";
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -15,11 +14,6 @@ export interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-/**
- * Confirmation gate for destructive/irreversible actions. Rendered as an
- * alertdialog; the caller owns Escape handling so it composes with a parent
- * dialog (the user drawer).
- */
 export function ConfirmDialog({
   open,
   title,
@@ -30,43 +24,29 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !loading) onCancel();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, loading, onCancel]);
-
-  if (!open) return null;
-
   return (
-    <>
-      <div
-        className="fixed inset-0 z-[100] bg-ink-900/50"
-        aria-hidden="true"
-        onClick={loading ? undefined : onCancel}
-      />
-      <FocusTrap>
-        <div
-          role="alertdialog"
-          aria-modal="true"
-          aria-label={title}
-          className="fixed left-1/2 top-1/2 z-[101] w-[360px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-[16px] bg-white p-5 shadow-2xl"
-        >
-          <h2 className="text-[16px] font-semibold text-ink-900">{title}</h2>
-          <p className="mt-1.5 text-[13.5px] text-ink-500">{description}</p>
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="default" onClick={onCancel} disabled={loading}>
-              Cancel
-            </Button>
-            <Button variant={confirmVariant} onClick={onConfirm} disabled={loading}>
-              {loading ? "Working…" : confirmLabel}
-            </Button>
-          </div>
-        </div>
-      </FocusTrap>
-    </>
+    <DialogShell
+      open={open}
+      ariaLabel={title}
+      role="alertdialog"
+      locked={loading}
+      onClose={onCancel}
+    >
+      <div className="grid h-11 w-11 place-items-center rounded-full bg-rose-50 text-rose-500">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-[22px] w-[22px]">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4M12 17h.01M10.3 3.9l-8 14A2 2 0 004 21h16a2 2 0 001.7-3l-8-14a2 2 0 00-3.4 0z" />
+        </svg>
+      </div>
+      <h2 className="mt-3.5 text-[17px] font-semibold text-ink-900">{title}</h2>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-500">{description}</p>
+      <div className="mt-5 flex justify-end gap-2.5">
+        <Button variant="default" className="px-4 py-2.5" onClick={onCancel} disabled={loading}>
+          Cancel
+        </Button>
+        <Button variant={confirmVariant} className="px-4 py-2.5" onClick={onConfirm} disabled={loading}>
+          {loading ? "Working…" : confirmLabel}
+        </Button>
+      </div>
+    </DialogShell>
   );
 }
