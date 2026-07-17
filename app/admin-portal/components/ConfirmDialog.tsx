@@ -14,12 +14,6 @@ export interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-/**
- * Confirmation gate for destructive/irreversible actions. Rendered as an
- * alertdialog through DialogShell so it composes cleanly with any parent
- * dialog (e.g. a drawer). While `loading` is true the backdrop and Escape are
- * inert — a mutation in flight cannot be dismissed halfway.
- */
 export function ConfirmDialog({
   open,
   title,
@@ -50,7 +44,7 @@ export function ConfirmDialog({
           Cancel
         </Button>
         <Button variant={confirmVariant} className="px-4 py-2.5" onClick={onConfirm} disabled={loading}>
-          {confirmLabel}
+          {loading ? "Working…" : confirmLabel}
         </Button>
       </div>
     </DialogShell>
